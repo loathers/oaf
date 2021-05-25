@@ -9,10 +9,9 @@ dotenv.config({ path: __dirname+'/.env' });
 const WEBSERVER_PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN || "";
 
-
 startWebserver(WEBSERVER_PORT);
-const client = new DiscordClient();
 
+const client = new DiscordClient();
 attachUtils(client);
 
 client.start(DISCORD_TOKEN);

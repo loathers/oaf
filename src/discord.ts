@@ -8,7 +8,7 @@ const RUDE = "<:rude2:585646615390584844><:rude3:585646615403167745>"
 
 export class DiscordClient {
     private _client: Client;
-    private _commands: Map<string, (message: Message) => void>;
+    private _commands: Map<string, (message: Message) => void> = new Map();
 
     constructor() {
         this._client = new Client();
@@ -16,7 +16,6 @@ export class DiscordClient {
             console.log(`Logged in as ${this._client?.user?.tag}!`);
         });
         this._client.on('message', this.onMessage);
-        this._commands = new Map<string, (message: Message) => void>();
     }
 
     client(): Client {
