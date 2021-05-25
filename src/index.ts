@@ -1,6 +1,6 @@
-import { Client } from "discord.js";
 import * as dotenv from "dotenv";
 import { DiscordClient } from "./discord";
+import { attachUtils } from "./utils";
 import { startWebserver } from "./webserver";
 
 dotenv.config({ path: __dirname+'/.env' });
@@ -11,4 +11,8 @@ const DISCORD_TOKEN = process.env.DISCORD_TOKEN || "";
 
 
 startWebserver(WEBSERVER_PORT);
-new DiscordClient().start(DISCORD_TOKEN);
+const client = new DiscordClient();
+
+attachUtils(client);
+
+client.start(DISCORD_TOKEN);
