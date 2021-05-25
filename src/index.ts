@@ -1,8 +1,6 @@
 import { Client } from "discord.js";
 import * as dotenv from "dotenv";
-import * as express from "express";
-
-const app = express();
+import { startWebserver } from "./webserver";
 
 dotenv.config({ path: __dirname+'/.env' });
 
@@ -20,13 +18,6 @@ client.on('message', msg => {
     }
 });
 
-app.get('/', (req, res) => {
-    res.send(`<img src='https://i.imgur.com/6ln1Rpn.png'></img>`);
-});
-  
-const port = process.env.PORT || 8080;
-app.listen(port, () => {
-    console.log(`server started on port ${port}`);
-});
 
+startWebserver(parseInt(process.env.PORT || "8080") || 8080);
 client.login(process.env.DISCORD_TOKEN);
