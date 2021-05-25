@@ -2,13 +2,18 @@
   "name": "oaf-js",
   "version": "1.0.0",
   "description": "OAF, the discord bot for the Ascension Speedrun Society, reborn in typescript!",
+  "repository": "https://github.com/Phillammon/oaf-js.git",
   "main": "build/oaf.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc --build",
+    "clean": "tsc --build --clean"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^12.5.3"
+    "discord.js": "^12.5.3",
+    "dotenv": "^10.0.0",
+    "prettier": "^2.3.0",
+    "typescript": "^4.2.4"
   }
 }
