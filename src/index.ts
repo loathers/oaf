@@ -1,5 +1,18 @@
 import { Client } from "discord.js";
 import * as dotenv from "dotenv";
+import * as express from "express";
+const app = express();
+
+
+app.get('/', (req, res) => {
+  res.send(`<img src='https://i.imgur.com/6ln1Rpn.png'></img>`);
+});
+
+const port = process.env.PORT || 8080;
+app.listen(port, () => {
+  console.log(`helloworld: listening on port ${port}`);
+});
+
 dotenv.config({ path: __dirname+'/.env' });
 
 
