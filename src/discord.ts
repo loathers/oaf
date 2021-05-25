@@ -20,15 +20,15 @@ export class DiscordClient {
 
     static onMessage(client: DiscordClient, message: Message): void {
         const content = message.content.toLowerCase();
-        if (content) {
+        if (content && !message.author.bot) {
             for (let item of content.match(ITEM_MATCHER) || []) {
-                client.findItem(item, message);
+                client.findItem(item.substring(2, item.length-2), message);
             }
 
             if (content.toLowerCase().includes("good bot")) message.reply(HEART);
             if (content.toLowerCase().includes("bad bot")) message.reply(RUDE);
 
-            if (!content.startsWith(COMMAND_INVOCATION) || message.author.bot) return;
+            if (!content.startsWith(COMMAND_INVOCATION)) return;
             const commandString = (content.split(" ")[0].substring(COMMAND_INVOCATION.length));
             const command = client._commands.get(commandString);
             if (command) command(message);
