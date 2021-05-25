@@ -1,6 +1,6 @@
 import { Client, Message } from "discord.js";
 
-const ITEM_MATCHER = /\[\[.*\]\]/;
+const ITEM_MATCHER = /\[\[.*\]\]/g;
 const COMMAND_INVOCATION = "!";
 
 const HEART = "<3"
