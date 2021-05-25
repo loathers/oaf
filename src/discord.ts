@@ -16,7 +16,7 @@ export class DiscordClient {
             console.log(`Logged in as ${this._client?.user?.tag}!`);
         });
         this._client.on('message', this.onMessage);
-        this._commands = new Map()
+        this._commands = new Map<string, (message: Message) => void>();
     }
 
     client(): Client {
