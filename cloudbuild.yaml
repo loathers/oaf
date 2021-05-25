@@ -1,0 +1,13 @@
+steps:
+# Build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/oaf-js:$COMMIT_SHA', '-f', 'Dockerfile', '.']
+# Push the container image to Container Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/oaf-js:$COMMIT_SHA']
+# Deploy container image to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args: ['run', 'deploy', 'oaf-js', '--image', 'gcr.io/oaf-js:$COMMIT_SHA', '--region', 'europe-west2', '--platform', 'managed']
+images:
+- gcr.io/oaf-js:$COMMIT_SHA
