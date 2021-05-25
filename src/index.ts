@@ -13,8 +13,8 @@ client.on('ready', () => {
 
   
 client.on('message', msg => {
-    if (msg.content === 'hello') {
-        msg.reply('hello!');
+    if (msg.content.toLowerCase().includes('good bot')) {
+        msg.reply('<3');
     }
 });
 
