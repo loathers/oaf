@@ -1,0 +1,14 @@
+{
+  "name": "oaf-js",
+  "version": "1.0.0",
+  "description": "OAF, the discord bot for the Ascension Speedrun Society, reborn in typescript!",
+  "main": "build/oaf.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.5.3"
+  }
+}
