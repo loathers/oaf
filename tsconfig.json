@@ -13,7 +13,7 @@
     "noImplicitReturns": true,
     "pretty": true,
     "strict": true,
-    "target": "es6"
+    "target": "es2020"
   },
   "include": ["src/**/*.ts"],
   "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */

@@ -1,6 +1,6 @@
 import { Client, Message } from "discord.js";
 
-const ITEM_MATCHER = /\[\[.*\]\]/g;
+const ITEM_MATCHER = /\[\[(.*)\]\]/g;
 const COMMAND_INVOCATION = "!";
 
 const HEART = "<3"
@@ -19,21 +19,24 @@ export class DiscordClient {
     }
 
     static onMessage(client: DiscordClient, message: Message): void {
+        console.log(`${message.createdTimestamp}: ${message.author.username} said "${message.content}`)
         const content = message.content.toLowerCase();
         if (content && !message.author.bot) {
-            for (let item of content.match(ITEM_MATCHER) || []) {
-                client.findItem(item.substring(2, item.length-2), message);
+            for (let match of [...content.matchAll(ITEM_MATCHER)]) {
+                const item = match[1];
+                console.log(`Found wiki invocation "${item}"`)
+                client.findItem(item, message);
             }
 
-            if (content.toLowerCase().includes("good bot")) message.reply(HEART);
-            if (content.toLowerCase().includes("bad bot")) message.reply(RUDE);
+            if (content.includes("good bot")) message.reply(HEART);
+            if (content.includes("bad bot")) message.reply(RUDE);
 
             if (!content.startsWith(COMMAND_INVOCATION)) return;
             const commandString = (content.split(" ")[0].substring(COMMAND_INVOCATION.length));
+            console.log(`Found command "${commandString}"`)
             const command = client._commands.get(commandString);
             if (command) command(message);
             else message.channel.send("Command not recognised.");
-            
         }
     }
 
