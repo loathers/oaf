@@ -7,11 +7,5 @@ manual_scaling:
   instances: 1
 
 handlers:
-# Matches requests to /images/... to files in static/images/...
-- url: /images
-  static_dir: static/images
-
-- url: /.*
-  secure: always
-  redirect_http_response_code: 301
-  script: auto
+  - url: /
+    static_dir: build
