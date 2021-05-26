@@ -8,6 +8,4 @@ steps:
 # Deploy container image to AppEngine
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['app', 'deploy']
-images:
-- gcr.io/$PROJECT_ID/oaf-js:$COMMIT_SHA
+  args: ['app', 'deploy', '--image-url=gcr.io/$PROJECT_ID/oaf-js:$COMMIT_SHA']
