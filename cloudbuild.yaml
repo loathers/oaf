@@ -2,4 +2,4 @@ steps:
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['app', 'deploy', 'oaf-js']
+  args: ['app', 'deploy']
