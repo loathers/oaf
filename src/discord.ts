@@ -19,7 +19,7 @@ export class DiscordClient {
     }
 
     static onMessage(client: DiscordClient, message: Message): void {
-        console.log(`${message.createdTimestamp}: ${message.author.username} said "${message.content}" in channel ${message.channel.toString}`)
+        console.log(`${message.createdTimestamp}: ${message.author.username} said "${message.content}" in channel ${message.channel}`)
         const content = message.content.toLowerCase();
         if (content && !message.author.bot) {
             for (let match of [...content.matchAll(ITEM_MATCHER)]) {
