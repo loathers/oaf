@@ -26,7 +26,7 @@ export class VariableManager {
     }
 
     async fetchAll(identifiers: string[]): Promise<void> {
-        const results = await Promise.all(identifiers.map(this.fetchValue));
+        const results = await Promise.all(identifiers.map((identifier) => this.fetchValue(identifier)));
         for (let i = 0; i < identifiers.length; i++) {
             this.set(identifiers[i], results[i] || "");
         }

@@ -22,17 +22,17 @@ export class DiscordClient {
         this._client.on('ready', () => {
             console.log(`Logged in as ${this._client?.user?.tag}!`);
         });
-        this._client.on('message', async (message) => DiscordClient.onMessage(this, message));
+        this._client.on('message', async (message) => this.onMessage(message));
     }
 
-    static async onMessage(client: DiscordClient, message: Message): Promise<void> {
+    async onMessage(message: Message): Promise<void> {
         console.log(`${message.createdTimestamp}: ${message.author.username} said "${message.content}" in channel ${message.channel}`)
         const content = message.content.toLowerCase();
         if (content && !message.author.bot) {
             for (let match of [...content.matchAll(ITEM_MATCHER)]) {
                 const item = match[1];
                 console.log(`Found wiki invocation "${item}"`)
-                await client.findItem(item, message);
+                await this.findItem(item, message);
             }
 
             if (content.includes("good bot")) message.reply(HEART);
@@ -41,7 +41,7 @@ export class DiscordClient {
             if (!content.startsWith(COMMAND_INVOCATION)) return;
             const commandString = (content.split(" ")[0].substring(COMMAND_INVOCATION.length));
             console.log(`Found command "${commandString}"`)
-            const command = client._commands.get(commandString);
+            const command = this._commands.get(commandString);
             if (command) command(message);
             else message.channel.send("Command not recognised.");
         }
