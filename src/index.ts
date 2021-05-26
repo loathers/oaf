@@ -4,17 +4,18 @@ import { attachUtils } from "./utils";
 import { VariableManager } from "./variables";
 
 
-const varManager = new VariableManager();
-console.log("Initialised variable manager")
+const variableManager = new VariableManager();
+const client = new DiscordClient(variableManager);
 
-const client = new DiscordClient();
-console.log("Initialised discord client")
 attachUtils(client);
-console.log("Attached utility commands")
 
-console.log("Starting discord client")
-varManager.get("DISCORD_TOKEN").then((discord_token) => {
-        console.log(`Retrieved discord token ${discord_token}`)
-        client.start(discord_token || "");
+const requiredVariables = [
+    "DISCORD_TOKEN",
+    "CUSTOM_SEARCH",
+    "GOOGLE_API_KEY",
+]
+
+variableManager.fetchAll(requiredVariables).then(() => {
+        client.start();
     }
 )

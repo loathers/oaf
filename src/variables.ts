@@ -11,49 +11,52 @@ export class VariableManager {
     constructor() {
         this._googleSecretClient = new SecretManagerServiceClient();
         this._dotEnvConfig = dotenv.config({ path: __dirname+'/.env' });
-        console.log("Variable manager started");
     }
 
-    async getSecret(identifier: string): Promise<string | undefined> {
+    set(identifier: string, value: string): void {
+        this._variables.set(identifier, value);
+    }
+
+    get(identifier: string): string | undefined {
+        return this._variables.get(identifier)
+    }
+
+    getNumber(identifier: string): number {
+        return parseInt(this.get(identifier) || "NaN");
+    }
+
+    async fetchAll(identifiers: string[]): Promise<void> {
+        const results = await Promise.all(identifiers.map(this.fetchValue));
+        for (let i = 0; i < identifiers.length; i++) {
+            this.set(identifiers[i], results[i] || "");
+        }
+    }
+
+    async fetch(identifier: string): Promise<void> {
+        this.set(identifier, await this.fetchValue(identifier) || "");
+    }
+
+    async fetchValue(identifier: string): Promise<string | undefined> {
+        if (process.env[identifier]) {
+            return process.env[identifier]
+        }
+        else {
+            return await this.accessSecret(identifier)
+        }
+    }
+
+    async accessSecret(identifier: string): Promise<string | undefined> {
         try {
             const secret = await this._googleSecretClient.accessSecretVersion({
                 name: `${process.env.SECRET_PATH}/${identifier}/versions/latest`,
             })
-            console.log("Secret request returned.");
-            console.log(secret);
-            console.log(secret[0]);
-            console.log(secret[0].payload);
-            console.log(secret[0].payload?.data);
             if (secret[0].payload) {
                 return secret[0].payload.data?.toString();
             }
         }
         catch (error){
-            console.log("Error thrown when seeking secret:");
-            throw(error);
+            console.log(error);
         }
         return undefined;
-
-    }
-
-    async get(identifier: string): Promise<string | undefined> {
-        console.log(`Looking for variable with identifier ${identifier}`);
-        if (!this._variables.has(identifier)) {
-            console.log(`Identifier ${identifier} not previously seen.`);
-            if (process.env[identifier]) {
-                console.log(`Environment variable ${identifier} found.`);
-                this._variables.set(identifier, process.env[identifier])
-            }
-            else {
-                console.log(`Looking for secret ${process.env.SECRET_PATH}/${identifier}/latest`);
-                this._variables.set(identifier, (await this.getSecret(identifier)))
-            }
-        }
-        console.log(`Returning ${this._variables.get(identifier)} for variable ${identifier}.`)
-        return this._variables.get(identifier) || undefined;
-    }
-
-    async getNumber(identifier: string): Promise<number> {
-        return parseInt((await this.get(identifier)) || "NaN");
     }
 }
