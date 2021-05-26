@@ -4,4 +4,4 @@ steps:
 - name: 'gcr.io/cloud-builders/gcloud'
   args: ['app', 'deploy']
 timeout: '1600s'
-images: ['gcr.io/$PROJECT_ID/<projectname>']
+images: ['gcr.io/$PROJECT_ID/oaf-js']
