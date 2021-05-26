@@ -58,7 +58,7 @@ export class DiscordClient {
     async findItem(item: string, message: Message): Promise<void> {
         const correctName = await this._itemFinder.findName(item);
         if (correctName) {
-            message.channel.send(`https://kol.coldfront.net/thekolwiki/index.php/${correctName}`);
+            message.channel.send(`${correctName}`);
         } else {
             message.channel.send("Sorry, no clue what that is. Search improvements coming soon.");
         }

@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build --clean",
-    "start": "pwd; ls -al; node ./dist/index.js"
+    "start": "node ./dist/index.js"
   },
   "author": "",
   "license": "ISC",
