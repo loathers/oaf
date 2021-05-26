@@ -1,6 +1,6 @@
 import { Client, Message } from "discord.js";
 
-const ITEM_MATCHER = /\[\[(.*)\]\]/g;
+const ITEM_MATCHER = /\[\[([^\[\]]*)\]\]/g;
 const COMMAND_INVOCATION = "!";
 
 const HEART = "<3"
@@ -19,7 +19,7 @@ export class DiscordClient {
     }
 
     static onMessage(client: DiscordClient, message: Message): void {
-        console.log(`${message.createdTimestamp}: ${message.author.username} said "${message.content}`)
+        console.log(`${message.createdTimestamp}: ${message.author.username} said "${message.content}" in channel ${message.channel.toString}`)
         const content = message.content.toLowerCase();
         if (content && !message.author.bot) {
             for (let match of [...content.matchAll(ITEM_MATCHER)]) {
@@ -49,7 +49,7 @@ export class DiscordClient {
     }
 
     findItem(item: string, message: Message) {
-        message.channel.send(`I found a wiki search invocation for ${item}, but Phillammon hasn't taught me how to search the wiki yet.`)
+        message.channel.send(`I found a wiki search invocation for "${item}", but Phillammon hasn't taught me how to search the wiki yet.`)
     }
 
     start(token: string) : void {
