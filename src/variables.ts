@@ -28,7 +28,10 @@ export class VariableManager {
                 return secret[0].payload.data?.toString();
             }
         }
-        catch {}
+        catch (error){
+            console.log("Error thrown when seeking secret:");
+            throw(error);
+        }
         return undefined;
 
     }
