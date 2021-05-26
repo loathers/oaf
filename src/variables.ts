@@ -17,7 +17,7 @@ export class VariableManager {
     async getSecret(identifier: string): Promise<string | undefined> {
         try {
             const secret = await this._googleSecretClient.accessSecretVersion({
-                name: `${process.env.SECRET_PATH}/${identifier}/latest`,
+                name: `${process.env.SECRET_PATH}/${identifier}/versions/latest`,
             })
             console.log("Secret request returned.");
             console.log(secret);
