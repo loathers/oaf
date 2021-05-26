@@ -8,6 +8,6 @@ steps:
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: gcloud
-  args: ['run', 'deploy', 'oaf-js', '--image', 'gcr.io/$PROJECT_ID/oaf-js:$COMMIT_SHA', '--region', 'europe-west2', '--platform', 'managed']
+  args: ['app', 'deploy', 'oaf-js', '--image', 'gcr.io/$PROJECT_ID/oaf-js:$COMMIT_SHA', '--region', 'europe-west2']
 images:
 - gcr.io/$PROJECT_ID/oaf-js:$COMMIT_SHA
