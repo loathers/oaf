@@ -7,3 +7,4 @@ manual_scaling:
 
 env_variables:
   BUCKET_NAME: "example-gcs-bucket"
+  SECRET_PATH: "projects/266362068940/secrets"

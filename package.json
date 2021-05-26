@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/secret-manager": "^3.7.1",
     "discord.js": "^12.5.3",
     "dotenv": "^10.0.0"
   },

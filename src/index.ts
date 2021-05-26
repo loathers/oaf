@@ -1,12 +1,15 @@
-import * as dotenv from "dotenv";
+
 import { DiscordClient } from "./discord";
 import { attachUtils } from "./utils";
+import { VariableManager } from "./variables";
 
-dotenv.config({ path: __dirname+'/.env' });
 
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN || "";
+const varManager = new VariableManager();
 
 const client = new DiscordClient();
 attachUtils(client);
 
-client.start(DISCORD_TOKEN);
+varManager.get("DISCORD_TOKEN").then((discord_token) => {
+        client.start(discord_token || "");
+    }
+)
