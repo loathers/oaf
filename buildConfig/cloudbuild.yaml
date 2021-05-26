@@ -1,7 +1,4 @@
 steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '--tag=gcr.io/$PROJECT_ID/oaf-js', '.']
 - name: 'gcr.io/cloud-builders/gcloud'
   args: ['app', 'deploy']
 timeout: '1600s'
-images: ['gcr.io/$PROJECT_ID/oaf-js']
