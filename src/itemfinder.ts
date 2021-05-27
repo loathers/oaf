@@ -1,5 +1,6 @@
 import { VariableManager } from "./variables";
 import get from "axios";
+import { urlencoded } from "express";
 
 
 export class ItemFinder {
@@ -13,10 +14,10 @@ export class ItemFinder {
     }
 
     async findName(searchTerm: string): Promise<string | undefined> {
-        const searchTermCrushed = searchTerm.replace(/\s/g, '_').replace(/[^A-Za-z0-9_\-:\/\(\)\,\.\!\?\']/g, '');
+        const searchTermCrushed = searchTerm.replace(/[^A-Za-z0-9_\-:\/\(\)\,\.\!\?\'\%]\s/g, '');
         if (this._nameMap.has(searchTermCrushed)) return this._nameMap.get(searchTermCrushed);
         try {
-            const wikiResponse = await get(`http://kol.coldfront.net/thekolwiki/index.php?search=${searchTermCrushed}`);
+            const wikiResponse = await get(`http://kol.coldfront.net/thekolwiki/index.php?search=${encodeURI(searchTermCrushed)}`);
             const responseUrl = String(wikiResponse.request.res.responseUrl);
             if (responseUrl.indexOf("index.php?search=") < 0) return responseUrl;
         }
