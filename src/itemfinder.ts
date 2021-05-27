@@ -16,10 +16,20 @@ export class ItemFinder {
     async findName(searchTerm: string): Promise<string | undefined> {
         const searchTermCrushed = searchTerm.replace(/[^A-Za-z0-9_\-:\/\(\)\,\.\!\?\'\%]\s/g, '');
         if (this._nameMap.has(searchTermCrushed)) return this._nameMap.get(searchTermCrushed);
+        const wikiName = searchTermCrushed.replace(/\s/g, "_");
+        const wikiSearchName = searchTermCrushed.replace(/\s/g, "+");
+        console.log(wikiName);
+        console.log(wikiSearchName);
         try {
-            const wikiResponse = await get(`http://kol.coldfront.net/thekolwiki/index.php?search=${encodeURI(searchTermCrushed)}`);
-            const responseUrl = String(wikiResponse.request.res.responseUrl);
-            if (responseUrl.indexOf("index.php?search=") < 0) return responseUrl;
+            const directWikiResponse = await get(`https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`);
+            const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
+            if (directResponseUrl.indexOf("index.php?search=") < 0) return directResponseUrl;
+        }
+        catch {}
+        try {
+            const wikiSearchResponse = await get(`https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`);
+            const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
+            if (searchResponseUrl.indexOf("index.php?search=") < 0) return searchResponseUrl;
         }
         catch {}
         return undefined;
