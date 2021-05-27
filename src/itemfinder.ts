@@ -44,7 +44,7 @@ export class ItemFinder {
                     q: searchTerm,
                 }
             });
-            return(googleSearchResponse.data.items[0].formattedUrl);
+            return(googleSearchResponse.data.items[0].link);
         }
         catch (error) {console.log(error.toString())}
         console.log("Google search stumped, I give up");
