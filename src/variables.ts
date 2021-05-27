@@ -5,12 +5,11 @@ import * as dotenv from "dotenv";
 
 export class VariableManager {
     private _variables: Map<string, string | undefined> = new Map();
-    private _dotEnvConfig: dotenv.DotenvConfigOutput;
     private _googleSecretClient: SecretManagerServiceClient;
 
     constructor() {
         this._googleSecretClient = new SecretManagerServiceClient();
-        this._dotEnvConfig = dotenv.config({ path: __dirname+'/.env' });
+        dotenv.config({ path: __dirname+'/.env' });
     }
 
     set(identifier: string, value: string): void {

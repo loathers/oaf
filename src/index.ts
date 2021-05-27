@@ -13,6 +13,7 @@ const requiredVariables = [
     "DISCORD_TOKEN",
     "CUSTOM_SEARCH",
     "GOOGLE_API_KEY",
+    "COMMAND_SYMBOL",
 ]
 
 variableManager.fetchAll(requiredVariables).then(() => {

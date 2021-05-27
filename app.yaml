@@ -6,5 +6,7 @@ manual_scaling:
   instances: 1
 
 env_variables:
-  BUCKET_NAME: "example-gcs-bucket"
+  BUCKET_NAME: "oaf-js"
   SECRET_PATH: "projects/266362068940/secrets"
+  CUSTOM_SEARCH: "010256427742174561589:appcyrqmlxo"
+  COMMAND_SYMBOL: "!"
