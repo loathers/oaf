@@ -15,7 +15,7 @@ function roll(message: Message): void {
         const args = message.content.substring(6).split("d");            
         const diceCount = parseInt(args[0])
         const diceSize = parseInt(args[1])
-        if (diceCount === NaN || diceSize === NaN) message.channel.send("Something about that didn't work. Don't feed me garbage.");
+        if (isNaN(diceCount + diceSize)) message.channel.send("Something about that didn't work. Don't feed me garbage.");
         else if (diceCount > 100) message.channel.send("The number of dice you tried to roll is greater than 100. Try 100 or less.");
         else if (diceCount < 1) message.channel.send("Please roll at least one die.");
         else if (diceSize > 1000000) message.channel.send("The size of dice you tried to roll is greater than 1000000. Try 1000000 or less.");
