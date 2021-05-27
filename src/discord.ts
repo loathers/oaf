@@ -10,19 +10,18 @@ const RUDE = "<:rude2:585646615390584844><:rude3:585646615403167745>"
 export class DiscordClient {
     private _client: Client;
     private _itemFinder: ItemFinder;
-    private _variableManager: VariableManager;
+    private _discordToken: string;
     private _commands: Map<string, (message: Message) => void> = new Map();
     private _commandSymbol: string;
 
     constructor(variableManager: VariableManager) {
         this._client = new Client();
         this._itemFinder = new ItemFinder(variableManager);
-        this._variableManager = variableManager;
-        this._commandSymbol = "%%%DONOTINVOKE%%%";
+        this._discordToken = variableManager.get("DISCORD_TOKEN") || "";
+        this._commandSymbol = variableManager.get("COMMAND_SYMBOL") || "%%%NO COMMAND SYMBOL SET%%%";
 
         this._client.on('ready', () => {
             console.log(`Logged in as ${this._client?.user?.tag}!`);
-            this._commandSymbol = variableManager.get("COMMAND_SYMBOL") || this._commandSymbol;
         });
         this._client.on('message', async (message) => this.onMessage(message));
     }
@@ -67,6 +66,6 @@ export class DiscordClient {
     }
 
     start() : void {
-        this._client.login(this._variableManager.get("DISCORD_TOKEN"));
+        this._client.login(this._discordToken);
     }
 }
