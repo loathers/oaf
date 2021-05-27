@@ -1,9 +1,4 @@
-runtime: custom
-
-env: flex
-
-manual_scaling:
-  instances: 1
+runtime: nodejs14
 
 env_variables:
   BUCKET_NAME: "oaf-js"
