@@ -30,7 +30,12 @@ export class DiscordClient {
         console.log(`${message.createdTimestamp}: ${message.author.username} said "${message.content}" in channel ${message.channel}`)
         const content = message.content;
         if (content && !message.author.bot) {
-            for (let match of [...content.matchAll(ITEM_MATCHER)]) {
+            const matches = [...content.matchAll(ITEM_MATCHER)]
+            if (matches.length > 3) {
+                message.channel.send("Detected too many wiki invocations in one message. Returning first three invocations only.");
+                matches.length = 3;
+            }
+            for (let match of matches) {
                 const item = match[1];
                 console.log(`Found wiki invocation "${item}"`)
                 await this.findItem(item, message);
@@ -57,11 +62,12 @@ export class DiscordClient {
     }
 
     async findItem(item: string, message: Message): Promise<void> {
-        const correctName = await this._itemFinder.findName(item);
-        if (correctName) {
-            message.channel.send(`${correctName}`);
+        if (!item.length) message.channel.send("Need something to search.");
+        const embed = await this._itemFinder.itemfinderEmbed(item);
+        if (embed) {
+            message.channel.send(embed);
         } else {
-            message.channel.send("Sorry, no clue what that is. Search improvements coming soon.");
+            message.channel.send("The requested page couldn't be found. Please refine your search.");
         }
     }
 
