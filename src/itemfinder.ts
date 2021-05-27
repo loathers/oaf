@@ -18,7 +18,7 @@ export class ItemFinder {
         try {
             const wikiResponse = await get(`http://kol.coldfront.net/thekolwiki/index.php?search=${searchTermCrushed}`);
             const responseUrl = String(wikiResponse.request.res.responseUrl);
-            if (!responseUrl.indexOf("index.php?search=")) return responseUrl;
+            if (responseUrl.indexOf("index.php?search=") < 0) return responseUrl;
         }
         catch {}
         return undefined;
