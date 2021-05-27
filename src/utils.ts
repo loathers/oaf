@@ -3,10 +3,31 @@ import { DiscordClient } from "./discord";
 
 export function attachUtils(client: DiscordClient) {
     client.addCommand("8ball", eightBall);
+    client.addCommand("roll", roll);
 }
 
 function eightBall(message: Message): void {
     message.channel.send(eightBallRolls[Math.floor(Math.random() * eightBallRolls.length)])
+}
+
+function roll(message: Message): void {
+    try {
+        const args = message.content.substring(6).split("d");
+        if (parseInt(args[0]) > 100) message.channel.send("The number of dice you tried to roll is greater than 100. Try 100 or less.");
+        else if (parseInt(args[1]) > 1000000) message.channel.send("The size of dice you tried to roll is greater than 1000000. Try 1000000 or less.");
+        else {
+            let sum = 0;
+            const diceCount = parseInt(args[0])
+            const diceSize = parseInt(args[1])
+            for (let i = 0; i < diceCount; i++) {
+                sum += 1 + Math.floor(Math.random() * diceSize);
+            }
+            message.channel.send(`Rolled ${sum} on ${diceCount}d${diceSize}`);
+        }
+    }
+    catch {
+        message.channel.send("Something about that didn't work. Don't feed me garbage.")
+    }
 }
 
 const eightBallRolls = [
