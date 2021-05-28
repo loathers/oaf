@@ -64,7 +64,7 @@ export class WikiSearcher {
             const directWikiResponse = await get(`https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`);
             const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
             if (directResponseUrl.indexOf("index.php?search=") < 0) {
-                const name = WikiSearcher.nameFromWikiUrl(directResponseUrl)
+                const name = WikiSearcher.nameFromWikiPage( directResponseUrl, directWikiResponse.data)
                 this._nameMap.set(searchTermCrushed, {name: name, url: directResponseUrl})
                 return this._nameMap.get(searchTermCrushed);
             }
@@ -76,7 +76,7 @@ export class WikiSearcher {
             const wikiSearchResponse = await get(`https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`);
             const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
             if (searchResponseUrl.indexOf("index.php?search=") < 0) {
-                const name = WikiSearcher.nameFromWikiUrl(searchResponseUrl)
+                const name = WikiSearcher.nameFromWikiPage(searchResponseUrl, wikiSearchResponse.data)
                 this._nameMap.set(searchTermCrushed, {name: name, url: searchResponseUrl})
                 return this._nameMap.get(searchTermCrushed);
             }
@@ -92,7 +92,7 @@ export class WikiSearcher {
                     q: searchTerm,
                 }
             });
-            const name = WikiSearcher.nameFromWikiUrl(googleSearchResponse.data.items[0].link)
+            const name = WikiSearcher.nameFromWikiPage(googleSearchResponse.data.items[0].link, "")
             this._nameMap.set(searchTermCrushed, {name: name, url: googleSearchResponse.data.items[0].link})
             return this._nameMap.get(searchTermCrushed);
         }
@@ -101,7 +101,10 @@ export class WikiSearcher {
         return undefined;
     }
 
-    static nameFromWikiUrl(url: string): string {
+    static nameFromWikiPage(url: string, data: any): string {
+        //Mediawiki redirects are unreliable, so we can't just read off the url, so we do this horrible thing instead.
+        const titleMatch = String(data).match(/\<h1 id="firstHeading" class="firstHeading" lang="en">\s*<span dir="auto">(?<pageTitle>.+)<\/span><\/h1>/);
+        if (titleMatch?.groups && titleMatch.groups.pageTitle) return titleMatch.groups.pageTitle;
         return decodeURI(url.split("/index.php/")[1]).replace(/\_/g, " ");
     }
 }

@@ -1,4 +1,5 @@
 import { MessageEmbed } from "discord.js";
+import { decode } from "html-entities";
 
 export abstract class Thing {
     abstract name(): string;
@@ -57,7 +58,7 @@ export class Item implements Thing {
         if (data.length < 7) throw "Invalid data"
         return {
             id: parseInt(data[0]),
-            name: data[1],
+            name: decode(data[1]),
             descId: parseInt(data[2]),
             imageUrl: data[3],
             types: data[4],
