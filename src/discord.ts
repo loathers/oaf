@@ -1,5 +1,5 @@
 import { Client, Message } from "discord.js";
-import { ItemFinder } from "./itemfinder";
+import { WikiSearcher } from "./wikisearch";
 import { VariableManager } from "./variables";
 
 const ITEM_MATCHER = /\[\[([^\[\]]*)\]\]/g;
@@ -9,14 +9,14 @@ const RUDE = "<:rude2:585646615390584844><:rude3:585646615403167745>"
 
 export class DiscordClient {
     private _client: Client;
-    private _itemFinder: ItemFinder;
+    private _wikiSearcher: WikiSearcher;
     private _discordToken: string;
     private _commands: Map<string, (message: Message) => void> = new Map();
     private _commandSymbol: string;
 
-    constructor(variableManager: VariableManager) {
+    constructor(variableManager: VariableManager, wikiSearcher: WikiSearcher) {
         this._client = new Client();
-        this._itemFinder = new ItemFinder(variableManager);
+        this._wikiSearcher = wikiSearcher;
         this._discordToken = variableManager.get("DISCORD_TOKEN") || "";
         this._commandSymbol = variableManager.get("COMMAND_SYMBOL") || "%%%NO COMMAND SYMBOL SET%%%";
 
@@ -38,7 +38,7 @@ export class DiscordClient {
             for (let match of matches) {
                 const item = match[1];
                 console.log(`Found wiki invocation "${item}"`)
-                await this.findItem(item, message);
+                await this.wikiSearch(item, message);
             }
 
             if (content.toLowerCase().includes("good bot")) message.reply(HEART);
@@ -61,9 +61,12 @@ export class DiscordClient {
         this._commands.set(command.toLowerCase(), functionToCall);
     }
 
-    async findItem(item: string, message: Message): Promise<void> {
-        if (!item.length) message.channel.send("Need something to search.");
-        const embed = await this._itemFinder.itemfinderEmbed(item);
+    async wikiSearch(item: string, message: Message): Promise<void> {
+        if (!item.length) {
+            message.channel.send("Need something to search.");
+            return;
+        }
+        const embed = await this._wikiSearcher.getEmbed(item);
         if (embed) {
             message.channel.send(embed);
         } else {

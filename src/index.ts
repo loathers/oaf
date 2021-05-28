@@ -1,5 +1,6 @@
 
 import { DiscordClient } from "./discord";
+import { WikiSearcher } from "./wikisearch";
 import { attachUtils } from "./utils";
 import { VariableManager } from "./variables";
 
@@ -12,10 +13,12 @@ const requiredVariables = [
 
 const variableManager = new VariableManager();
 variableManager.fetchAll(requiredVariables).then(() => {
-        const client = new DiscordClient(variableManager);
+    const wikiSearcher = new WikiSearcher(variableManager);
+    wikiSearcher.downloadMafiaData().then(() => {
+        const client = new DiscordClient(variableManager, wikiSearcher);
         
         attachUtils(client);
         
         client.start();
-    }
-)
+    });
+});

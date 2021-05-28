@@ -1,15 +1,16 @@
 import { VariableManager } from "./variables";
 import get from "axios";
-import { urlencoded } from "express";
-import { DiscordAPIError, MessageEmbed } from "discord.js";
+import { MessageEmbed } from "discord.js";
+import { Item, Thing } from "./things";
 
 type FoundName = {
     name: string,
     url: string,
 }
 
-export class ItemFinder {
+export class WikiSearcher {
     private _nameMap: Map<string, FoundName> = new Map();
+    private _thingMap: Map<string, Thing> = new Map();
     private _searchApiKey: string;
     private _customSearch: string;
 
@@ -18,16 +19,38 @@ export class ItemFinder {
         this._customSearch = variableManager.get("CUSTOM_SEARCH") || "";
     }
 
-    async itemfinderEmbed(item: string): Promise<MessageEmbed | undefined> {
+    async downloadMafiaData(): Promise<void> {
+        const itemFile = await get("https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/items.txt?format=raw");
+        for (let line of itemFile.data.split(/\n/)) {
+            try {
+                const item = new Item(line);
+                if (item.name() && !this._thingMap.has(item.name())) {
+                    this._thingMap.set(item.name(), item)
+                }
+            } catch {}
+        }
+    }
+
+    async reloadMafiaData(): Promise<void> {
+        this._thingMap.clear();
+        this.downloadMafiaData();
+    }
+
+    async getEmbed(item: string): Promise<MessageEmbed | undefined> {
         const foundName = await this.findName(item);
         if (!foundName) return undefined;
-        return new MessageEmbed()
+        const embed = new MessageEmbed()
             .setTitle(foundName.name)
             .setURL(foundName.url)
             .setFooter(
                 "Problems? Message Phillammon#2824 on discord.",
                 "http://images.kingdomofloathing.com/itemimages/oaf.gif" 
             )
+        if (this._thingMap.has(foundName.name.toLowerCase())) {
+            const thing = this._thingMap.get(foundName.name.toLowerCase());
+            thing?.addToEmbed(embed);
+        }
+        return embed 
     }
 
     async findName(searchTerm: string): Promise<FoundName | undefined> {
@@ -41,7 +64,7 @@ export class ItemFinder {
             const directWikiResponse = await get(`https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`);
             const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
             if (directResponseUrl.indexOf("index.php?search=") < 0) {
-                const name = ItemFinder.nameFromWikiUrl(directResponseUrl)
+                const name = WikiSearcher.nameFromWikiUrl(directResponseUrl)
                 this._nameMap.set(searchTermCrushed, {name: name, url: directResponseUrl})
                 return this._nameMap.get(searchTermCrushed);
             }
@@ -53,7 +76,7 @@ export class ItemFinder {
             const wikiSearchResponse = await get(`https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`);
             const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
             if (searchResponseUrl.indexOf("index.php?search=") < 0) {
-                const name = ItemFinder.nameFromWikiUrl(searchResponseUrl)
+                const name = WikiSearcher.nameFromWikiUrl(searchResponseUrl)
                 this._nameMap.set(searchTermCrushed, {name: name, url: searchResponseUrl})
                 return this._nameMap.get(searchTermCrushed);
             }
@@ -69,7 +92,7 @@ export class ItemFinder {
                     q: searchTerm,
                 }
             });
-            const name = ItemFinder.nameFromWikiUrl(googleSearchResponse.data.items[0].link)
+            const name = WikiSearcher.nameFromWikiUrl(googleSearchResponse.data.items[0].link)
             this._nameMap.set(searchTermCrushed, {name: name, url: googleSearchResponse.data.items[0].link})
             return this._nameMap.get(searchTermCrushed);
         }
