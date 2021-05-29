@@ -1,7 +1,7 @@
 import { VariableManager } from "./variables";
 import axios from "axios";
 import { MessageEmbed } from "discord.js";
-import { Effect, Item, Thing } from "./things";
+import { Effect, Familiar, Item, Skill, Thing } from "./things";
 import { KOLClient } from "./kolclient";
 
 type FoundName = {
@@ -29,6 +29,24 @@ export class WikiSearcher {
                 const effect = new Effect(line);
                 if (effect.name() && !this._thingMap.has(effect.name())) {
                     this._thingMap.set(effect.name(), effect)
+                }
+            } catch {}
+        }
+        const skillFile = await axios("https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/classskills.txt?format=raw");
+        for (let line of skillFile.data.split(/\n/)) {
+            try {
+                const skill = new Skill(line);
+                if (skill.name() && !this._thingMap.has(skill.name())) {
+                    this._thingMap.set(skill.name(), skill)
+                }
+            } catch {}
+        }
+        const familiarFile = await axios("https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/familiars.txt?format=raw");
+        for (let line of familiarFile.data.split(/\n/)) {
+            try {
+                const familiar = new Familiar(line);
+                if (familiar.name() && !this._thingMap.has(familiar.name())) {
+                    this._thingMap.set(familiar.name(), familiar)
                 }
             } catch {}
         }
@@ -105,7 +123,8 @@ export class WikiSearcher {
                 }
             });
             const name = WikiSearcher.nameFromWikiPage(googleSearchResponse.data.items[0].link, "")
-            this._nameMap.set(searchTermCrushed, {name: decodeURI(name), url: googleSearchResponse.data.items[0].link})
+            console.log(name)
+            this._nameMap.set(searchTermCrushed, {name: name, url: googleSearchResponse.data.items[0].link})
             return this._nameMap.get(searchTermCrushed);
         }
         catch (error) {console.log(error.toString())}
@@ -124,6 +143,6 @@ export class WikiSearcher {
                 default: return decodeURI(titleMatch.groups.pageTitle);
             }
         }
-        return decodeURI(url.split("/index.php/")[1]).replace(/\_/g, " ");
+        return decodeURIComponent(url.split("/index.php/")[1]).replace(/\_/g, " ");
     }
 }

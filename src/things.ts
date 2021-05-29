@@ -49,12 +49,8 @@ export class Item implements Thing {
         }
         else if (!this._item.discardable) description_string += "Cannot be discarded.\n\n";
 
-        switch (this._item.id) {
-            case 10637: description_string += "+1, 11, and 111 to a wide array of stats\n\n"; break;
-            default: 
-                const blueText = await client.getItemDescription(this._item.descId);  
-                if (blueText) description_string += `${blueText}\n\n`;
-        }
+        const blueText = await client.getItemDescription(this._item.descId);  
+        if (blueText) description_string += `${blueText}\n`;
 
         if (this._item.discardable && this._item.autosell > 0) {
             description_string += `Autosell value: ${this._item.autosell} meat.\n`;
@@ -104,7 +100,7 @@ export class Effect implements Thing {
     _name: string;
 
     constructor(data: string) {
-        this._effect = this.parseeffectData(data);
+        this._effect = this.parseEffectData(data);
         this._name = this._effect.name.toLowerCase();
     }
 
@@ -118,14 +114,10 @@ export class Effect implements Thing {
 
     async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
         embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
-        switch (this._effect.id) {
-            case 1301: embed.setDescription("+5 to basically everything"); break;
-            case 2469: embed.setDescription("Muscle +10%\nMysticality +10%\nMoxie +10%\n+5 Prismatic Damage\n+10 Prismatic Spell Damage\nSo-So Resistance to All Elements (+2)"); break;
-            default: embed.setDescription(await client.getEffectDescription(this._effect.descId));
-        }
+        embed.setDescription(`**Effect**\n${await client.getEffectDescription(this._effect.descId)}`);
     }
     
-    parseeffectData(effectData: string): EffectData {
+    parseEffectData(effectData: string): EffectData {
         const data = effectData.split(/\t/);
         if (data.length < 6) throw "Invalid data"
         return {
@@ -135,6 +127,104 @@ export class Effect implements Thing {
             descId: data[3],
             quality: data[4],
             attributes: data[5],
+        }
+    }
+}
+
+type SkillData = {
+    id: number,
+    name: string,
+    imageUrl: string,
+    type: string,
+    manaCost: number,
+    duration: number,
+    level?: number,
+}
+
+export class Skill implements Thing {
+    _skill: SkillData;
+    _name: string;
+
+    constructor(data: string) {
+        this._skill = this.parseSkillData(data);
+        this._name = this._skill.name.toLowerCase();
+    }
+
+    get(): SkillData {
+        return this._skill;
+    }
+
+    name(): string {
+        return this._name;
+    }
+
+    async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+        embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._skill.imageUrl}`);
+        switch (this._skill.id) {
+            default: embed.setDescription(await client.getSkillDescription(this._skill.id));
+        }
+    }
+    
+    parseSkillData(skillData: string): SkillData {
+        const data = skillData.split(/\t/);
+        if (data.length < 6) throw "Invalid data"
+        return {
+            id: parseInt(data[0]),
+            name: decode(data[1]),
+            imageUrl: data[2],
+            type: data[3],
+            manaCost: parseInt(data[4]),
+            duration: parseInt(data[5]),
+            level: data[6] ?  parseInt(data[6]) : undefined,
+        }
+    }
+}
+
+type FamiliarData = {
+    id: number,
+    name: string,
+    imageUrl: string,
+    type: string,
+    larva: string,
+    item: string,
+    attributes: string,
+}
+
+export class Familiar implements Thing {
+    _familiar: FamiliarData;
+    _name: string;
+
+    constructor(data: string) {
+        this._familiar = this.parseFamiliarData(data);
+        this._name = this._familiar.name.toLowerCase();
+    }
+
+    get(): FamiliarData {
+        return this._familiar;
+    }
+
+    name(): string {
+        return this._name;
+    }
+
+    async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+        embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._familiar.imageUrl}`);
+        let description_string = "**Familiar**\n"
+        description_string += `Hatchling: ${this._familiar.larva}\n${this._familiar.item ? `Equipment: ${this._familiar.item}\n` : ""}Attributes: ${this._familiar.attributes || "None"}`;
+        embed.setDescription(description_string);
+    }
+    
+    parseFamiliarData(familiarData: string): FamiliarData {
+        const data = familiarData.split(/\t/);
+        if (data.length < 10) throw "Invalid data"
+        return {
+            id: parseInt(data[0]),
+            name: decode(data[1]),
+            imageUrl: data[2],
+            type: data[3],
+            larva: data[4],
+            item: data[5],
+            attributes: data[10]? data[10].replace(/,/g, ", ") : "",
         }
     }
 }
