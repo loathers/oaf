@@ -120,13 +120,14 @@ export class Effect implements Thing {
         embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
         switch (this._effect.id) {
             case 1301: embed.setDescription("+5 to basically everything"); break;
+            case 2469: embed.setDescription("Muscle +10%\nMysticality +10%\nMoxie +10%\n+5 Prismatic Damage\n+10 Prismatic Spell Damage\nSo-So Resistance to All Elements (+2)"); break;
             default: embed.setDescription(await client.getEffectDescription(this._effect.descId));
         }
     }
     
     parseeffectData(effectData: string): EffectData {
         const data = effectData.split(/\t/);
-        if (data.length < 7) throw "Invalid data"
+        if (data.length < 6) throw "Invalid data"
         return {
             id: parseInt(data[0]),
             name: decode(data[1]),
