@@ -116,7 +116,14 @@ export class WikiSearcher {
     static nameFromWikiPage(url: string, data: any): string {
         //Mediawiki redirects are unreliable, so we can't just read off the url, so we do this horrible thing instead.
         const titleMatch = String(data).match(/\<h1 id="firstHeading" class="firstHeading" lang="en">\s*<span dir="auto">(?<pageTitle>.+)<\/span><\/h1>/);
-        if (titleMatch?.groups && titleMatch.groups.pageTitle) return decodeURI(titleMatch.groups.pageTitle);
+        if (titleMatch?.groups && titleMatch.groups.pageTitle) {
+            switch (titleMatch.groups.pageTitle.toLowerCase()) {
+                //Hooray for special cases.
+                case "%monster%":  return "%monster%";
+                case "glitch season reward name":  return "[glitch season reward name]";
+                default: return decodeURI(titleMatch.groups.pageTitle);
+            }
+        }
         return decodeURI(url.split("/index.php/")[1]).replace(/\_/g, " ");
     }
 }
