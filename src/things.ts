@@ -51,7 +51,9 @@ export class Item implements Thing {
 
         switch (this._item.id) {
             case 10637: description_string += "+1, 11, and 111 to a wide array of stats\n\n"; break;
-            default: description_string += `${await client.getItemDescription(this._item.descId)}\n\n`;
+            default: 
+                const blueText = await client.getItemDescription(this._item.descId);  
+                if (blueText) description_string += `${blueText}\n\n`;
         }
 
         if (this._item.discardable && this._item.autosell > 0) {
