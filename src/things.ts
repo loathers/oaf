@@ -44,10 +44,15 @@ export class Item implements Thing {
         if (this._item.quest) description_string += "Quest Item\n";
         else if (this._item.gift) description_string += "Gift Item\n";
         if (!this._item.tradeable) {
-            if (this._item.discardable) description_string += "Cannot be traded.\n";
-            else description_string += "Cannot be traded or discarded.\n";
+            if (this._item.discardable) description_string += "Cannot be traded.\n\n";
+            else description_string += "Cannot be traded or discarded.\n\n";
         }
-        else if (!this._item.discardable) description_string += "Cannot be discarded.\n";
+        else if (!this._item.discardable) description_string += "Cannot be discarded.\n\n";
+
+        switch (this._item.id) {
+            case 10637: description_string += "+1, 11, and 111 to a wide array of stats\n\n"; break;
+            default: description_string += `${await client.getItemDescription(this._item.descId)}\n\n`;
+        }
 
         if (this._item.discardable && this._item.autosell > 0) {
             description_string += `Autosell value: ${this._item.autosell} meat.\n`;
@@ -111,6 +116,10 @@ export class Effect implements Thing {
 
     async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
         embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
+        switch (this._effect.id) {
+            case 1301: embed.setDescription("+5 to basically everything"); break;
+            default: embed.setDescription(await client.getEffectDescription(this._effect.descId));
+        }
     }
     
     parseeffectData(effectData: string): EffectData {

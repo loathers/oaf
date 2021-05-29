@@ -91,4 +91,20 @@ export class KOLClient {
             limitedMallPrice: limitedMatch ? limitedMatch[1] : "",
         }
     }
+
+    async getItemDescription(descId: number): Promise<string> {
+        const description = await this.tryRequestWithLogin("desc_item.php", {
+            whichitem: descId,
+        });        
+        const blueText = description.match(/<center>\s?<b>\s?<font color="?[\w]+"?>(?<description>[\s\S]+)<\/blockquote>/);
+        return blueText ? blueText[1].replace(/<br>/g, "\n").replace(/<[^<>]+>/g, "").replace(/\n+/g, "\n") : "";
+    }
+
+    async getEffectDescription(descId: string): Promise<string> {
+        const description = await this.tryRequestWithLogin("desc_effect.php", {
+            whicheffect: descId,
+        });    
+        const blueText = description.match(/<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/);
+        return blueText ? blueText.replace(/<br>/g, "\n").replace(/<[^<>]+>/g, "").replace(/\n+/g, "\n") : "";
+    }
 }
