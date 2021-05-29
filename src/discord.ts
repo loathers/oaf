@@ -17,8 +17,8 @@ export class DiscordClient {
     constructor(variableManager: VariableManager, wikiSearcher: WikiSearcher) {
         this._client = new Client();
         this._wikiSearcher = wikiSearcher;
-        this._discordToken = variableManager.get("DISCORD_TOKEN") || "";
-        this._commandSymbol = variableManager.get("COMMAND_SYMBOL") || "%%%NO COMMAND SYMBOL SET%%%";
+        this._discordToken = variableManager.get("DISCORD_TOKEN");
+        this._commandSymbol = variableManager.get("COMMAND_SYMBOL", "%%%NO COMMAND SYMBOL SET%%%");
 
         this._client.on('ready', () => {
             console.log(`Logged in as ${this._client?.user?.tag}!`);

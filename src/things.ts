@@ -1,9 +1,10 @@
 import { MessageEmbed } from "discord.js";
 import { decode } from "html-entities";
+import { KOLClient } from "./kolclient";
 
 export abstract class Thing {
     abstract name(): string;
-    abstract addToEmbed(embed: MessageEmbed): void;
+    abstract addToEmbed(embed: MessageEmbed, client: KOLClient): void;
 }
 
 type ItemData = {
@@ -37,7 +38,7 @@ export class Item implements Thing {
         return this._name;
     }
 
-    addToEmbed(embed: MessageEmbed): void {
+    async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
         embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._item.imageUrl}`);
         let description_string = "";
         if (this._item.quest) description_string += "Quest Item\n";
@@ -47,8 +48,18 @@ export class Item implements Thing {
             else description_string += "Cannot be traded or discarded.\n";
         }
         else if (!this._item.discardable) description_string += "Cannot be discarded.\n";
+
         if (this._item.discardable && this._item.autosell > 0) {
             description_string += `Autosell value: ${this._item.autosell} meat.\n`;
+        }
+        if (this._item.tradeable) {
+            const {mallPrice, limitedMallPrice} = await client.getMallPrice(this._item.id);
+            if (mallPrice) {            
+                description_string += `Mall Price: ${mallPrice} meat`;
+                if (limitedMallPrice) description_string += ` (or ${limitedMallPrice} meat limited per day)`
+            }
+            else if (limitedMallPrice) description_string += `Mall Price: ${mallPrice} meat (only available limited per day)`;
+            else description_string += "Mall extinct."
         }
         embed.setDescription(description_string);
     }
@@ -68,6 +79,50 @@ export class Item implements Thing {
             discardable: data[5].indexOf("d") >= 0,
             autosell: parseInt(data[6]),
             pluralName: data[7] || `${data[1]}s`,
+        }
+    }
+}
+
+type EffectData = {
+    id: number,
+    name: string,
+    imageUrl: string,
+    descId: string,
+    quality: string,
+    attributes: string,
+}
+
+export class Effect implements Thing {
+    _effect: EffectData;
+    _name: string;
+
+    constructor(data: string) {
+        this._effect = this.parseeffectData(data);
+        this._name = this._effect.name.toLowerCase();
+    }
+
+    get(): EffectData {
+        return this._effect;
+    }
+
+    name(): string {
+        return this._name;
+    }
+
+    async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+        embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
+    }
+    
+    parseeffectData(effectData: string): EffectData {
+        const data = effectData.split(/\t/);
+        if (data.length < 7) throw "Invalid data"
+        return {
+            id: parseInt(data[0]),
+            name: decode(data[1]),
+            imageUrl: data[2],
+            descId: data[3],
+            quality: data[4],
+            attributes: data[5],
         }
     }
 }

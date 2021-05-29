@@ -1,7 +1,8 @@
 import { VariableManager } from "./variables";
-import get from "axios";
+import axios from "axios";
 import { MessageEmbed } from "discord.js";
-import { Item, Thing } from "./things";
+import { Effect, Item, Thing } from "./things";
+import { KOLClient } from "./kolclient";
 
 type FoundName = {
     name: string,
@@ -11,16 +12,27 @@ type FoundName = {
 export class WikiSearcher {
     private _nameMap: Map<string, FoundName> = new Map();
     private _thingMap: Map<string, Thing> = new Map();
+    private _client: KOLClient;
     private _searchApiKey: string;
     private _customSearch: string;
 
-    constructor(variableManager: VariableManager) {
-        this._searchApiKey = variableManager.get("GOOGLE_API_KEY") || "";
-        this._customSearch = variableManager.get("CUSTOM_SEARCH") || "";
+    constructor(variableManager: VariableManager, client: KOLClient) {
+        this._searchApiKey = variableManager.get("GOOGLE_API_KEY");
+        this._customSearch = variableManager.get("CUSTOM_SEARCH");
+        this._client = client;
     }
 
     async downloadMafiaData(): Promise<void> {
-        const itemFile = await get("https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/items.txt?format=raw");
+        const effectsFile = await axios("https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/statuseffects.txt?format=raw");
+        for (let line of effectsFile.data.split(/\n/)) {
+            try {
+                const effect = new Effect(line);
+                if (effect.name() && !this._thingMap.has(effect.name())) {
+                    this._thingMap.set(effect.name(), effect)
+                }
+            } catch {}
+        }
+        const itemFile = await axios("https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/items.txt?format=raw");
         for (let line of itemFile.data.split(/\n/)) {
             try {
                 const item = new Item(line);
@@ -48,7 +60,7 @@ export class WikiSearcher {
             )
         if (this._thingMap.has(foundName.name.toLowerCase())) {
             const thing = this._thingMap.get(foundName.name.toLowerCase());
-            thing?.addToEmbed(embed);
+            await thing?.addToEmbed(embed, this._client);
         }
         return embed 
     }
@@ -61,7 +73,7 @@ export class WikiSearcher {
         const wikiSearchName = searchTerm.replace(/\s/g, "+");
         console.log("Trying precise wiki page");
         try {
-            const directWikiResponse = await get(`https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`);
+            const directWikiResponse = await axios(`https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`);
             const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
             if (directResponseUrl.indexOf("index.php?search=") < 0) {
                 const name = WikiSearcher.nameFromWikiPage( directResponseUrl, directWikiResponse.data)
@@ -73,7 +85,7 @@ export class WikiSearcher {
         console.log("Not found as wiki page");
         console.log("Trying wiki search");
         try {
-            const wikiSearchResponse = await get(`https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`);
+            const wikiSearchResponse = await axios(`https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`);
             const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
             if (searchResponseUrl.indexOf("index.php?search=") < 0) {
                 const name = WikiSearcher.nameFromWikiPage(searchResponseUrl, wikiSearchResponse.data)
@@ -85,7 +97,7 @@ export class WikiSearcher {
         console.log("Not found in wiki search");
         console.log("Trying google search");
         try {
-            const googleSearchResponse = await get(`https://www.googleapis.com/customsearch/v1`, {
+            const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
                 params: {
                     key: this._searchApiKey,
                     cx: this._customSearch,

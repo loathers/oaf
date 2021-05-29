@@ -16,12 +16,12 @@ export class VariableManager {
         this._variables.set(identifier, value);
     }
 
-    get(identifier: string): string | undefined {
-        return this._variables.get(identifier)
+    get(identifier: string, defaultResult?: string): string {
+        return this._variables.get(identifier) || defaultResult || "";
     }
 
     getNumber(identifier: string): number {
-        return parseInt(this.get(identifier) || "NaN");
+        return parseInt(this.get(identifier, "NaN"));
     }
 
     async fetchAll(identifiers: string[]): Promise<void> {
