@@ -105,6 +105,6 @@ export class KOLClient {
             whicheffect: descId,
         });    
         const blueText = description.match(/<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/);
-        return blueText ? blueText.replace(/<br>/g, "\n").replace(/<[^<>]+>/g, "").replace(/\n+/g, "\n") : "";
+        return blueText ? blueText[1].replace(/<br>/g, "\n").replace(/<[^<>]+>/g, "").replace(/\n+/g, "\n") : "";
     }
 }
