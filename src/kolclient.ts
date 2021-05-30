@@ -14,6 +14,22 @@ type KOLCredentials = {
   pwdhash?: string;
 };
 
+function sanitiseBlueText(blueText: string): string {
+  return decode(
+    blueText
+      .replace(/\r/g, "")
+      .replace(/\r/g, "")
+      .replace(/(<p><\/p>)|(<br>)|(<Br>)|(<br \/>)|(<Br \/>)/g, "\n")
+      .replace(/<[^<>]+>/g, "")
+      .replace(/(\n+)/g, "\n")
+      .replace(/(\n)+$/, "")
+  );
+}
+
+function indent(textToIndent: string): string {
+  return `${decode("&nbsp;&nbsp;&nbsp;​&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")}${textToIndent.replace(/\n/g, decode("\n​&nbsp;&nbsp;&nbsp;​&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"))}`;
+}
+
 export class KOLClient {
   private _loginParameters: URLSearchParams;
   private _credentials: KOLCredentials = {};
@@ -116,15 +132,15 @@ export class KOLClient {
     );
     const melting = description.match(/This item will disappear at the end of the day\./);
     const singleEquip = description.match(/ You may not equip more than one of these at a time\./);
-    return `${melting ? "Disappears at rollover.\n" : ""}${
+    return `${melting ? "Disappears at rollover\n" : ""}${
       singleEquip ? "Single equip only.\n" : ""
     }\n${
-      blueText ? `${this.sanitiseBlueText(blueText.groups.description)}${effect ? "\n\n" : ""}` : ""
+      blueText ? `${sanitiseBlueText(blueText.groups.description)}${effect ? "\n\n" : ""}` : ""
     }${
       effect
         ? `Gives ${effect.groups.duration} adventures of **${decode(
             effect.groups.effect
-          )}**:\n${await this.getEffectDescription(effect.groups.descid)}`
+          )}**:\n${indent(await this.getEffectDescription(effect.groups.descid))}`
         : ""
     }`;
   }
@@ -145,7 +161,7 @@ export class KOLClient {
     const blueText = description.match(
       /<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/
     );
-    return blueText ? this.sanitiseBlueText(blueText.groups.description) : "";
+    return blueText ? sanitiseBlueText(blueText.groups.description) : "";
   }
 
   async getSkillDescription(id: number): Promise<string> {
@@ -155,18 +171,6 @@ export class KOLClient {
     const blueText = description.match(
       /<blockquote[\s\S]+<[Cc]enter>(?<description>[\s\S]+)<\/[Cc]enter>/
     );
-    return blueText ? this.sanitiseBlueText(blueText.groups.description) : "";
-  }
-
-  private sanitiseBlueText(blueText: string): string {
-    return decode(
-      blueText
-        .replace(/\r/g, "")
-        .replace(/\r/g, "")
-        .replace(/(<p><\/p>)|(<br>)|(<Br>)|(<br \/>)|(<Br \/>)/g, "\n")
-        .replace(/<[^<>]+>/g, "")
-        .replace(/(\n+)/g, "\n")
-        .replace(/(\n)+$/, "")
-    );
+    return blueText ? sanitiseBlueText(blueText.groups.description) : "";
   }
 }
