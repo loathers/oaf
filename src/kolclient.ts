@@ -3,8 +3,10 @@ import axios from "axios";
 import { decode } from "html-entities";
 
 type MallPrice = {
-  mallPrice: string;
-  limitedMallPrice: string;
+  formattedMallPrice: string;
+  formattedLimitedMallPrice: string;
+  mallPrice: number;
+  limitedMallPrice: number;
 };
 
 type KOLCredentials = {
@@ -89,8 +91,10 @@ export class KOLClient {
     const unlimitedMatch = prices.match(/<td>unlimited:<\/td><td><b>(?<unlimitedPrice>[\d\,]+)/);
     const limitedMatch = prices.match(/<td>limited:<\/td><td><b>(?<limitedPrice>[\d\,]+)/);
     return {
-      mallPrice: unlimitedMatch ? unlimitedMatch[1] : "",
-      limitedMallPrice: limitedMatch ? limitedMatch[1] : "",
+      mallPrice: unlimitedMatch ? parseInt(unlimitedMatch[1].replace(/,/g, "")) : 0,
+      limitedMallPrice: limitedMatch ? parseInt(limitedMatch[1].replace(/,/g, "")) : 0,
+      formattedMallPrice: unlimitedMatch ? unlimitedMatch[1] : "",
+      formattedLimitedMallPrice: limitedMatch ? limitedMatch[1] : "",
     };
   }
 
@@ -111,7 +115,7 @@ export class KOLClient {
       /Effect: \s?<b>\s?<a[^\>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^\>]+>(?<effect>[\s\S]+)<\/a>[^\(]+\((?<duration>[\d]+)/
     );
     return `${
-      blueText ? `${this.sanitiseBlueText(blueText.groups.description)}${effect ? "\n" : ""}` : ""
+      blueText ? `${this.sanitiseBlueText(blueText.groups.description)}${effect ? "\n\n" : ""}` : ""
     }${
       effect
         ? `Gives ${effect.groups.duration} adventures of **${decode(
@@ -151,11 +155,12 @@ export class KOLClient {
   }
 
   private sanitiseBlueText(blueText: string): string {
+    console.log(blueText);
     return decode(
       blueText
         .replace(/\r/g, "")
         .replace(/\r/g, "")
-        .replace(/(<p><\/p>)|(<br>)|(<br \/>)/g, "\n")
+        .replace(/(<p><\/p>)|(<br>)|(<Br>)|(<br \/>)|(<Br \/>)/g, "\n")
         .replace(/<[^<>]+>/g, "")
         .replace(/(\n+)/g, "\n")
         .replace(/(\n)+$/, "")

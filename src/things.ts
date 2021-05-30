@@ -246,13 +246,14 @@ export class Item implements Thing {
     description_string = this._fullDescription;
 
     if (this._item.tradeable) {
-      const { mallPrice, limitedMallPrice } = await client.getMallPrice(this._item.id);
+      const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
+        await client.getMallPrice(this._item.id);
       if (mallPrice) {
-        description_string += `Mall Price: ${mallPrice} meat`;
-        if (limitedMallPrice)
-          description_string += ` (or ${limitedMallPrice} meat limited per day)`;
+        description_string += `Mall Price: ${formattedMallPrice} meat`;
+        if (limitedMallPrice && limitedMallPrice < mallPrice)
+          description_string += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
       } else if (limitedMallPrice)
-        description_string += `Mall Price: ${mallPrice} meat (only available limited per day)`;
+        description_string += `Mall Price: ${formattedLimitedMallPrice} meat (only available limited per day)`;
       else description_string += "Mall extinct.";
     }
     embed.setDescription(description_string);
