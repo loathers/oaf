@@ -157,12 +157,14 @@ export class Item implements Thing {
     }
     if (this._item.types.includes("offhand")) {
       const requirement = data[2].split(": ");
-      let equipString = `**Offhand ${data[3] === "shield" ? "Shield" : ""}**`;
+      const isShield = data[3] === "shield" 
+      let equipString = `**Offhand ${isShield ? "Shield" : ""}**`;
       equipString += ` (${data[1]} power${
         data[2] !== "none" && requirement[0] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
           : ""
       })\n`;
+      if (isShield) equipString += `Damage Reduction: ${parseInt(data[1])/15-1}\n`;
       return equipString;
     }
     //This is hideous. but hey.
@@ -201,7 +203,7 @@ export class Item implements Thing {
     if (this._item.types.includes("grow")) {
       return "**Familiar hatchling**\n";
     }
-    return "**Item**\n";
+    return "**Miscellaneous Item**\n";
   }
 
   get(): ItemData {
