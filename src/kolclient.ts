@@ -103,15 +103,15 @@ export class KOLClient {
         });        
         const blueText = description.match(/<[Cc]enter>\s?<b>\s?<font color="?[\w]+"?>(?<description>[\s\S]+)<\/[Cc]enter>/);
         const effect = description.match(/Effect: \s?<b>\s?<a[^\>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^\>]+>(?<effect>[\s\S]+)<\/a>[^\(]+\((?<duration>[\d]+)/);
-        return `${blueText ? `${this.sanitiseBlueText(blueText.groups.description)}\n` : ""}${effect ? `Gives ${effect.groups.duration} adventures of **${decode(effect.groups.effect)}**:\n${await this.getEffectDescription(effect.groups.descid)}` : ""}`;
+        return `${blueText ? `${this.sanitiseBlueText(blueText.groups.description)}${effect ? "\n" : ""}` : ""}${effect ? `Gives ${effect.groups.duration} adventures of **${decode(effect.groups.effect)}**:\n${await this.getEffectDescription(effect.groups.descid)}` : ""}`;
     }
 
     async getEffectDescription(descId: string): Promise<string> {
         switch (descId) {
             // Video... Games?
-            case "3d5280f646ac2a6b70e64eae72daa263": return "+5 to basically everything\n";
+            case "3d5280f646ac2a6b70e64eae72daa263": return "+5 to basically everything";
             // Spoon Boon
-            case "fa4374dcb3f6a5d3ff129b0be374fa1f": return "Muscle +10%\nMysticality +10%\nMoxie +10%\n+5 Prismatic Damage\n+10 Prismatic Spell Damage\nSo-So Resistance to All Elements (+2)\n";
+            case "fa4374dcb3f6a5d3ff129b0be374fa1f": return "Muscle +10%\nMysticality +10%\nMoxie +10%\n+5 Prismatic Damage\n+10 Prismatic Spell Damage\nSo-So Resistance to All Elements (+2)";
             default: //fall through
         }
         const description = await this.tryRequestWithLogin("desc_effect.php", {
@@ -130,6 +130,6 @@ export class KOLClient {
     }
 
     private sanitiseBlueText(blueText: string): string {
-        return blueText.replace(/\r/g, "").replace(/\r/g, "").replace(/(<p><\/p>)|(<br>)/g, "\n").replace(/<[^<>]+>/g, "").replace(/\n+/g, "\n").replace(/(\n)+$/, "")
+        return decode(blueText.replace(/\r/g, "").replace(/\r/g, "").replace(/(<p><\/p>)|(<br>)/g, "\n").replace(/<[^<>]+>/g, "").replace(/(\n+)/g, "\n").replace(/(\n)+$/, ""))
     }
 }

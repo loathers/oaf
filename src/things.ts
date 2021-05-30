@@ -12,7 +12,7 @@ type ItemData = {
     name: string,
     descId: number,
     imageUrl: string,
-    types: string,
+    types: string[],
     quest: boolean,
     gift: boolean,
     tradeable: boolean,
@@ -24,10 +24,129 @@ type ItemData = {
 export class Item implements Thing {
     _item: ItemData;
     _name: string;
+    _shortDescription: string = "";
+    _fullDescription: string = "";
+    _craftSting: string = "";
 
-    constructor(data: string) {
+    constructor(data: string, itemMap: Map<string, string[]>) {
         this._item = this.parseItemData(data);
         this._name = this._item.name.toLowerCase();
+        this._shortDescription = this.buildShortDescription(itemMap);
+    }
+
+    mapQuality(rawQuality: string): string {
+        switch (rawQuality) {
+            case "crappy": return "Crappy";
+            case "decent": return "Decent";
+            case "good": return "Good";
+            case "awesome": return "Awesome";
+            case "EPIC": return "EPIC";
+            default: return "????";
+        }
+    }
+
+    mapStat(rawStat: string): string {
+        switch (rawStat) {
+            case "Mys": return "Mysticality";
+            case "Mox": return "Moxie";
+            case "Mus": return "Muscle";
+            default: return "???";
+        }
+    }
+
+    buildShortDescription(itemMap: Map<string, string[]>): string {
+        const data = itemMap.get(this._name) || []
+        if (this._item.types.includes("food")) {
+            const advRange = data[4].split("-");
+            const size = parseInt(data[1]);
+            const average = advRange.length > 1 ? (parseInt(advRange[0]) + parseInt(advRange[1]))/2 : parseInt(data[4]);
+            let desc = `**${this.mapQuality(data[3])} food** (Size ${data[1]}${data[2] !== "1" ? `, requires level ${data[2]}` : ""})`
+            if (data[4] !== "0") {
+                desc += `\n${advRange.length > 1 ? `${advRange[0]}-${advRange[1]}` : data[4]} adventure${data[4] === "1" ? "" : "s"}` 
+                if (advRange.length > 1 || size > 1) {
+                    desc += ` (${advRange.length > 1 ? `Average ${average} adventure${data[4] === "1" ? "" : "s"}` : ""}`
+                    desc += `${size > 1 ? `${advRange.length > 1 ? ", " : ""}${average/size} per fullness` : ""})`;
+                }
+            }
+            desc += "\n\n"
+            return desc;
+        }
+        if (this._item.types.includes("booze")) {
+            const advRange = data[4].split("-");
+            const size = parseInt(data[1]);
+            const average = advRange.length > 1 ? (parseInt(advRange[0]) + parseInt(advRange[1]))/2 : parseInt(data[4]);
+            let desc = `**${this.mapQuality(data[3])} booze** (Potency ${data[1]}${data[2] !== "1" ? `, requires level ${data[2]}` : ""})`
+            if (data[4] !== "0") {
+                desc += `\n${advRange.length > 1 ? `${advRange[0]}-${advRange[1]}` : data[4]} adventure${data[4] === "1" ? "" : "s"}` 
+                if (advRange.length > 1 || size > 1) {
+                    desc += ` (${advRange.length > 1 ? `Average ${average} adventure${data[4] === "1" ? "" : "s"}` : ""}`
+                    desc += `${size > 1 ? `${advRange.length > 1 ? ", " : ""}${average/size} per inebriety` : ""})`;
+                }
+            }
+            desc += "\n\n"
+            return desc;
+        }
+        if (this._item.types.includes("spleen")) {
+            const advRange = data[4].split("-");
+            const size = parseInt(data[1]);
+            const average = advRange.length > 1 ? (parseInt(advRange[0]) + parseInt(advRange[1]))/2 : parseInt(data[4]);
+            let desc = `**${this.mapQuality(data[3])} spleen item** (Toxicity ${data[1]}${data[2] !== "1" ? `, requires level ${data[2]}` : ""})`
+            if (data[4] !== "0") {
+                desc += `\n${advRange.length > 1 ? `${advRange[0]}-${advRange[1]}` : data[4]} adventure${data[4] === "1" ? "" : "s"}` 
+                if (advRange.length > 1 || size > 1) {
+                    desc += ` (${advRange.length > 1 ? `Average ${average} adventure${data[4] === "1" ? "" : "s"}` : ""}`
+                    desc += `${size > 1 ? `${advRange.length > 1 ? ", " : ""}${average/size} per spleen` : ""})`;
+                }
+            }
+            desc += "\n\n"
+            return desc;
+        }
+        if (this._item.types.includes("weapon")) {
+            const requirement = data[2].split(": ")
+            const damage = parseInt(data[1])/10;
+            let equipString = `**${data[3]}**\n`
+            equipString += `${damage}-${damage*2} damage${data[2] !== "none" && requirement[0] !== "0" ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`: ""}\n`
+            return equipString;
+        }
+        if (this._item.types.includes("offhand")) {
+            const requirement = data[2].split(": ")
+            let equipString = `**Offhand ${data[4] === "shield" ? " Shield" : ""}**\n`;
+            equipString += `${data[1]} power${data[2] !== "none" && requirement[0] !== "0" ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`: ""}\n`
+            return equipString;
+        }
+        //This is hideous. but hey.
+        let equipmentType = "";
+        for (equipmentType of ["hat", "offhand", "container", "shirt", "pants", "accessory", "familiar", ""]){
+            if (this._item.types.includes(equipmentType)) break;
+        }
+        if (equipmentType) {
+            const requirement = data[2].split(": ")
+            let equipString = `**${equipmentType.charAt(0).toUpperCase() + equipmentType.slice(1)}**\n`
+            equipString += `${data[1]} power${data[2] !== "none" && requirement[0] !== "0" ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`: ""}\n`
+            return equipString;
+        }
+        if (this._item.types.includes("potion")) {
+            if (this._item.types.includes("combat")) return "**Potion** (also usable in combat)\n"
+            return "**Potion**\n"
+        }
+        if (this._item.types.includes("usable")) {
+            if (this._item.types.includes("combat")) return "**Usable item** (also usable in combat)\n"
+            return "**Usable item**\n"
+        }
+        if (this._item.types.includes("reusable")) {
+            if (this._item.types.includes("combat")) return "**Reusable item** (also usable in combat)\n"
+            return "**Reusable item**\n"
+        }
+        if (this._item.types.includes("combat")) {
+            return "**Combat item**\n"
+        }
+        if (this._item.types.includes("combat reusable")) {
+            return "**Reusable combat item**\n"
+        }
+        if (this._item.types.includes("grow")) {
+            return "**Familiar hatchling**\n"
+        }
+        return "**Item**\n"
     }
 
     get(): ItemData {
@@ -40,21 +159,31 @@ export class Item implements Thing {
 
     async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
         embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._item.imageUrl}`);
-        let description_string = "";
-        if (this._item.quest) description_string += "Quest Item\n";
-        else if (this._item.gift) description_string += "Gift Item\n";
-        if (!this._item.tradeable) {
-            if (this._item.discardable) description_string += "Cannot be traded.\n\n";
-            else description_string += "Cannot be traded or discarded.\n\n";
-        }
-        else if (!this._item.discardable) description_string += "Cannot be discarded.\n\n";
 
-        const blueText = await client.getItemDescription(this._item.descId);  
-        if (blueText) description_string += `${blueText}\n`;
 
-        if (this._item.discardable && this._item.autosell > 0) {
-            description_string += `Autosell value: ${this._item.autosell} meat.\n`;
+        let description_string = this._shortDescription;
+        
+        if (!this._fullDescription) {
+            if (this._item.quest) description_string += "Quest Item\n";
+            else if (this._item.gift) description_string += "Gift Item\n";
+            if (!this._item.tradeable) {
+                if (this._item.discardable) description_string += "Cannot be traded.\n\n";
+                else description_string += "Cannot be traded or discarded.\n\n";
+            }
+            else if (!this._item.discardable) description_string += "Cannot be discarded.\n\n";
+
+            const blueText = await client.getItemDescription(this._item.descId);  
+            if (blueText) description_string += `${blueText}\n\n`;
+
+
+            if (this._item.discardable && this._item.autosell > 0) {
+                description_string += `Autosell value: ${this._item.autosell} meat.\n`;
+            }
+            this._fullDescription = description_string;
         }
+
+        description_string = this._fullDescription;
+
         if (this._item.tradeable) {
             const {mallPrice, limitedMallPrice} = await client.getMallPrice(this._item.id);
             if (mallPrice) {            
@@ -75,7 +204,7 @@ export class Item implements Thing {
             name: decode(data[1]),
             descId: parseInt(data[2]),
             imageUrl: data[3],
-            types: data[4],
+            types: data[4].split(", "),
             quest: data[5].indexOf("q") >= 0,
             gift: data[5].indexOf("g") >= 0,
             tradeable: data[5].indexOf("t") >= 0,
@@ -98,6 +227,7 @@ type EffectData = {
 export class Effect implements Thing {
     _effect: EffectData;
     _name: string;
+    _description: string = "";
 
     constructor(data: string) {
         this._effect = this.parseEffectData(data);
@@ -114,7 +244,8 @@ export class Effect implements Thing {
 
     async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
         embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
-        embed.setDescription(`**Effect**\n${await client.getEffectDescription(this._effect.descId)}`);
+        if (!this._description) this._description = `**Effect**\n${await client.getEffectDescription(this._effect.descId)}`
+        embed.setDescription(this._description);
     }
     
     parseEffectData(effectData: string): EffectData {
@@ -144,6 +275,7 @@ type SkillData = {
 export class Skill implements Thing {
     _skill: SkillData;
     _name: string;
+    _description: string = "";
 
     constructor(data: string) {
         this._skill = this.parseSkillData(data);
@@ -158,8 +290,7 @@ export class Skill implements Thing {
         return this._name;
     }
 
-    async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
-        embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._skill.imageUrl}`);
+    async buildDescription(client: KOLClient): Promise<string> {
         let description = ""
         switch (this._skill.type) {
             case 0: description += "**Passive Skill**"; break;
@@ -177,7 +308,13 @@ export class Skill implements Thing {
         }
         description += "\n\n";
         description += await client.getSkillDescription(this._skill.id);
-        embed.setDescription(description);
+        return description;
+    }
+
+    async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+        embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._skill.imageUrl}`);
+        if (!this._description) this._description = await this.buildDescription(client);
+        embed.setDescription(this._description);
     }
     
     parseSkillData(skillData: string): SkillData {
@@ -208,6 +345,7 @@ type FamiliarData = {
 export class Familiar implements Thing {
     _familiar: FamiliarData;
     _name: string;
+    _description: string = "";
 
     constructor(data: string) {
         this._familiar = this.parseFamiliarData(data);
@@ -222,11 +360,16 @@ export class Familiar implements Thing {
         return this._name;
     }
 
-    async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
-        embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._familiar.imageUrl}`);
+    async buildDescription(client: KOLClient): Promise<string> {
         let description_string = "**Familiar**\n"
         description_string += `Hatchling: ${this._familiar.larva}\n${this._familiar.item ? `Equipment: ${this._familiar.item}\n` : ""}Attributes: ${this._familiar.attributes || "None"}`;
-        embed.setDescription(description_string);
+        return description_string;
+    }
+
+    async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+        embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._familiar.imageUrl}`);
+        if (!this._description) this._description = await this.buildDescription(client);
+        embed.setDescription(this._description);
     }
     
     parseFamiliarData(familiarData: string): FamiliarData {

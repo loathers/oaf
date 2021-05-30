@@ -3,6 +3,7 @@ import axios from "axios";
 import { MessageEmbed } from "discord.js";
 import { Effect, Familiar, Item, Skill, Thing } from "./things";
 import { KOLClient } from "./kolclient";
+import { decode } from "html-entities";
 
 type FoundName = {
     name: string,
@@ -23,6 +24,18 @@ export class WikiSearcher {
     }
 
     async downloadMafiaData(): Promise<void> {
+        const itemMap = new Map<string, string[]>()
+        for (let fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
+            const file = await axios(`https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/${fileName}.txt?format=raw`);
+            for (let line of file.data.split(/\n/)) {
+                try {
+                    const item = line.split("\t");
+                    if (item.length > 1) itemMap.set(decode(item[0]).toLowerCase(), item)
+                } catch {}
+            }
+        }
+
+
         const effectsFile = await axios("https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/statuseffects.txt?format=raw");
         for (let line of effectsFile.data.split(/\n/)) {
             try {
@@ -53,7 +66,7 @@ export class WikiSearcher {
         const itemFile = await axios("https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/items.txt?format=raw");
         for (let line of itemFile.data.split(/\n/)) {
             try {
-                const item = new Item(line);
+                const item = new Item(line, itemMap);
                 if (item.name() && !this._thingMap.has(item.name())) {
                     this._thingMap.set(item.name(), item)
                 }
@@ -123,7 +136,6 @@ export class WikiSearcher {
                 }
             });
             const name = WikiSearcher.nameFromWikiPage(googleSearchResponse.data.items[0].link, "")
-            console.log(name)
             this._nameMap.set(searchTermCrushed, {name: name, url: googleSearchResponse.data.items[0].link})
             return this._nameMap.get(searchTermCrushed);
         }
