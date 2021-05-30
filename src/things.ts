@@ -135,7 +135,7 @@ type SkillData = {
     id: number,
     name: string,
     imageUrl: string,
-    type: string,
+    type: number,
     manaCost: number,
     duration: number,
     level?: number,
@@ -160,9 +160,24 @@ export class Skill implements Thing {
 
     async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
         embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._skill.imageUrl}`);
-        switch (this._skill.id) {
-            default: embed.setDescription(await client.getSkillDescription(this._skill.id));
+        let description = ""
+        switch (this._skill.type) {
+            case 0: description += "**Passive Skill**"; break;
+            case 1: 
+            case 2: 
+            case 3: 
+            case 4: description += `**Skill**\nCost: ${this._skill.manaCost}mp`; break;
+            case 5: description += `**Combat Skill**\nCost: ${this._skill.manaCost}mp`; break;
+            case 6: description += `**Skill (Boris Song)**\nCost: ${this._skill.manaCost}mp`; break;
+            case 7: description += `**Combat/Noncombat Skill**\nCost: ${this._skill.manaCost}mp`; break;
+            case 8: description += `**Combat Passive Skill**`; break;
+            case 9: description += `**Skill (Expression)**\nCost: ${this._skill.manaCost}mp`; break;
+            case 10: description += `**Skill (Walk)**\nCost: ${this._skill.manaCost}mp`; break;
+            default: "**Skill**";
         }
+        description += "\n\n";
+        description += await client.getSkillDescription(this._skill.id);
+        embed.setDescription(description);
     }
     
     parseSkillData(skillData: string): SkillData {
@@ -172,7 +187,7 @@ export class Skill implements Thing {
             id: parseInt(data[0]),
             name: decode(data[1]),
             imageUrl: data[2],
-            type: data[3],
+            type: parseInt(data[3]),
             manaCost: parseInt(data[4]),
             duration: parseInt(data[5]),
             level: data[6] ?  parseInt(data[6]) : undefined,
