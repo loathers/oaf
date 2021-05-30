@@ -155,7 +155,6 @@ export class KOLClient {
   }
 
   private sanitiseBlueText(blueText: string): string {
-    console.log(blueText);
     return decode(
       blueText
         .replace(/\r/g, "")

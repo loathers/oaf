@@ -194,10 +194,10 @@ export class WikiSearcher {
     if (titleMatch?.groups && titleMatch.groups.pageTitle) {
       result = titleMatch.groups.pageTitle;
     } else result = decodeURIComponent(url.split("/index.php/")[1]).replace(/\_/g, " ");
-    if (result.endsWith(" (item)")) result.replace(" (item)", "");
-    if (result.endsWith(" (skill)")) result.replace(" (skill)", "");
-    if (result.endsWith(" (effect)")) result.replace(" (effect)", "");
-    if (result.endsWith(" (familiar)")) result.replace(" (familiar)", "");
+    if (result.endsWith(" (item)")) result = result.replace(" (item)", "");
+    if (result.endsWith(" (skill)")) result = result.replace(" (skill)", "");
+    if (result.endsWith(" (effect)")) result = result.replace(" (effect)", "");
+    if (result.endsWith(" (familiar)")) result = result.replace(" (familiar)", "");
     switch (result.toLowerCase()) {
       case "glitch season reward name":
         return "[glitch season reward name]";
