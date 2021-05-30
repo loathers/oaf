@@ -157,7 +157,7 @@ export class Item implements Thing {
     }
     if (this._item.types.includes("offhand")) {
       const requirement = data[2].split(": ");
-      let equipString = `**Offhand ${data[4] === "shield" ? " Shield" : ""}**`;
+      let equipString = `**Offhand ${data[3] === "shield" ? " Shield" : ""}**`;
       equipString += ` (${data[1]} power${
         data[2] !== "none" && requirement[0] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
@@ -169,7 +169,6 @@ export class Item implements Thing {
     let equipmentType = "";
     for (equipmentType of [
       "hat",
-      "offhand",
       "container",
       "shirt",
       "pants",
