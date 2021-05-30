@@ -245,7 +245,8 @@ export class Item implements Thing {
       } else if (!this._item.discardable) description_string += "Cannot be discarded.\n";
 
       const blueText = await client.getItemDescription(this._item.descId);
-      if (blueText) description_string += `${blueText}\n\n`;
+
+      if (blueText && blueText !== "\n") description_string += `${blueText}\n\n`;
 
       if (this._item.discardable && this._item.autosell > 0) {
         description_string += `Autosell value: ${this._item.autosell} meat.\n`;
