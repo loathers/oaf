@@ -145,38 +145,51 @@ export class Item implements Thing {
       return desc;
     }
     if (this._item.types.includes("weapon")) {
-      const requirement = data[2].split(": ");
+      const requirement = (data[2] || ": 0").split(": ");
       const damage = parseInt(data[1]) / 10;
       let equipString = `**${data[3]}**\n`;
       equipString += `${Math.round(damage)}-${Math.round(damage * 2)} damage${
-        data[2] !== "none" && requirement[0] !== "0"
+        data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
           : ""
       }\n`;
       return equipString;
     }
     if (this._item.types.includes("offhand")) {
-      const requirement = data[2].split(": ");
-      const isShield = data[3] === "shield" 
+      const requirement = (data[2] || ": 0").split(": ");
+      const isShield = data[3] === "shield";
       let equipString = `**Offhand ${isShield ? "Shield" : ""}**`;
       equipString += ` (${data[1]} power${
-        data[2] !== "none" && requirement[0] !== "0"
+        data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
           : ""
       })\n`;
-      if (isShield) equipString += `Damage Reduction: ${parseInt(data[1])/15-1}\n`;
+      if (isShield) equipString += `Damage Reduction: ${parseInt(data[1]) / 15 - 1}\n`;
       return equipString;
+    }
+    if (this._item.types.includes("container")) {
+      const requirement = (data[2] || ": 0").split(": ");
+      let equipString = `**Back**`;
+      equipString += ` (${data[1]} power${
+        data[2] !== "none" && requirement[1] !== "0"
+          ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
+          : ""
+      })\n`;
+      return equipString;
+    }
+    if (this._item.types.includes("familiar")) {
+      return `**Familiar Equipment**\n`;
     }
     //This is hideous. but hey.
     let equipmentType = "";
-    for (equipmentType of ["hat", "container", "shirt", "pants", "accessory", "familiar", ""]) {
+    for (equipmentType of ["hat", "shirt", "pants", "accessory", ""]) {
       if (this._item.types.includes(equipmentType)) break;
     }
     if (equipmentType) {
-      const requirement = data[2].split(": ");
+      const requirement = (data[2] || ": 0").split(": ");
       let equipString = `**${equipmentType.charAt(0).toUpperCase() + equipmentType.slice(1)}**`;
       equipString += ` (${data[1]} power${
-        data[2] !== "none" && requirement[0] !== "0"
+        data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
           : ""
       })\n`;
@@ -204,6 +217,10 @@ export class Item implements Thing {
       return "**Familiar hatchling**\n";
     }
     return "**Miscellaneous Item**\n";
+  }
+
+  addFamiliar(familiar: Familiar): void {
+    this._shortDescription += `Familiar: ${familiar.name()}\n`;
   }
 
   get(): ItemData {
@@ -254,7 +271,9 @@ export class Item implements Thing {
 
   parseItemData(itemData: string): ItemData {
     const data = itemData.split(/\t/);
-    if (data.length < 7) throw "Invalid data";
+    if (data.length < 7) {
+      throw "Invalid data";
+    }
     return {
       id: parseInt(data[0]),
       name: decode(data[1]),
@@ -456,8 +475,8 @@ export class Familiar implements Thing {
       name: decode(data[1]),
       imageUrl: data[2],
       type: data[3],
-      larva: data[4],
-      item: data[5],
+      larva: decode(data[4]),
+      item: decode(data[5]),
       attributes: data[10] ? data[10].replace(/,/g, ", ") : "",
     };
   }

@@ -37,36 +37,14 @@ export class WikiSearcher {
       }
     }
 
-    const effectsFile = await axios(
-      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/statuseffects.txt?format=raw"
-    );
-    for (let line of effectsFile.data.split(/\n/)) {
-      try {
-        const effect = new Effect(line);
-        if (effect.name() && !this._thingMap.has(effect.name())) {
-          this._thingMap.set(effect.name(), effect);
-        }
-      } catch {}
-    }
     const skillFile = await axios(
       "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/classskills.txt?format=raw"
     );
     for (let line of skillFile.data.split(/\n/)) {
       try {
         const skill = new Skill(line);
-        if (skill.name() && !this._thingMap.has(skill.name())) {
+        if (skill.name()) {
           this._thingMap.set(skill.name(), skill);
-        }
-      } catch {}
-    }
-    const familiarFile = await axios(
-      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/familiars.txt?format=raw"
-    );
-    for (let line of familiarFile.data.split(/\n/)) {
-      try {
-        const familiar = new Familiar(line);
-        if (familiar.name() && !this._thingMap.has(familiar.name())) {
-          this._thingMap.set(familiar.name(), familiar);
         }
       } catch {}
     }
@@ -76,8 +54,31 @@ export class WikiSearcher {
     for (let line of itemFile.data.split(/\n/)) {
       try {
         const item = new Item(line, itemMap);
-        if (item.name() && !this._thingMap.has(item.name())) {
+        if (item.name()) {
           this._thingMap.set(item.name(), item);
+        }
+      } catch (error) {}
+    }
+    const familiarFile = await axios(
+      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/familiars.txt?format=raw"
+    );
+    for (let line of familiarFile.data.split(/\n/)) {
+      try {
+        const familiar = new Familiar(line);
+        if (familiar.name()) {
+          this._thingMap.set(familiar.name(), familiar);
+          (this._thingMap.get(familiar.get().item.toLowerCase()) as Item).addFamiliar(familiar);
+        }
+      } catch {}
+    }
+    const effectsFile = await axios(
+      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/statuseffects.txt?format=raw"
+    );
+    for (let line of effectsFile.data.split(/\n/)) {
+      try {
+        const effect = new Effect(line);
+        if (effect.name()) {
+          this._thingMap.set(effect.name(), effect);
         }
       } catch {}
     }
