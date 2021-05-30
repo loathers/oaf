@@ -92,7 +92,7 @@ export class Item implements Thing {
       desc += "\n\n";
       return desc;
     }
-    if (this._item.types.includes("booze")) {
+    if (this._item.types.includes("drink")) {
       const advRange = data[4].split("-");
       const size = parseInt(data[1]);
       const average =
@@ -148,7 +148,7 @@ export class Item implements Thing {
       const requirement = data[2].split(": ");
       const damage = parseInt(data[1]) / 10;
       let equipString = `**${data[3]}**\n`;
-      equipString += `${damage}-${damage * 2} damage${
+      equipString += `${Math.round(damage)}-${Math.round(damage * 2)} damage${
         data[2] !== "none" && requirement[0] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
           : ""
@@ -157,7 +157,7 @@ export class Item implements Thing {
     }
     if (this._item.types.includes("offhand")) {
       const requirement = data[2].split(": ");
-      let equipString = `**Offhand ${data[3] === "shield" ? " Shield" : ""}**`;
+      let equipString = `**Offhand ${data[3] === "shield" ? "Shield" : ""}**`;
       equipString += ` (${data[1]} power${
         data[2] !== "none" && requirement[0] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
@@ -167,15 +167,7 @@ export class Item implements Thing {
     }
     //This is hideous. but hey.
     let equipmentType = "";
-    for (equipmentType of [
-      "hat",
-      "container",
-      "shirt",
-      "pants",
-      "accessory",
-      "familiar",
-      "",
-    ]) {
+    for (equipmentType of ["hat", "container", "shirt", "pants", "accessory", "familiar", ""]) {
       if (this._item.types.includes(equipmentType)) break;
     }
     if (equipmentType) {
@@ -192,13 +184,13 @@ export class Item implements Thing {
       if (this._item.types.includes("combat")) return "**Potion** (also usable in combat)\n";
       return "**Potion**\n";
     }
-    if (this._item.types.includes("usable")) {
-      if (this._item.types.includes("combat")) return "**Usable item** (also usable in combat)\n";
-      return "**Usable item**\n";
-    }
     if (this._item.types.includes("reusable")) {
       if (this._item.types.includes("combat")) return "**Reusable item** (also usable in combat)\n";
       return "**Reusable item**\n";
+    }
+    if (this._item.types.includes("usable") || this._item.types.includes("multiple")) {
+      if (this._item.types.includes("combat")) return "**Usable item** (also usable in combat)\n";
+      return "**Usable item**\n";
     }
     if (this._item.types.includes("combat")) {
       return "**Combat item**\n";
