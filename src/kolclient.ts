@@ -114,7 +114,11 @@ export class KOLClient {
     const effect = description.match(
       /Effect: \s?<b>\s?<a[^\>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^\>]+>(?<effect>[\s\S]+)<\/a>[^\(]+\((?<duration>[\d]+)/
     );
-    return `${
+    const melting = description.match(/This item will disappear at the end of the day\./);
+    const singleEquip = description.match(/ You may not equip more than one of these at a time\./);
+    return `${melting ? "Disappears at rollover.\n" : ""}${
+      singleEquip ? "Single equip only.\n" : ""
+    }\n${
       blueText ? `${this.sanitiseBlueText(blueText.groups.description)}${effect ? "\n\n" : ""}` : ""
     }${
       effect

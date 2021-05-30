@@ -158,7 +158,7 @@ export class Item implements Thing {
     if (this._item.types.includes("offhand")) {
       const requirement = (data[2] || ": 0").split(": ");
       const isShield = data[3] === "shield";
-      let equipString = `**Offhand ${isShield ? "Shield" : ""}**`;
+      let equipString = `**Offhand ${isShield ? "Shield" : "Item"}**`;
       equipString += ` (${data[1]} power${
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
@@ -169,7 +169,7 @@ export class Item implements Thing {
     }
     if (this._item.types.includes("container")) {
       const requirement = (data[2] || ": 0").split(": ");
-      let equipString = `**Back**`;
+      let equipString = `**Back Item**`;
       equipString += ` (${data[1]} power${
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
@@ -240,9 +240,9 @@ export class Item implements Thing {
       if (this._item.quest) description_string += "Quest Item\n";
       else if (this._item.gift) description_string += "Gift Item\n";
       if (!this._item.tradeable) {
-        if (this._item.discardable) description_string += "Cannot be traded.\n\n";
-        else description_string += "Cannot be traded or discarded.\n\n";
-      } else if (!this._item.discardable) description_string += "Cannot be discarded.\n\n";
+        if (this._item.discardable) description_string += "Cannot be traded.\n";
+        else description_string += "Cannot be traded or discarded.\n";
+      } else if (!this._item.discardable) description_string += "Cannot be discarded.\n";
 
       const blueText = await client.getItemDescription(this._item.descId);
       if (blueText) description_string += `${blueText}\n\n`;
