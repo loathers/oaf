@@ -130,6 +130,6 @@ export class KOLClient {
     }
 
     private sanitiseBlueText(blueText: string): string {
-        return blueText.replace(/\r/g, "").replace(/\r/g, "").replace(/(<p><\/p>)|(<br>)/g, "\n").replace(/<[^<>]+>/g, "").replace(/\n+/g, "\n")
+        return blueText.replace(/\r/g, "").replace(/\r/g, "").replace(/(<p><\/p>)|(<br>)/g, "\n").replace(/<[^<>]+>/g, "").replace(/\n+/g, "\n").replace(/(\n)+$/, "")
     }
 }
