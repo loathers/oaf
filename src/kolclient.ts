@@ -211,20 +211,20 @@ export class KOLClient {
 
   private extractDreadOverview(raidLog: string): DreadStatus {
     const forest = raidLog.match(
-      /Your clan has defeated <b>(?<forest>[\d]+)<\/b> monster\(s\) in the Forest/
+      /Your clan has defeated <b>(?<forest>[\d,]+)<\/b> monster\(s\) in the Forest/
     );
     const village = raidLog.match(
-      /Your clan has defeated <b>(?<village>[\d]+)<\/b> monster\(s\) in the Village/
+      /Your clan has defeated <b>(?<village>[\d,]+)<\/b> monster\(s\) in the Village/
     );
     const castle = raidLog.match(
-      /Your clan has defeated <b>(?<castle>[\d]+)<\/b> monster\(s\) in the Castle/
+      /Your clan has defeated <b>(?<castle>[\d,]+)<\/b> monster\(s\) in the Castle/
     );
     const capacitor = raidLog.match(/fixed The Machine \(1 turn\)/);
     const skills = raidLog.match(/used The Machine, assisted by/g);
     return {
-      forest: 1000 - (forest ? parseInt(forest.groups?.forest || "0") : 0),
-      village: 1000 - (village ? parseInt(village.groups?.village || "0") : 0),
-      castle: 1000 - (castle ? parseInt(castle.groups?.castle || "0") : 0),
+      forest: 1000 - (forest ? parseInt(forest.groups?.forest.replace(",", "") || "0") : 0),
+      village: 1000 - (village ? parseInt(village.groups?.village.replace(",", "") || "0") : 0),
+      castle: 1000 - (castle ? parseInt(castle.groups?.castle.replace(",", "") || "0") : 0),
       skills: skills ? 3 - skills.length : 3,
       capacitor: !!capacitor,
     };

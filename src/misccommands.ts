@@ -12,8 +12,7 @@ export function attachMiscCommands(client: DiscordClient) {
   );
   client.addCommand(
     "oops",
-    async (message) =>
-      await purge(message.channel as TextChannel, client, 1)
+    async (message) => await purge(message.channel as TextChannel, client, 1)
   );
 }
 
