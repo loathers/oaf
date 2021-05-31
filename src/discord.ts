@@ -33,7 +33,8 @@ export class DiscordClient {
     const content = message.content;
     if (content && !message.author.bot) {
       const matches = [...content.matchAll(ITEM_MATCHER)];
-      if (matches.length) message.channel.startTyping();
+      let searchingMessage = undefined;
+      if (matches.length) searchingMessage = await message.channel.send("Searching wiki...");
       if (matches.length > 3) {
         message.channel.send(
           "Detected too many wiki invocations in one message. Returning first three invocations only."
@@ -45,7 +46,7 @@ export class DiscordClient {
         console.log(`Found wiki invocation "${item}"`);
         await this.wikiSearch(item, message);
       }
-      message.channel.stopTyping();
+      if (searchingMessage) searchingMessage.delete();
 
       if (content.toLowerCase().includes("good bot")) message.reply(HEART);
       if (content.toLowerCase().includes("bad bot")) message.reply(RUDE);

@@ -30,7 +30,9 @@ export function attachClanCommands(discordClient: DiscordClient, kolClient: KOLC
 
 async function clanStatus(message: Message, kolClient: KOLClient): Promise<void> {
   let messageString = "__DREAD STATUS__\n";
-  message.channel.send("Fetching status for all clans, back in a bit!");
+  const responseMessage = await message.channel.send(
+    "Fetching status for all clans, watch this space!"
+  );
   for (let clan of clans) {
     await kolClient.whitelist(clan.id);
     const overview = await kolClient.getDreadStatusOverview();
@@ -39,7 +41,7 @@ async function clanStatus(message: Message, kolClient: KOLClient): Promise<void>
       : "Needs capacitor";
     messageString += `**${clan.name}**: ${overview.forest}/${overview.village}/${overview.castle} (${capacitorString})\n`;
   }
-  await message.channel.send(messageString);
+  await responseMessage.edit(messageString);
 }
 
 async function detailedClanStatus(
@@ -54,7 +56,9 @@ async function detailedClanStatus(
     message.channel.send("Clan not recognised.");
     return;
   }
-  message.channel.send(`Fetching status for clan ${clan.name}, back in a bit!`);
+  const responseMessage = await message.channel.send(
+    `Fetching status for clan ${clan.name}, watch this space!!`
+  );
   await kolClient.whitelist(clan.id);
   const status = await kolClient.getDetailedDreadStatus();
   let returnString = `__**STATUS UPDATE FOR ${clan.name.toUpperCase()}**__\n`;
@@ -108,5 +112,5 @@ async function detailedClanStatus(
     else
       returnString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";
   } else returnString += "~~Castle fully cleared.~~\n";
-  message.channel.send(returnString);
+  await responseMessage.edit(returnString);
 }
