@@ -1,7 +1,7 @@
 import { VariableManager } from "./variables";
 import axios from "axios";
 import { MessageEmbed } from "discord.js";
-import { Effect, Familiar, Item, Skill, Thing } from "./things";
+import { Effect, Familiar, Item, Monster, Skill, Thing } from "./things";
 import { KOLClient } from "./kolclient";
 import { cleanString } from "./utils";
 
@@ -36,7 +36,6 @@ export class WikiSearcher {
         } catch {}
       }
     }
-
     const skillFile = await axios(
       "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/classskills.txt?format=raw"
     );
@@ -59,6 +58,19 @@ export class WikiSearcher {
         }
       } catch (error) {}
     }
+
+    const monsterFile = await axios(
+      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/monsters.txt?format=raw"
+    );
+    for (let line of monsterFile.data.split(/\n/)) {
+      try {
+        const monster = new Monster(line, this._thingMap);
+        if (monster.name()) {
+          this._thingMap.set(monster.name(), monster);
+        }
+      } catch {}
+    }
+
     const familiarFile = await axios(
       "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/familiars.txt?format=raw"
     );
