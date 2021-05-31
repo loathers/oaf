@@ -11,7 +11,7 @@ export class DiscordClient {
   private _client: Client;
   private _wikiSearcher: WikiSearcher;
   private _discordToken: string;
-  private _commands: Map<string, (message: Message) => void> = new Map();
+  private _commands: Map<string, (message: Message, args: string[]) => void> = new Map();
   private _commandSymbol: string;
 
   constructor(variableManager: VariableManager, wikiSearcher: WikiSearcher) {
@@ -57,7 +57,7 @@ export class DiscordClient {
         .substring(this._commandSymbol.length);
       console.log(`Found command "${commandString}"`);
       const command = this._commands.get(commandString);
-      if (command) command(message);
+      if (command) command(message, content.toLowerCase().split(" "));
       else message.channel.send("Command not recognised.");
     }
   }
@@ -66,7 +66,7 @@ export class DiscordClient {
     return this._client;
   }
 
-  addCommand(command: string, functionToCall: (message: Message) => void): void {
+  addCommand(command: string, functionToCall: (message: Message, args: string[]) => void): void {
     this._commands.set(command.toLowerCase(), functionToCall);
   }
 

@@ -10,11 +10,11 @@ function eightBall(message: Message): void {
   message.channel.send(eightBallRolls[Math.floor(Math.random() * eightBallRolls.length)]);
 }
 
-function roll(message: Message): void {
+function roll(message: Message, args: string[]): void {
   try {
-    const args = message.content.substring(6).split("d");
-    const diceCount = parseInt(args[0]);
-    const diceSize = parseInt(args[1]);
+    const dice = args[1].split("d");
+    const diceCount = parseInt(dice[0]);
+    const diceSize = parseInt(dice[1]);
     if (isNaN(diceCount + diceSize))
       message.channel.send("Something about that didn't work. Don't feed me garbage.");
     else if (diceCount > 100)
@@ -28,12 +28,15 @@ function roll(message: Message): void {
       );
     else if (diceSize < 0) message.channel.send("Please roll positive integer sized dice.");
     else {
-      let sum = 0;
-
+      let rolls = [];
       for (let i = 0; i < diceCount; i++) {
-        sum += 1 + Math.floor(Math.random() * diceSize);
+        rolls.push(Math.floor(Math.random() * diceSize) + 1);
       }
-      message.channel.send(`Rolled ${sum} on ${diceCount}d${diceSize}`);
+      message.channel.send(
+        `Rolled ${rolls.reduce(
+          (acc, curr) => acc + curr
+        )} on ${diceCount}d${diceSize} (Rolls: ${rolls.join(", ")})`
+      );
     }
   } catch {
     message.channel.send("Something about that didn't work. Don't feed me garbage.");

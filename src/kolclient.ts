@@ -23,6 +23,35 @@ type DreadStatus = {
   capacitor: boolean;
 };
 
+type DreadForestStatus = {
+  attic: boolean;
+  watchtower: boolean;
+  auditor: boolean;
+  musicbox: boolean;
+  kiwi: boolean;
+  amber: boolean;
+};
+
+type DreadVillageStatus = {
+  schoolhouse: boolean;
+  suite: boolean;
+  hanging: boolean;
+};
+
+type DreadCastleStatus = {
+  lab: boolean;
+  roast: boolean;
+  banana: boolean;
+  agaricus: boolean;
+};
+
+type DetailedDreadStatus = {
+  overview: DreadStatus;
+  forest: DreadForestStatus;
+  village: DreadVillageStatus;
+  castle: DreadCastleStatus;
+};
+
 function sanitiseBlueText(blueText: string): string {
   return decode(
     blueText
@@ -180,25 +209,67 @@ export class KOLClient {
     return blueText ? sanitiseBlueText(blueText.groups.description) : "";
   }
 
-  async getDreadStatus(): Promise<DreadStatus> {
-    const description = await this.tryRequestWithLogin("clan_raidlogs.php", {});
-    const forest = description.match(
+  private extractDreadOverview(raidLog: string): DreadStatus {
+    const forest = raidLog.match(
       /Your clan has defeated <b>(?<forest>[\d]+)<\/b> monster\(s\) in the Forest/
     );
-    const village = description.match(
+    const village = raidLog.match(
       /Your clan has defeated <b>(?<village>[\d]+)<\/b> monster\(s\) in the Village/
     );
-    const castle = description.match(
+    const castle = raidLog.match(
       /Your clan has defeated <b>(?<castle>[\d]+)<\/b> monster\(s\) in the Castle/
     );
-    const capacitor = description.match(/fixed The Machine \(1 turn\)/);
-    const skills = description.match(/used The Machine, assisted by/g);
+    const capacitor = raidLog.match(/fixed The Machine \(1 turn\)/);
+    const skills = raidLog.match(/used The Machine, assisted by/g);
     return {
-      forest: 1000 - (forest ? parseInt(forest.groups.forest) : 0),
-      village: 1000 - (village ? parseInt(village.groups.village) : 0),
-      castle: 1000 - (castle ? parseInt(castle.groups.castle) : 0),
+      forest: 1000 - (forest ? parseInt(forest.groups?.forest || "0") : 0),
+      village: 1000 - (village ? parseInt(village.groups?.village || "0") : 0),
+      castle: 1000 - (castle ? parseInt(castle.groups?.castle || "0") : 0),
       skills: skills ? 3 - skills.length : 3,
-      capacitor: capacitor,
+      capacitor: !!capacitor,
+    };
+  }
+
+  private extractDreadForest(raidLog: string): DreadForestStatus {
+    return {
+      attic: !!raidLog.match(/unlocked the attic of the cabin/),
+      watchtower: !!raidLog.match(/unlocked the fire watchtower/),
+      auditor: !!raidLog.match(/got a Dreadsylvanian auditor's badge/),
+      musicbox: !!raidLog.match(/made the forest less spooky/),
+      kiwi: !!raidLog.match(/got a blood kiwi/),
+      amber: !!raidLog.match(/acquired a chunk of moon-amber/),
+    };
+  }
+
+  private extractDreadVillage(raidLog: string): DreadVillageStatus {
+    return {
+      schoolhouse: !!raidLog.match(/unlocked the schoolhouse/),
+      suite: !!raidLog.match(/unlocked the master suite/),
+      hanging: !!raidLog.match(/hanged/),
+    };
+  }
+
+  private extractDreadCastle(raidLog: string): DreadCastleStatus {
+    return {
+      lab: !!raidLog.match(/unlocked the lab/),
+      roast: !!raidLog.match(/got some roast beast/),
+      banana: !!raidLog.match(/got a wax banana/),
+      agaricus: !!raidLog.match(/got some stinking agaric/),
+    };
+  }
+
+  async getDreadStatusOverview(): Promise<DreadStatus> {
+    const description = await this.tryRequestWithLogin("clan_raidlogs.php", {});
+    return this.extractDreadOverview(description);
+  }
+
+  async getDetailedDreadStatus(): Promise<DetailedDreadStatus> {
+    const raidLog = await this.tryRequestWithLogin("clan_raidlogs.php", {});
+    return {
+      overview: this.extractDreadOverview(raidLog),
+      forest: this.extractDreadForest(raidLog),
+      village: this.extractDreadVillage(raidLog),
+      castle: this.extractDreadCastle(raidLog),
     };
   }
 
