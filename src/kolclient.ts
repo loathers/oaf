@@ -15,6 +15,14 @@ type KOLCredentials = {
   pwdhash?: string;
 };
 
+type DreadStatus = {
+  forest: number;
+  village: number;
+  castle: number;
+  skills: number;
+  capacitor: boolean;
+};
+
 function sanitiseBlueText(blueText: string): string {
   return decode(
     blueText
@@ -170,5 +178,35 @@ export class KOLClient {
       /<blockquote[\s\S]+<[Cc]enter>(?<description>[\s\S]+)<\/[Cc]enter>/
     );
     return blueText ? sanitiseBlueText(blueText.groups.description) : "";
+  }
+
+  async getDreadStatus(): Promise<DreadStatus> {
+    const description = await this.tryRequestWithLogin("clan_raidlogs.php", {});
+    const forest = description.match(
+      /Your clan has defeated <b>(?<forest>[\d]+)<\/b> monster\(s\) in the Forest/
+    );
+    const village = description.match(
+      /Your clan has defeated <b>(?<village>[\d]+)<\/b> monster\(s\) in the Village/
+    );
+    const castle = description.match(
+      /Your clan has defeated <b>(?<castle>[\d]+)<\/b> monster\(s\) in the Castle/
+    );
+    const capacitor = description.match(/fixed The Machine \(1 turn\)/);
+    const skills = description.match(/used The Machine, assisted by/g);
+    return {
+      forest: 1000 - (forest ? parseInt(forest.groups.forest) : 0),
+      village: 1000 - (village ? parseInt(village.groups.village) : 0),
+      castle: 1000 - (castle ? parseInt(castle.groups.castle) : 0),
+      skills: skills ? 3 - skills.length : 3,
+      capacitor: capacitor,
+    };
+  }
+
+  async whitelist(id: number): Promise<void> {
+    await this.tryRequestWithLogin("showclan.php", {
+      whichclan: id,
+      action: "joinclan",
+      confirm: "on",
+    });
   }
 }

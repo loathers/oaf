@@ -1,7 +1,7 @@
 import { Message } from "discord.js";
 import { DiscordClient } from "./discord";
 
-export function miscCommands(client: DiscordClient) {
+export function attachMiscCommands(client: DiscordClient) {
   client.addCommand("8ball", eightBall);
   client.addCommand("roll", roll);
 }

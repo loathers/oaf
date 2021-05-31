@@ -1,8 +1,9 @@
 import { DiscordClient } from "./discord";
 import { WikiSearcher } from "./wikisearch";
-import { miscCommands } from "./misccommands";
+import { attachMiscCommands } from "./misccommands";
 import { VariableManager } from "./variables";
 import { KOLClient } from "./kolclient";
+import { attachClanCommands } from "./raidlogs";
 
 const requiredVariables = [
   "DISCORD_TOKEN",
@@ -18,10 +19,11 @@ variableManager.fetchAll(requiredVariables).then(() => {
   const kolClient = new KOLClient(variableManager);
   const wikiSearcher = new WikiSearcher(variableManager, kolClient);
   wikiSearcher.downloadMafiaData().then(() => {
-    const client = new DiscordClient(variableManager, wikiSearcher);
+    const discordClient = new DiscordClient(variableManager, wikiSearcher);
 
-    miscCommands(client);
+    attachMiscCommands(discordClient);
+    attachClanCommands(discordClient, kolClient);
 
-    client.start();
+    discordClient.start();
   });
 });
