@@ -1,7 +1,7 @@
 import { MessageEmbed } from "discord.js";
 import { FamiliarActionTypes, FAMILIAR_CLASSIFCATIONS, HARD_CODED_FAMILIARS } from "./constants";
 import { KOLClient } from "./kolclient";
-import { cleanString, indent } from "./utils";
+import { cleanString, indent, toWikiLink } from "./utils";
 
 export abstract class Thing {
   abstract name(): string;
@@ -250,11 +250,15 @@ export class Item implements Thing {
   }
 
   addGrowingFamiliar(familiar: Familiar): void {
-    this._addlDescription = `Grows into: **${familiar.get().name}**\n\n`;
+    this._addlDescription = `Grows into: **[${familiar.get().name}](${toWikiLink(
+      familiar.get().name
+    )})**\n\n`;
   }
 
   addEquppingFamiliar(familiar: Familiar): void {
-    this._addlDescription = `Familiar: ${familiar.name()}\n\n`;
+    this._addlDescription = `Familiar: [${familiar.get().name}](${toWikiLink(
+      familiar.get().name
+    )})\n\n`;
   }
 
   get(): ItemData {
@@ -280,11 +284,11 @@ export class Item implements Thing {
       const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
         await client.getMallPrice(this._item.id);
       if (mallPrice) {
-        price_section += `Mall Price: ${formattedMallPrice} meat`;
+        price_section += `Mall Price: [${formattedMallPrice} meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${this._item.id}&timespan=1&noanim=0)`;
         if (limitedMallPrice && limitedMallPrice < mallPrice)
           price_section += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
       } else if (limitedMallPrice)
-        price_section += `Mall Price: ${formattedLimitedMallPrice} meat (only available limited per day)`;
+        price_section += `Mall Price: [${formattedLimitedMallPrice} meat (only available limited per day)](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${this._item.id}&timespan=1&noanim=0)`;
       else price_section += "Mall extinct.";
     }
 
@@ -521,15 +525,15 @@ export class Familiar implements Thing {
     description_string += `${this.parseTypes()}\n`;
     description_string += `Attributes: ${this._familiar.attributes || "None"}\n\n`;
     if (this._familiar.larva)
-      description_string += `Hatchling: ${this._familiar.larva}\n${(
-        await this._hatchling?.buildFullDescription(client, false)
-      )
+      description_string += `Hatchling: [${this._familiar.larva}](${toWikiLink(
+        this._familiar.larva
+      )})\n${(await this._hatchling?.buildFullDescription(client, false))
         ?.substring(23)
         .replace(/\n+/g, "\n")}\n`;
     if (this._familiar.item)
-      description_string += `Equipment: ${this._familiar.item}\n${indent(
-        (await client.getItemDescription(this._equipment?.get().descId || 0)) || ""
-      )}`;
+      description_string += `Equipment: [${this._familiar.item}](${toWikiLink(
+        this._familiar.item
+      )})\n${indent((await client.getItemDescription(this._equipment?.get().descId || 0)) || "")}`;
     return description_string;
   }
 
@@ -683,7 +687,7 @@ export class Monster implements Thing {
         if (drop.attributes.accordion) {
           dropDesc += `${drop.item} (Stealable accordion)\n`;
         } else {
-          dropDesc += `${drop.item} (${
+          dropDesc += `[${drop.item}](${toWikiLink(drop.item)}) (${
             drop.droprate > 0 ? `${drop.droprate}%` : "Unknown droprate"
           }`;
           if (drop.attributes.pickpocketOnly) dropDesc += ", pickpocket only";

@@ -10,3 +10,7 @@ export function indent(textToIndent: string): string {
 export function cleanString(input: string): string {
   return decode(input).replace(/<[^>]+>/g, "");
 }
+
+export function toWikiLink(input: string): string {
+  return `https://kol.coldfront.net/thekolwiki/index.php/${input.replace(/\s/g, "_")}`;
+}

@@ -1,7 +1,7 @@
 import { VariableManager } from "./variables";
 import axios from "axios";
 import { decode } from "html-entities";
-import { indent } from "./utils";
+import { cleanString, indent, toWikiLink } from "./utils";
 
 type MallPrice = {
   formattedMallPrice: string;
@@ -171,9 +171,11 @@ export class KOLClient {
     const singleEquipString = singleEquip ? "Single equip only.\n" : "";
     const blueTextString = blueText ? `${sanitiseBlueText(blueText.groups.description)}\n` : "";
     const effectString = effect
-      ? `Gives ${effect.groups.duration} adventures of **${decode(
+      ? `Gives ${effect.groups.duration} adventures of **[${cleanString(
           effect.groups.effect
-        )}**\n${indent(await this.getEffectDescription(effect.groups.descid))}\n`
+        )}](${toWikiLink(cleanString(effect.groups.effect))})**\n${indent(
+          await this.getEffectDescription(effect.groups.descid)
+        )}\n`
       : "";
     return `${meltingString}${singleEquipString}${blueTextString}${
       blueText && effect ? "\n" : ""
