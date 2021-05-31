@@ -738,6 +738,7 @@ export class Familiar implements Thing {
   async buildDescription(client: KOLClient): Promise<string> {
     let description_string = "**Familiar**\n";
     description_string += `${this.parseTypes()}\n`;
+    description_string += `Attributes: ${this._familiar.attributes || "None"}\n\n`;
     if (this._familiar.larva)
       description_string += `Hatchling: ${this._familiar.larva}\n${(
         await this._hatchling?.buildFullDescription(client)
@@ -747,8 +748,7 @@ export class Familiar implements Thing {
     if (this._familiar.item)
       description_string += `Equipment: ${this._familiar.item}\n${indent(
         (await client.getItemDescription(this._equipment?.get().descId || 0)) || ""
-      )}\n`;
-    description_string += `Attributes: ${this._familiar.attributes || "None"}`;
+      )}`;
     return description_string;
   }
 
