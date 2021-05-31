@@ -12,5 +12,7 @@ export function cleanString(input: string): string {
 }
 
 export function toWikiLink(input: string): string {
-  return `https://kol.coldfront.net/thekolwiki/index.php/${input.replace(/\s/g, "_")}`;
+  return `https://kol.coldfront.net/thekolwiki/index.php/${encodeURI(input.replace(/\s/g, "_"))
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29")}`;
 }
