@@ -1,7 +1,6 @@
 import { MessageEmbed } from "discord.js";
 import { decode } from "html-entities";
 import { KOLClient } from "./kolclient";
-import { indent } from "./utils";
 
 export abstract class Thing {
   abstract name(): string;
@@ -436,7 +435,7 @@ type FamiliarData = {
   id: number;
   name: string;
   imageUrl: string;
-  type: string;
+  types: string[];
   larva: string;
   item: string;
   attributes: string;
@@ -470,12 +469,80 @@ export class Familiar implements Thing {
     this._equipment = equipment;
   }
 
+  parseTypes(): string {
+    let types = "";
+    if (this._familiar.types.includes("none")) {
+      types += "Does nothing useful.\n";
+    }
+    if (this._familiar.types.includes("stat0")) {
+      types += "Boosts stat gains (volleyball formula).\n";
+    }
+    if (this._familiar.types.includes("stat1")) {
+      types += "Boosts stat gains (sombrero formula).\n";
+    }
+    if (this._familiar.types.includes("item0")) {
+      types += "Boosts item drops.\n";
+    }
+    if (this._familiar.types.includes("meat0")) {
+      types += "Boosts meat drops.\n";
+    }
+    if (this._familiar.types.includes("combat0")) {
+      types += "Deals physical damage in combat.\n";
+    }
+    if (this._familiar.types.includes("combat1")) {
+      types += "Deals elemental damage in combat.\n";
+    }
+    if (this._familiar.types.includes("block")) {
+      types += "Blocks enemy attacks.\n";
+    }
+    if (this._familiar.types.includes("delevel")) {
+      types += "Delevels enemies in combat.\n";
+    }
+    if (this._familiar.types.includes("hp0")) {
+      types += "Heals you during combat.\n";
+    }
+    if (this._familiar.types.includes("mp0")) {
+      types += "Restores your mp during combat.\n";
+    }
+    if (this._familiar.types.includes("meat1")) {
+      types += "Drops meat during combat.\n";
+    }
+    if (this._familiar.types.includes("stat2")) {
+      types += "Grants stats during combat.\n";
+    }
+    if (this._familiar.types.includes("other0")) {
+      types += "Does something unusual during combat.\n";
+    }
+    if (this._familiar.types.includes("hp1")) {
+      types += "Heals you after combat.\n";
+    }
+    if (this._familiar.types.includes("mp1")) {
+      types += "Restores your mp after combat.\n";
+    }
+    if (this._familiar.types.includes("stat3")) {
+      types += "Boosts stat gains (unusual formula).\n";
+    }
+    if (this._familiar.types.includes("other1")) {
+      types += "Does something unusual after combat.\n";
+    }
+    if (this._familiar.types.includes("passive")) {
+      types += "Grants a passive benefit.\n";
+    }
+    if (this._familiar.types.includes("drop")) {
+      types += "Drops special items.\n";
+    }
+    if (this._familiar.types.includes("variable")) {
+      types += "Has varying abilities.\n";
+    }
+    if (this._familiar.types.includes("underwater")) {
+      types += "Can naturally breathe underwater.\n";
+    }
+    return types;
+  }
+
   async buildDescription(client: KOLClient): Promise<string> {
     let description_string = "**Familiar**\n";
-    description_string += "Familiar types go here\n\n";
-    console.log(
-      ((await this._hatchling?.buildFullDescription(client)) || "").replace(/\n/g, "NEWLINE")
-    );
+    description_string += `${this.parseTypes()}\n`;
     if (this._familiar.larva)
       description_string += `Hatchling: ${this._familiar.larva}\n${(
         await this._hatchling?.buildFullDescription(client)
@@ -501,7 +568,7 @@ export class Familiar implements Thing {
       id: parseInt(data[0]),
       name: decode(data[1]),
       imageUrl: data[2],
-      type: data[3],
+      types: data[3].split(","),
       larva: decode(data[4]),
       item: decode(data[5]),
       attributes: data[10] ? data[10].replace(/,/g, ", ") : "",
