@@ -7,7 +7,8 @@ export function attachMiscCommands(client: DiscordClient) {
   client.addCommand("roll", roll);
   client.addCommand(
     "purge",
-    async (message, args) => await purge(message.channel as TextChannel, client, parseInt(args[1]))
+    async (message, args) =>
+      await purge(message.channel as TextChannel, client, args[1] ? parseInt(args[1]) : 1)
   );
 }
 
