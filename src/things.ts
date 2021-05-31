@@ -27,6 +27,7 @@ export class Item implements Thing {
   _item: ItemData;
   _name: string;
   _shortDescription: string = "";
+  _addlDescription: string = "";
   _fullDescription: string = "";
   _craftSting: string = "";
 
@@ -96,7 +97,12 @@ export class Item implements Thing {
             advRange.length > 1 ? `Average ${average} adventure${data[4] === "1" ? "" : "s"}` : ""
           }`;
           desc += `${
-            size > 1 ? `${advRange.length > 1 ? ", " : ""}${average / size} per fullness` : ""
+            size > 1
+              ? `${advRange.length > 1 ? ", " : ""}${String(average / size).substring(
+                  0,
+                  4
+                )} per fullness`
+              : ""
           })`;
         }
       }
@@ -122,7 +128,12 @@ export class Item implements Thing {
             advRange.length > 1 ? `Average ${average} adventure${data[4] === "1" ? "" : "s"}` : ""
           }`;
           desc += `${
-            size > 1 ? `${advRange.length > 1 ? ", " : ""}${average / size} per inebriety` : ""
+            size > 1
+              ? `${advRange.length > 1 ? ", " : ""}${String(average / size).substring(
+                  0,
+                  4
+                )} per inebriety`
+              : ""
           })`;
         }
       }
@@ -148,7 +159,12 @@ export class Item implements Thing {
             advRange.length > 1 ? `Average ${average} adventure${data[4] === "1" ? "" : "s"}` : ""
           }`;
           desc += `${
-            size > 1 ? `${advRange.length > 1 ? ", " : ""}${average / size} per spleen` : ""
+            size > 1
+              ? `${advRange.length > 1 ? ", " : ""}${String(average / size).substring(
+                  0,
+                  4
+                )} per spleen`
+              : ""
           })`;
         }
       }
@@ -234,8 +250,12 @@ export class Item implements Thing {
     return `**Miscellaneous Item**\n${tradeability_section}`;
   }
 
-  addFamiliar(familiar: Familiar): void {
-    this._shortDescription += `Familiar: ${familiar.name()}\n\n`;
+  addGrowingFamiliar(familiar: Familiar): void {
+    this._addlDescription = `Grows into: **${familiar.get().name}**\n\n`;
+  }
+
+  addEquppingFamiliar(familiar: Familiar): void {
+    this._addlDescription = `Familiar: ${familiar.name()}\n\n`;
   }
 
   get(): ItemData {
@@ -246,8 +266,8 @@ export class Item implements Thing {
     return this._name;
   }
 
-  async buildFullDescription(client: KOLClient): Promise<string> {
-    let description_string = this._shortDescription;
+  async buildFullDescription(client: KOLClient, withAddl: boolean = true): Promise<string> {
+    let description_string = this._shortDescription + (withAddl ? this._addlDescription : "");
 
     let blueText = await client.getItemDescription(this._item.descId);
 
@@ -665,6 +685,7 @@ const hardCodedFamiliars: Map<string, string> = new Map([
   ["jumpsuited hound dog", "Massively boosts item drops.\nIncreases your combat frequency.\n"],
   ["magic dragonfish", "Increases your spell damage.\n"],
   ["peppermint rhino", "Boosts item drops, especially in Dreadsylvania.\n"],
+  ["melodramedary", "Boosts stat gains (volleyball-like).\nRestores your mp after combat.\n"],
   ["mu", "Increases your elemental resistances.\nDeals elemental damage in combat.\n"],
   ["mutant cactus bud", "Boosts meat drops based on Grimace Darkness.\n"],
   ["mutant fire ant", "Boosts item drops based on Grimace Darkness.\n"],
@@ -683,6 +704,8 @@ const hardCodedFamiliars: Map<string, string> = new Map([
   ],
   ["trick-or-treating tot", "Restores your hp and mp after combat.\nHas varying abilities.\n"],
   ["xiblaxian holo-companion", "Increases your combat initiative.\nStaggers enemies in combat.\n"],
+  ["black cat", "Is adorable.\nGenerally messes with you.\n"],
+  ["o.a.f.", "Is optimal.\nGenerally messes with you.\n"],
 ]);
 
 export class Familiar implements Thing {
@@ -741,7 +764,7 @@ export class Familiar implements Thing {
     description_string += `Attributes: ${this._familiar.attributes || "None"}\n\n`;
     if (this._familiar.larva)
       description_string += `Hatchling: ${this._familiar.larva}\n${(
-        await this._hatchling?.buildFullDescription(client)
+        await this._hatchling?.buildFullDescription(client, false)
       )
         ?.substring(23)
         .replace(/\n+/g, "\n")}\n`;
