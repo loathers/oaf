@@ -11,12 +11,12 @@ type Clan = {
 const clans: Clan[] = [
   {
     name: "Collaborative Dungeon Running 1",
-    synonyms: ["cdr1"],
+    synonyms: ["cdr1", "1"],
     id: 2047008362,
   },
   {
     name: "Collaborative Dungeon Running 2",
-    synonyms: ["cdr2"],
+    synonyms: ["cdr2", "2"],
     id: 2047008363,
   },
 ];
