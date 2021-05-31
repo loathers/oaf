@@ -10,6 +10,11 @@ export function attachMiscCommands(client: DiscordClient) {
     async (message, args) =>
       await purge(message.channel as TextChannel, client, parseInt(args[1]) ? parseInt(args[1]) : 1)
   );
+  client.addCommand(
+    "oops",
+    async (message) =>
+      await purge(message.channel as TextChannel, client, 1)
+  );
 }
 
 function eightBall(message: Message): void {
