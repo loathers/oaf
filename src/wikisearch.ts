@@ -66,6 +66,8 @@ export class WikiSearcher {
       try {
         const familiar = new Familiar(line);
         if (familiar.name()) {
+          familiar.addHatchling(this._thingMap.get(familiar.get().larva.toLowerCase()) as Item);
+          familiar.addEquipment(this._thingMap.get(familiar.get().item.toLowerCase()) as Item);
           this._thingMap.set(familiar.name(), familiar);
           (this._thingMap.get(familiar.get().item.toLowerCase()) as Item).addFamiliar(familiar);
         }

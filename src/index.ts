@@ -1,6 +1,6 @@
 import { DiscordClient } from "./discord";
 import { WikiSearcher } from "./wikisearch";
-import { attachUtils } from "./utils";
+import { miscCommands } from "./misccommands";
 import { VariableManager } from "./variables";
 import { KOLClient } from "./kolclient";
 
@@ -20,7 +20,7 @@ variableManager.fetchAll(requiredVariables).then(() => {
   wikiSearcher.downloadMafiaData().then(() => {
     const client = new DiscordClient(variableManager, wikiSearcher);
 
-    attachUtils(client);
+    miscCommands(client);
 
     client.start();
   });

@@ -1,6 +1,7 @@
 import { MessageEmbed } from "discord.js";
 import { decode } from "html-entities";
 import { KOLClient } from "./kolclient";
+import { indent } from "./utils";
 
 export abstract class Thing {
   abstract name(): string;
@@ -152,7 +153,7 @@ export class Item implements Thing {
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
           : ""
-      }\n`;
+      }\n\n`;
       return equipString;
     }
     if (this._item.types.includes("offhand")) {
@@ -163,7 +164,7 @@ export class Item implements Thing {
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
           : ""
-      })\n`;
+      })\n\n`;
       if (isShield) equipString += `Damage Reduction: ${parseInt(data[1]) / 15 - 1}\n`;
       return equipString;
     }
@@ -174,7 +175,7 @@ export class Item implements Thing {
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
           : ""
-      })\n`;
+      })\n\n`;
       return equipString;
     }
     if (this._item.types.includes("familiar")) {
@@ -192,7 +193,7 @@ export class Item implements Thing {
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
           : ""
-      })\n`;
+      })\n\n`;
       return equipString;
     }
     if (this._item.types.includes("potion")) {
@@ -220,7 +221,7 @@ export class Item implements Thing {
   }
 
   addFamiliar(familiar: Familiar): void {
-    this._shortDescription += `Familiar: ${familiar.name()}\n`;
+    this._shortDescription += `Familiar: ${familiar.name()}\n\n`;
   }
 
   get(): ItemData {
@@ -231,43 +232,48 @@ export class Item implements Thing {
     return this._name;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
-    embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._item.imageUrl}`);
-
+  async buildFullDescription(client: KOLClient): Promise<string> {
     let description_string = this._shortDescription;
 
-    if (!this._fullDescription) {
-      if (this._item.quest) description_string += "Quest Item\n";
-      else if (this._item.gift) description_string += "Gift Item\n";
-      if (!this._item.tradeable) {
-        if (this._item.discardable) description_string += "Cannot be traded.\n";
-        else description_string += "Cannot be traded or discarded.\n";
-      } else if (!this._item.discardable) description_string += "Cannot be discarded.\n";
+    let tradeability_section = "";
+    if (this._item.quest) tradeability_section += "Quest Item\n";
+    else if (this._item.gift) tradeability_section += "Gift Item\n";
+    if (!this._item.tradeable) {
+      if (this._item.discardable) tradeability_section += "Cannot be traded.";
+      else tradeability_section += "Cannot be traded or discarded.";
+    } else if (!this._item.discardable) tradeability_section += "Cannot be discarded.";
 
-      const blueText = await client.getItemDescription(this._item.descId);
+    let blueText = await client.getItemDescription(this._item.descId);
 
-      if (blueText && blueText !== "\n") description_string += `${blueText}\n\n`;
-
-      if (this._item.discardable && this._item.autosell > 0) {
-        description_string += `Autosell value: ${this._item.autosell} meat.\n`;
-      }
-      this._fullDescription = description_string;
+    let autosell = "";
+    if (this._item.discardable && this._item.autosell > 0) {
+      autosell += `Autosell value: ${this._item.autosell} meat.`;
     }
 
-    description_string = this._fullDescription;
-
+    let price_section = "";
     if (this._item.tradeable) {
       const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
         await client.getMallPrice(this._item.id);
       if (mallPrice) {
-        description_string += `Mall Price: ${formattedMallPrice} meat`;
+        price_section += `Mall Price: ${formattedMallPrice} meat`;
         if (limitedMallPrice && limitedMallPrice < mallPrice)
-          description_string += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
+          price_section += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
       } else if (limitedMallPrice)
-        description_string += `Mall Price: ${formattedLimitedMallPrice} meat (only available limited per day)`;
-      else description_string += "Mall extinct.";
+        price_section += `Mall Price: ${formattedLimitedMallPrice} meat (only available limited per day)`;
+      else price_section += "Mall extinct.";
     }
-    embed.setDescription(description_string);
+
+    if (tradeability_section) tradeability_section += "\n";
+    if (blueText && (autosell || price_section)) blueText += "\n";
+    if (autosell) autosell += "\n";
+    if (price_section) price_section += "\n";
+
+    return `${description_string}${tradeability_section}${blueText}${autosell}${price_section}`;
+  }
+
+  async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+    embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._item.imageUrl}`);
+    embed.setDescription(await this.buildFullDescription(client));
   }
 
   parseItemData(itemData: string): ItemData {
@@ -440,6 +446,8 @@ export class Familiar implements Thing {
   _familiar: FamiliarData;
   _name: string;
   _description: string = "";
+  _hatchling: Item | undefined;
+  _equipment: Item | undefined;
 
   constructor(data: string) {
     this._familiar = this.parseFamiliarData(data);
@@ -454,11 +462,29 @@ export class Familiar implements Thing {
     return this._name;
   }
 
+  addHatchling(hatchling: Item) {
+    this._hatchling = hatchling;
+  }
+
+  addEquipment(equipment: Item) {
+    this._equipment = equipment;
+  }
+
   async buildDescription(client: KOLClient): Promise<string> {
     let description_string = "**Familiar**\n";
-    description_string += `Hatchling: ${this._familiar.larva}\n${
-      this._familiar.item ? `Equipment: ${this._familiar.item}\n` : ""
-    }Attributes: ${this._familiar.attributes || "None"}`;
+    description_string += "Familiar types go here\n\n";
+    console.log(
+      ((await this._hatchling?.buildFullDescription(client)) || "").replace(/\n/g, "NEWLINE")
+    );
+    if (this._familiar.larva)
+      description_string += `Hatchling: ${this._familiar.larva}\n${(
+        await this._hatchling?.buildFullDescription(client)
+      )?.substring(23)}\n`;
+    if (this._familiar.item)
+      description_string += `Equipment: ${this._familiar.item}\n${await client.getItemDescription(
+        this._equipment?.get().descId || 0
+      )}\n`;
+    description_string += `Attributes: ${this._familiar.attributes || "None"}`;
     return description_string;
   }
 

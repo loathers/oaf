@@ -1,6 +1,7 @@
 import { VariableManager } from "./variables";
 import axios from "axios";
 import { decode } from "html-entities";
+import { indent } from "./utils";
 
 type MallPrice = {
   formattedMallPrice: string;
@@ -24,10 +25,6 @@ function sanitiseBlueText(blueText: string): string {
       .replace(/(\n+)/g, "\n")
       .replace(/(\n)+$/, "")
   );
-}
-
-function indent(textToIndent: string): string {
-  return `${decode("&nbsp;&nbsp;&nbsp;​&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")}${textToIndent.replace(/\n/g, decode("\n​&nbsp;&nbsp;&nbsp;​&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"))}`;
 }
 
 export class KOLClient {
@@ -132,17 +129,18 @@ export class KOLClient {
     );
     const melting = description.match(/This item will disappear at the end of the day\./);
     const singleEquip = description.match(/ You may not equip more than one of these at a time\./);
-    return `${melting ? "Disappears at rollover\n" : ""}${
-      singleEquip ? "Single equip only.\n" : ""
-    }\n${
-      blueText ? `${sanitiseBlueText(blueText.groups.description)}${effect ? "\n\n" : ""}` : ""
-    }${
-      effect
-        ? `Gives ${effect.groups.duration} adventures of **${decode(
-            effect.groups.effect
-          )}**:\n${indent(await this.getEffectDescription(effect.groups.descid))}`
-        : ""
-    }`;
+
+    const meltingString = melting ? "Disappears at rollover\n" : "";
+    const singleEquipString = singleEquip ? "Single equip only.\n" : "";
+    const blueTextString = blueText ? `${sanitiseBlueText(blueText.groups.description)}\n` : "";
+    const effectString = effect
+      ? `Gives ${effect.groups.duration} adventures of **${decode(
+          effect.groups.effect
+        )}**\n${indent(await this.getEffectDescription(effect.groups.descid))}\n`
+      : "";
+    return `${meltingString}${singleEquipString}${blueTextString}${
+      blueText && effect ? "\n" : ""
+    }${effectString}`;
   }
 
   async getEffectDescription(descId: string): Promise<string> {
