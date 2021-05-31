@@ -3,7 +3,7 @@ import axios from "axios";
 import { MessageEmbed } from "discord.js";
 import { Effect, Familiar, Item, Skill, Thing } from "./things";
 import { KOLClient } from "./kolclient";
-import { decode } from "html-entities";
+import { cleanString } from "./utils";
 
 type FoundName = {
   name: string;
@@ -32,7 +32,7 @@ export class WikiSearcher {
       for (let line of file.data.split(/\n/)) {
         try {
           const item = line.split("\t");
-          if (item.length > 1) itemMap.set(decode(item[0]).toLowerCase(), item);
+          if (item.length > 1) itemMap.set(cleanString(item[0]).toLowerCase(), item);
         } catch {}
       }
     }
