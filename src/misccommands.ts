@@ -7,7 +7,7 @@ export function attachMiscCommands(client: DiscordClient) {
   client.addCommand("roll", roll);
   client.addCommand(
     "purge",
-    async (message) => await purge(message.channel as TextChannel, client)
+    async (message, args) => await purge(message.channel as TextChannel, client, parseInt(args[1]))
   );
 }
 
@@ -48,11 +48,13 @@ function roll(message: Message, args: string[]): void {
   }
 }
 
-async function purge(channel: TextChannel, client: DiscordClient): Promise<void> {
+async function purge(channel: TextChannel, client: DiscordClient, quantity: number): Promise<void> {
+  let purged = 0;
   for (let message of (await channel.messages.fetch()).array()) {
     if (message.author.id === client?.client()?.user?.id) {
       await message.delete();
-      return;
+      purged += 1;
+      if (purged >= quantity) return;
     }
   }
 }
