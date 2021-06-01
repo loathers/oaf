@@ -128,9 +128,11 @@ export class WikiSearcher {
     if (!searchTerm.length) return undefined;
     if (this._nameMap.has(searchTerm.toLowerCase()))
       return this._nameMap.get(searchTerm.toLowerCase());
-    const wikiName = searchTerm.replace(/\s/g, "_");
-    const wikiSearchName = searchTerm.replace(/\s/g, "+");
-    const wikiSearchNameCrushed = searchTerm
+    const cleanedSearchTerm = emoteNamesFromEmotes(searchTerm);
+    console.log(cleanedSearchTerm);
+    const wikiName = cleanedSearchTerm.replace(/\s/g, "_");
+    const wikiSearchName = cleanedSearchTerm.replace(/\s/g, "+");
+    const wikiSearchNameCrushed = cleanedSearchTerm
       .replace(/[^A-Za-z0-9\s]/g, "")
       .toLowerCase()
       .replace(/\s/g, "+");
@@ -141,7 +143,7 @@ export class WikiSearcher {
       );
       const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
       if (directResponseUrl.indexOf("index.php?search=") < 0) {
-        const name = WikiSearcher.nameFromWikiPage(directResponseUrl, directWikiResponse.data);
+        const name = nameFromWikiPage(directResponseUrl, directWikiResponse.data);
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: directResponseUrl });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
@@ -156,7 +158,7 @@ export class WikiSearcher {
       );
       const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
       if (searchResponseUrl.indexOf("index.php?search=") < 0) {
-        const name = WikiSearcher.nameFromWikiPage(searchResponseUrl, wikiSearchResponse.data);
+        const name = nameFromWikiPage(searchResponseUrl, wikiSearchResponse.data);
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: searchResponseUrl });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
@@ -171,10 +173,7 @@ export class WikiSearcher {
       );
       const crushedSearchResponseUrl = String(crushedWikiSearchResponse.request.res.responseUrl);
       if (crushedSearchResponseUrl.indexOf("index.php?search=") < 0) {
-        const name = WikiSearcher.nameFromWikiPage(
-          crushedSearchResponseUrl,
-          crushedWikiSearchResponse.data
-        );
+        const name = nameFromWikiPage(crushedSearchResponseUrl, crushedWikiSearchResponse.data);
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: crushedSearchResponseUrl });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
@@ -191,7 +190,7 @@ export class WikiSearcher {
           q: searchTerm,
         },
       });
-      const name = WikiSearcher.nameFromWikiPage(googleSearchResponse.data.items[0].link, "");
+      const name = nameFromWikiPage(googleSearchResponse.data.items[0].link, "");
       this._nameMap.set(searchTerm.toLowerCase(), {
         name: name,
         url: googleSearchResponse.data.items[0].link,
@@ -203,25 +202,32 @@ export class WikiSearcher {
     console.log("Google search stumped, I give up");
     return undefined;
   }
+}
 
-  static nameFromWikiPage(url: string, data: any): string {
-    //Mediawiki redirects are unreliable, so we can't just read off the url, so we do this horrible thing instead.
-    const titleMatch = String(data).match(
-      /\<h1 id="firstHeading" class="firstHeading" lang="en">\s*<span dir="auto">(?<pageTitle>.+)<\/span><\/h1>/
-    );
-    let result = "";
-    if (titleMatch?.groups && titleMatch.groups.pageTitle) {
-      result = titleMatch.groups.pageTitle;
-    } else result = decodeURIComponent(url.split("/index.php/")[1]).replace(/\_/g, " ");
-    if (result.endsWith(" (item)")) result = result.replace(" (item)", "");
-    if (result.endsWith(" (skill)")) result = result.replace(" (skill)", "");
-    if (result.endsWith(" (effect)")) result = result.replace(" (effect)", "");
-    if (result.endsWith(" (familiar)")) result = result.replace(" (familiar)", "");
-    switch (result.toLowerCase()) {
-      case "glitch season reward name":
-        return "[glitch season reward name]";
-      default:
-        return result;
-    }
+function nameFromWikiPage(url: string, data: any): string {
+  //Mediawiki redirects are unreliable, so we can't just read off the url, so we do this horrible thing instead.
+  const titleMatch = String(data).match(
+    /\<h1 id="firstHeading" class="firstHeading" lang="en">\s*<span dir="auto">(?<pageTitle>.+)<\/span><\/h1>/
+  );
+  let result = "";
+  if (titleMatch?.groups && titleMatch.groups.pageTitle) {
+    result = titleMatch.groups.pageTitle;
+  } else result = decodeURIComponent(url.split("/index.php/")[1]).replace(/\_/g, " ");
+  if (result.endsWith(" (item)")) result = result.replace(" (item)", "");
+  if (result.endsWith(" (skill)")) result = result.replace(" (skill)", "");
+  if (result.endsWith(" (effect)")) result = result.replace(" (effect)", "");
+  if (result.endsWith(" (familiar)")) result = result.replace(" (familiar)", "");
+  switch (result.toLowerCase()) {
+    case "glitch season reward name":
+      return "[glitch season reward name]";
+    default:
+      return result;
   }
+}
+
+function emoteNamesFromEmotes(emoteString: string) {
+  return emoteString.replace(/\<:(?<emote>[a-zA-Z\-\_]+):[\d]+\>/g, (match) => {
+    const emoteName = match.match(/:(?<emote>[a-zA-Z\-\_]+):/);
+    return emoteName ? emoteName[1].replace(/:/g, "") : "";
+  });
 }
