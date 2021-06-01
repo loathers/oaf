@@ -43,7 +43,9 @@ function roll(message: Message, args: string[]): void {
         rolls.push(Math.floor(Math.random() * diceSize) + 1);
       }
       message.channel.send(
-        `Rolled ${rolls.reduce((acc, curr) => acc + curr)} total on ${diceCount}d${diceSize}${
+        `Rolled ${diceCount > 1 ? "a total of " : ""}${rolls.reduce(
+          (acc, curr) => acc + curr
+        )} on ${diceCount}d${diceSize}${
           diceCount > 1 ? ` (Individual rolls: ${rolls.join(", ")})` : "."
         }`
       );
