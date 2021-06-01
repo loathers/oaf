@@ -23,6 +23,7 @@ variableManager.fetchAll(requiredVariables).then(() => {
 
     attachMiscCommands(discordClient);
     attachClanCommands(discordClient, kolClient);
+    discordClient.attachWikiSearchCommand();
 
     discordClient.start();
   });

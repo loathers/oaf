@@ -1,4 +1,4 @@
-import { Client, Message } from "discord.js";
+import { Client, Message, Util } from "discord.js";
 import { WikiSearcher } from "./wikisearch";
 import { VariableManager } from "./variables";
 
@@ -33,23 +33,13 @@ export class DiscordClient {
     const content = message.content;
     if (content && !message.author.bot) {
       const matches = [...content.matchAll(ITEM_MATCHER)];
-      let searchingMessage = undefined;
-      if (matches.length) searchingMessage = await message.channel.send("Searching wiki...");
       if (matches.length > 3) {
         message.channel.send(
           "Detected too many wiki invocations in one message. Returning first three invocations only."
         );
         matches.length = 3;
       }
-      for (let match of matches) {
-        const item = match[1];
-        console.log(`Found wiki invocation "${item}"`);
-        await this.wikiSearch(item, message);
-      }
-      if (searchingMessage) searchingMessage.delete();
-
-      if (content.toLowerCase().includes("good bot")) message.reply(HEART);
-      if (content.toLowerCase().includes("bad bot")) message.reply(RUDE);
+      await Promise.all(matches.map((match) => this.wikiSearch(match[1], message)));
 
       if (!content.startsWith(this._commandSymbol)) return;
       const commandString = content
@@ -67,24 +57,36 @@ export class DiscordClient {
     return this._client;
   }
 
-  addCommand(command: string, functionToCall: (message: Message, args: string[]) => void): void {
+  attachCommand(command: string, functionToCall: (message: Message, args: string[]) => void): void {
     this._commands.set(command.toLowerCase(), functionToCall);
   }
 
   async wikiSearch(item: string, message: Message): Promise<void> {
+    const searchingMessage = await message.channel.send(
+      `Searching for "${Util.cleanContent(item, message)}"...`
+    );
     if (!item.length) {
-      message.channel.send("Need something to search.");
+      await searchingMessage.edit("Need something to search for.");
       return;
     }
     const embed = await this._wikiSearcher.getEmbed(item);
     if (embed) {
-      message.channel.send(embed);
+      searchingMessage.edit("", embed);
     } else {
-      message.channel.send("The requested page couldn't be found. Please refine your search.");
+      searchingMessage.edit(
+        `"${Util.cleanContent(item, message)}" wasn't found. Please refine your search.`
+      );
     }
   }
 
   start(): void {
     this._client.login(this._discordToken);
+  }
+
+  attachWikiSearchCommand() {
+    this.attachCommand(
+      "wiki",
+      async (message, args) => await this.wikiSearch(args.slice(1).join(" "), message)
+    );
   }
 }

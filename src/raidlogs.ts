@@ -22,8 +22,8 @@ const clans: Clan[] = [
 ];
 
 export function attachClanCommands(discordClient: DiscordClient, kolClient: KOLClient) {
-  discordClient.addCommand("status", (message) => clanStatus(message, kolClient));
-  discordClient.addCommand("clan", (message, args) =>
+  discordClient.attachCommand("status", (message) => clanStatus(message, kolClient));
+  discordClient.attachCommand("clan", (message, args) =>
     detailedClanStatus(message, args[1], kolClient)
   );
 }

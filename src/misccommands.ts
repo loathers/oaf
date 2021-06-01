@@ -3,14 +3,14 @@ import { EIGHTBALL_RESPONSES } from "./constants";
 import { DiscordClient } from "./discord";
 
 export function attachMiscCommands(client: DiscordClient) {
-  client.addCommand("8ball", eightBall);
-  client.addCommand("roll", roll);
-  client.addCommand(
+  client.attachCommand("8ball", eightBall);
+  client.attachCommand("roll", roll);
+  client.attachCommand(
     "purge",
     async (message, args) =>
       await purge(message.channel as TextChannel, client, parseInt(args[1]) ? parseInt(args[1]) : 1)
   );
-  client.addCommand(
+  client.attachCommand(
     "oops",
     async (message) => await purge(message.channel as TextChannel, client, 1)
   );
