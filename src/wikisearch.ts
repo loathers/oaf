@@ -129,7 +129,6 @@ export class WikiSearcher {
     if (this._nameMap.has(searchTerm.toLowerCase()))
       return this._nameMap.get(searchTerm.toLowerCase());
     const cleanedSearchTerm = emoteNamesFromEmotes(searchTerm);
-    console.log(cleanedSearchTerm);
     const wikiName = cleanedSearchTerm.replace(/\s/g, "_");
     const wikiSearchName = cleanedSearchTerm.replace(/\s/g, "+");
     const wikiSearchNameCrushed = cleanedSearchTerm
@@ -226,7 +225,7 @@ function nameFromWikiPage(url: string, data: any): string {
 }
 
 function emoteNamesFromEmotes(emoteString: string) {
-  return emoteString.replace(/\<:(?<emote>[a-zA-Z\-\_]+):[\d]+\>/g, (match) => {
+  return emoteString.replace(/\<a?:(?<emote>[a-zA-Z\-\_]+):[\d]+\>/g, (match) => {
     const emoteName = match.match(/:(?<emote>[a-zA-Z\-\_]+):/);
     return emoteName ? emoteName[1].replace(/:/g, "") : "";
   });
