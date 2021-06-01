@@ -96,7 +96,7 @@ async function detailedClanStatus(
     else {
       if (status.overview.capacitor)
         returnString += status.overview.skills
-          ? `${status.overview.skills} skill${status.overview.skills != 1 ? "s" : ""} available\n`
+          ? `${status.overview.skills} skill${status.overview.skills != 1 ? "s" : ""} available.\n`
           : "~~All skills claimed.~~\n";
       else returnString += "Machine needs repairing (with skull capacitor).\n";
     }
@@ -105,7 +105,7 @@ async function detailedClanStatus(
     if (status.castle.banana) returnString += "~~Wax banana claimed.~~\n";
     else
       returnString +=
-        "Wax banana available. (Great Hall -> Dining Room -> Levitate (requires myst class)\n";
+        "Wax banana available. (Great Hall -> Dining Room -> Levitate (requires myst class))\n";
     if (status.castle.agaricus) returnString += "~~Stinking agaricus claimed.~~\n";
     else
       returnString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";

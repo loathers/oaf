@@ -45,7 +45,7 @@ function roll(message: Message, args: string[]): void {
       message.channel.send(
         `Rolled ${rolls.reduce(
           (acc, curr) => acc + curr
-        )} on ${diceCount}d${diceSize} (Rolls: ${rolls.join(", ")})`
+        )} on ${diceCount}d${diceSize}${diceCount > 1 ? `(Rolls: ${rolls.join(", ")}` : ""}`
       );
     }
   } catch {
