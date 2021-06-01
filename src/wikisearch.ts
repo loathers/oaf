@@ -187,7 +187,7 @@ export class WikiSearcher {
         params: {
           key: this._searchApiKey,
           cx: this._customSearch,
-          q: searchTerm,
+          q: cleanedSearchTerm,
         },
       });
       const name = nameFromWikiPage(googleSearchResponse.data.items[0].link, "");
