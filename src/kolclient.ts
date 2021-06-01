@@ -2,6 +2,10 @@ import { VariableManager } from "./variables";
 import axios from "axios";
 import { decode } from "html-entities";
 import { cleanString, indent, toWikiLink } from "./utils";
+import { Mutex } from "async-mutex";
+
+const clanActionMutex = new Mutex();
+const loginMutex = new Mutex();
 
 type MallPrice = {
   formattedMallPrice: string;
@@ -11,6 +15,7 @@ type MallPrice = {
 };
 
 type KOLCredentials = {
+  fetched: number;
   sessionCookies?: string;
   pwdhash?: string;
 };
@@ -66,7 +71,7 @@ function sanitiseBlueText(blueText: string): string {
 
 export class KOLClient {
   private _loginParameters: URLSearchParams;
-  private _credentials: KOLCredentials = {};
+  private _credentials: KOLCredentials = { fetched: -1 };
 
   constructor(variableManager: VariableManager) {
     this._loginParameters = new URLSearchParams();
@@ -78,33 +83,38 @@ export class KOLClient {
   }
 
   async logIn(): Promise<void> {
-    try {
-      const loginResponse = await axios("https://www.kingdomofloathing.com/login.php", {
-        method: "POST",
-        data: this._loginParameters,
-        maxRedirects: 0,
-        validateStatus: (status) => status === 302,
-      });
-      const sessionCookies = loginResponse.headers["set-cookie"]
-        .map((cookie: string) => cookie.split(";")[0])
-        .join("; ");
-      const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
-        withCredentials: true,
-        headers: {
-          cookie: sessionCookies,
-        },
-        params: {
-          what: "status",
-          for: "OAF Discord bot for Kingdom of Loathing",
-        },
-      });
-      this._credentials = {
-        sessionCookies: sessionCookies,
-        pwdhash: apiResponse.data.pwd,
-      };
-    } catch (error) {
-      console.log(error);
-    }
+    await loginMutex.runExclusive(async () => {
+      try {
+        if (this._credentials.fetched < new Date().getTime() - 60000) {
+          const loginResponse = await axios("https://www.kingdomofloathing.com/login.php", {
+            method: "POST",
+            data: this._loginParameters,
+            maxRedirects: 0,
+            validateStatus: (status) => status === 302,
+          });
+          const sessionCookies = loginResponse.headers["set-cookie"]
+            .map((cookie: string) => cookie.split(";")[0])
+            .join("; ");
+          const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
+            withCredentials: true,
+            headers: {
+              cookie: sessionCookies,
+            },
+            params: {
+              what: "status",
+              for: "OAF Discord bot for Kingdom of Loathing",
+            },
+          });
+          this._credentials = {
+            fetched: new Date().getTime(),
+            sessionCookies: sessionCookies,
+            pwdhash: apiResponse.data.pwd,
+          };
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    });
   }
 
   private async makeCredentialedRequest(url: string, parameters: object) {
@@ -260,13 +270,13 @@ export class KOLClient {
     };
   }
 
-  async getDreadStatusOverview(): Promise<DreadStatus> {
-    const description = await this.tryRequestWithLogin("clan_raidlogs.php", {});
-    return this.extractDreadOverview(description);
+  async getDreadStatusOverview(clanId: number): Promise<DreadStatus> {
+    const raidLog = await this.getRaidLog(clanId);
+    return this.extractDreadOverview(raidLog);
   }
 
-  async getDetailedDreadStatus(): Promise<DetailedDreadStatus> {
-    const raidLog = await this.tryRequestWithLogin("clan_raidlogs.php", {});
+  async getDetailedDreadStatus(clanId: number): Promise<DetailedDreadStatus> {
+    const raidLog = await this.getRaidLog(clanId);
     return {
       overview: this.extractDreadOverview(raidLog),
       forest: this.extractDreadForest(raidLog),
@@ -275,7 +285,14 @@ export class KOLClient {
     };
   }
 
-  async whitelist(id: number): Promise<void> {
+  private async getRaidLog(clanId: number): Promise<string> {
+    return await clanActionMutex.runExclusive(async () => {
+      await this.whitelist(clanId);
+      return await this.tryRequestWithLogin("clan_raidlogs.php", {});
+    });
+  }
+
+  private async whitelist(id: number): Promise<void> {
     await this.tryRequestWithLogin("showclan.php", {
       whichclan: id,
       action: "joinclan",

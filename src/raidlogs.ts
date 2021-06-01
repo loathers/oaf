@@ -34,8 +34,7 @@ async function clanStatus(message: Message, kolClient: KOLClient): Promise<void>
     "Fetching status for all clans, watch this space!"
   );
   for (let clan of clans) {
-    await kolClient.whitelist(clan.id);
-    const overview = await kolClient.getDreadStatusOverview();
+    const overview = await kolClient.getDreadStatusOverview(clan.id);
     const capacitorString = overview.capacitor
       ? `${overview.skills} skill${overview.skills != 1 ? "s" : ""} left`
       : "Needs capacitor";
@@ -59,8 +58,7 @@ async function detailedClanStatus(
   const responseMessage = await message.channel.send(
     `Fetching status for clan ${clan.name}, watch this space!!`
   );
-  await kolClient.whitelist(clan.id);
-  const status = await kolClient.getDetailedDreadStatus();
+  const status = await kolClient.getDetailedDreadStatus(clan.id);
   let returnString = `__**STATUS UPDATE FOR ${clan.name.toUpperCase()}**__\n`;
   returnString += `${status.overview.forest}/${status.overview.village}/${status.overview.castle} kills remaining.\n\n`;
   returnString += "__FOREST__\n";
