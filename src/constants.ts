@@ -275,3 +275,6 @@ export const EIGHTBALL_RESPONSES: string[] = [
   "INSUFFICIENT DATA FOR MEANINGFUL ANSWER",
   "THERE IS AS YET INSUFFICIENT DATA FOR A MEANINGFUL ANSWER",
 ];
+
+export const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
+export const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;

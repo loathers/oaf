@@ -25,6 +25,7 @@ export class WikiSearcher {
 
   async downloadMafiaData(): Promise<void> {
     const itemMap = new Map<string, string[]>();
+    console.log("Reading item data.");
     for (let fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
       const file = await axios(
         `https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/${fileName}.txt?format=raw`
@@ -36,6 +37,7 @@ export class WikiSearcher {
         } catch {}
       }
     }
+    console.log("Reading skills.");
     const skillFile = await axios(
       "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/classskills.txt?format=raw"
     );
@@ -47,6 +49,7 @@ export class WikiSearcher {
         }
       } catch {}
     }
+    console.log("Reading items.");
     const itemFile = await axios(
       "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/items.txt?format=raw"
     );
@@ -59,6 +62,7 @@ export class WikiSearcher {
       } catch (error) {}
     }
 
+    console.log("Reading monsters.");
     const monsterFile = await axios(
       "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/monsters.txt?format=raw"
     );
@@ -71,6 +75,7 @@ export class WikiSearcher {
       } catch {}
     }
 
+    console.log("Reading familiars.");
     const familiarFile = await axios(
       "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/familiars.txt?format=raw"
     );
@@ -89,6 +94,8 @@ export class WikiSearcher {
         }
       } catch {}
     }
+
+    console.log("Reading effects.");
     const effectsFile = await axios(
       "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/statuseffects.txt?format=raw"
     );

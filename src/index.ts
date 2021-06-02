@@ -15,16 +15,25 @@ const requiredVariables = [
 ];
 
 const variableManager = new VariableManager();
+console.log("Fetching variables.");
 variableManager.fetchAll(requiredVariables).then(() => {
+  console.log("Creating KOL client.");
   const kolClient = new KOLClient(variableManager);
+  console.log("Creating wiki searcher.");
   const wikiSearcher = new WikiSearcher(variableManager, kolClient);
+  console.log("Downloading mafia data.");
   wikiSearcher.downloadMafiaData().then(() => {
+    console.log("All mafia data downloaded.");
+    console.log("Creating discord client.");
     const discordClient = new DiscordClient(variableManager, wikiSearcher);
-
+    console.log("Attaching misc commands.");
     attachMiscCommands(discordClient);
+    console.log("Attaching clan commands.");
     attachClanCommands(discordClient, kolClient);
+    console.log("Attaching wiki commands.");
     discordClient.attachWikiSearchCommand();
 
+    console.log("Starting bot.");
     discordClient.start();
   });
 });

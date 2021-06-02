@@ -285,7 +285,36 @@ export class KOLClient {
     };
   }
 
-  private async getRaidLog(clanId: number): Promise<string> {
+  async getMissingRaidLogs(clanId: number): Promise<string[]> {
+    const raidLog = await this.getRaidLog(clanId);
+    return await clanActionMutex.runExclusive(async () => {
+      await this.whitelist(clanId);
+      let raidLogs = await this.tryRequestWithLogin("clan_oldraidlogs.php", {});
+      let raidIds: string[] = [];
+      let row = 0;
+      while (!raidLogs.match(/No previous Clan Dungeon records found/)) {
+        for (let id of raidLogs.match(
+          /kisses<\/td><td class=tiny>\[<a href="clan_viewraidlog\.php\?viewlog=(?<id>\d+)/g
+        )) {
+          raidIds.push(id.replace(/\D/g, ""));
+        }
+        row += 10;
+        raidLogs = await this.tryRequestWithLogin("clan_oldraidlogs.php", {
+          startrow: row,
+        });
+      }
+      return raidIds;
+    });
+  }
+
+  async getFinishedRaidLog(raidId: string) {
+    return await this.tryRequestWithLogin("clan_viewraidlog.php", {
+      viewlog: raidId,
+      backstart: 0,
+    });
+  }
+
+  async getRaidLog(clanId: number): Promise<string> {
     return await clanActionMutex.runExclusive(async () => {
       await this.whitelist(clanId);
       return await this.tryRequestWithLogin("clan_raidlogs.php", {});

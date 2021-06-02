@@ -1,10 +1,12 @@
 import { Message } from "discord.js";
+import { KILLMATCHER, SKILLMATCHER } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 
 type Clan = {
   name: string;
   synonyms: string[];
+  parsedRaids: string[];
   id: number;
 };
 
@@ -12,20 +14,66 @@ const clans: Clan[] = [
   {
     name: "Collaborative Dungeon Running 1",
     synonyms: ["cdr1", "1"],
+    parsedRaids: [],
     id: 2047008362,
   },
   {
     name: "Collaborative Dungeon Running 2",
     synonyms: ["cdr2", "2"],
+    parsedRaids: [],
     id: 2047008363,
   },
 ];
+
+type DreadParticipation = {
+  kills: number;
+  skills: number;
+};
+
+const skillBlacklist = [
+  "The Dictator",
+  "kirByllAmA",
+  "kenny kamAKAzi",
+  "Captain Scotch",
+  "gregmasta",
+  "violetinsane",
+  "RandomExtremity",
+  "madowl",
+  "Gausie",
+  "threebullethamburgler",
+  "Just Eyes",
+  "Phillammon",
+  "Headdab",
+  "stibarsen",
+  "NatNit",
+  "monsieur bob",
+  "coolanybody",
+  "stockFD3S",
+  "ast154251",
+  "Archie700",
+  "k3wLb0t",
+  "aEniMUs",
+  "tHE eROsIoNseEker",
+  "worthawholebean",
+  "phreddrickkv2",
+  "epicgamer",
+  "monkeyman200",
+  "schalfi",
+  "merrywanderer",
+  "manendra",
+  "pyacide",
+  "kha0z",
+  "soxfan196o",
+].map((name) => name.toLowerCase());
+
+const killMap: Map<string, DreadParticipation> = new Map();
 
 export function attachClanCommands(discordClient: DiscordClient, kolClient: KOLClient) {
   discordClient.attachCommand("status", (message) => clanStatus(message, kolClient));
   discordClient.attachCommand("clan", (message, args) =>
     detailedClanStatus(message, args[1], kolClient)
   );
+  discordClient.attachCommand("skills", (message) => getSkills(message, kolClient));
 }
 
 async function clanStatus(message: Message, kolClient: KOLClient): Promise<void> {
@@ -111,4 +159,109 @@ async function detailedClanStatus(
       returnString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";
   } else returnString += "~~Castle fully cleared.~~\n";
   await responseMessage.edit(returnString);
+}
+
+async function getSkills(message: Message, kolClient: KOLClient): Promise<void> {
+  const sentMessage = await message.channel.send("Calculating skills, watch this space!");
+  await parseOldLogs(kolClient, sentMessage);
+  const currentKills: Map<string, DreadParticipation> = new Map();
+  for (let entry of killMap.entries()) {
+    currentKills.set(entry[0], { ...entry[1] });
+  }
+  await parseCurrentLogs(kolClient, currentKills, sentMessage);
+  let skillString = "__SKILLS OWED__\n\n";
+  let skillArray = [];
+  for (let entry of currentKills.entries()) {
+    if (!skillBlacklist.includes(entry[0])) {
+      const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
+      if (owedSkills > 0) {
+        skillArray.push(
+          `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}: ${owedSkills} skill${
+            owedSkills > 1 ? "s" : ""
+          }.`
+        );
+      }
+    }
+  }
+  skillString += skillArray.sort().join("\n");
+  await sentMessage.edit(skillString);
+}
+
+async function parseOldLogs(kolClient: KOLClient, sentMessage?: Message) {
+  for (let clan of clans) {
+    await sentMessage?.edit(
+      `Calculating skills, watch this space! Parsing completed logs for clan ${clan.name}`
+    );
+    const raidsToParse = (await kolClient.getMissingRaidLogs(clan.id)).filter(
+      (id) => !clan.parsedRaids.includes(id)
+    );
+    for (let raid of raidsToParse) {
+      await sentMessage?.edit(
+        `Calculating skills, watch this space! Parsing logs for clan ${clan.name}, raid #${raid}`
+      );
+      const raidLog = await kolClient.getFinishedRaidLog(raid);
+      addParticipationFromRaidLog(raidLog, killMap);
+      clan.parsedRaids.push(raid);
+    }
+  }
+}
+
+async function parseCurrentLogs(
+  kolClient: KOLClient,
+  mapToUpdate: Map<string, DreadParticipation>,
+  sentMessage?: Message
+) {
+  for (let clan of clans) {
+    await sentMessage?.edit(
+      `Calculating skills, watch this space! Parsing current log for clan ${clan.name}`
+    );
+    const raidLog = await kolClient.getRaidLog(clan.id);
+    addParticipationFromRaidLog(raidLog, mapToUpdate);
+  }
+}
+
+function addParticipationFromRaidLog(
+  raidLog: string,
+  mapToUpdate: Map<string, DreadParticipation>
+): void {
+  const skillLines = raidLog.toLowerCase().match(new RegExp(SKILLMATCHER, "g"));
+  const killLines = raidLog.toLowerCase().match(new RegExp(KILLMATCHER, "g"));
+  if (killLines) {
+    for (let kill of killLines) {
+      const matchedKill = kill.match(KILLMATCHER);
+      if (matchedKill) {
+        const participation = mapToUpdate.get(matchedKill[1]);
+        if (participation) {
+          mapToUpdate.set(matchedKill[1], {
+            kills: participation.kills + parseInt(matchedKill[2]),
+            skills: participation.skills,
+          });
+        } else {
+          mapToUpdate.set(matchedKill[1], {
+            kills: parseInt(matchedKill[2]),
+            skills: 0,
+          });
+        }
+      }
+    }
+  }
+  if (skillLines) {
+    for (let skill of skillLines) {
+      const matchedSkill = skill.match(SKILLMATCHER);
+      if (matchedSkill) {
+        const participation = mapToUpdate.get(matchedSkill[1]);
+        if (participation) {
+          mapToUpdate.set(matchedSkill[1], {
+            kills: participation.kills,
+            skills: participation.skills + 1,
+          });
+        } else {
+          mapToUpdate.set(matchedSkill[1], {
+            kills: 0,
+            skills: 1,
+          });
+        }
+      }
+    }
+  }
 }
