@@ -570,7 +570,7 @@ type Drop = {
   };
 };
 
-function convertToDrop(drop: string, thingMap: Map<string, Thing>): Drop | undefined {
+function convertToDrop(drop: string): Drop | undefined {
   const dropMatch = drop.match(/^(?<itemName>.+) \((?<attributes>[a-z]*)(?<droprate>[\d]+)\)$/);
   if (dropMatch) {
     const attributes = dropMatch.groups?.attributes || "";
@@ -602,8 +602,8 @@ export class Monster implements Thing {
   _name: string;
   _description: string = "";
 
-  constructor(data: string, thingMap: Map<string, Thing>) {
-    this._monster = this.parseMonsterData(data, thingMap);
+  constructor(data: string) {
+    this._monster = this.parseMonsterData(data);
     this._name = this._monster.name.toLowerCase();
   }
 
@@ -688,7 +688,7 @@ export class Monster implements Thing {
           dropDesc += `${drop.item} (Stealable accordion)\n`;
         } else {
           dropDesc += `[${drop.item}](${toWikiLink(drop.item)}) (${
-            drop.droprate > 0 ? `${drop.droprate}%` : "Unknown droprate"
+            drop.droprate > 0 ? `${drop.droprate}%` : "Sometimes"
           }`;
           if (drop.attributes.pickpocketOnly) dropDesc += ", pickpocket only";
           if (drop.attributes.noPickpocket) dropDesc += ", can't be stolen";
@@ -720,7 +720,7 @@ export class Monster implements Thing {
     embed.setDescription(this._description);
   }
 
-  parseMonsterData(monsterData: string, thingMap: Map<string, Thing>): MonsterData {
+  parseMonsterData(monsterData: string): MonsterData {
     const data = monsterData.split(/\t/);
     if (data.length < 4) throw "Invalid data";
     return {
@@ -732,7 +732,7 @@ export class Monster implements Thing {
         ? (
             data
               .slice(4)
-              .map((drop) => convertToDrop(cleanString(drop), thingMap))
+              .map((drop) => convertToDrop(cleanString(drop)))
               .filter((drop) => drop !== undefined) as Drop[]
           ).sort((a, b) => b.droprate - a.droprate)
         : [],

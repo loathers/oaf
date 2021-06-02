@@ -64,7 +64,7 @@ export class WikiSearcher {
     );
     for (let line of monsterFile.data.split(/\n/)) {
       try {
-        const monster = new Monster(line, this._thingMap);
+        const monster = new Monster(line);
         if (monster.name()) {
           this._thingMap.set(monster.name(), monster);
         }
