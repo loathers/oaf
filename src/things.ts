@@ -701,13 +701,17 @@ export class Monster implements Thing {
         else dedupedDrops.set(dropDesc, 1);
         dropArray.push(dropDesc);
       }
+      let dropsWritten = 0;
       for (let drop of dropArray) {
         if (dedupedDrops.has(drop)) {
           const quantity = dedupedDrops.get(drop) || 1;
           description += `${quantity > 1 ? `${quantity}x ` : ""}${drop}\n`;
           dedupedDrops.delete(drop);
+          dropsWritten += 1;
+          if (dropsWritten >= 10) break;
         }
       }
+      if (dedupedDrops.size > 0) description += "...and more.";
     }
     return description;
   }
