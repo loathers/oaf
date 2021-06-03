@@ -248,7 +248,7 @@ export class KOLClient {
       watchtower: !!raidLog.match(/unlocked the fire watchtower/),
       auditor: !!raidLog.match(/got a Dreadsylvanian auditor's badge/),
       musicbox: !!raidLog.match(/made the forest less spooky/),
-      kiwi: !!raidLog.match(/got a blood kiwi/),
+      kiwi: !!raidLog.match(/knocked some fruit loose/),
       amber: !!raidLog.match(/acquired a chunk of moon-amber/),
     };
   }
