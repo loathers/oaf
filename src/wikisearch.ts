@@ -1,4 +1,3 @@
-import { VariableManager } from "./variables";
 import axios from "axios";
 import { MessageEmbed } from "discord.js";
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "./things";
@@ -17,9 +16,9 @@ export class WikiSearcher {
   private _searchApiKey: string;
   private _customSearch: string;
 
-  constructor(variableManager: VariableManager, client: KOLClient) {
-    this._searchApiKey = variableManager.get("GOOGLE_API_KEY");
-    this._customSearch = variableManager.get("CUSTOM_SEARCH");
+  constructor(client: KOLClient) {
+    this._searchApiKey = process.env.GOOGLE_API_KEY || "";
+    this._customSearch = process.env.CUSTOM_SEARCH || "";
     this._client = client;
   }
 

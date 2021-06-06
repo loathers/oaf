@@ -1,4 +1,3 @@
-import { VariableManager } from "./variables";
 import axios from "axios";
 import { decode } from "html-entities";
 import { cleanString, indent, toWikiLink } from "./utils";
@@ -73,11 +72,11 @@ export class KOLClient {
   private _loginParameters: URLSearchParams;
   private _credentials: KOLCredentials = { fetched: -1 };
 
-  constructor(variableManager: VariableManager) {
+  constructor() {
     this._loginParameters = new URLSearchParams();
     this._loginParameters.append("loggingin", "Yup.");
-    this._loginParameters.append("loginname", variableManager.get("KOL_USER"));
-    this._loginParameters.append("password", variableManager.get("KOL_PASS"));
+    this._loginParameters.append("loginname", process.env.KOL_USER || "");
+    this._loginParameters.append("password", process.env.KOL_PASS || "");
     this._loginParameters.append("secure", "0");
     this._loginParameters.append("submitbutton", "Log In");
   }

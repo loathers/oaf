@@ -1,11 +1,7 @@
 import { Client, Message, Util } from "discord.js";
 import { WikiSearcher } from "./wikisearch";
-import { VariableManager } from "./variables";
 
 const ITEM_MATCHER = /\[\[([^\[\]]*)\]\]/g;
-
-const HEART = "<3";
-const RUDE = "<:rude2:585646615390584844><:rude3:585646615403167745>";
 
 export class DiscordClient {
   private _client: Client;
@@ -14,11 +10,11 @@ export class DiscordClient {
   private _commands: Map<string, (message: Message, args: string[]) => void> = new Map();
   private _commandSymbol: string;
 
-  constructor(variableManager: VariableManager, wikiSearcher: WikiSearcher) {
+  constructor(wikiSearcher: WikiSearcher) {
     this._client = new Client();
     this._wikiSearcher = wikiSearcher;
-    this._discordToken = variableManager.get("DISCORD_TOKEN");
-    this._commandSymbol = variableManager.get("COMMAND_SYMBOL", "%%%NO COMMAND SYMBOL SET%%%");
+    this._discordToken = process.env.DISCORD_TOKEN || "";
+    this._commandSymbol = process.env.COMMAND_SYMBOL || "%%%NO COMMAND SYMBOL SET%%%";
 
     this._client.on("ready", () => {
       console.log(`Logged in as ${this._client?.user?.tag}!`);
