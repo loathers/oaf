@@ -23,7 +23,11 @@ export function attachMiscCommands(client: DiscordClient) {
 }
 
 function orb(message: Message): void {
-  message.channel.send(`O.A.F. gazes into the mini crystal ball. "${ORB_RESPONSES[Math.floor(Math.random() * ORB_RESPONSES.length)]}", they report.`);
+  message.channel.send(
+    `O.A.F. gazes into the mini crystal ball. "${
+      ORB_RESPONSES[Math.floor(Math.random() * ORB_RESPONSES.length)]
+    }", they report.`
+  );
 }
 
 function roll(message: Message, args: string[]): void {

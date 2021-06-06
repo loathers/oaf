@@ -111,7 +111,9 @@ export class KOLClient {
           };
         } else {
           console.log("Blocked fetching new credentials");
-          console.log(`${60000 + this._credentials.fetched - new Date().getTime()} milliseconds to new login`)
+          console.log(
+            `${60000 + this._credentials.fetched - new Date().getTime()} milliseconds to new login`
+          );
         }
       } catch (error) {
         console.log(error);
@@ -128,10 +130,11 @@ export class KOLClient {
         },
         params: {
           pwd: this._credentials.pwdhash,
-          maxRedirects: 0,
           ...parameters,
         },
       });
+      if (request.data.indexOf("<title>The Kingdom of Loathing</title>") > -1)
+        throw "Login expired";
       return request.data;
     } catch {
       return undefined;
@@ -140,7 +143,6 @@ export class KOLClient {
 
   private async tryRequestWithLogin(url: string, parameters: object) {
     const result = await this.makeCredentialedRequest(url, parameters);
-    console.log(result)
     if (result) return result;
     await this.logIn();
     return await this.makeCredentialedRequest(url, parameters);

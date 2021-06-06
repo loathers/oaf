@@ -95,7 +95,9 @@ export class DiscordClient {
   async help(message: Message): Promise<void> {
     let helpString = "```";
     for (let command of this._commands.entries()) {
-      helpString += `${this._commandSymbol}${command[0].padEnd(15, " ")} ${command[1].description}\n`;
+      helpString += `${this._commandSymbol}${command[0].padEnd(15, " ")} ${
+        command[1].description
+      }\n`;
     }
     helpString += "```";
     message.channel.send(helpString);
