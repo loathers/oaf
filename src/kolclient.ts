@@ -109,6 +109,9 @@ export class KOLClient {
             sessionCookies: sessionCookies,
             pwdhash: apiResponse.data.pwd,
           };
+        } else {
+          console.log("Blocked fetching new credentials");
+          console.log(`${60000 + this._credentials.fetched - new Date().getTime()} milliseconds to new login`)
         }
       } catch (error) {
         console.log(error);
