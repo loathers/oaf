@@ -128,6 +128,7 @@ export class KOLClient {
         },
         params: {
           pwd: this._credentials.pwdhash,
+          maxRedirects: 0,
           ...parameters,
         },
       });
