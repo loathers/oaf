@@ -24,7 +24,9 @@ export class DiscordClient {
 
   async onMessage(message: Message): Promise<void> {
     console.log(
-      `${message.createdTimestamp}: ${message.author.username} said "${message.content}" in channel ${message.channel}`
+      `${new Date(message.createdTimestamp).toLocaleTimeString()} ${
+        message.author.username
+      } said "${Util.cleanContent(message.content, message)}" in channel ${message.channel}`
     );
     const content = message.content;
     if (content && !message.author.bot) {
