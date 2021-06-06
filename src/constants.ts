@@ -239,7 +239,7 @@ export const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
   ["o.a.f.", "Is optimal.\nGenerally messes with you.\n"],
 ]);
 
-export const EIGHTBALL_RESPONSES: string[] = [
+export const ORB_RESPONSES: string[] = [
   "It is certain.",
   "It is decidedly so.",
   "Without a doubt.",

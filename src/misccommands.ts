@@ -1,9 +1,9 @@
 import { Message, TextChannel } from "discord.js";
-import { EIGHTBALL_RESPONSES } from "./constants";
+import { ORB_RESPONSES } from "./constants";
 import { DiscordClient } from "./discord";
 
 export function attachMiscCommands(client: DiscordClient) {
-  client.attachCommand("8ball", eightBall, "Consult OAF's Magic 8 Ball.");
+  client.attachCommand("orb", orb, "Consult OAF's miniature crystal ball.");
   client.attachCommand("roll", roll, "Roll the specified dice of the form <x>d<y>.");
   client.attachCommand(
     "purge",
@@ -22,8 +22,8 @@ export function attachMiscCommands(client: DiscordClient) {
   );
 }
 
-function eightBall(message: Message): void {
-  message.channel.send(EIGHTBALL_RESPONSES[Math.floor(Math.random() * EIGHTBALL_RESPONSES.length)]);
+function orb(message: Message): void {
+  message.channel.send(`O.A.F. gazes into the mini crystal ball. "${ORB_RESPONSES[Math.floor(Math.random() * ORB_RESPONSES.length)]}", they report.`);
 }
 
 function roll(message: Message, args: string[]): void {
