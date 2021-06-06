@@ -139,6 +139,7 @@ export class KOLClient {
 
   private async tryRequestWithLogin(url: string, parameters: object) {
     const result = await this.makeCredentialedRequest(url, parameters);
+    console.log(result)
     if (result) return result;
     await this.logIn();
     return await this.makeCredentialedRequest(url, parameters);
