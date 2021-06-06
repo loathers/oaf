@@ -21,7 +21,7 @@ wikiSearcher.downloadMafiaData().then(() => {
   console.log("Attaching clan commands.");
   attachClanCommands(discordClient, kolClient);
   console.log("Attaching wiki commands.");
-  discordClient.attachWikiSearchCommand();
+  discordClient.attachMetaBotCommands();
 
   console.log("Starting bot.");
   discordClient.start();

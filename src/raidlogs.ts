@@ -69,11 +69,21 @@ const skillBlacklist = [
 const killMap: Map<string, DreadParticipation> = new Map();
 
 export function attachClanCommands(discordClient: DiscordClient, kolClient: KOLClient) {
-  discordClient.attachCommand("status", (message) => clanStatus(message, kolClient));
-  discordClient.attachCommand("clan", (message, args) =>
-    detailedClanStatus(message, args[1], kolClient)
+  discordClient.attachCommand(
+    "status",
+    (message) => clanStatus(message, kolClient),
+    "Get the current status of all monitored Dreadsylvania instances."
   );
-  discordClient.attachCommand("skills", (message) => getSkills(message, kolClient));
+  discordClient.attachCommand(
+    "clan",
+    (message, args) => detailedClanStatus(message, args[1], kolClient),
+    "Get a detailed current status of the specified Dreadsylvania instance."
+  );
+  discordClient.attachCommand(
+    "skills",
+    (message) => getSkills(message, kolClient),
+    "Get a list of everyone currently elgible for Dreadsylvania skills."
+  );
 }
 
 async function clanStatus(message: Message, kolClient: KOLClient): Promise<void> {

@@ -3,11 +3,16 @@ import { WikiSearcher } from "./wikisearch";
 
 const ITEM_MATCHER = /\[\[([^\[\]]*)\]\]/g;
 
+type Command = {
+  description: string;
+  execute: (message: Message, args: string[]) => void;
+};
+
 export class DiscordClient {
   private _client: Client;
   private _wikiSearcher: WikiSearcher;
   private _discordToken: string;
-  private _commands: Map<string, (message: Message, args: string[]) => void> = new Map();
+  private _commands: Map<string, Command> = new Map();
   private _commandSymbol: string;
 
   constructor(wikiSearcher: WikiSearcher) {
@@ -46,8 +51,11 @@ export class DiscordClient {
         .substring(this._commandSymbol.length);
       console.log(`Found command "${commandString}"`);
       const command = this._commands.get(commandString);
-      if (command) command(message, content.toLowerCase().split(" "));
-      else message.channel.send("Command not recognised.");
+      if (command) command.execute(message, content.toLowerCase().split(" "));
+      else
+        message.channel.send(
+          `Command not recognised. Try ${this._commandSymbol}help for a list of all commands.`
+        );
     }
   }
 
@@ -55,8 +63,15 @@ export class DiscordClient {
     return this._client;
   }
 
-  attachCommand(command: string, functionToCall: (message: Message, args: string[]) => void): void {
-    this._commands.set(command.toLowerCase(), functionToCall);
+  attachCommand(
+    command: string,
+    functionToCall: (message: Message, args: string[]) => void,
+    description: string = ""
+  ): void {
+    this._commands.set(command.toLowerCase(), {
+      description: description,
+      execute: functionToCall,
+    });
   }
 
   async wikiSearch(item: string, message: Message): Promise<void> {
@@ -77,14 +92,29 @@ export class DiscordClient {
     }
   }
 
+  async help(message: Message): Promise<void> {
+    let helpString = "```";
+    for (let command of this._commands.entries()) {
+      helpString += `${this._commandSymbol}${command[0].padEnd(15, " ")} ${command[1].description}\n`;
+    }
+    helpString += "```";
+    message.channel.send(helpString);
+  }
+
   start(): void {
     this._client.login(this._discordToken);
   }
 
-  attachWikiSearchCommand() {
+  attachMetaBotCommands() {
     this.attachCommand(
       "wiki",
-      async (message, args) => await this.wikiSearch(args.slice(1).join(" "), message)
+      async (message, args) => await this.wikiSearch(args.slice(1).join(" "), message),
+      "Search the KoL wiki for the given term."
+    );
+    this.attachCommand(
+      "help",
+      async (message) => await this.help(message),
+      "Display this message."
     );
   }
 }
