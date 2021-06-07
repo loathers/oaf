@@ -4,6 +4,7 @@ import { attachMiscCommands } from "./misccommands";
 import { KOLClient } from "./kolclient";
 import { attachClanCommands } from "./raidlogs";
 import * as dotenv from "dotenv";
+import { attachKoLCommands } from "./kolcommands";
 
 dotenv.config({ path: __dirname + "/.env" });
 
@@ -18,6 +19,8 @@ wikiSearcher.downloadMafiaData().then(() => {
   const discordClient = new DiscordClient(wikiSearcher);
   console.log("Attaching misc commands.");
   attachMiscCommands(discordClient);
+  console.log("Attaching kol commands.");
+  attachKoLCommands(discordClient);
   console.log("Attaching clan commands.");
   attachClanCommands(discordClient, kolClient);
   console.log("Attaching wiki commands.");

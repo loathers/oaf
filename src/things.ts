@@ -97,9 +97,8 @@ export class Item implements Thing {
           }`;
           desc += `${
             size > 1
-              ? `${advRange.length > 1 ? ", " : ""}${String(average / size).substring(
-                  0,
-                  4
+              ? `${advRange.length > 1 ? ", " : ""}${Number(
+                  (average / size).toFixed(2)
                 )} per fullness`
               : ""
           })`;
@@ -128,9 +127,8 @@ export class Item implements Thing {
           }`;
           desc += `${
             size > 1
-              ? `${advRange.length > 1 ? ", " : ""}${String(average / size).substring(
-                  0,
-                  4
+              ? `${advRange.length > 1 ? ", " : ""}${Number(
+                  (average / size).toFixed(2)
                 )} per inebriety`
               : ""
           })`;
@@ -159,9 +157,8 @@ export class Item implements Thing {
           }`;
           desc += `${
             size > 1
-              ? `${advRange.length > 1 ? ", " : ""}${String(average / size).substring(
-                  0,
-                  4
+              ? `${advRange.length > 1 ? ", " : ""}${Number(
+                  (average / size).toFixed(2)
                 )} per spleen`
               : ""
           })`;
