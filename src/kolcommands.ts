@@ -35,8 +35,8 @@ function item(message: Message, args: string[]): void {
     message.channel.send("Please supply a sensible drop rate.");
     return;
   }
-  if (drop >= 100) {
-    message.channel.send(`A ${drop}% drop does not require any item drop bonus to cap.`);
+  if (drop > 99.9) {
+    message.channel.send(`A 100% drop does not require any item drop bonus to cap.`);
     return;
   }
   message.channel.send(
