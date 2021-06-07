@@ -17,7 +17,7 @@ export function attachKoLCommands(client: DiscordClient) {
   client.attachCommand(
     "volleyball",
     volley,
-    "Print the +stat drop supplied by a leprechaun of a given weight."
+    "Print the +stat drop supplied by a volleyball of a given weight."
   );
   client.attachCommand("volley", volley, "Alias for volleyball.");
   //client.attachCommand("level", level, "Finds the stats and substats needed for a given level.");
@@ -40,7 +40,7 @@ function item(message: Message, args: string[]): void {
     return;
   }
   message.channel.send(
-    `A ${drop}% drop requires a +${Math.ceil(10000 / drop) - 100}% item drop bonus to cap.`
+    `A ${Math.max(0.1, drop)}% drop requires a +${Math.ceil(10000 / Math.max(0.1, drop)) - 100}% item drop bonus to cap.`
   );
 }
 
