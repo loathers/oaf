@@ -31,8 +31,8 @@ function item(message: Message, args: string[]): void {
     return;
   }
   const drop = parseFloat(args[1]) || 0;
-  if (drop <= 0) {
-    message.channel.send("Please supply a positive drop rate.");
+  if (drop < 0.1) {
+    message.channel.send("Please supply a sensible drop rate.");
     return;
   }
   if (drop >= 100) {
@@ -40,7 +40,7 @@ function item(message: Message, args: string[]): void {
     return;
   }
   message.channel.send(
-    `A ${Math.max(0.1, drop)}% drop requires a +${Math.ceil(10000 / Math.max(0.1, drop)) - 100}% item drop bonus to cap.`
+    `A ${Number(drop.toFixed(1))}% drop requires a +${Math.ceil(10000 / drop) - 100}% item drop bonus to cap.`
   );
 }
 
