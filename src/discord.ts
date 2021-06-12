@@ -116,7 +116,7 @@ export class DiscordClient {
       }\n`;
     }
     helpString += "```";
-    message.channel.send(helpString);
+    message.author.send(helpString);
   }
 
   start(): void {
