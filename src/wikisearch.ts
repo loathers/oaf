@@ -260,7 +260,8 @@ export class WikiSearcher {
 
   async getPizzaEmbed(letters: string): Promise<MessageEmbed> {
     let node = this._pizzaTreeRoot;
-    for (let i = 0; i < letters.length; i++) {
+    let i = 0;
+    for (; i <= letters.length; i++) {
       const child = node.children.get(letters.charAt(i));
       if (child) node = child;
       else break;
@@ -269,11 +270,13 @@ export class WikiSearcher {
     const options = node.options();
     if (options.length > 11) {
       return new MessageEmbed()
-        .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "*")} Pizza effects`)
+        .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "⚹")} Pizza effects`)
         .setDescription(
-          `${letters.match(/^[aeiouAEIOU]/) ? "An" : "A"} ${letters
-            .toUpperCase()
-            .padEnd(4, "*")} Diabolic Pizza has too many possible effects to list.`
+          `${letters.match(/^[aeiouAEIOU]/) ? "An" : "A"} ${letters.toUpperCase().padEnd(4, "⚹")}${
+            i < letters.length
+              ? ` (functionally ${letters.slice(0, i).toUpperCase().padEnd(4, "⚹")})`
+              : ""
+          } Diabolic Pizza has too many possible effects to list.`
         )
         .setFooter(
           "Problems? Message Phillammon#2824 on discord.",
@@ -281,29 +284,29 @@ export class WikiSearcher {
         );
     }
     if (options.length === 1) {
-      const foundName = await this.findName(options[0].name());
-      const embed = new MessageEmbed()
-        .setTitle(foundName?.name || "")
-        .setURL(foundName?.url || "")
-        .setFooter(
-          "Problems? Message Phillammon#2824 on discord.",
-          "http://images.kingdomofloathing.com/itemimages/oaf.gif"
-        );
-      await options[0].addToEmbed(embed, this._client);
-      return embed;
+      return (await this.getEmbed(options[0].name())) || new MessageEmbed();
     }
-    return new MessageEmbed()
-      .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "*")} Pizza effects`)
-      .setDescription(
-        (
-          await Promise.all(
-            options.map(async (effect) => {
-              const foundName = await this.findName(effect.name());
-              return `[${foundName?.name}](${foundName?.url})`;
-            })
-          )
-        ).join("\n")
+    let description = "";
+    if (i < letters.length) {
+      description += `(Note: A ${letters
+        .toUpperCase()
+        .padEnd(4, "⚹")} pizza functions as a ${letters
+        .slice(0, i)
+        .toUpperCase()
+        .padEnd(4, "⚹")} pizza)\n`;
+    }
+    description += (
+      await Promise.all(
+        options.map(async (effect) => {
+          const foundName = await this.findName(effect.name());
+          return `[${foundName?.name}](${encodeURI(foundName?.url || "")})`;
+        })
       )
+    ).join("\n");
+
+    return new MessageEmbed()
+      .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "⚹")} Pizza effects`)
+      .setDescription(description)
       .setFooter(
         "Problems? Message Phillammon#2824 on discord.",
         "http://images.kingdomofloathing.com/itemimages/oaf.gif"
