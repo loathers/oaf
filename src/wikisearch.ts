@@ -148,7 +148,7 @@ export class WikiSearcher {
         const effect = new Effect(line);
         if (effect.name()) {
           this._thingMap.set(effect.name(), effect);
-          if (effect.get().hookah) {
+          if (effect.get().hookah && effect.get().quality !== "bad") {
             this._pizzaTreeRoot.addEffectToTree(effect.name(), effect);
           }
         }
@@ -270,11 +270,11 @@ export class WikiSearcher {
     const options = node.options();
     if (options.length > 11) {
       return new MessageEmbed()
-        .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "⚹")} Pizza effects`)
+        .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
         .setDescription(
-          `${letters.match(/^[aeiouAEIOU]/) ? "An" : "A"} ${letters.toUpperCase().padEnd(4, "⚹")}${
+          `${letters.match(/^[aeiouAEIOU]/) ? "An" : "A"} ${letters.toUpperCase().padEnd(4, "✱")}${
             i < letters.length
-              ? ` (functionally ${letters.slice(0, i).toUpperCase().padEnd(4, "⚹")})`
+              ? ` (functionally ${letters.slice(0, i).toUpperCase().padEnd(4, "✱")})`
               : ""
           } Diabolic Pizza has too many possible effects to list.`
         )
@@ -290,10 +290,10 @@ export class WikiSearcher {
     if (i < letters.length) {
       description += `(Note: A ${letters
         .toUpperCase()
-        .padEnd(4, "⚹")} pizza functions as a ${letters
+        .padEnd(4, "✱")} pizza functions as a ${letters
         .slice(0, i)
         .toUpperCase()
-        .padEnd(4, "⚹")} pizza)\n`;
+        .padEnd(4, "✱")} pizza)\n`;
     }
     description += (
       await Promise.all(
@@ -305,7 +305,7 @@ export class WikiSearcher {
     ).join("\n");
 
     return new MessageEmbed()
-      .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "⚹")} Pizza effects`)
+      .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱⚹")} Pizza effects`)
       .setDescription(description)
       .setFooter(
         "Problems? Message Phillammon#2824 on discord.",

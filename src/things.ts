@@ -359,7 +359,7 @@ export class Effect implements Thing {
     let description = `**Effect**\n${await client.getEffectDescription(this._effect.descId)}\n\n`;
     if (this._effect.hookah) {
       if (this._pizza) {
-        description += `Pizza: ${this._pizza.letters.padEnd(4, "*")} (${
+        description += `Pizza: ${this._pizza.letters.padEnd(4, "✱")} (${
           this._pizza.options === 1 ? "Uncontested" : `1 in ${this._pizza.options}`
         })`;
       } else {
