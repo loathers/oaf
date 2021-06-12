@@ -148,7 +148,7 @@ export class WikiSearcher {
         const effect = new Effect(line);
         if (effect.name()) {
           this._thingMap.set(effect.name(), effect);
-          if (effect.get().hookah && effect.get().quality !== "bad") {
+          if (effect.get().hookah) {
             this._pizzaTreeRoot.addEffectToTree(effect.name(), effect);
           }
         }

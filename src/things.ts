@@ -381,7 +381,7 @@ export class Effect implements Thing {
       imageUrl: data[2],
       descId: data[3],
       quality: data[4],
-      hookah: data[5].indexOf("nohookah") === -1,
+      hookah: data[5].indexOf("nohookah") === -1 && data[4] !== "bad",
     };
   }
 }
