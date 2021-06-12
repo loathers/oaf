@@ -9,9 +9,54 @@ type FoundName = {
   url: string;
 };
 
+class PizzaNode {
+  children: Map<string, PizzaNode> = new Map();
+  letters: string;
+  effects: Effect[] = [];
+
+  constructor(letters: string) {
+    this.letters = letters;
+  }
+
+  addEffectToTree(name: string, effect: Effect): void {
+    if (this.letters.length === 4 || name.length === 0 || name.match(/^[^a-z]/)) {
+      this.effects.push(effect);
+    } else {
+      let letter = name.charAt(0);
+      let child =
+        this.children.get(letter) ||
+        this.children.set(letter, new PizzaNode(this.letters + letter)).get(letter);
+      child?.addEffectToTree(name.slice(1), effect);
+    }
+  }
+
+  addPizzaToEffects(): void {
+    let options = this.options();
+    for (let option of options) {
+      option._pizza = {
+        letters: this.letters.toUpperCase(),
+        options: options.length,
+      };
+    }
+    if (options.length > 1) {
+      for (let child of this.children.values()) {
+        child.addPizzaToEffects();
+      }
+    }
+  }
+
+  options(): Effect[] {
+    return Array.from(this.children.values()).reduce(
+      (acc, curr) => acc.concat(curr.options()),
+      this.effects
+    );
+  }
+}
+
 export class WikiSearcher {
   private _nameMap: Map<string, FoundName> = new Map();
   private _thingMap: Map<string, Thing> = new Map();
+  private _pizzaTreeRoot: PizzaNode = new PizzaNode("");
   private _client: KOLClient;
   private _searchApiKey: string;
   private _customSearch: string;
@@ -103,9 +148,14 @@ export class WikiSearcher {
         const effect = new Effect(line);
         if (effect.name()) {
           this._thingMap.set(effect.name(), effect);
+          if (effect.get().hookah) {
+            this._pizzaTreeRoot.addEffectToTree(effect.name(), effect);
+          }
         }
       } catch {}
     }
+
+    this._pizzaTreeRoot.addPizzaToEffects();
   }
 
   async reloadMafiaData(): Promise<void> {
@@ -206,6 +256,58 @@ export class WikiSearcher {
     }
     console.log("Google search stumped, I give up");
     return undefined;
+  }
+
+  async getPizzaEmbed(letters: string): Promise<MessageEmbed> {
+    let node = this._pizzaTreeRoot;
+    for (let i = 0; i < letters.length; i++) {
+      const child = node.children.get(letters.charAt(i));
+      if (child) node = child;
+      else break;
+    }
+
+    const options = node.options();
+    if (options.length > 11) {
+      return new MessageEmbed()
+        .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "*")} Pizza effects`)
+        .setDescription(
+          `${letters.match(/^[aeiouAEIOU]/) ? "An" : "A"} ${letters
+            .toUpperCase()
+            .padEnd(4, "*")} Diabolic Pizza has too many possible effects to list.`
+        )
+        .setFooter(
+          "Problems? Message Phillammon#2824 on discord.",
+          "http://images.kingdomofloathing.com/itemimages/oaf.gif"
+        );
+    }
+    if (options.length === 1) {
+      const foundName = await this.findName(options[0].name());
+      const embed = new MessageEmbed()
+        .setTitle(foundName?.name || "")
+        .setURL(foundName?.url || "")
+        .setFooter(
+          "Problems? Message Phillammon#2824 on discord.",
+          "http://images.kingdomofloathing.com/itemimages/oaf.gif"
+        );
+      await options[0].addToEmbed(embed, this._client);
+      return embed;
+    }
+    return new MessageEmbed()
+      .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "*")} Pizza effects`)
+      .setDescription(
+        (
+          await Promise.all(
+            options.map(async (effect) => {
+              const foundName = await this.findName(effect.name());
+              return `[${foundName?.name}](${foundName?.url})`;
+            })
+          )
+        ).join("\n")
+      )
+      .setFooter(
+        "Problems? Message Phillammon#2824 on discord.",
+        "http://images.kingdomofloathing.com/itemimages/oaf.gif"
+      );
   }
 }
 

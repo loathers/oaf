@@ -1,4 +1,4 @@
-import { Client, Message, Util } from "discord.js";
+import { Client, Message, MessageEmbed, Util } from "discord.js";
 import { WikiSearcher } from "./wikisearch";
 
 const ITEM_MATCHER = /\[\[([^\[\]]*)\]\]/g;
@@ -74,6 +74,22 @@ export class DiscordClient {
     });
   }
 
+  async pizzaSearch(letters: string, message: Message): Promise<void> {
+    if (!letters || letters.length < 1 || letters.length > 4) {
+      await message.channel.send(
+        "Invalid pizza length. Please supply a sensible number of letters."
+      );
+      return;
+    }
+    if (!letters.match(/^[A-Za-z]+$/)) {
+      await message.channel.send(
+        "Invalid pizza letters. Please supply a string containing only alphabetical characters."
+      );
+      return;
+    }
+    await message.channel.send(await this._wikiSearcher.getPizzaEmbed(letters));
+  }
+
   async wikiSearch(item: string, message: Message): Promise<void> {
     const searchingMessage = await message.channel.send(
       `Searching for "${Util.cleanContent(item, message)}"...`
@@ -108,6 +124,11 @@ export class DiscordClient {
   }
 
   attachMetaBotCommands() {
+    this.attachCommand(
+      "pizza",
+      async (message, args) => await this.pizzaSearch(args[1], message),
+      "Find what effects a diabolic pizza with the given letters can grant you."
+    );
     this.attachCommand(
       "wiki",
       async (message, args) => await this.wikiSearch(args.slice(1).join(" "), message),

@@ -328,13 +328,18 @@ type EffectData = {
   imageUrl: string;
   descId: string;
   quality: string;
-  attributes: string;
+  hookah: boolean;
+};
+
+type PizzaData = {
+  letters: string;
+  options: number;
 };
 
 export class Effect implements Thing {
   _effect: EffectData;
   _name: string;
-  _description: string = "";
+  _pizza?: PizzaData;
 
   constructor(data: string) {
     this._effect = this.parseEffectData(data);
@@ -351,9 +356,20 @@ export class Effect implements Thing {
 
   async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
-    if (!this._description)
-      this._description = `**Effect**\n${await client.getEffectDescription(this._effect.descId)}`;
-    embed.setDescription(this._description);
+    let description = `**Effect**\n${await client.getEffectDescription(this._effect.descId)}\n\n`;
+    if (this._effect.hookah) {
+      if (this._pizza) {
+        description += `Pizza: ${this._pizza.letters.padEnd(4, "*")} (${
+          this._pizza.options === 1 ? "Uncontested" : `1 in ${this._pizza.options}`
+        })`;
+      } else {
+        description +=
+          "Pizza: If you are reading this Phillammon has hecked something up. Please ping him.";
+      }
+    } else {
+      description += "Inelgible for pizza, wishes, or hookahs.";
+    }
+    embed.setDescription(description);
   }
 
   parseEffectData(effectData: string): EffectData {
@@ -365,7 +381,7 @@ export class Effect implements Thing {
       imageUrl: data[2],
       descId: data[3],
       quality: data[4],
-      attributes: data[5],
+      hookah: data[5].indexOf("nohookah") === -1,
     };
   }
 }

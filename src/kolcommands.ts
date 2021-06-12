@@ -40,7 +40,9 @@ function item(message: Message, args: string[]): void {
     return;
   }
   message.channel.send(
-    `A ${Number(drop.toFixed(1))}% drop requires a +${Math.ceil(10000 / Number(drop.toFixed(1))) - 100}% item drop bonus to cap.`
+    `A ${Number(drop.toFixed(1))}% drop requires a +${
+      Math.ceil(10000 / Number(drop.toFixed(1))) - 100
+    }% item drop bonus to cap.`
   );
 }
 
