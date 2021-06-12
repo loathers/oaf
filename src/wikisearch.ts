@@ -305,7 +305,7 @@ export class WikiSearcher {
     ).join("\n");
 
     return new MessageEmbed()
-      .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱⚹")} Pizza effects`)
+      .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
       .setDescription(description)
       .setFooter(
         "Problems? Message Phillammon#2824 on discord.",
