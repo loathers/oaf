@@ -192,7 +192,7 @@ function stat(message: Message, args: string[]): void {
         nextLevel.substat - statBlock.substat
       ).toLocaleString()} more substat${
         nextLevel.substat - statBlock.substat > 1 ? "s" : ""
-      }) are required to reach level ${nextLevel.level}.`
+      }) is required to reach level ${nextLevel.level}.`
   );
 }
 
