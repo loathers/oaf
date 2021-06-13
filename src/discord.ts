@@ -1,7 +1,6 @@
-import { Client, Message, MessageEmbed, Util } from "discord.js";
+import { Client, GuildMember, Message, MessageReaction, PartialUser, User, Util } from "discord.js";
+import { ITEMMATCHER, ROLEMAP } from "./constants";
 import { WikiSearcher } from "./wikisearch";
-
-const ITEM_MATCHER = /\[\[([^\[\]]*)\]\]/g;
 
 type Command = {
   description: string;
@@ -17,6 +16,7 @@ export class DiscordClient {
 
   constructor(wikiSearcher: WikiSearcher) {
     this._client = new Client({
+      partials: ["MESSAGE", "REACTION", "USER"],
       ws: {
         intents: ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES", "GUILD_MESSAGE_REACTIONS"],
       },
@@ -29,6 +29,54 @@ export class DiscordClient {
       console.log(`Logged in as ${this._client?.user?.tag}!`);
     });
     this._client.on("message", async (message) => this.onMessage(message));
+    this._client.on("messageReactionAdd", async (reaction, user) => this.onReact(reaction, user));
+    this._client.on("messageReactionRemove", async (reaction, user) =>
+      this.onReactRemove(reaction, user)
+    );
+  }
+
+  async onReact(reaction: MessageReaction, user: User | PartialUser): Promise<void> {
+    if (reaction.partial || user.partial) {
+      try {
+        await reaction.fetch();
+        await user.fetch();
+      } catch (error) {
+        console.error("Something went wrong when fetching the message: ", error);
+        return;
+      }
+    }
+    if (!user.partial && reaction.message.channel.id === "741479910886866944") {
+      console.log("Found reaction in appropriate channel!");
+      const role = (await reaction.message.guild?.roles.cache)?.get(
+        ROLEMAP.get(reaction.emoji.name) || ""
+      );
+      const member = await reaction.message.guild?.member(user);
+      if (role && member) {
+        await member?.roles.add(role);
+      }
+    }
+  }
+
+  async onReactRemove(reaction: MessageReaction, user: User | PartialUser): Promise<void> {
+    if (reaction.partial || user.partial) {
+      try {
+        await reaction.fetch();
+        await user.fetch();
+      } catch (error) {
+        console.error("Something went wrong when fetching the message: ", error);
+        return;
+      }
+    }
+    if (!user.partial && reaction.message.channel.id === "741479910886866944") {
+      console.log("Found reaction in appropriate channel!");
+      const role = (await reaction.message.guild?.roles.cache)?.get(
+        ROLEMAP.get(reaction.emoji.name) || ""
+      );
+      const member = await reaction.message.guild?.member(user);
+      if (role && member) {
+        await member?.roles.remove(role);
+      }
+    }
   }
 
   async onMessage(message: Message): Promise<void> {
@@ -39,7 +87,7 @@ export class DiscordClient {
     );
     const content = message.content;
     if (content && !message.author.bot) {
-      const matches = [...content.matchAll(ITEM_MATCHER)];
+      const matches = [...content.matchAll(ITEMMATCHER)];
       if (matches.length > 3) {
         message.channel.send(
           "Detected too many wiki invocations in one message. Returning first three invocations only."
@@ -94,7 +142,7 @@ export class DiscordClient {
     const searchingMessage = await message.channel.send(
       `Finding pizzas for "${Util.cleanContent(letters, message)}"...`
     );
-    await searchingMessage.edit(await this._wikiSearcher.getPizzaEmbed(letters));
+    await searchingMessage.edit("", await this._wikiSearcher.getPizzaEmbed(letters));
   }
 
   async wikiSearch(item: string, message: Message): Promise<void> {

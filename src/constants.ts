@@ -278,3 +278,13 @@ export const ORB_RESPONSES: string[] = [
 
 export const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
 export const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
+export const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
+
+export const ROLEMAP: Map<string, string> = new Map([
+  ["🇹", "741479573337800706"],
+  ["♀️", "741479514902757416"],
+  ["♂️", "741479366319538226"],
+  ["👂", "466622497991688202"],
+  ["🚫", "512522219574919179"],
+  ["✅", "754473984661258391"],
+]);
