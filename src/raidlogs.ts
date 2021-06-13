@@ -94,8 +94,8 @@ async function clanStatus(message: Message, kolClient: KOLClient): Promise<void>
   for (let clan of clans) {
     const overview = await kolClient.getDreadStatusOverview(clan.id);
     const capacitorString = overview.capacitor
-      ? `${overview.castle ? 0 : overview.skills} skill${
-          overview.castle || overview.skills != 1 ? "s" : ""
+      ? `${!overview.castle ? 0 : overview.skills} skill${
+          !overview.castle || overview.skills != 1 ? "s" : ""
         } left`
       : "Needs capacitor";
     messageString += `**${clan.name}**: ${overview.forest}/${overview.village}/${overview.castle} (${capacitorString})\n`;
