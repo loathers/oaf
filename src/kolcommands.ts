@@ -175,7 +175,9 @@ function stat(message: Message, args: string[]): void {
   const statBlock = StatBlock.fromMainstat(mainstat);
   if (statBlock.level >= 255) {
     message.channel.send(
-      `Mainstat ${mainstat.toLocaleString()} (reached at ${statBlock.substat.toLocaleString()} total substats) reaches maximum level 255.`
+      `Mainstat ${mainstat.toLocaleString()} (reached at ${statBlock.substat.toLocaleString()} total substat${
+        statBlock.substat > 1 ? "s" : ""
+      }) reaches maximum level 255.`
     );
     return;
   }
