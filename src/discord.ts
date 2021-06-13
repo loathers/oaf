@@ -46,7 +46,7 @@ export class DiscordClient {
       }
     }
     if (!user.partial && reaction.message.channel.id === "741479910886866944") {
-      console.log("Found reaction in appropriate channel!");
+      console.log(`Adding role ${reaction.emoji.name} to user ${user.username}`);
       const role = (await reaction.message.guild?.roles.cache)?.get(
         ROLEMAP.get(reaction.emoji.name) || ""
       );
@@ -68,7 +68,7 @@ export class DiscordClient {
       }
     }
     if (!user.partial && reaction.message.channel.id === "741479910886866944") {
-      console.log("Found reaction in appropriate channel!");
+      console.log(`Removing role ${reaction.emoji.name} from user ${user.username}`);
       const role = (await reaction.message.guild?.roles.cache)?.get(
         ROLEMAP.get(reaction.emoji.name) || ""
       );
