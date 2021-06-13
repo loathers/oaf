@@ -16,7 +16,11 @@ export class DiscordClient {
   private _commandSymbol: string;
 
   constructor(wikiSearcher: WikiSearcher) {
-    this._client = new Client();
+    this._client = new Client({
+      ws: {
+        intents: ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES", "GUILD_MESSAGE_REACTIONS"],
+      },
+    });
     this._wikiSearcher = wikiSearcher;
     this._discordToken = process.env.DISCORD_TOKEN || "";
     this._commandSymbol = process.env.COMMAND_SYMBOL || "%%%NO COMMAND SYMBOL SET%%%";
@@ -87,7 +91,10 @@ export class DiscordClient {
       );
       return;
     }
-    await message.channel.send(await this._wikiSearcher.getPizzaEmbed(letters));
+    const searchingMessage = await message.channel.send(
+      `Finding pizzas for "${Util.cleanContent(letters, message)}"...`
+    );
+    await searchingMessage.edit(await this._wikiSearcher.getPizzaEmbed(letters));
   }
 
   async wikiSearch(item: string, message: Message): Promise<void> {
