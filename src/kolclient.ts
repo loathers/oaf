@@ -133,8 +133,9 @@ export class KOLClient {
           ...parameters,
         },
       });
-      if (request.data.indexOf("<title>The Kingdom of Loathing</title>") > -1)
-        throw "Login expired";
+      if (!request.data || request.data.match(/<title>The Kingdom of Loathing<\/title>/) || request.data.match(/This script is not available unless you're logged in\./)) {
+      return undefined;
+      }
       return request.data;
     } catch {
       return undefined;
