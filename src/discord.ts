@@ -133,12 +133,6 @@ export class DiscordClient {
       );
       return;
     }
-    if (!letters.match(/^[A-Za-z]+$/)) {
-      await message.channel.send(
-        "Invalid pizza letters. Please supply a string containing only alphabetical characters."
-      );
-      return;
-    }
     const searchingMessage = await message.channel.send(
       `Finding pizzas for "${Util.cleanContent(letters, message)}"...`
     );

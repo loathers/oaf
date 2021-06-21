@@ -19,7 +19,7 @@ class PizzaNode {
   }
 
   addEffectToTree(name: string, effect: Effect): void {
-    if (this.letters.length === 4 || name.length === 0 || name.match(/^[^a-z]/)) {
+    if (this.letters.length === 4 || name.length === 0) {
       this.effects.push(effect);
     } else {
       let letter = name.charAt(0);
