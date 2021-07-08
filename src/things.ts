@@ -341,8 +341,8 @@ export class Effect implements Thing {
   _name: string;
   _pizza?: PizzaData;
 
-  constructor(data: string) {
-    this._effect = this.parseEffectData(data);
+  constructor(data: string, avatarSet: Set<string>) {
+    this._effect = this.parseEffectData(data, avatarSet);
     this._name = this._effect.name.toLowerCase();
   }
 
@@ -372,16 +372,19 @@ export class Effect implements Thing {
     embed.setDescription(description);
   }
 
-  parseEffectData(effectData: string): EffectData {
+  parseEffectData(effectData: string, avatarPotionSet: Set<string>): EffectData {
     const data = effectData.split(/\t/);
     if (data.length < 6) throw "Invalid data";
+    const potion = (data.length >= 7) ? (data[6].startsWith("use 1") ? data[6].slice(6) : "") : ""
+    const isAvatar = avatarPotionSet.has(potion.toLowerCase())
+    if (isAvatar) avatarPotionSet.delete(potion.toLowerCase())
     return {
       id: parseInt(data[0]),
       name: cleanString(data[1]),
       imageUrl: data[2],
       descId: data[3],
       quality: data[4],
-      hookah: data[5].indexOf("nohookah") === -1 && data[4] !== "bad",
+      hookah: !isAvatar && data[5].indexOf("nohookah") === -1 && data[4] !== "bad",
     };
   }
 }

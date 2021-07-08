@@ -69,6 +69,7 @@ export class WikiSearcher {
 
   async downloadMafiaData(): Promise<void> {
     const itemMap = new Map<string, string[]>();
+    const avatarPotionSet = new Set<string>();
     console.log("Reading item data.");
     for (let fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
       const file = await axios(
@@ -102,6 +103,9 @@ export class WikiSearcher {
         const item = new Item(line, itemMap);
         if (item.name()) {
           this._thingMap.set(item.name(), item);
+          if (item.get().types.includes("avatar")) {
+            avatarPotionSet.add(item.name())
+          }
         }
       } catch (error) {}
     }
@@ -145,7 +149,7 @@ export class WikiSearcher {
     );
     for (let line of effectsFile.data.split(/\n/)) {
       try {
-        const effect = new Effect(line);
+        const effect = new Effect(line, avatarPotionSet);
         if (effect.name()) {
           this._thingMap.set(effect.name(), effect);
           if (effect.get().hookah) {
@@ -330,6 +334,8 @@ function nameFromWikiPage(url: string, data: any): string {
   switch (result.toLowerCase()) {
     case "glitch season reward name":
       return "[glitch season reward name]";
+      case "monster types":
+        return "Category";
     default:
       return result;
   }
