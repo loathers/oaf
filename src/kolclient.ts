@@ -146,7 +146,7 @@ export class KOLClient {
     const result = await this.makeCredentialedRequest(url, parameters);
     if (result) return result;
     await this.logIn();
-    return await this.makeCredentialedRequest(url, parameters);
+    return await this.makeCredentialedRequest(url, parameters) || "";
   }
 
   async getMallPrice(itemId: number): Promise<MallPrice> {
