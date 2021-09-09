@@ -103,7 +103,7 @@ async function clanStatus(message: Message, kolClient: KOLClient): Promise<void>
     }
     await responseMessage.edit(messageString);
   } catch {
-    await responseMessage.edit("I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to login.");
+    await responseMessage.edit("I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in.");
   }
 }
 
@@ -177,7 +177,7 @@ async function detailedClanStatus(
     } else returnString += "~~Castle fully cleared.~~\n";
     await responseMessage.edit(returnString); 
     } catch {
-      await responseMessage.edit("I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to login.");
+      await responseMessage.edit("I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in.");
     }
   }
 
@@ -207,7 +207,7 @@ async function detailedClanStatus(
       skillString += skillArray.sort().join("\n");
       await sentMessage.edit(skillString);
     } catch {
-      await sentMessage.edit("I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to login.");
+      await sentMessage.edit("I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in.");
     }
 }
 
