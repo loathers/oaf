@@ -91,16 +91,20 @@ async function clanStatus(message: Message, kolClient: KOLClient): Promise<void>
   const responseMessage = await message.channel.send(
     "Fetching status for all clans, watch this space!"
   );
-  for (let clan of clans) {
-    const overview = await kolClient.getDreadStatusOverview(clan.id);
-    const capacitorString = overview.capacitor
-      ? `${!overview.castle ? 0 : overview.skills} skill${
-          !overview.castle || overview.skills != 1 ? "s" : ""
-        } left`
-      : "Needs capacitor";
-    messageString += `**${clan.name}**: ${overview.forest}/${overview.village}/${overview.castle} (${capacitorString})\n`;
+  try {
+    for (let clan of clans) {
+      const overview = await kolClient.getDreadStatusOverview(clan.id);
+      const capacitorString = overview.capacitor
+        ? `${!overview.castle ? 0 : overview.skills} skill${
+            !overview.castle || overview.skills != 1 ? "s" : ""
+          } left`
+        : "Needs capacitor";
+      messageString += `**${clan.name}**: ${overview.forest}/${overview.village}/${overview.castle} (${capacitorString})\n`;
+    }
+    await responseMessage.edit(messageString);
+  } catch {
+    await responseMessage.edit("I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to login.");
   }
-  await responseMessage.edit(messageString);
 }
 
 async function detailedClanStatus(

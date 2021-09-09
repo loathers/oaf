@@ -279,6 +279,7 @@ export class KOLClient {
 
   async getDreadStatusOverview(clanId: number): Promise<DreadStatus> {
     const raidLog = await this.getRaidLog(clanId);
+    if (!raidLog) throw "No raidlog"
     return this.extractDreadOverview(raidLog);
   }
 
