@@ -122,85 +122,93 @@ async function detailedClanStatus(
   const responseMessage = await message.channel.send(
     `Fetching status for clan ${clan.name}, watch this space!!`
   );
-  const status = await kolClient.getDetailedDreadStatus(clan.id);
-  let returnString = `__**STATUS UPDATE FOR ${clan.name.toUpperCase()}**__\n`;
-  returnString += `${status.overview.forest}/${status.overview.village}/${status.overview.castle} kills remaining.\n\n`;
-  returnString += "__FOREST__\n";
-  if (status.overview.forest) {
-    if (!status.forest.attic) returnString += "**Cabin attic needs unlocking.**\n";
-    if (status.forest.watchtower)
-      returnString += "Watchtower open, you can grab freddies if you like.\n";
-    if (status.forest.auditor) returnString += "~~Auditor's badge claimed.~~\n";
-    else returnString += "Auditor's badge available. (Cabin -> Basement -> Lockbox)\n";
-    if (status.forest.musicbox) returnString += "~~Intricate music box parts claimed.~~\n";
-    else
-      returnString +=
-        "Intricate music box parts available. (Cabin -> Attic -> Music Box as AT (also banishes spooky from forest))\n";
-    if (status.forest.kiwi) returnString += "~~Blood kiwi claimed.~~\n";
-    else returnString += "Blood kiwi available. (Tree, Root Around -> Look Up + Climb -> Stomp)\n";
-    if (status.forest.amber) returnString += "~~Moon-amber claimed.~~\n";
-    else
-      returnString +=
-        "Moon-amber available. (Tree -> Climb -> Shiny Thing (requires muscle class)\n";
-  } else returnString += "~~Forest fully cleared.~~\n";
-  returnString += "\n";
-  returnString += "__VILLAGE__\n";
-  if (status.overview.village) {
-    if (!status.village.schoolhouse) returnString += "Schoolhouse is open, go get your pencils!\n";
-    if (status.village.suite) returnString += "Master suite is open, grab some eau de mort?\n";
-    if (status.village.hanging) returnString += "~~Hanging complete.~~\n";
-    else
-      returnString +=
-        "Hanging available. (Square, Gallows -> Stand on Trap Door + Gallows -> Pull Lever)\n";
-  } else returnString += "~~Village fully cleared.~~\n";
-  returnString += "\n";
-  returnString += "__CASTLE__\n";
-  if (status.overview.castle) {
-    if (!status.castle.lab) returnString += "**Lab needs unlocking.**\n";
-    else {
-      if (status.overview.capacitor)
-        returnString += status.overview.skills
-          ? `${status.overview.skills} skill${status.overview.skills != 1 ? "s" : ""} available.\n`
-          : "~~All skills claimed.~~\n";
-      else returnString += "Machine needs repairing (with skull capacitor).\n";
-    }
-    if (status.castle.roast) returnString += "~~Dreadful roast claimed.~~\n";
-    else returnString += "Dreadful roast available. (Great Hall -> Dining Room -> Grab roast)\n";
-    if (status.castle.banana) returnString += "~~Wax banana claimed.~~\n";
-    else
-      returnString +=
-        "Wax banana available. (Great Hall -> Dining Room -> Levitate (requires myst class))\n";
-    if (status.castle.agaricus) returnString += "~~Stinking agaricus claimed.~~\n";
-    else
-      returnString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";
-  } else returnString += "~~Castle fully cleared.~~\n";
-  await responseMessage.edit(returnString);
-}
-
-async function getSkills(message: Message, kolClient: KOLClient): Promise<void> {
-  const sentMessage = await message.channel.send("Calculating skills, watch this space!");
-  await parseOldLogs(kolClient, sentMessage);
-  const currentKills: Map<string, DreadParticipation> = new Map();
-  for (let entry of killMap.entries()) {
-    currentKills.set(entry[0], { ...entry[1] });
-  }
-  await parseCurrentLogs(kolClient, currentKills, sentMessage);
-  let skillString = "__SKILLS OWED__\n\n";
-  let skillArray = [];
-  for (let entry of currentKills.entries()) {
-    if (!skillBlacklist.includes(entry[0])) {
-      const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
-      if (owedSkills > 0) {
-        skillArray.push(
-          `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}: ${owedSkills} skill${
-            owedSkills > 1 ? "s" : ""
-          }.`
-        );
+  try {
+    const status = await kolClient.getDetailedDreadStatus(clan.id);
+    let returnString = `__**STATUS UPDATE FOR ${clan.name.toUpperCase()}**__\n`;
+    returnString += `${status.overview.forest}/${status.overview.village}/${status.overview.castle} kills remaining.\n\n`;
+    returnString += "__FOREST__\n";
+    if (status.overview.forest) {
+      if (!status.forest.attic) returnString += "**Cabin attic needs unlocking.**\n";
+      if (status.forest.watchtower)
+        returnString += "Watchtower open, you can grab freddies if you like.\n";
+      if (status.forest.auditor) returnString += "~~Auditor's badge claimed.~~\n";
+      else returnString += "Auditor's badge available. (Cabin -> Basement -> Lockbox)\n";
+      if (status.forest.musicbox) returnString += "~~Intricate music box parts claimed.~~\n";
+      else
+        returnString +=
+          "Intricate music box parts available. (Cabin -> Attic -> Music Box as AT (also banishes spooky from forest))\n";
+      if (status.forest.kiwi) returnString += "~~Blood kiwi claimed.~~\n";
+      else returnString += "Blood kiwi available. (Tree, Root Around -> Look Up + Climb -> Stomp)\n";
+      if (status.forest.amber) returnString += "~~Moon-amber claimed.~~\n";
+      else
+        returnString +=
+          "Moon-amber available. (Tree -> Climb -> Shiny Thing (requires muscle class)\n";
+    } else returnString += "~~Forest fully cleared.~~\n";
+    returnString += "\n";
+    returnString += "__VILLAGE__\n";
+    if (status.overview.village) {
+      if (!status.village.schoolhouse) returnString += "Schoolhouse is open, go get your pencils!\n";
+      if (status.village.suite) returnString += "Master suite is open, grab some eau de mort?\n";
+      if (status.village.hanging) returnString += "~~Hanging complete.~~\n";
+      else
+        returnString +=
+          "Hanging available. (Square, Gallows -> Stand on Trap Door + Gallows -> Pull Lever)\n";
+    } else returnString += "~~Village fully cleared.~~\n";
+    returnString += "\n";
+    returnString += "__CASTLE__\n";
+    if (status.overview.castle) {
+      if (!status.castle.lab) returnString += "**Lab needs unlocking.**\n";
+      else {
+        if (status.overview.capacitor)
+          returnString += status.overview.skills
+            ? `${status.overview.skills} skill${status.overview.skills != 1 ? "s" : ""} available.\n`
+            : "~~All skills claimed.~~\n";
+        else returnString += "Machine needs repairing (with skull capacitor).\n";
       }
+      if (status.castle.roast) returnString += "~~Dreadful roast claimed.~~\n";
+      else returnString += "Dreadful roast available. (Great Hall -> Dining Room -> Grab roast)\n";
+      if (status.castle.banana) returnString += "~~Wax banana claimed.~~\n";
+      else
+        returnString +=
+          "Wax banana available. (Great Hall -> Dining Room -> Levitate (requires myst class))\n";
+      if (status.castle.agaricus) returnString += "~~Stinking agaricus claimed.~~\n";
+      else
+        returnString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";
+    } else returnString += "~~Castle fully cleared.~~\n";
+    await responseMessage.edit(returnString); 
+    } catch {
+      await responseMessage.edit("I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to login.");
     }
   }
-  skillString += skillArray.sort().join("\n");
-  await sentMessage.edit(skillString);
+
+  async function getSkills(message: Message, kolClient: KOLClient): Promise<void> {
+    const sentMessage = await message.channel.send("Calculating skills, watch this space!");
+    try {
+      await parseOldLogs(kolClient, sentMessage);
+      const currentKills: Map<string, DreadParticipation> = new Map();
+      for (let entry of killMap.entries()) {
+        currentKills.set(entry[0], { ...entry[1] });
+      }
+      await parseCurrentLogs(kolClient, currentKills, sentMessage);
+      let skillString = "__SKILLS OWED__\n\n";
+      let skillArray = [];
+      for (let entry of currentKills.entries()) {
+        if (!skillBlacklist.includes(entry[0])) {
+          const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
+          if (owedSkills > 0) {
+            skillArray.push(
+              `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}: ${owedSkills} skill${
+                owedSkills > 1 ? "s" : ""
+              }.`
+            );
+          }
+        }
+      }
+      skillString += skillArray.sort().join("\n");
+      await sentMessage.edit(skillString);
+    } catch {
+      await sentMessage.edit("I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to login.");
+    }
 }
 
 async function parseOldLogs(kolClient: KOLClient, sentMessage?: Message) {
@@ -232,6 +240,7 @@ async function parseCurrentLogs(
       `Calculating skills, watch this space! Parsing current log for clan ${clan.name}`
     );
     const raidLog = await kolClient.getRaidLog(clan.id);
+    if (!raidLog) throw "Clan inaccessible"
     addParticipationFromRaidLog(raidLog, mapToUpdate);
   }
 }
