@@ -246,9 +246,9 @@ function reverseLep(message: Message, args: string[]): void {
     return;
   }
   message.channel.send(
-    `To get ${meatDrop}% meat drop from a leprechaun, it should be of weight ${
+    `To get ${meatDrop}% meat drop from a leprechaun, it should weigh at least ${
       (meatDrop + 61 + Math.sqrt(110 * meatDrop + 3685)) / 2
-    }. So, really a weight of ${Math.ceil((meatDrop + 61 + Math.sqrt(110 * meatDrop + 3685)) / 2)}.`
+    } lbs.`
   );
 }
 
