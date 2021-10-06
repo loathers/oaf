@@ -73,7 +73,7 @@ export class WikiSearcher {
     console.log("Reading item data.");
     for (let fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
       const file = await axios(
-        `https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/${fileName}.txt?format=raw`
+        `https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/${fileName}.txt`
       );
       for (let line of file.data.split(/\n/)) {
         try {
@@ -84,7 +84,7 @@ export class WikiSearcher {
     }
     console.log("Reading skills.");
     const skillFile = await axios(
-      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/classskills.txt?format=raw"
+      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/classskills.txt"
     );
     for (let line of skillFile.data.split(/\n/)) {
       try {
@@ -96,7 +96,7 @@ export class WikiSearcher {
     }
     console.log("Reading items.");
     const itemFile = await axios(
-      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/items.txt?format=raw"
+      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/items.txt"
     );
     for (let line of itemFile.data.split(/\n/)) {
       try {
@@ -104,7 +104,7 @@ export class WikiSearcher {
         if (item.name()) {
           this._thingMap.set(item.name(), item);
           if (item.get().types.includes("avatar")) {
-            avatarPotionSet.add(item.name())
+            avatarPotionSet.add(item.name());
           }
         }
       } catch (error) {}
@@ -112,7 +112,7 @@ export class WikiSearcher {
 
     console.log("Reading monsters.");
     const monsterFile = await axios(
-      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/monsters.txt?format=raw"
+      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/monsters.txt"
     );
     for (let line of monsterFile.data.split(/\n/)) {
       try {
@@ -125,7 +125,7 @@ export class WikiSearcher {
 
     console.log("Reading familiars.");
     const familiarFile = await axios(
-      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/familiars.txt?format=raw"
+      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/familiars.txt"
     );
     for (let line of familiarFile.data.split(/\n/)) {
       try {
@@ -145,7 +145,7 @@ export class WikiSearcher {
 
     console.log("Reading effects.");
     const effectsFile = await axios(
-      "https://sourceforge.net/p/kolmafia/code/HEAD/tree/src/data/statuseffects.txt?format=raw"
+      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/statuseffects.txt"
     );
     for (let line of effectsFile.data.split(/\n/)) {
       try {
@@ -334,8 +334,8 @@ function nameFromWikiPage(url: string, data: any): string {
   switch (result.toLowerCase()) {
     case "glitch season reward name":
       return "[glitch season reward name]";
-      case "monster types":
-        return "Category";
+    case "monster types":
+      return "Category";
     default:
       return result;
   }
