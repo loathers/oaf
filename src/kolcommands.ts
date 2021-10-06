@@ -263,10 +263,8 @@ function reverseFairy(message: Message, args: string[]): void {
     return;
   }
   message.channel.send(
-    `To get ${itemDrop}% item drop from a fairy, it should be of weight ${
+    `To get ${itemDrop}% item drop from a fairy, it should be weigh at least ${
       (2 * itemDrop + 61 + Math.sqrt(220 * itemDrop + 3685)) / 2
-    }. So, really a weight of ${Math.ceil(
-      (2 * itemDrop + 61 + Math.sqrt(220 * itemDrop + 3685)) / 2
-    )}.`
+    } lbs.`
   );
 }
