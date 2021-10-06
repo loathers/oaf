@@ -364,7 +364,7 @@ export class Effect implements Thing {
         })`;
       } else {
         description +=
-          "Pizza: If you are reading this Phillammon has hecked something up. Please ping him.";
+          "Pizza: If you are reading this, Captain 'Jalen' Scotch has hecked something up. Please ping him.";
       }
     } else {
       description += "Inelgible for pizza, wishes, or hookahs.";

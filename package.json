@@ -2,7 +2,7 @@
   "name": "oaf-js",
   "version": "1.0.0",
   "description": "OAF, the discord bot for the Ascension Speedrun Society, reborn in typescript!",
-  "repository": "https://github.com/Phillammon/oaf-js.git",
+  "repository": "https://github.com/Loathing-Associates-Scripting-Society/oaf-js.git",
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build",
