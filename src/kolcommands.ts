@@ -169,7 +169,7 @@ function level(message: Message, args: string[]): void {
   message.channel.send(
     `Level ${
       statBlock.level
-    } requires ${statBlock.mainstat.toLocaleString()} mainstat or ${statBlock.substat.toLocaleString()} total substats.`
+    } requires ${statBlock.mainstat.toLocaleString()} mainstat or ${statBlock.substat.toLocaleString()} total substats. And also I hunt man for sport.`
   );
 }
 
