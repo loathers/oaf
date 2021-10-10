@@ -174,7 +174,7 @@ export class WikiSearcher {
       .setTitle(foundName.name)
       .setURL(foundName.url)
       .setFooter(
-        "Problems? Message Phillammon#2824 on discord.",
+        "Problems? Message DocRostov#7004 on discord.",
         "http://images.kingdomofloathing.com/itemimages/oaf.gif"
       );
     if (this._thingMap.has(foundName.name.toLowerCase())) {
@@ -283,7 +283,7 @@ export class WikiSearcher {
           } Diabolic Pizza has too many possible effects to list.`
         )
         .setFooter(
-          "Problems? Message Phillammon#2824 on discord.",
+          "Problems? Message DocRostov#7004 on discord.",
           "http://images.kingdomofloathing.com/itemimages/oaf.gif"
         );
     }
@@ -312,7 +312,7 @@ export class WikiSearcher {
       .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
       .setDescription(description)
       .setFooter(
-        "Problems? Message Phillammon#2824 on discord.",
+        "Problems? Message DocRostov#7004 on discord.",
         "http://images.kingdomofloathing.com/itemimages/oaf.gif"
       );
   }
