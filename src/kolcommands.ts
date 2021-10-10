@@ -28,6 +28,17 @@ export function attachKoLCommands(client: DiscordClient) {
     "Print the +stat drop supplied by a volleyball of a given weight."
   );
   client.attachCommand("volley", volley, "Alias for volleyball.");
+  client.attachCommand(
+    "reverseleprechaun",
+    reverseLep,
+    "Print the leprechaun weight necessary to supply a particular meat drop."
+  );
+  client.attachCommand("reverselep", reverseLep, "Alias for reverseleprechaun.");
+  client.attachCommand(
+    "reversefairy",
+    reverseFairy,
+    "Print the fairy weight necessary to supply a particular item drop."
+  );
 }
 
 function item(message: Message, args: string[]): void {
@@ -221,5 +232,43 @@ function substat(message: Message, args: string[]): void {
       ` An additional ${(nextLevel.substat - statBlock.substat).toLocaleString()} total substat${
         nextLevel.substat - statBlock.substat > 1 ? "s are" : " is"
       } required to reach level ${nextLevel.level}.`
+  );
+}
+
+function reverseLep(message: Message, args: string[]): void {
+  if (args.length === 0) {
+    message.channel.send("Please supply a meat drop value.");
+    return;
+  }
+  const meatDrop = parseInt(args[1]) || 0;
+  if (meatDrop <= 0) {
+    message.channel.send("Please supply a positive meat drop value.");
+    return;
+  }
+  message.channel.send(
+    `To get ${meatDrop}% meat drop from a leprechaun, it should weigh at least ${
+      (meatDrop + 61 + Math.sqrt(110 * meatDrop + 3685)) / 2
+    } lbs, or a Hobo Monkey that weighs at least ${
+      (meatDrop + 61 + Math.sqrt(110 * meatDrop + 3685)) / 2 / 1.25
+    } lbs.`
+  );
+}
+
+function reverseFairy(message: Message, args: string[]): void {
+  if (args.length === 0) {
+    message.channel.send("Please supply an item drop value.");
+    return;
+  }
+  const itemDrop = parseInt(args[1]) || 0;
+  if (itemDrop <= 0) {
+    message.channel.send("Please supply a positive item drop.");
+    return;
+  }
+  message.channel.send(
+    `To get ${itemDrop}% item drop from a fairy, it should be weigh at least ${
+      (2 * itemDrop + 61 + Math.sqrt(220 * itemDrop + 3685)) / 2
+    } lbs, or a Jumpsuited Hounddog that weighs at least ${
+      (2 * itemDrop + 61 + Math.sqrt(220 * itemDrop + 3685)) / 2 / 1.25
+    } lbs.`
   );
 }
