@@ -64,6 +64,7 @@ const skillBlacklist = [
   "pyacide",
   "kha0z",
   "soxfan196o",
+  "Aldo13",
 ].map((name) => name.toLowerCase());
 
 const killMap: Map<string, DreadParticipation> = new Map();
@@ -103,7 +104,9 @@ async function clanStatus(message: Message, kolClient: KOLClient): Promise<void>
     }
     await responseMessage.edit(messageString);
   } catch {
-    await responseMessage.edit("I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in.");
+    await responseMessage.edit(
+      "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
+    );
   }
 }
 
@@ -138,7 +141,8 @@ async function detailedClanStatus(
         returnString +=
           "Intricate music box parts available. (Cabin -> Attic -> Music Box as AT (also banishes spooky from forest))\n";
       if (status.forest.kiwi) returnString += "~~Blood kiwi claimed.~~\n";
-      else returnString += "Blood kiwi available. (Tree, Root Around -> Look Up + Climb -> Stomp)\n";
+      else
+        returnString += "Blood kiwi available. (Tree, Root Around -> Look Up + Climb -> Stomp)\n";
       if (status.forest.amber) returnString += "~~Moon-amber claimed.~~\n";
       else
         returnString +=
@@ -147,7 +151,8 @@ async function detailedClanStatus(
     returnString += "\n";
     returnString += "__VILLAGE__\n";
     if (status.overview.village) {
-      if (!status.village.schoolhouse) returnString += "Schoolhouse is open, go get your pencils!\n";
+      if (!status.village.schoolhouse)
+        returnString += "Schoolhouse is open, go get your pencils!\n";
       if (status.village.suite) returnString += "Master suite is open, grab some eau de mort?\n";
       if (status.village.hanging) returnString += "~~Hanging complete.~~\n";
       else
@@ -161,7 +166,9 @@ async function detailedClanStatus(
       else {
         if (status.overview.capacitor)
           returnString += status.overview.skills
-            ? `${status.overview.skills} skill${status.overview.skills != 1 ? "s" : ""} available.\n`
+            ? `${status.overview.skills} skill${
+                status.overview.skills != 1 ? "s" : ""
+              } available.\n`
             : "~~All skills claimed.~~\n";
         else returnString += "Machine needs repairing (with skull capacitor).\n";
       }
@@ -175,40 +182,44 @@ async function detailedClanStatus(
       else
         returnString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";
     } else returnString += "~~Castle fully cleared.~~\n";
-    await responseMessage.edit(returnString); 
-    } catch {
-      await responseMessage.edit("I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in.");
-    }
+    await responseMessage.edit(returnString);
+  } catch {
+    await responseMessage.edit(
+      "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
+    );
   }
+}
 
-  async function getSkills(message: Message, kolClient: KOLClient): Promise<void> {
-    const sentMessage = await message.channel.send("Calculating skills, watch this space!");
-    try {
-      await parseOldLogs(kolClient, sentMessage);
-      const currentKills: Map<string, DreadParticipation> = new Map();
-      for (let entry of killMap.entries()) {
-        currentKills.set(entry[0], { ...entry[1] });
-      }
-      await parseCurrentLogs(kolClient, currentKills, sentMessage);
-      let skillString = "__SKILLS OWED__\n\n";
-      let skillArray = [];
-      for (let entry of currentKills.entries()) {
-        if (!skillBlacklist.includes(entry[0])) {
-          const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
-          if (owedSkills > 0) {
-            skillArray.push(
-              `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}: ${owedSkills} skill${
-                owedSkills > 1 ? "s" : ""
-              }.`
-            );
-          }
+async function getSkills(message: Message, kolClient: KOLClient): Promise<void> {
+  const sentMessage = await message.channel.send("Calculating skills, watch this space!");
+  try {
+    await parseOldLogs(kolClient, sentMessage);
+    const currentKills: Map<string, DreadParticipation> = new Map();
+    for (let entry of killMap.entries()) {
+      currentKills.set(entry[0], { ...entry[1] });
+    }
+    await parseCurrentLogs(kolClient, currentKills, sentMessage);
+    let skillString = "__SKILLS OWED__\n\n";
+    let skillArray = [];
+    for (let entry of currentKills.entries()) {
+      if (!skillBlacklist.includes(entry[0])) {
+        const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
+        if (owedSkills > 0) {
+          skillArray.push(
+            `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}: ${owedSkills} skill${
+              owedSkills > 1 ? "s" : ""
+            }.`
+          );
         }
       }
-      skillString += skillArray.sort().join("\n");
-      await sentMessage.edit(skillString);
-    } catch {
-      await sentMessage.edit("I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in.");
     }
+    skillString += skillArray.sort().join("\n");
+    await sentMessage.edit(skillString);
+  } catch {
+    await sentMessage.edit(
+      "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
+    );
+  }
 }
 
 async function parseOldLogs(kolClient: KOLClient, sentMessage?: Message) {
@@ -240,7 +251,7 @@ async function parseCurrentLogs(
       `Calculating skills, watch this space! Parsing current log for clan ${clan.name}`
     );
     const raidLog = await kolClient.getRaidLog(clan.id);
-    if (!raidLog) throw "Clan inaccessible"
+    if (!raidLog) throw "Clan inaccessible";
     addParticipationFromRaidLog(raidLog, mapToUpdate);
   }
 }
