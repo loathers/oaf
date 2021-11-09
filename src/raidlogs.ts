@@ -30,7 +30,7 @@ type DreadParticipation = {
   skills: number;
 };
 
-const skillBlacklist = [
+const doneWithSkillsList = [
   "The Dictator",
   "kirByllAmA",
   "kenny kamAKAzi",
@@ -202,7 +202,7 @@ async function getSkills(message: Message, kolClient: KOLClient): Promise<void> 
     let skillString = "__SKILLS OWED__\n\n";
     let skillArray = [];
     for (let entry of currentKills.entries()) {
-      if (!skillBlacklist.includes(entry[0])) {
+      if (!doneWithSkillsList.includes(entry[0])) {
         const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
         if (owedSkills > 0) {
           skillArray.push(
