@@ -151,8 +151,7 @@ async function detailedClanStatus(
     returnString += "\n";
     returnString += "__VILLAGE__\n";
     if (status.overview.village) {
-      if (!status.village.schoolhouse)
-        returnString += "Schoolhouse is open, go get your pencils!\n";
+      if (status.village.schoolhouse) returnString += "Schoolhouse is open, go get your pencils!\n";
       if (status.village.suite) returnString += "Master suite is open, grab some eau de mort?\n";
       if (status.village.hanging) returnString += "~~Hanging complete.~~\n";
       else
