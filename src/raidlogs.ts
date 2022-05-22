@@ -30,43 +30,6 @@ type DreadParticipation = {
   skills: number;
 };
 
-const doneWithSkillsList = [
-  "The Dictator",
-  "kirByllAmA",
-  "kenny kamAKAzi",
-  "Captain Scotch",
-  "gregmasta",
-  "violetinsane",
-  "RandomExtremity",
-  "madowl",
-  "Gausie",
-  "threebullethamburgler",
-  "Just Eyes",
-  "Phillammon",
-  "Headdab",
-  "stibarsen",
-  "NatNit",
-  "monsieur bob",
-  "coolanybody",
-  "stockFD3S",
-  "ast154251",
-  "Archie700",
-  "k3wLb0t",
-  "aEniMUs",
-  "tHE eROsIoNseEker",
-  "worthawholebean",
-  "phreddrickkv2",
-  "epicgamer",
-  "monkeyman200",
-  "schalfi",
-  "merrywanderer",
-  "manendra",
-  "pyacide",
-  "kha0z",
-  "soxfan196o",
-  "Aldo13",
-].map((name) => name.toLowerCase());
-
 const killMap: Map<string, DreadParticipation> = new Map();
 
 export function attachClanCommands(discordClient: DiscordClient, kolClient: KOLClient) {
@@ -201,6 +164,11 @@ async function getSkills(message: Message, kolClient: KOLClient): Promise<void> 
     let skillString = "__SKILLS OWED__\n\n";
     let skillArray = [];
     for (let entry of currentKills.entries()) {
+      const doneWithSkillsList = JSON.parse(
+        await axios(
+          "https://raw.githubusercontent.com/Loathing-Associate-Scripting-Society/oaf-js/main/done-with-skills.JSON"
+        ).data
+      ).map((name) => name.toLowercase()) as string[];
       if (!doneWithSkillsList.includes(entry[0])) {
         const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
         if (owedSkills > 0) {
