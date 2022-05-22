@@ -255,7 +255,7 @@ export class KOLClient {
       watchtower: !!raidLog.match(/unlocked the fire watchtower/),
       auditor: !!raidLog.match(/got a Dreadsylvanian auditor's badge/),
       musicbox: !!raidLog.match(/made the forest less spooky/),
-      kiwi: !!raidLog.match(/knocked some fruit loose/),
+      kiwi: !!raidLog.match(/knocked some fruit loose/) || !!raidLog.match(/wasted some fruit/),
       amber: !!raidLog.match(/acquired a chunk of moon-amber/),
     };
   }
@@ -264,7 +264,7 @@ export class KOLClient {
     return {
       schoolhouse: !!raidLog.match(/unlocked the schoolhouse/),
       suite: !!raidLog.match(/unlocked the master suite/),
-      hanging: !!raidLog.match(/hanged/),
+      hanging: !!(raidLog.match(/hanged/) || !! raidLog.match(/hung/),
     };
   }
 
