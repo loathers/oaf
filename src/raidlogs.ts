@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Message } from "discord.js";
 import { KILLMATCHER, SKILLMATCHER } from "./constants";
 import { DiscordClient } from "./discord";
