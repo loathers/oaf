@@ -161,16 +161,16 @@ async function getSkills(message: Message, kolClient: KOLClient): Promise<void> 
     for (let entry of killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
+    const rawList = await axios(
+      "https://raw.githubusercontent.com/Loathing-Associate-Scripting-Society/oaf-js/main/done-with-skills.JSON"
+    );
+    const doneWithSkillsList = (JSON.parse(rawList.data) as string[]).map((name) =>
+      name.toLowerCase()
+    );
     await parseCurrentLogs(kolClient, currentKills, sentMessage);
     let skillString = "__SKILLS OWED__\n\n";
     let skillArray = [];
     for (let entry of currentKills.entries()) {
-      const rawList = await axios(
-        "https://raw.githubusercontent.com/Loathing-Associate-Scripting-Society/oaf-js/main/done-with-skills.JSON"
-      );
-      const doneWithSkillsList = (JSON.parse(rawList.data) as string[]).map((name) =>
-        name.toLowerCase()
-      );
       if (!doneWithSkillsList.includes(entry[0])) {
         const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
         if (owedSkills > 0) {
