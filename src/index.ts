@@ -2,10 +2,10 @@ import { DiscordClient } from "./discord";
 import { WikiSearcher } from "./wikisearch";
 import { attachMiscCommands } from "./misccommands";
 import { KOLClient } from "./kolclient";
-import { attachClanCommands } from "./raidlogs";
+import { attachClanCommands, syncToDatabase } from "./raidlogs";
 import * as dotenv from "dotenv";
 import { attachKoLCommands } from "./kolcommands";
-import { Client } from "pg";
+import { Pool } from "pg";
 import { migrate } from "postgres-migrations";
 
 dotenv.config({ path: __dirname + "/.env" });
@@ -13,8 +13,8 @@ dotenv.config({ path: __dirname + "/.env" });
 console.log("Creating KOL client.");
 const kolClient = new KOLClient();
 
-console.log("Creating database client.");
-const databaseClient = new Client({
+console.log("Creating database client pool.");
+const databaseClientPool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false,
@@ -24,10 +24,10 @@ const databaseClient = new Client({
 console.log("Creating wiki searcher.");
 const wikiSearcher = new WikiSearcher(kolClient);
 
-console.log("Connecting to database.");
-databaseClient.connect().then(() => {
-  console.log("Migrating database.");
-  migrate({ client: databaseClient }, "./migrations").then(() => {
+console.log("Migrating database.");
+migrate({ client: databaseClientPool }, "./migrations").then(() => {
+  console.log("Syncing database.");
+  syncToDatabase(databaseClientPool).then(() => {
     console.log("Downloading mafia data.");
     wikiSearcher.downloadMafiaData().then(() => {
       console.log("All mafia data downloaded.");
@@ -38,7 +38,7 @@ databaseClient.connect().then(() => {
       console.log("Attaching kol commands.");
       attachKoLCommands(discordClient);
       console.log("Attaching clan commands.");
-      attachClanCommands(discordClient, kolClient, databaseClient);
+      attachClanCommands(discordClient, kolClient, databaseClientPool);
       console.log("Attaching wiki commands.");
       discordClient.attachMetaBotCommands();
 

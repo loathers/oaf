@@ -1,5 +1,5 @@
 import { Message } from "discord.js";
-import { Client } from "pg";
+import { Pool } from "pg";
 import { KILLMATCHER, SKILLMATCHER } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
@@ -36,7 +36,7 @@ const killMap: Map<string, DreadParticipation> = new Map();
 export function attachClanCommands(
   discordClient: DiscordClient,
   kolClient: KOLClient,
-  databaseClient: Client
+  databaseClientPool: Pool
 ) {
   discordClient.attachCommand(
     "status",
@@ -50,19 +50,33 @@ export function attachClanCommands(
   );
   discordClient.attachCommand(
     "skills",
-    (message) => getSkills(message, kolClient, databaseClient),
+    (message) => getSkills(message, kolClient, databaseClientPool),
     "Get a list of everyone currently elgible for Dreadsylvania skills."
   );
   discordClient.attachCommand(
     "done",
-    (message, args) => setDone(message, args.slice(1).join(" "), databaseClient),
+    (message, args) => setDone(message, args.slice(1).join(" "), databaseClientPool),
     "Set a player as done with Dreadsylvania skills."
   );
   discordClient.attachCommand(
     "undone",
-    (message, args) => setNotDone(message, args.slice(1).join(" "), databaseClient),
+    (message, args) => setNotDone(message, args.slice(1).join(" "), databaseClientPool),
     "Set a player as not done with Dreadsylvania skills."
   );
+}
+
+export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
+  for (let clan of clans) {
+    clan.parsedRaids = (
+      await databaseClientPool.query("SELECT raid_id FROM tracked_instances WHERE clan_id = $1;", [
+        clan.id,
+      ])
+    ).rows.map((row) => row.raid_id);
+  }
+
+  for (let player of (await databaseClientPool.query("SELECT * FROM players;")).rows) {
+    killMap.set(player.username, { kills: player.kills, skills: player.skills });
+  }
 }
 
 async function clanStatus(message: Message, kolClient: KOLClient): Promise<void> {
@@ -170,14 +184,14 @@ async function detailedClanStatus(
 async function getSkills(
   message: Message,
   kolClient: KOLClient,
-  databaseClient: Client
+  databaseClientPool: Pool
 ): Promise<void> {
   const sentMessage = await message.channel.send("Calculating skills, watch this space!");
   const doneWithSkillsList = (
-    await databaseClient.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
+    await databaseClientPool.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
   ).rows.map((result) => result.username.toLowerCase());
   try {
-    await parseOldLogs(kolClient, sentMessage);
+    await parseOldLogs(kolClient, databaseClientPool, sentMessage);
     const currentKills: Map<string, DreadParticipation> = new Map();
     for (let entry of killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
@@ -206,7 +220,8 @@ async function getSkills(
   }
 }
 
-async function parseOldLogs(kolClient: KOLClient, sentMessage?: Message) {
+async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sentMessage?: Message) {
+  const newlyParsedRaids = [];
   for (let clan of clans) {
     await sentMessage?.edit(
       `Calculating skills, watch this space! Parsing completed logs for clan ${clan.name}`
@@ -221,12 +236,29 @@ async function parseOldLogs(kolClient: KOLClient, sentMessage?: Message) {
       const raidLog = await kolClient.getFinishedRaidLog(raid);
       addParticipationFromRaidLog(raidLog, killMap);
       clan.parsedRaids.push(raid);
+      newlyParsedRaids.push({ clan_id: clan.id, raid_id: raid });
     }
+    const databaseClient = await databaseClientPool.connect();
+    await databaseClient.query("BEGIN");
+    for (let raid of newlyParsedRaids) {
+      await databaseClient.query(
+        "INSERT INTO tracked_instances(clan_id, raid_id) VALUES ($1, $2)",
+        [raid.clan_id, raid.raid_id]
+      );
+    }
+    for (let [player, participation] of killMap.entries()) {
+      await databaseClient.query(
+        "INSERT INTO players (username, kills, skills) VALUES ($1, $2, $3) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3;",
+        [player, participation.kills, participation.skills]
+      );
+    }
+    await databaseClient.query("COMMIT");
+    databaseClient.release();
   }
 }
 
-async function setDone(message: Message, username: string, databaseClient: Client) {
-  await databaseClient.query(
+async function setDone(message: Message, username: string, databaseClientPool: Pool) {
+  await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET done_with_skills = TRUE;",
     [username]
   );
@@ -234,8 +266,8 @@ async function setDone(message: Message, username: string, databaseClient: Clien
   return;
 }
 
-async function setNotDone(message: Message, username: string, databaseClient: Client) {
-  await databaseClient.query(
+async function setNotDone(message: Message, username: string, databaseClientPool: Pool) {
+  await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET done_with_skills = FALSE;",
     [username]
   );
