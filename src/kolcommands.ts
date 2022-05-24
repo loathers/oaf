@@ -1,6 +1,5 @@
 import { Message } from "discord.js";
 import { DiscordClient } from "./discord";
-import { clamp } from "./utils";
 
 export function attachKoLCommands(client: DiscordClient) {
   client.attachCommand("item", item, "Print the +item drop required to cap a drop.");
