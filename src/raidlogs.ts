@@ -1,4 +1,5 @@
 import { Message } from "discord.js";
+import { Client } from "pg";
 import { KILLMATCHER, SKILLMATCHER } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
@@ -30,46 +31,13 @@ type DreadParticipation = {
   skills: number;
 };
 
-const doneWithSkillsList = [
-  "The Dictator",
-  "kirByllAmA",
-  "kenny kamAKAzi",
-  "Captain Scotch",
-  "gregmasta",
-  "violetinsane",
-  "RandomExtremity",
-  "madowl",
-  "Gausie",
-  "threebullethamburgler",
-  "Just Eyes",
-  "Phillammon",
-  "Headdab",
-  "stibarsen",
-  "NatNit",
-  "monsieur bob",
-  "coolanybody",
-  "stockFD3S",
-  "ast154251",
-  "Archie700",
-  "k3wLb0t",
-  "aEniMUs",
-  "tHE eROsIoNseEker",
-  "worthawholebean",
-  "phreddrickkv2",
-  "epicgamer",
-  "monkeyman200",
-  "schalfi",
-  "merrywanderer",
-  "manendra",
-  "pyacide",
-  "kha0z",
-  "soxfan196o",
-  "Aldo13",
-].map((name) => name.toLowerCase());
-
 const killMap: Map<string, DreadParticipation> = new Map();
 
-export function attachClanCommands(discordClient: DiscordClient, kolClient: KOLClient) {
+export function attachClanCommands(
+  discordClient: DiscordClient,
+  kolClient: KOLClient,
+  databaseClient: Client
+) {
   discordClient.attachCommand(
     "status",
     (message) => clanStatus(message, kolClient),
@@ -82,8 +50,18 @@ export function attachClanCommands(discordClient: DiscordClient, kolClient: KOLC
   );
   discordClient.attachCommand(
     "skills",
-    (message) => getSkills(message, kolClient),
+    (message) => getSkills(message, kolClient, databaseClient),
     "Get a list of everyone currently elgible for Dreadsylvania skills."
+  );
+  discordClient.attachCommand(
+    "done",
+    (message, args) => setDone(message, args.slice(1).join(" "), databaseClient),
+    "Set a player as done with Dreadsylvania skills."
+  );
+  discordClient.attachCommand(
+    "undone",
+    (message, args) => setNotDone(message, args.slice(1).join(" "), databaseClient),
+    "Set a player as not done with Dreadsylvania skills."
   );
 }
 
@@ -189,8 +167,15 @@ async function detailedClanStatus(
   }
 }
 
-async function getSkills(message: Message, kolClient: KOLClient): Promise<void> {
+async function getSkills(
+  message: Message,
+  kolClient: KOLClient,
+  databaseClient: Client
+): Promise<void> {
   const sentMessage = await message.channel.send("Calculating skills, watch this space!");
+  const doneWithSkillsList = (
+    await databaseClient.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
+  ).rows.map((result) => result.username.toLowerCase());
   try {
     await parseOldLogs(kolClient, sentMessage);
     const currentKills: Map<string, DreadParticipation> = new Map();
@@ -238,6 +223,24 @@ async function parseOldLogs(kolClient: KOLClient, sentMessage?: Message) {
       clan.parsedRaids.push(raid);
     }
   }
+}
+
+async function setDone(message: Message, username: string, databaseClient: Client) {
+  await databaseClient.query(
+    "INSERT INTO players (username, done_with_skills) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET done_with_skills = TRUE;",
+    [username]
+  );
+  message.channel.send(`Added user ${username} to players done with skills.`);
+  return;
+}
+
+async function setNotDone(message: Message, username: string, databaseClient: Client) {
+  await databaseClient.query(
+    "INSERT INTO players (username, done_with_skills) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET done_with_skills = FALSE;",
+    [username]
+  );
+  message.channel.send(`Removed user ${username} from players done with skills.`);
+  return;
 }
 
 async function parseCurrentLogs(
