@@ -92,6 +92,7 @@ function prsWelcome(message: Message, args: string[]): void {
     ["freecandy", "freecandydotexe"],
     ["garfjalen", "kol-scripting-resources"],
     ["mafia", "kolmafia"],
+    ["oaf", "oaf-js"],
   ]);
 
   const project = aliases.get(args[1].toLowerCase()) ?? args[1].toLowerCase();
@@ -102,7 +103,6 @@ function prsWelcome(message: Message, args: string[]): void {
     ["kol-scripting-resources", "KoL-Scripting-Resources"],
     ["cagebot", "Cagebot"],
     ["uberpvpoptimizer", "UberPvPOptimizer"],
-    ["oaf", "oaf-js"]
   ]);
 
   const capitalizedProject = capitalizations.get(project) ?? project;
