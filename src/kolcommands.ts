@@ -246,11 +246,14 @@ function reverseLep(message: Message, args: string[]): void {
     return;
   }
   message.channel.send(
-    `To get ${meatDrop}% meat drop from a leprechaun, it should weigh at least ${
-      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) / 2
-    } lbs, or a Hobo Monkey that weighs at least ${
-      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) / 2 / 1.25
-    } lbs.`
+    `To get ${meatDrop}% meat drop from a leprechaun, it should weigh at least ${(
+      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) /
+      2
+    ).toFixed(1)} lbs, or a Hobo Monkey that weighs at least ${(
+      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) /
+      2 /
+      1.25
+    ).toFixed(1)} lbs.`
   );
 }
 
@@ -265,10 +268,13 @@ function reverseFairy(message: Message, args: string[]): void {
     return;
   }
   message.channel.send(
-    `To get ${itemDrop}% item drop from a fairy, it should be weigh at least ${
-      (2 * itemDrop + 61 - Math.sqrt(220 * itemDrop + 3685)) / 2
-    } lbs, or a Jumpsuited Hounddog that weighs at least ${
-      (2 * itemDrop + 61 - Math.sqrt(220 * itemDrop + 3685)) / 2 / 1.25
-    } lbs.`
+    `To get ${itemDrop}% item drop from a fairy, it should be weigh at least ${(
+      (2 * itemDrop + 61 - Math.sqrt(220 * itemDrop + 3685)) /
+      2
+    ).toFixed(1)} lbs, or a Jumpsuited Hounddog that weighs at least ${(
+      (2 * itemDrop + 61 - Math.sqrt(220 * itemDrop + 3685)) /
+      2 /
+      1.25
+    ).toFixed(1)} lbs.`
   );
 }
