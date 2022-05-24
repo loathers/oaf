@@ -39,6 +39,11 @@ export function attachKoLCommands(client: DiscordClient) {
     reverseFairy,
     "Print the fairy weight necessary to supply a particular item drop."
   );
+  client.attachCommand(
+    "prswelcome",
+    prsWelcome,
+    "Links to the PRs and issues assigned to you for a given LASS project"
+  );
 }
 
 function item(message: Message, args: string[]): void {
@@ -270,5 +275,36 @@ function reverseFairy(message: Message, args: string[]): void {
     } lbs, or a Jumpsuited Hounddog that weighs at least ${
       (2 * itemDrop + 61 - Math.sqrt(220 * itemDrop + 3685)) / 2 / 1.25
     } lbs.`
+  );
+}
+
+function prsWelcome(message: Message, args: string[]): void {
+  if (args.length === 0) {
+    message.reply(":grep:");
+    return;
+  }
+
+  const aliases: Map<string, string> = new Map([
+    ["garbo", "garbage-collector"],
+    ["freecandy", "freecandydotexe"],
+    ["garfjalen", "kol-scripting-resources"],
+  ]);
+
+  const project = aliases.get(args[1].toLowerCase()) ?? args[1].toLowerCase();
+
+  const capitalizations: Map<string, string> = new Map([
+    ["tourguide", "TourGuide"],
+    ["chit", "ChIT"],
+    ["kol-scripting-resources", "KoL-Scripting-Resources"],
+    ["cagebot", "Cagebot"],
+    ["uberpvpoptimizer", "UberPvPOptimizer"],
+  ]);
+
+  const capitalizedProject = capitalizations.get(project) ?? project;
+
+  message.channel.send(
+    `https://github.com/${
+      capitalizedProject === "kolmafia" ? "kolmafia" : "Loathing-Associates-Scripting-Society"
+    }/${capitalizedProject}/issues?q=is%3Aopen+assignee%3A%40me`
   );
 }
