@@ -298,6 +298,7 @@ function prsWelcome(message: Message, args: string[]): void {
     ["kol-scripting-resources", "KoL-Scripting-Resources"],
     ["cagebot", "Cagebot"],
     ["uberpvpoptimizer", "UberPvPOptimizer"],
+    ["mafia", "kolmafia"],
   ]);
 
   const capitalizedProject = capitalizations.get(project) ?? project;
