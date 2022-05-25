@@ -240,12 +240,71 @@ export const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
 ]);
 
 export const PACKAGES: Map<string, string> = new Map([
-  ["suspicious package", "Kremlin's Greatest Briefcase"],
+  ["packet of maygfly bait", "mayfly bait necklace"],
+  ["grumpy bumpkin's pumpkin seed catalog", "packet of pumpkin seeds"],
+  ["make-your-own-vampire-fangs kit", "plastic vampire fangs"],
+  ["mint salton pepper's peppermint seed catalog", "peppermint pip packet"],
+  ["pete & jackie's dragon tooth emporium catalog", "packet of dragon's teeth"],
+  ["folder holder", "over-the-shoulder folder holder"],
+  ["discontent&trade; winter garden catalog", "packet of winter seeds"],
+  ["ed the undying exhibit crate", "the crown of ed the undying"],
+  ["pack of every card", "deck of every card"],
+  ["diy protonic accelerator kit", "protonic accelerator pack"],
+  ["dear past self package", "time-spinner"],
+  ["suspicious package", "kremlin's greatest briefcase"],
+  ["li-11 motor pool voucher", "asdon martin keyfob"],
+  ["corked genie bottle", "genie bottle"],
+  ["pantogram", "portable pantogram"],
+  ["locked mumming trunk", "mumming trunk"],
+  ["january's garbage tote (unopened)", "january's garbage tote"],
+  ["pok&eacute;fam guide to capturing all of them", "packet of tall grass seeds"],
+  ["songboom&trade; boombox box", "songboom&trade; boombox"],
+  ["bastille batallion control rig crate", "bastille batallion control rig"],
+  ["latte lovers club card", "latte lovers member's mug"],
+  ["kramco industries packing carton", "kramco sausage-o-matic&trade;"],
+  ["mint condition lil' doctor&trade; bag", "lil' doctor&trade; bag"],
+  ["vampyric cloake pattern", "vampyric cloake"],
+  ["fourth of may cosplay saber kit", "fourth of may cosplay saber"],
+  ["rune-strewn spoon coccoon", "hewn moon-rune spoon"],
+  ["beach comb box", "beach comb"],
+  ["unopened eight days a week pill keeper", "eight days a week pill keeper"],
+  ["unopened diabolic pizza cube box", "diabolic pizza cube"],
+  ["mint-in-box powerful glove", "powerful glove"],
+  ["better shrooms and gardens catalog", "packet of mushroom spores"],
+  ["guzzlr application", "guzzlr tablet"],
+  ["bag of iunion stones", "iunion crown"],
+  ["packaged spinmaster&trade; lathe", "spinmaster&trade; lathe"],
+  ["bagged cargo cultist shorts", "cargo cultist shorts"],
+  ["packaged knock-off retro superhero cape", "unwrapped knock-off retro superhero cape"],
+  ["box o' ghosts", "greedy ghostling"],
+  ["packaged miniature crystal ball", "miniature crystal ball"],
+  ["emotion chip", "spinal-fluid-covered emotion chip"],
+  ["power seed", "potted power plant"],
+  ["packaged backup camera", "backup camera"],
+  ["packaged familiar scrapbook", "familiar scrapbook"],
+  ["packaged industrial fire extinguisher", "industrial fire extinguisher"],
+  ["packaged daylight shavings helmet", "daylight shavings helmet"],
+  ["packaged cold medicine cabinet", "cold medicine cabinet"],
+  ["undrilled cosmic bowling ball", "cosmic bowling ball"],
+  ["combat lover's locket lockbox", "combat lover's locket"],
+  ["undamaged unbreakable umbrella", "unbreakable umbrella"],
+  ["retrospecs try-at-home kit", "retrospecs"],
+  ["fresh can of paint", "fresh coat of paint"],
+  ["mint condition magnifying glass", "cursed magnifying glass"],
 ]);
 
-export const REVERSE_PACKAGES: Map<string, string> = new Map(
-  Array.from(PACKAGES.keys()).map((key) => [PACKAGES.get(key) || "", key])
-);
+const ghostlings: [string, string][] = [
+  ["grinning ghostling", "box o' ghosts"],
+  ["gregarious ghostling", "box o' ghosts"],
+  ["greedy ghostling", "box o' ghosts"],
+];
+
+const reversed: [string, string][] = Array.from(PACKAGES.keys()).map((key) => [
+  PACKAGES.get(key) || "",
+  key,
+]);
+
+export const REVERSE_PACKAGES: Map<string, string> = new Map(reversed.concat(ghostlings));
 
 export const ORB_RESPONSES: string[] = [
   "It is certain.",
