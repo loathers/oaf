@@ -725,7 +725,7 @@ export class Monster implements Thing {
       for (let drop of this._monster.drops) {
         let dropDesc = "";
         if (drop.attributes.accordion) {
-          dropDesc += `${drop.item} (Stealable accordion)\n`;
+          dropDesc += `[${drop.item}](${toWikiLink(drop.item)}) (Stealable accordion)\n`;
         } else {
           dropDesc += `[${drop.item}](${toWikiLink(drop.item)}) (${
             drop.droprate > 0 ? `${drop.droprate}%` : "Sometimes"
