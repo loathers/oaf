@@ -91,7 +91,7 @@ export class KOLClient {
             maxRedirects: 0,
             validateStatus: (status) => status === 302,
           });
-          const sessionCookies = loginResponse.headers["set-cookie"]
+          const sessionCookies = (loginResponse.headers["set-cookie"] || [])
             .map((cookie: string) => cookie.split(";")[0])
             .join("; ");
           const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
@@ -126,7 +126,7 @@ export class KOLClient {
       const request = await axios(`https://www.kingdomofloathing.com/${url}`, {
         method: "GET",
         headers: {
-          cookie: this._credentials.sessionCookies,
+          cookie: this._credentials.sessionCookies || "",
         },
         params: {
           pwd: this._credentials.pwdhash,

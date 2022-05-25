@@ -67,9 +67,9 @@ function roll(message: Message, args: string[]): void {
 
 async function purge(channel: TextChannel, client: DiscordClient, quantity: number): Promise<void> {
   let purged = 0;
-  for (let message of (await channel.messages.fetch()).array()) {
-    if (message.author.id === client?.client()?.user?.id) {
-      await message.delete();
+  for (let message of await channel.messages.fetch()) {
+    if (message[1].author.id === client?.client()?.user?.id) {
+      await message[1].delete();
       purged += 1;
       if (purged >= quantity) return;
     }

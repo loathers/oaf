@@ -221,7 +221,7 @@ export class WikiSearcher {
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: directResponseUrl });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error.toString());
     }
     console.log("Not found as wiki page");
@@ -236,7 +236,7 @@ export class WikiSearcher {
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: searchResponseUrl });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error.toString());
     }
     console.log("Not found in wiki search");
@@ -251,7 +251,7 @@ export class WikiSearcher {
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: crushedSearchResponseUrl });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error.toString());
     }
     console.log("Not found in stripped wiki search");
@@ -270,7 +270,7 @@ export class WikiSearcher {
         url: googleSearchResponse.data.items[0].link,
       });
       return this._nameMap.get(searchTerm.toLowerCase());
-    } catch (error) {
+    } catch (error: any) {
       console.log(error.toString());
     }
     console.log("Google search stumped, I give up");

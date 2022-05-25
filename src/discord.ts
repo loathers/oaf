@@ -1,4 +1,13 @@
-import { Client, GuildMember, Message, MessageReaction, PartialUser, User, Util } from "discord.js";
+import {
+  Client,
+  Message,
+  MessageReaction,
+  PartialUser,
+  User,
+  Util,
+  Intents,
+  PartialMessageReaction,
+} from "discord.js";
 import { ITEMMATCHER, ROLEMAP } from "./constants";
 import { WikiSearcher } from "./wikisearch";
 
@@ -17,9 +26,12 @@ export class DiscordClient {
   constructor(wikiSearcher: WikiSearcher) {
     this._client = new Client({
       partials: ["MESSAGE", "REACTION", "USER"],
-      ws: {
-        intents: ["GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES", "GUILD_MESSAGE_REACTIONS"],
-      },
+      intents: [
+        Intents.FLAGS.GUILDS,
+        Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+        Intents.FLAGS.DIRECT_MESSAGES,
+      ],
     });
     this._wikiSearcher = wikiSearcher;
     this._discordToken = process.env.DISCORD_TOKEN || "";
@@ -29,13 +41,22 @@ export class DiscordClient {
       console.log(`Logged in as ${this._client?.user?.tag}!`);
     });
     this._client.on("message", async (message) => this.onMessage(message));
-    this._client.on("messageReactionAdd", async (reaction, user) => this.onReact(reaction, user));
-    this._client.on("messageReactionRemove", async (reaction, user) =>
-      this.onReactRemove(reaction, user)
+    this._client.on(
+      "messageReactionAdd",
+      async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
+        this.onReact(reaction, user)
+    );
+    this._client.on(
+      "messageReactionRemove",
+      async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
+        this.onReactRemove(reaction, user)
     );
   }
 
-  async onReact(reaction: MessageReaction, user: User | PartialUser): Promise<void> {
+  async onReact(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser
+  ): Promise<void> {
     if (reaction.partial || user.partial) {
       try {
         await reaction.fetch();
@@ -48,16 +69,19 @@ export class DiscordClient {
     if (!user.partial && reaction.message.channel.id === "741479910886866944") {
       console.log(`Adding role ${reaction.emoji.name} to user ${user.username}`);
       const role = (await reaction.message.guild?.roles.cache)?.get(
-        ROLEMAP.get(reaction.emoji.name) || ""
+        ROLEMAP.get(reaction.emoji.name || "") || ""
       );
-      const member = await reaction.message.guild?.member(user);
+      const member = await reaction.message.guild?.members.cache.get(user.id);
       if (role && member) {
         await member?.roles.add(role);
       }
     }
   }
 
-  async onReactRemove(reaction: MessageReaction, user: User | PartialUser): Promise<void> {
+  async onReactRemove(
+    reaction: MessageReaction | PartialMessageReaction,
+    user: User | PartialUser
+  ): Promise<void> {
     if (reaction.partial || user.partial) {
       try {
         await reaction.fetch();
@@ -70,9 +94,9 @@ export class DiscordClient {
     if (!user.partial && reaction.message.channel.id === "741479910886866944") {
       console.log(`Removing role ${reaction.emoji.name} from user ${user.username}`);
       const role = (await reaction.message.guild?.roles.cache)?.get(
-        ROLEMAP.get(reaction.emoji.name) || ""
+        ROLEMAP.get(reaction.emoji.name || "") || ""
       );
-      const member = await reaction.message.guild?.member(user);
+      const member = await reaction.message.guild?.members.cache.get(user.id);
       if (role && member) {
         await member?.roles.remove(role);
       }
@@ -83,7 +107,7 @@ export class DiscordClient {
     console.log(
       `${new Date(message.createdTimestamp).toLocaleTimeString()} ${
         message.author.username
-      } said "${Util.cleanContent(message.content, message)}" in channel ${message.channel}`
+      } said "${message.content}" in channel ${message.channel}`
     );
     const content = message.content;
     if (content && !message.author.bot) {
@@ -133,27 +157,21 @@ export class DiscordClient {
       );
       return;
     }
-    const searchingMessage = await message.channel.send(
-      `Finding pizzas for "${Util.cleanContent(letters, message)}"...`
-    );
-    await searchingMessage.edit("", await this._wikiSearcher.getPizzaEmbed(letters));
+    const searchingMessage = await message.channel.send(`Finding pizzas for "${letters}"...`);
+    await searchingMessage.edit({ embeds: [await this._wikiSearcher.getPizzaEmbed(letters)] });
   }
 
   async wikiSearch(item: string, message: Message): Promise<void> {
-    const searchingMessage = await message.channel.send(
-      `Searching for "${Util.cleanContent(item, message)}"...`
-    );
+    const searchingMessage = await message.channel.send(`Searching for "${item}"...`);
     if (!item.length) {
       await searchingMessage.edit("Need something to search for.");
       return;
     }
     const embed = await this._wikiSearcher.getEmbed(item);
     if (embed) {
-      searchingMessage.edit("", embed);
+      searchingMessage.edit({ embeds: [embed] });
     } else {
-      searchingMessage.edit(
-        `"${Util.cleanContent(item, message)}" wasn't found. Please refine your search.`
-      );
+      searchingMessage.edit(`"${item}" wasn't found. Please refine your search.`);
     }
   }
 
