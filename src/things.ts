@@ -29,6 +29,8 @@ export class Item implements Thing {
   _addlDescription: string = "";
   _fullDescription: string = "";
   _craftSting: string = "";
+  _container: Item | undefined;
+  _contents: Item | undefined;
 
   constructor(data: string, itemMap: Map<string, string[]>) {
     this._item = this.parseItemData(data);
@@ -258,6 +260,14 @@ export class Item implements Thing {
     )})\n\n`;
   }
 
+  addContainer(container: Item) {
+    this._container = container;
+  }
+
+  addContents(contents: Item) {
+    this._contents = contents;
+  }
+
   get(): ItemData {
     return this._item;
   }
@@ -289,11 +299,25 @@ export class Item implements Thing {
       else price_section += "Mall extinct.";
     }
 
+    let container = "";
+    if (withAddl && this._container) {
+      container = `Enclosed in: [${this._container.name()}](${toWikiLink(
+        this._container.name()
+      )})\n${(await this._container?.buildFullDescription(client, false)).replace(/\n+/g, "\n")}\n`;
+    }
+
+    let contents = "";
+    if (withAddl && this._contents) {
+      contents = `Encloses: [${this._contents.name()}](${toWikiLink(this._contents.name())})\n${(
+        await this._contents?.buildFullDescription(client, false)
+      ).replace(/\n+/g, "\n")}\n`;
+    }
+
     if (blueText && (autosell || price_section)) blueText += "\n";
     if (autosell) autosell += "\n";
     if (price_section) price_section += "\n";
 
-    return `${description_string}${blueText}${autosell}${price_section}`;
+    return `${description_string}${blueText}${autosell}${price_section}${container}${contents}`;
   }
 
   async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
@@ -375,9 +399,9 @@ export class Effect implements Thing {
   parseEffectData(effectData: string, avatarPotionSet: Set<string>): EffectData {
     const data = effectData.split(/\t/);
     if (data.length < 6) throw "Invalid data";
-    const potion = (data.length >= 7) ? (data[6].startsWith("use 1") ? data[6].slice(6) : "") : ""
-    const isAvatar = avatarPotionSet.has(potion.toLowerCase())
-    if (isAvatar) avatarPotionSet.delete(potion.toLowerCase())
+    const potion = data.length >= 7 ? (data[6].startsWith("use 1") ? data[6].slice(6) : "") : "";
+    const isAvatar = avatarPotionSet.has(potion.toLowerCase());
+    if (isAvatar) avatarPotionSet.delete(potion.toLowerCase());
     return {
       id: parseInt(data[0]),
       name: cleanString(data[1]),
