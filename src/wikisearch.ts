@@ -3,6 +3,7 @@ import { MessageEmbed } from "discord.js";
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "./things";
 import { KOLClient } from "./kolclient";
 import { cleanString } from "./utils";
+import { PACKAGES, REVERSE_PACKAGES } from "./constants";
 
 type FoundName = {
   name: string;
@@ -105,6 +106,20 @@ export class WikiSearcher {
           this._thingMap.set(item.name(), item);
           if (item.get().types.includes("avatar")) {
             avatarPotionSet.add(item.name());
+          }
+          if (PACKAGES.get(item.name())) {
+            const contents = this._thingMap.get(PACKAGES.get(item.name()) as string);
+            if (contents) {
+              (contents as Item).addContainer(item);
+              item.addContents(contents as Item);
+            }
+          }
+          if (REVERSE_PACKAGES.get(item.name())) {
+            const container = this._thingMap.get(REVERSE_PACKAGES.get(item.name()) as string);
+            if (container) {
+              (container as Item).addContents(item);
+              item.addContainer(container as Item);
+            }
           }
         }
       } catch (error) {}

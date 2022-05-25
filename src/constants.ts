@@ -239,6 +239,14 @@ export const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
   ["o.a.f.", "Is optimal.\nGenerally messes with you.\n"],
 ]);
 
+export const PACKAGES: Map<string, string> = new Map([
+  ["suspicious package", "Kremlin's Greatest Briefcase"],
+]);
+
+export const REVERSE_PACKAGES: Map<string, string> = new Map(
+  Array.from(PACKAGES.keys()).map((key) => [PACKAGES.get(key) || "", key])
+);
+
 export const ORB_RESPONSES: string[] = [
   "It is certain.",
   "It is decidedly so.",
