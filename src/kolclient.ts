@@ -91,7 +91,7 @@ export class KOLClient {
             maxRedirects: 0,
             validateStatus: (status) => status === 302,
           });
-          const sessionCookies = loginResponse.headers["set-cookie"]
+          const sessionCookies = (loginResponse.headers["set-cookie"] || [])
             .map((cookie: string) => cookie.split(";")[0])
             .join("; ");
           const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
@@ -126,15 +126,19 @@ export class KOLClient {
       const request = await axios(`https://www.kingdomofloathing.com/${url}`, {
         method: "GET",
         headers: {
-          cookie: this._credentials.sessionCookies,
+          cookie: this._credentials.sessionCookies || "",
         },
         params: {
           pwd: this._credentials.pwdhash,
           ...parameters,
         },
       });
-      if (!request.data || request.data.match(/<title>The Kingdom of Loathing<\/title>/) || request.data.match(/This script is not available unless you're logged in\./)) {
-      return undefined;
+      if (
+        !request.data ||
+        request.data.match(/<title>The Kingdom of Loathing<\/title>/) ||
+        request.data.match(/This script is not available unless you're logged in\./)
+      ) {
+        return undefined;
       }
       return request.data;
     } catch {
@@ -146,7 +150,7 @@ export class KOLClient {
     const result = await this.makeCredentialedRequest(url, parameters);
     if (result) return result;
     await this.logIn();
-    return await this.makeCredentialedRequest(url, parameters) || "";
+    return (await this.makeCredentialedRequest(url, parameters)) || "";
   }
 
   async getMallPrice(itemId: number): Promise<MallPrice> {
@@ -279,13 +283,13 @@ export class KOLClient {
 
   async getDreadStatusOverview(clanId: number): Promise<DreadStatus> {
     const raidLog = await this.getRaidLog(clanId);
-    if (!raidLog) throw "No raidlog"
+    if (!raidLog) throw "No raidlog";
     return this.extractDreadOverview(raidLog);
   }
 
   async getDetailedDreadStatus(clanId: number): Promise<DetailedDreadStatus> {
     const raidLog = await this.getRaidLog(clanId);
-    if (!raidLog) throw "No raidlog"
+    if (!raidLog) throw "No raidlog";
     return {
       overview: this.extractDreadOverview(raidLog),
       forest: this.extractDreadForest(raidLog),

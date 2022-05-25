@@ -13,6 +13,7 @@
     "noImplicitReturns": true,
     "pretty": true,
     "strict": true,
+    "lib": ["ES5"],
     "target": "esNext"
   },
   "include": ["src/**/*.ts"],
