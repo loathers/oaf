@@ -133,8 +133,12 @@ export class KOLClient {
           ...parameters,
         },
       });
-      if (!request.data || request.data.match(/<title>The Kingdom of Loathing<\/title>/) || request.data.match(/This script is not available unless you're logged in\./)) {
-      return undefined;
+      if (
+        !request.data ||
+        request.data.match(/<title>The Kingdom of Loathing<\/title>/) ||
+        request.data.match(/This script is not available unless you're logged in\./)
+      ) {
+        return undefined;
       }
       return request.data;
     } catch {
@@ -146,7 +150,7 @@ export class KOLClient {
     const result = await this.makeCredentialedRequest(url, parameters);
     if (result) return result;
     await this.logIn();
-    return await this.makeCredentialedRequest(url, parameters) || "";
+    return (await this.makeCredentialedRequest(url, parameters)) || "";
   }
 
   async getMallPrice(itemId: number): Promise<MallPrice> {
@@ -255,7 +259,7 @@ export class KOLClient {
       watchtower: !!raidLog.match(/unlocked the fire watchtower/),
       auditor: !!raidLog.match(/got a Dreadsylvanian auditor's badge/),
       musicbox: !!raidLog.match(/made the forest less spooky/),
-      kiwi: !!raidLog.match(/knocked some fruit loose/),
+      kiwi: !!(raidLog.match(/knocked some fruit loose/) || raidLog.match(/wasted some fruit/)),
       amber: !!raidLog.match(/acquired a chunk of moon-amber/),
     };
   }
@@ -264,7 +268,7 @@ export class KOLClient {
     return {
       schoolhouse: !!raidLog.match(/unlocked the schoolhouse/),
       suite: !!raidLog.match(/unlocked the master suite/),
-      hanging: !!raidLog.match(/hanged/),
+      hanging: !!(raidLog.match(/hanged/) || raidLog.match(/hung/)),
     };
   }
 
@@ -279,13 +283,13 @@ export class KOLClient {
 
   async getDreadStatusOverview(clanId: number): Promise<DreadStatus> {
     const raidLog = await this.getRaidLog(clanId);
-    if (!raidLog) throw "No raidlog"
+    if (!raidLog) throw "No raidlog";
     return this.extractDreadOverview(raidLog);
   }
 
   async getDetailedDreadStatus(clanId: number): Promise<DetailedDreadStatus> {
     const raidLog = await this.getRaidLog(clanId);
-    if (!raidLog) throw "No raidlog"
+    if (!raidLog) throw "No raidlog";
     return {
       overview: this.extractDreadOverview(raidLog),
       forest: this.extractDreadForest(raidLog),
