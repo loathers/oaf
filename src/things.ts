@@ -375,9 +375,9 @@ export class Effect implements Thing {
   parseEffectData(effectData: string, avatarPotionSet: Set<string>): EffectData {
     const data = effectData.split(/\t/);
     if (data.length < 6) throw "Invalid data";
-    const potion = (data.length >= 7) ? (data[6].startsWith("use 1") ? data[6].slice(6) : "") : ""
-    const isAvatar = avatarPotionSet.has(potion.toLowerCase())
-    if (isAvatar) avatarPotionSet.delete(potion.toLowerCase())
+    const potion = data.length >= 7 ? (data[6].startsWith("use 1") ? data[6].slice(6) : "") : "";
+    const isAvatar = avatarPotionSet.has(potion.toLowerCase());
+    if (isAvatar) avatarPotionSet.delete(potion.toLowerCase());
     return {
       id: parseInt(data[0]),
       name: cleanString(data[1]),
@@ -701,7 +701,7 @@ export class Monster implements Thing {
       for (let drop of this._monster.drops) {
         let dropDesc = "";
         if (drop.attributes.accordion) {
-          dropDesc += `${drop.item} (Stealable accordion)\n`;
+          dropDesc += `[${drop.item}](${toWikiLink(drop.item)}) (Stealable accordion)\n`;
         } else {
           dropDesc += `[${drop.item}](${toWikiLink(drop.item)}) (${
             drop.droprate > 0 ? `${drop.droprate}%` : "Sometimes"
