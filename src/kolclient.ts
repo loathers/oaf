@@ -369,16 +369,22 @@ export class KOLClient {
       whichboard: leaderboardId,
     });
 
-    console.log(
-      leaderboard.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g).groups
-    );
-
     const entries =
       Array.from(leaderboard.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g)) ||
       [];
 
+    const cleanedEntries = entries.map(
+      (messyRegex) =>
+        (messyRegex as string).match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/)
+          ?.groups?.playername
+    );
+
     return {
-      normal: entries.map((playername) => ({ player: playername as string, turns: 0, days: 0 })),
+      normal: cleanedEntries.map((playername) => ({
+        player: playername as string,
+        turns: 0,
+        days: 0,
+      })),
       hardcore: [],
     };
   }
