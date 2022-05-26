@@ -340,7 +340,7 @@ export class Item implements Thing {
 
     let foldGroup = "";
     if (withAddl && this._foldGroup) {
-      zapGroup = `\nFolds into: ${this._foldGroup
+      foldGroup = `\nFolds into: ${this._foldGroup
         .filter((item) => item.name() !== this.name())
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
