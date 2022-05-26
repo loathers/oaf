@@ -336,7 +336,7 @@ export class Item implements Thing {
         .slice(0, 7)
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
-        .join(", ")}${this._zapGroup.length > 7 ? " ...and more." : ""}\n`;
+        .join(", ")}${this._zapGroup.length > 8 ? " ...and more." : ""}\n`;
     }
 
     let foldGroup = "";
@@ -346,7 +346,7 @@ export class Item implements Thing {
         .slice(0, 7)
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
-        .join(", ")}${this._foldGroup.length > 7 ? " ...and more." : ""}\n`;
+        .join(", ")}${this._foldGroup.length > 8 ? " ...and more." : ""}\n`;
     }
 
     if (blueText && (autosell || price_section)) blueText += "\n";

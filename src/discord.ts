@@ -1,3 +1,4 @@
+import axios from "axios";
 import {
   Client,
   Message,
@@ -178,6 +179,26 @@ export class DiscordClient {
     }
   }
 
+  async mafiawikiSearch(item: string, message: Message): Promise<void> {
+    const searchingMessage = await message.channel.send(`Searching for "${item}"...`);
+    if (!item.length) {
+      await searchingMessage.edit("Need something to search for.");
+      return;
+    }
+    const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
+      params: {
+        key: process.env.GOOGLE_API_KEY || "",
+        cx: process.env.MAFIA_CUSTOM_SEARCH || "",
+        q: item,
+      },
+    });
+    if (googleSearchResponse.data.items.length) {
+      searchingMessage.edit({ content: googleSearchResponse.data.items[0].link });
+    } else {
+      searchingMessage.edit(`"${item}" wasn't found. Please refine your search.`);
+    }
+  }
+
   async help(message: Message): Promise<void> {
     let helpString = "```";
     for (let command of this._commands.entries()) {
@@ -203,6 +224,16 @@ export class DiscordClient {
       "wiki",
       async (message, args) => await this.wikiSearch(args.slice(1).join(" "), message),
       "Search the KoL wiki for the given term."
+    );
+    this.attachCommand(
+      "mafia",
+      async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
+      "Search the KoLmafia wiki for the given term."
+    );
+    this.attachCommand(
+      "mafiawiki",
+      async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
+      "Alias for !mafia."
     );
     this.attachCommand(
       "help",
