@@ -301,17 +301,17 @@ export class Item implements Thing {
 
     let container = "";
     if (withAddl && this._container) {
-      container = `\nEnclosed in: **[${this._container.name()}](${toWikiLink(
+      container = `\nEnclosed in: **[${this._container.get().name}](${toWikiLink(
         this._container.name()
-      )})\n${(await this._container?.buildFullDescription(client, false)).replace(
+      )})**\n${(await this._container?.buildFullDescription(client, false)).replace(
         /\n+/g,
         "\n"
-      )}**\n`;
+      )}\n`;
     }
 
     let contents = "";
     if (withAddl && this._contents) {
-      contents = `\nEncloses: **[${this._contents.name()}](${toWikiLink(
+      contents = `\nEncloses: **[${this._contents.get().name}](${toWikiLink(
         this._contents.name()
       )})**\n${(await this._contents?.buildFullDescription(client, false)).replace(
         /\n+/g,

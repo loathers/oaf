@@ -82,8 +82,7 @@ async function purge(channel: TextChannel, client: DiscordClient, quantity: numb
 }
 
 function prsWelcome(message: Message, args: string[]): void {
-  if (args.length === 0) {
-    message.reply(":grep:");
+  if (args.length < 2) {
     return;
   }
 
