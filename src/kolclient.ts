@@ -369,23 +369,31 @@ export class KOLClient {
       whichboard: leaderboardId,
     });
 
-    const entries =
-      Array.from(leaderboard.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g)) ||
-      [];
+    const boards = String(leaderboard).split("Fastest Hardcore");
 
-    const cleanedEntries = entries.map(
-      (messyRegex) =>
-        (messyRegex as string).match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/)
-          ?.groups?.playername
+    const entries = boards.map((board: any) =>
+      Array.from(board.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g) || [])
+    );
+
+    const cleanedEntries = entries.map((board: any) =>
+      board.map(
+        (messyRegex: any) =>
+          (messyRegex as string).match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/)
+            ?.groups?.playername
+      )
     );
 
     return {
-      normal: cleanedEntries.map((playername) => ({
+      normal: cleanedEntries[0].map((playername: any) => ({
         player: playername as string,
         turns: 0,
         days: 0,
       })),
-      hardcore: [],
+      hardcore: cleanedEntries[1].map((playername: any) => ({
+        player: playername as string,
+        turns: 0,
+        days: 0,
+      })),
     };
   }
 }

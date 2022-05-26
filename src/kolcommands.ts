@@ -292,10 +292,6 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
   const board = parseInt(args[1]) || 0;
   const sentMessage = await message.channel.send(`Fetching leaderboard ${board}`);
   const leaderboardInfo = await kolClient.getLeaderboard(board);
-  console.log(
-    leaderboardInfo.normal.map((run) => `${run.player} ${run.days}/${run.turns}`).join("\n") ||
-      "No runs yet!"
-  );
   sentMessage.edit({
     content: null,
     embeds: [
