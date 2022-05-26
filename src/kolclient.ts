@@ -383,7 +383,7 @@ export class KOLClient {
       board.map(
         (messyRegex: any) =>
           (messyRegex as string).match(
-            /tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)\D+(?<days>\d)+\D+(?<turns>\d+)/
+            /tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)\D+(?<days>[\d\,]+)\D+(?<turns>[\d\,]+)/
           )?.groups
       )
     );
