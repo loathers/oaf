@@ -221,7 +221,7 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sent
     await sentMessage?.edit(
       `Calculating skills, watch this space! Parsing completed logs for clan ${clan.name}`
     );
-    const raidsToParse = (await kolClient.getMissingRaidLogs(clan.id)).filter(
+    const raidsToParse = (await kolClient.getMissingRaidLogs(clan.id, parsedRaids)).filter(
       (id) => !parsedRaids.includes(id)
     );
     for (let raid of raidsToParse) {
