@@ -185,13 +185,10 @@ export class WikiSearcher {
   async getEmbed(item: string): Promise<MessageEmbed | undefined> {
     const foundName = await this.findName(item);
     if (!foundName) return undefined;
-    const embed = new MessageEmbed()
-      .setTitle(foundName.name)
-      .setURL(foundName.url)
-      .setFooter(
-        "Problems? Message DocRostov#7004 on discord.",
-        "http://images.kingdomofloathing.com/itemimages/oaf.gif"
-      );
+    const embed = new MessageEmbed().setTitle(foundName.name).setURL(foundName.url).setFooter({
+      text: "Problems? Message DocRostov#7004 on discord.",
+      iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+    });
     if (this._thingMap.has(foundName.name.toLowerCase())) {
       const thing = this._thingMap.get(foundName.name.toLowerCase());
       await thing?.addToEmbed(embed, this._client);
@@ -297,10 +294,10 @@ export class WikiSearcher {
               : ""
           } Diabolic Pizza has too many possible effects to list.`
         )
-        .setFooter(
-          "Problems? Message DocRostov#7004 on discord.",
-          "http://images.kingdomofloathing.com/itemimages/oaf.gif"
-        );
+        .setFooter({
+          text: "Problems? Message DocRostov#7004 on discord.",
+          iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+        });
     }
     if (options.length === 1) {
       return (await this.getEmbed(options[0].name())) || new MessageEmbed();
@@ -326,10 +323,10 @@ export class WikiSearcher {
     return new MessageEmbed()
       .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
       .setDescription(description)
-      .setFooter(
-        "Problems? Message DocRostov#7004 on discord.",
-        "http://images.kingdomofloathing.com/itemimages/oaf.gif"
-      );
+      .setFooter({
+        text: "Problems? Message DocRostov#7004 on discord.",
+        iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+      });
   }
 }
 

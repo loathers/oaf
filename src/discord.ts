@@ -40,7 +40,7 @@ export class DiscordClient {
     this._client.on("ready", () => {
       console.log(`Logged in as ${this._client?.user?.tag}!`);
     });
-    this._client.on("message", async (message) => this.onMessage(message));
+    this._client.on("messageCreate", async (message) => this.onMessage(message));
     this._client.on(
       "messageReactionAdd",
       async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
