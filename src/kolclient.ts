@@ -56,6 +56,17 @@ type DetailedDreadStatus = {
   castle: DreadCastleStatus;
 };
 
+type LeaderboardInfo = {
+  normal: RunInfo[];
+  hardcore: RunInfo[];
+};
+
+type RunInfo = {
+  player: string;
+  days: number;
+  turns: number;
+};
+
 function sanitiseBlueText(blueText: string): string {
   return decode(
     blueText
@@ -349,5 +360,24 @@ export class KOLClient {
       action: "joinclan",
       confirm: "on",
     });
+  }
+
+  async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo> {
+    const leaderboard = await this.tryRequestWithLogin("museum.php", {
+      floor: -1,
+      place: "leaderboards",
+      whichboard: leaderboardId,
+    });
+
+    console.log(leaderboard);
+
+    return {
+      normal: [
+        leaderboard
+          .match(/<tr>[^<]+<td[^<]+<a[^<]+"><b>(?<playername>[^<]+)<\/b>/g)
+          .map((playername: string) => ({ player: playername, turns: 0, days: 0 })),
+      ],
+      hardcore: [],
+    };
   }
 }

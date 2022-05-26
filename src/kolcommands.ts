@@ -1,7 +1,8 @@
-import { Message } from "discord.js";
+import { Message, MessageEmbed } from "discord.js";
 import { DiscordClient } from "./discord";
+import { KOLClient } from "./kolclient";
 
-export function attachKoLCommands(client: DiscordClient) {
+export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
   client.attachCommand("item", item, "Print the +item drop required to cap a drop.");
   client.attachCommand("level", level, "Finds the stats and substats needed for a given level.");
   client.attachCommand("stat", stat, "Finds the substats and level for a given mainstat total.");
@@ -38,10 +39,15 @@ export function attachKoLCommands(client: DiscordClient) {
     reverseFairy,
     "Print the fairy weight necessary to supply a particular item drop."
   );
+  client.attachCommand(
+    "leaderboard",
+    (message, args) => leaderboard(message, args, kolClient),
+    "Print the specified leaderboard."
+  );
 }
 
 function item(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a drop rate.");
     return;
   }
@@ -62,7 +68,7 @@ function item(message: Message, args: string[]): void {
 }
 
 function fairy(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a fairy weight.");
     return;
   }
@@ -81,7 +87,7 @@ function fairy(message: Message, args: string[]): void {
 }
 
 function lep(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a leprechaun weight.");
     return;
   }
@@ -100,7 +106,7 @@ function lep(message: Message, args: string[]): void {
 }
 
 function volley(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a volleyball weight.");
     return;
   }
@@ -145,7 +151,7 @@ class StatBlock {
 }
 
 function level(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a level.");
     return;
   }
@@ -173,7 +179,7 @@ function level(message: Message, args: string[]): void {
 }
 
 function stat(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a mainstat.");
     return;
   }
@@ -207,7 +213,7 @@ function stat(message: Message, args: string[]): void {
 }
 
 function substat(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a substat total.");
     return;
   }
@@ -235,7 +241,7 @@ function substat(message: Message, args: string[]): void {
 }
 
 function reverseLep(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a meat drop value.");
     return;
   }
@@ -257,7 +263,7 @@ function reverseLep(message: Message, args: string[]): void {
 }
 
 function reverseFairy(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply an item drop value.");
     return;
   }
@@ -276,4 +282,31 @@ function reverseFairy(message: Message, args: string[]): void {
       1.25
     ).toFixed(1)} lbs.`
   );
+}
+
+async function leaderboard(message: Message, args: string[], kolClient: KOLClient): Promise<void> {
+  if (args.length <= 1) {
+    message.channel.send("Please supply a leaderboard id.");
+    return;
+  }
+  const board = parseInt(args[1]) || 0;
+  const sentMessage = await message.channel.send(`Fetching leaderboard ${board}`);
+  const leaderboardInfo = await kolClient.getLeaderboard(board);
+  sentMessage.edit({
+    content: "",
+    embeds: [
+      new MessageEmbed().addFields(
+        leaderboardInfo.normal.map((run) => ({
+          name: run.player,
+          value: `${run.days}/${run.turns}`,
+        }))
+      ),
+      new MessageEmbed().addFields(
+        leaderboardInfo.hardcore.map((run) => ({
+          name: run.player,
+          value: `${run.days}/${run.turns}`,
+        }))
+      ),
+    ],
+  });
 }

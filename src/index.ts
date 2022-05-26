@@ -40,7 +40,7 @@ async function performSetup(): Promise<DiscordClient> {
   attachMiscCommands(discordClient);
 
   console.log("Attaching kol commands.");
-  attachKoLCommands(discordClient);
+  attachKoLCommands(discordClient, kolClient);
 
   console.log("Attaching clan commands.");
   attachClanCommands(discordClient, kolClient, databaseClientPool);
