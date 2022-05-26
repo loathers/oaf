@@ -370,11 +370,11 @@ export class KOLClient {
     });
 
     return {
-      normal: [
-        (leaderboard.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g) || []).map(
-          (playername: string) => ({ player: playername, turns: 0, days: 0 })
-        ),
-      ],
+      normal: (
+        Array.from(
+          leaderboard.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g)
+        ) || []
+      ).map((playername) => ({ player: playername as string, turns: 0, days: 0 })),
       hardcore: [],
     };
   }
