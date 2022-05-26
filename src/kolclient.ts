@@ -369,7 +369,7 @@ export class KOLClient {
       whichboard: leaderboardId,
     });
 
-    const boards = String(leaderboard).split("Fastest Hardcore");
+    const boards = String(leaderboard).split("Fastest");
 
     console.log(boards.length);
 
@@ -386,12 +386,12 @@ export class KOLClient {
     );
 
     return {
-      normal: cleanedEntries[0].map((playername: any) => ({
+      normal: cleanedEntries[1].map((playername: any) => ({
         player: playername as string,
         turns: 0,
         days: 0,
       })),
-      hardcore: cleanedEntries[1].map((playername: any) => ({
+      hardcore: cleanedEntries[2].map((playername: any) => ({
         player: playername as string,
         turns: 0,
         days: 0,
