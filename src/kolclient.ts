@@ -371,30 +371,33 @@ export class KOLClient {
 
     const boards = String(leaderboard).split("Ascensions");
 
-    console.log(boards.length);
-
     const entries = boards.map((board: any) =>
-      Array.from(board.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g) || [])
+      Array.from(
+        board.match(
+          /tr>[^<]*<td[^<]+(<b>)?<a[^<]+\">(<b>)?[^<]+(<\/b>)?<\/a>[^<]+<\/td><td[^<]+\d+<\/td><td[^<]+\d+<\/td>/g
+        ) || []
+      )
     );
 
     const cleanedEntries = entries.map((board: any) =>
       board.map(
         (messyRegex: any) =>
-          (messyRegex as string).match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/)
-            ?.groups?.playername
+          (messyRegex as string).match(
+            /tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)\D+(?<days>\d)+\D+(?<turns>\d+)/
+          )?.groups
       )
     );
 
     return {
-      normal: cleanedEntries[1].map((playername: any) => ({
-        player: playername as string,
-        turns: 0,
-        days: 0,
+      normal: cleanedEntries[1].map((run: any) => ({
+        player: run.playername as string,
+        turns: parseInt(run.turns.replace(",", "")),
+        days: parseInt(run.days.replace(",", "")),
       })),
-      hardcore: cleanedEntries[2].map((playername: any) => ({
-        player: playername as string,
-        turns: 0,
-        days: 0,
+      hardcore: cleanedEntries[2].map((run: any) => ({
+        player: run.playername as string,
+        turns: parseInt(run.turns.replace(",", "")),
+        days: parseInt(run.days.replace(",", "")),
       })),
     };
   }
