@@ -159,7 +159,7 @@ export class DiscordClient {
     }
     const searchingMessage = await message.channel.send(`Finding pizzas for "${letters}"...`);
     await searchingMessage.edit({
-      content: "",
+      content: null,
       embeds: [await this._wikiSearcher.getPizzaEmbed(letters)],
     });
   }
@@ -172,7 +172,7 @@ export class DiscordClient {
     }
     const embed = await this._wikiSearcher.getEmbed(item);
     if (embed) {
-      searchingMessage.edit({ content: "", embeds: [embed] });
+      searchingMessage.edit({ content: null, embeds: [embed] });
     } else {
       searchingMessage.edit(`"${item}" wasn't found. Please refine your search.`);
     }
