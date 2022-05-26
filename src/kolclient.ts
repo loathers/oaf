@@ -371,6 +371,8 @@ export class KOLClient {
 
     const boards = String(leaderboard).split("Fastest Hardcore");
 
+    console.log(boards.length);
+
     const entries = boards.map((board: any) =>
       Array.from(board.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g) || [])
     );
