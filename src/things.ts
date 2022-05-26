@@ -31,6 +31,8 @@ export class Item implements Thing {
   _craftSting: string = "";
   _container: Item | undefined;
   _contents: Item | undefined;
+  _zapGroup: Item[] | undefined;
+  _foldGroup: Item[] | undefined;
 
   constructor(data: string, itemMap: Map<string, string[]>) {
     this._item = this.parseItemData(data);
@@ -268,6 +270,14 @@ export class Item implements Thing {
     this._contents = contents;
   }
 
+  addZapGroup(zapGroup: Item[]) {
+    this._zapGroup = zapGroup;
+  }
+
+  addFoldGroup(foldGroup: Item[]) {
+    this._foldGroup = foldGroup;
+  }
+
   get(): ItemData {
     return this._item;
   }
@@ -319,11 +329,29 @@ export class Item implements Thing {
       )}\n`;
     }
 
+    let zapGroup = "";
+    if (withAddl && this._zapGroup) {
+      zapGroup = `\nZaps into: ${this._zapGroup
+        .filter((item) => item.name() !== this.name())
+        .map((item) => item.get().name)
+        .map((name) => `[${name}](${toWikiLink(name)})`)
+        .join(", ")}\n`;
+    }
+
+    let foldGroup = "";
+    if (withAddl && this._foldGroup) {
+      zapGroup = `\nFolds into: ${this._foldGroup
+        .filter((item) => item.name() !== this.name())
+        .map((item) => item.get().name)
+        .map((name) => `[${name}](${toWikiLink(name)})`)
+        .join(", ")}\n`;
+    }
+
     if (blueText && (autosell || price_section)) blueText += "\n";
     if (autosell) autosell += "\n";
     if (price_section) price_section += "\n";
 
-    return `${description_string}${blueText}${autosell}${price_section}${container}${contents}`;
+    return `${description_string}${blueText}${autosell}${price_section}${zapGroup}${foldGroup}${container}${contents}`;
   }
 
   async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {

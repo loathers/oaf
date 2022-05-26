@@ -124,6 +124,40 @@ export class WikiSearcher {
         }
       } catch (error) {}
     }
+    const zapFile = await axios(
+      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/zapgroups.txt"
+    );
+    for (let line of zapFile.data.split(/\n/)) {
+      if (line.length && !line.startsWith("#")) {
+        try {
+          const group = line
+            .replaceAll("\\,", "🍕")
+            .split(",")
+            .map((itemName: string) => itemName.replaceAll("🍕", ","))
+            .map((itemName: string) => this._thingMap.get(cleanString(itemName)));
+          for (let item of group) {
+            (item as Item).addZapGroup(group);
+          }
+        } catch (error) {}
+      }
+    }
+
+    const foldFile = await axios(
+      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/foldgroups.txt"
+    );
+    for (let line of foldFile.data.split(/\n/)) {
+      if (line.length && !line.startsWith("#")) {
+        try {
+          const group = line
+            .split("\t")
+            .slice(1)
+            .map((itemName: string) => this._thingMap.get(cleanString(itemName)));
+          for (let item of group) {
+            (item as Item).addFoldGroup(group);
+          }
+        } catch (error) {}
+      }
+    }
 
     console.log("Reading monsters.");
     const monsterFile = await axios(
