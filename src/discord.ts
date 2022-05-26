@@ -192,7 +192,7 @@ export class DiscordClient {
         q: item,
       },
     });
-    if (googleSearchResponse.data.items.length) {
+    if (googleSearchResponse.data.items && googleSearchResponse.data.items.length) {
       searchingMessage.edit({ content: googleSearchResponse.data.items[0].link });
     } else {
       searchingMessage.edit(`"${item}" wasn't found. Please refine your search.`);
