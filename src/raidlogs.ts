@@ -7,7 +7,6 @@ import { KOLClient } from "./kolclient";
 type Clan = {
   name: string;
   synonyms: string[];
-  parsedRaids: string[];
   id: number;
 };
 
@@ -15,16 +14,16 @@ const clans: Clan[] = [
   {
     name: "Collaborative Dungeon Running 1",
     synonyms: ["cdr1", "1"],
-    parsedRaids: [],
     id: 2047008362,
   },
   {
     name: "Collaborative Dungeon Running 2",
     synonyms: ["cdr2", "2"],
-    parsedRaids: [],
     id: 2047008363,
   },
 ];
+
+let parsedRaids: string[] = [];
 
 type DreadParticipation = {
   kills: number;
@@ -66,13 +65,9 @@ export function attachClanCommands(
 }
 
 export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
-  for (let clan of clans) {
-    clan.parsedRaids = (
-      await databaseClientPool.query("SELECT raid_id FROM tracked_instances WHERE clan_id = $1;", [
-        clan.id,
-      ])
-    ).rows.map((row) => row.raid_id);
-  }
+  parsedRaids = (await databaseClientPool.query("SELECT raid_id FROM tracked_instances;")).rows.map(
+    (row) => row.raid_id
+  );
 
   for (let player of (await databaseClientPool.query("SELECT * FROM players;")).rows) {
     killMap.set(player.username, { kills: player.kills, skills: player.skills });
@@ -227,7 +222,7 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sent
       `Calculating skills, watch this space! Parsing completed logs for clan ${clan.name}`
     );
     const raidsToParse = (await kolClient.getMissingRaidLogs(clan.id)).filter(
-      (id) => !clan.parsedRaids.includes(id)
+      (id) => !parsedRaids.includes(id)
     );
     for (let raid of raidsToParse) {
       await sentMessage?.edit(
@@ -235,17 +230,14 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sent
       );
       const raidLog = await kolClient.getFinishedRaidLog(raid);
       addParticipationFromRaidLog(raidLog, killMap);
-      clan.parsedRaids.push(raid);
-      newlyParsedRaids.push({ clan_id: clan.id, raid_id: raid });
+      parsedRaids.push(raid);
+      newlyParsedRaids.push(raid);
     }
   }
   const databaseClient = await databaseClientPool.connect();
-  await databaseClient.query("BEGIN");
+  await databaseClient.query("BEGIN;");
   for (let raid of newlyParsedRaids) {
-    await databaseClient.query("INSERT INTO tracked_instances(clan_id, raid_id) VALUES ($1, $2)", [
-      raid.clan_id,
-      raid.raid_id,
-    ]);
+    await databaseClient.query("INSERT INTO tracked_instances(raid_id) VALUES ($1);", [raid]);
   }
   for (let [player, participation] of killMap.entries()) {
     await databaseClient.query(
@@ -253,7 +245,7 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sent
       [player, participation.kills, participation.skills]
     );
   }
-  await databaseClient.query("COMMIT");
+  await databaseClient.query("COMMIT;");
   databaseClient.release();
 }
 
