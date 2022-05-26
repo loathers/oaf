@@ -135,7 +135,7 @@ export class WikiSearcher {
             .split(",")
             .map((itemName: string) => itemName.replaceAll("🍕", ","))
             .map((itemName: string) => this._thingMap.get(cleanString(itemName)));
-          console.log(group);
+          console.log(group.map((item: Item | undefined) => item?.name()));
           for (let item of group) {
             (item as Item).addZapGroup(group);
           }
