@@ -333,18 +333,20 @@ export class Item implements Thing {
     if (withAddl && this._zapGroup) {
       zapGroup = `\nZaps into: ${this._zapGroup
         .filter((item) => item.name() !== this.name())
+        .slice(0, 7)
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
-        .join(", ")}\n`;
+        .join(", ")}${this._zapGroup.length > 7 ? " ...and more." : ""}\n`;
     }
 
     let foldGroup = "";
     if (withAddl && this._foldGroup) {
       foldGroup = `\nFolds into: ${this._foldGroup
         .filter((item) => item.name() !== this.name())
+        .slice(0, 7)
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
-        .join(", ")}\n`;
+        .join(", ")}${this._foldGroup.length > 7 ? " ...and more." : ""}\n`;
     }
 
     if (blueText && (autosell || price_section)) blueText += "\n";
