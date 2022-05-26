@@ -83,6 +83,7 @@ async function purge(channel: TextChannel, client: DiscordClient, quantity: numb
 
 function prsWelcome(message: Message, args: string[]): void {
   if (args.length < 2) {
+  message.channel.send("I need a project for that.");
     return;
   }
 
