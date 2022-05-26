@@ -293,19 +293,21 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
   const sentMessage = await message.channel.send(`Fetching leaderboard ${board}`);
   const leaderboardInfo = await kolClient.getLeaderboard(board);
   sentMessage.edit({
-    content: "",
+    content: null,
     embeds: [
       new MessageEmbed()
         .addField(
           "Normal Leaderboard",
-          leaderboardInfo.normal.map((run) => `${run.player} ${run.days}/${run.turns}`).join("\n"),
+          leaderboardInfo.normal
+            .map((run) => `${run.player} ${run.days}/${run.turns}`)
+            .join("\n") || "No runs yet!",
           true
         )
         .addField(
           "Hardcore Leaderboard",
           leaderboardInfo.hardcore
             .map((run) => `${run.player} ${run.days}/${run.turns}`)
-            .join("\n"),
+            .join("\n") || "No runs yet!",
           true
         ),
     ],

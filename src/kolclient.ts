@@ -369,11 +369,9 @@ export class KOLClient {
       whichboard: leaderboardId,
     });
 
-    console.log(leaderboard.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g));
-
     return {
       normal: [
-        leaderboard
+        (leaderboard || [])
           .match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g)
           .map((playername: string) => ({ player: playername, turns: 0, days: 0 })),
       ],
