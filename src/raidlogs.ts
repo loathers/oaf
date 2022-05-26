@@ -238,23 +238,23 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sent
       clan.parsedRaids.push(raid);
       newlyParsedRaids.push({ clan_id: clan.id, raid_id: raid });
     }
-    const databaseClient = await databaseClientPool.connect();
-    await databaseClient.query("BEGIN");
-    for (let raid of newlyParsedRaids) {
-      await databaseClient.query(
-        "INSERT INTO tracked_instances(clan_id, raid_id) VALUES ($1, $2)",
-        [raid.clan_id, raid.raid_id]
-      );
-    }
-    for (let [player, participation] of killMap.entries()) {
-      await databaseClient.query(
-        "INSERT INTO players (username, kills, skills) VALUES ($1, $2, $3) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3;",
-        [player, participation.kills, participation.skills]
-      );
-    }
-    await databaseClient.query("COMMIT");
-    databaseClient.release();
   }
+  const databaseClient = await databaseClientPool.connect();
+  await databaseClient.query("BEGIN");
+  for (let raid of newlyParsedRaids) {
+    await databaseClient.query("INSERT INTO tracked_instances(clan_id, raid_id) VALUES ($1, $2)", [
+      raid.clan_id,
+      raid.raid_id,
+    ]);
+  }
+  for (let [player, participation] of killMap.entries()) {
+    await databaseClient.query(
+      "INSERT INTO players (username, kills, skills) VALUES ($1, $2, $3) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3;",
+      [player, participation.kills, participation.skills]
+    );
+  }
+  await databaseClient.query("COMMIT");
+  databaseClient.release();
 }
 
 async function setDone(message: Message, username: string, databaseClientPool: Pool) {
