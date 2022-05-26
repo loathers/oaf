@@ -369,10 +369,9 @@ export class KOLClient {
       whichboard: leaderboardId,
     });
 
-    const boards = String(leaderboard).split("<table>");
+    const boards = String(leaderboard).split("Ascensions");
 
     console.log(boards.length);
-    console.log(boards.map((thing) => (thing || "").slice(300)));
 
     const entries = boards.map((board: any) =>
       Array.from(board.match(/tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g) || [])
