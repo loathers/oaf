@@ -251,13 +251,13 @@ export class Item implements Thing {
   addGrowingFamiliar(familiar: Familiar): void {
     this._addlDescription = `Grows into: **[${familiar.get().name}](${toWikiLink(
       familiar.get().name
-    )})**\n\n`;
+    )})**\n`;
   }
 
   addEquppingFamiliar(familiar: Familiar): void {
     this._addlDescription = `Familiar: [${familiar.get().name}](${toWikiLink(
       familiar.get().name
-    )})\n\n`;
+    )})\n`;
   }
 
   addContainer(container: Item) {
@@ -301,16 +301,22 @@ export class Item implements Thing {
 
     let container = "";
     if (withAddl && this._container) {
-      container = `Enclosed in: [${this._container.name()}](${toWikiLink(
+      container = `\nEnclosed in: **[${this._container.name()}](${toWikiLink(
         this._container.name()
-      )})\n${(await this._container?.buildFullDescription(client, false)).replace(/\n+/g, "\n")}\n`;
+      )})\n${(await this._container?.buildFullDescription(client, false)).replace(
+        /\n+/g,
+        "\n"
+      )}**\n`;
     }
 
     let contents = "";
     if (withAddl && this._contents) {
-      contents = `Encloses: [${this._contents.name()}](${toWikiLink(this._contents.name())})\n${(
-        await this._contents?.buildFullDescription(client, false)
-      ).replace(/\n+/g, "\n")}\n`;
+      contents = `\nEncloses: **[${this._contents.name()}](${toWikiLink(
+        this._contents.name()
+      )})**\n${(await this._contents?.buildFullDescription(client, false)).replace(
+        /\n+/g,
+        "\n"
+      )}\n`;
     }
 
     if (blueText && (autosell || price_section)) blueText += "\n";

@@ -72,6 +72,7 @@ export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
         clan.id,
       ])
     ).rows.map((row) => row.raid_id);
+    console.log(clan.parsedRaids);
   }
 
   for (let player of (await databaseClientPool.query("SELECT * FROM players;")).rows) {
