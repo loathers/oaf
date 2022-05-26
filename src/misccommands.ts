@@ -110,6 +110,6 @@ function prsWelcome(message: Message, args: string[]): void {
   message.channel.send(
     `https://github.com/${
       capitalizedProject === "kolmafia" ? "kolmafia" : "Loathing-Associates-Scripting-Society"
-    }/${capitalizedProject}/issues?q=is%3Aopen+assignee%3A%40me`
+    }/${capitalizedProject}/pulls?q=is%3Apr+is%3Aopen+user-review-requested%3A%40me`
   );
 }
