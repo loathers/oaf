@@ -374,7 +374,7 @@ export class KOLClient {
     return {
       normal: [
         leaderboard
-          .match(/<tr>[^<]+<td[^<]+<a[^<]+"><b>(?<playername>[^<]+)<\/b>/g)
+          .match(/<tr>[^<]+<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)/g)
           .map((playername: string) => ({ player: playername, turns: 0, days: 0 })),
       ],
       hardcore: [],
