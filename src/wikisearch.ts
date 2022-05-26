@@ -134,7 +134,9 @@ export class WikiSearcher {
             .replaceAll("\\,", "🍕")
             .split(",")
             .map((itemName: string) => itemName.replaceAll("🍕", ","))
-            .map((itemName: string) => this._thingMap.get(cleanString(itemName.trim())))
+            .map((itemName: string) =>
+              this._thingMap.get(cleanString(itemName.trim()).toLowerCase())
+            )
             .filter((item: Item | undefined) => !!item);
           for (let item of group) {
             (item as Item).addZapGroup(group);
@@ -152,7 +154,7 @@ export class WikiSearcher {
           const group = line
             .split("\t")
             .slice(1)
-            .map((itemName: string) => this._thingMap.get(cleanString(itemName)))
+            .map((itemName: string) => this._thingMap.get(cleanString(itemName).toLowerCase()))
             .filter((item: Item | undefined) => !!item);
           for (let item of group) {
             (item as Item).addFoldGroup(group);
