@@ -2,9 +2,22 @@ import axios from "axios";
 import { decode } from "html-entities";
 import { cleanString, indent, toWikiLink } from "./utils";
 import { Mutex } from "async-mutex";
+import { DOMParser } from "xmldom";
+import { select, SelectedValue } from "xpath";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();
+
+const parser = new DOMParser({
+  locator: {},
+  errorHandler: {
+    warning: function (w) {},
+    error: function (e) {},
+    fatalError: function (e) {
+      console.error(e);
+    },
+  },
+});
 
 type MallPrice = {
   formattedMallPrice: string;
@@ -57,8 +70,13 @@ type DetailedDreadStatus = {
 };
 
 type LeaderboardInfo = {
-  normal: RunInfo[];
-  hardcore: RunInfo[];
+  name: string;
+  boards: SubboardInfo[];
+};
+
+type SubboardInfo = {
+  name: string;
+  runs: RunInfo[];
 };
 
 type RunInfo = {
@@ -369,35 +387,20 @@ export class KOLClient {
       whichboard: leaderboardId,
     });
 
-    const boards = String(leaderboard).split("Ascensions");
-
-    const entries = boards.map((board: any) =>
-      Array.from(
-        board.match(
-          /tr>[^<]*<td[^<]+(<b>)?<a[^<]+\">(<b>)?[^<]+(<\/b>)?<\/a>[^<]+<\/td><td[^<]+\d+<\/td><td[^<]+\d+<\/td>/g
-        ) || []
-      )
-    );
-
-    const cleanedEntries = entries.map((board: any) =>
-      board.map(
-        (messyRegex: any) =>
-          (messyRegex as string).match(
-            /tr>[^<]*<td[^<]+(<b>)?<a[^<]+">(<b>)?(?<playername>[^<]+)\D+(?<days>[\d\,]+)\D+(?<turns>[\d\,]+)/
-          )?.groups
-      )
-    );
+    const document = parser.parseFromString(leaderboard);
+    const [board, ...boards] = select("//table", document);
 
     return {
-      normal: cleanedEntries[1].map((run: any) => ({
-        player: run.playername as string,
-        turns: parseInt(run.turns.replace(",", "")),
-        days: parseInt(run.days.replace(",", "")),
-      })),
-      hardcore: cleanedEntries[2].map((run: any) => ({
-        player: run.playername as string,
-        turns: parseInt(run.turns.replace(",", "")),
-        days: parseInt(run.days.replace(",", "")),
+      name: select(".//text()", (board as Node).firstChild as ChildNode)
+        .map((node) => (node as Node).nodeValue)
+        .join("")
+        .trim(),
+      boards: boards.slice(1).map((subboard) => ({
+        name: select(".//text()", (subboard as Node).firstChild as ChildNode)
+          .map((node) => (node as Node).nodeValue)
+          .join("")
+          .trim(),
+        runs: [],
       })),
     };
   }

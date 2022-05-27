@@ -295,21 +295,13 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
   sentMessage.edit({
     content: null,
     embeds: [
-      new MessageEmbed()
-        .addField(
-          "Normal Leaderboard",
-          leaderboardInfo.normal
-            .map((run) => `${run.player} ${run.days}/${run.turns}`)
-            .join("\n") || "No runs yet!",
-          true
-        )
-        .addField(
-          "Hardcore Leaderboard",
-          leaderboardInfo.hardcore
-            .map((run) => `${run.player} ${run.days}/${run.turns}`)
-            .join("\n") || "No runs yet!",
-          true
-        ),
+      new MessageEmbed().setTitle(leaderboardInfo.name).addFields(
+        leaderboardInfo.boards.map((subboard) => ({
+          title: subboard.name,
+          name: subboard.name,
+          value: subboard.name,
+        }))
+      ),
     ],
   });
 }
