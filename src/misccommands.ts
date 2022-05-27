@@ -25,6 +25,7 @@ export function attachMiscCommands(client: DiscordClient) {
     prsWelcome,
     "Links to the PRs and issues assigned to you for a given LASS project"
   );
+  client.attachCommand("remind", createReminder, "Sets a reminder");
 }
 
 function orb(message: Message): void {
@@ -83,7 +84,7 @@ async function purge(channel: TextChannel, client: DiscordClient, quantity: numb
 
 function prsWelcome(message: Message, args: string[]): void {
   if (args.length < 2) {
-  message.channel.send("I need a project for that.");
+    message.channel.send("I need a project for that.");
     return;
   }
 
@@ -112,4 +113,34 @@ function prsWelcome(message: Message, args: string[]): void {
       capitalizedProject === "kolmafia" ? "kolmafia" : "Loathing-Associates-Scripting-Society"
     }/${capitalizedProject}/pulls?q=is%3Apr+is%3Aopen+user-review-requested%3A%40me`
   );
+}
+
+const timeMatcher =
+  /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
+
+function createReminder(message: Message, args: string[]) {
+  if (args.length < 2 || (!timeMatcher.test(args[1]) && args[1] !== "rollover")) {
+    message.channel.send(
+      'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".'
+    );
+    return;
+  }
+  if (timeMatcher.test(args[1])) {
+    const timeMatch = timeMatcher.exec(args[1]);
+    const timeToWait =
+      7 * 24 * 60 * 60 * 1000 * parseInt(timeMatch?.groups?.weeks || "0") +
+      24 * 60 * 60 * 1000 * parseInt(timeMatch?.groups?.days || "0") +
+      60 * 60 * 1000 * parseInt(timeMatch?.groups?.hours || "0") +
+      60 * 1000 * parseInt(timeMatch?.groups?.minutes || "0") +
+      1000 * parseInt(timeMatch?.groups?.seconds || "0");
+
+    setTimeout(
+      () =>
+        message.channel.send({
+          reply: { messageReference: message },
+          content: args.slice(2).join() || "Time's up!",
+        }),
+      timeToWait
+    );
+  }
 }
