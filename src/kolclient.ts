@@ -380,39 +380,46 @@ export class KOLClient {
     });
   }
 
-  async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo> {
-    const leaderboard = await this.tryRequestWithLogin("museum.php", {
-      floor: 1,
-      place: "leaderboards",
-      whichboard: leaderboardId,
-    });
+  async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo | undefined> {
+    try {
+      const leaderboard = await this.tryRequestWithLogin("museum.php", {
+        floor: 1,
+        place: "leaderboards",
+        whichboard: leaderboardId,
+      });
 
-    const document = parser.parseFromString(leaderboard);
-    const [board, ...boards] = select("//table", document);
+      const document = parser.parseFromString(leaderboard);
+      const [board, ...boards] = select("//table", document);
 
-    return {
-      name: select(".//text()", (board as Node).firstChild as ChildNode)
-        .map((node) => (node as Node).nodeValue)
-        .join("")
-        .trim(),
-      boards: boards
-        .slice(1)
-        .filter((board) =>
-          (select("./tr//text()", board as Node)[0] as Node)?.nodeValue?.startsWith("Fastest")
-        )
-        .map((subboard) => {
-          const rows = select("./tr", subboard as Node);
-          return {
-            name: ((select(".//text()", rows[0] as Node)[0] as Node)?.nodeValue || "").trim(),
-            runs: select("./td//tr", rows[1] as Node)
-              .slice(2)
-              .map((node) => ({
-                player: select(".//a//text()", node as Node)[0].toString(),
-                days: 0,
-                turns: 0,
-              })),
-          };
-        }),
-    };
+      return {
+        name: select(".//text()", (board as Node).firstChild as ChildNode)
+          .map((node) => (node as Node).nodeValue)
+          .join("")
+          .trim(),
+        boards: boards
+          .slice(1)
+          .filter(
+            (board) =>
+              (select("./tr//text()", board as Node)[0] as Node)?.nodeValue?.startsWith(
+                "Fastest"
+              ) && select("./tr", board as Node).length > 1
+          )
+          .map((subboard) => {
+            const rows = select("./tr", subboard as Node);
+            return {
+              name: ((select(".//text()", rows[0] as Node)[0] as Node)?.nodeValue || "").trim(),
+              runs: select("./td//tr", rows[1] as Node)
+                .slice(2)
+                .map((node) => ({
+                  player: select(".//a//text()", node as Node)[0].toString(),
+                  days: 0,
+                  turns: 0,
+                })),
+            };
+          }),
+      };
+    } catch (error) {
+      return undefined;
+    }
   }
 }

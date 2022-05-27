@@ -292,19 +292,23 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
   const board = parseInt(args[1]) || 0;
   const sentMessage = await message.channel.send(`Fetching leaderboard ${board}`);
   const leaderboardInfo = await kolClient.getLeaderboard(board);
-  sentMessage.edit({
-    content: null,
-    embeds: [
-      new MessageEmbed().setTitle(leaderboardInfo.name || "...").addFields(
-        leaderboardInfo.boards.map((subboard) => ({
-          title: subboard.name || "...",
-          name: subboard.name || "...",
-          value:
-            subboard.runs.map((run) => `${run.player} ${run.days}/${run.turns}`).join("\n") ||
-            "...",
-          inline: true,
-        }))
-      ),
-    ],
-  });
+  if (!leaderboardInfo) {
+    sentMessage.edit("I couldn't understand that leaderboard, sorry.");
+  } else {
+    sentMessage.edit({
+      content: null,
+      embeds: [
+        new MessageEmbed().setTitle(leaderboardInfo.name || "...").addFields(
+          leaderboardInfo.boards.map((subboard) => ({
+            title: subboard.name || "...",
+            name: subboard.name || "...",
+            value:
+              subboard.runs.map((run) => `${run.player} ${run.days}/${run.turns}`).join("\n") ||
+              "...",
+            inline: true,
+          }))
+        ),
+      ],
+    });
+  }
 }
