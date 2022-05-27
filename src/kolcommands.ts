@@ -294,7 +294,7 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
 
   let board = PATH_MAPPINGS.get(args[1].toLowerCase().replace(/\W/g, "")) || parseInt(args[1]) || 0;
   if (board > 2000) board = 998 + 2015 - board;
-  const sentMessage = await message.channel.send(`Fetching leaderboard ${board}`);
+  const sentMessage = await message.channel.send(`Fetching leaderboard ${board}...`);
   const leaderboardInfo = await kolClient.getLeaderboard(board);
   if (!leaderboardInfo) {
     sentMessage.edit("I don't think that's a real leaderboard, sorry.");
