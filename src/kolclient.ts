@@ -395,13 +395,16 @@ export class KOLClient {
         .map((node) => (node as Node).nodeValue)
         .join("")
         .trim(),
-      boards: boards.slice(1).map((subboard) => ({
-        name: select(".//text()", (subboard as Node).firstChild as ChildNode)
-          .map((node) => (node as Node).nodeValue)
-          .join("")
-          .trim(),
-        runs: [],
-      })),
+      boards: boards.slice(1).map((subboard) => {
+        const rows = select("./tr", subboard as Node);
+        return {
+          name: select(".//text()", rows[0] as Node)
+            .map((node) => (node as Node).nodeValue)
+            .join("")
+            .trim(),
+          runs: [],
+        };
+      }),
     };
   }
 }
