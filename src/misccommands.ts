@@ -155,7 +155,7 @@ async function createReminder(message: Message, args: string[], databaseConnecti
     );
     message.channel.send(`Okay, I'll remind you in ${args[1]}.`);
     await databaseConnectionPool.query(
-      "INSERT INTO reminders(guild_id, channel_id, message_id, message_contents, reminder_time) VALUES $1, $2, $3, $4, $5;",
+      "INSERT INTO reminders(guild_id, channel_id, message_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5);",
       [message.guildId, message.channelId, message.id, reminderText, reminderTime]
     );
   } else {
@@ -174,7 +174,7 @@ async function createReminder(message: Message, args: string[], databaseConnecti
     );
     message.channel.send(`Okay, I'll remind you just after rollover`);
     await databaseConnectionPool.query(
-      "INSERT INTO reminders(guild_id, channel_id, message_id, message_contents, reminder_time) VALUES $1, $2, $3, $4, $5;",
+      "INSERT INTO reminders(guild_id, channel_id, message_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5);",
       [message.guildId, message.channelId, message.id, reminderText, reminderTime]
     );
   }
