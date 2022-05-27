@@ -402,13 +402,14 @@ export class KOLClient {
             .map((node) => (node as Node).nodeValue)
             .join("")
             .trim(),
-          runs: select("./td//tr", rows[1] as Node)
-            .slice(2)
-            .map((node) => ({
-              player: select(".//a//text()", node as Node)[0].toString(),
-              days: 0,
-              turns: 0,
-            })),
+          runs: [],
+          // runs: select("./td//tr", rows[1] as Node)
+          //   .slice(2)
+          //   .map((node) => ({
+          //     player: select(".//a//text()", node as Node)[0].toString(),
+          //     days: 0,
+          //     turns: 0,
+          //   })),
         };
       }),
     };
