@@ -394,6 +394,7 @@ export const PATH_MAPPINGS: Map<string, number> = new Map([
   ["lowkeysummer", 41],
   ["lks", 41],
   ["greygoo", 42],
+  ["graygoo", 42],
   ["goo", 42],
   ["yourobot", 43],
   ["robot", 43],
@@ -401,6 +402,7 @@ export const PATH_MAPPINGS: Map<string, number> = new Map([
   ["qt", 44],
   ["wildfire", 45],
   ["greyyou", 46],
+  ["grayyou", 46],
   ["journeyman", 47],
   ["standard", 999],
 ]);
