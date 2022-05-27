@@ -372,3 +372,21 @@ export class DiscordClient {
     );
   }
 }
+
+function toAshFunction(functionName: string): string {
+  return functionName
+    .replace(/([A-z])/, (match: string) => "_" + match.toLowerCase())
+    .replace(" ", "_")
+    .replace("__", "_");
+}
+
+async function parseJsRef(functionName: string) {
+  const ashName = toAshFunction(functionName);
+  const jsref = await axios(
+    "https://raw.githubusercontent.com/Loathing-Associates-Scripting-Society/kolmafia-js/main/index.d.ts"
+  );
+  const matches = Array.from(
+    (jsref.data as string).matchAll(new RegExp(`^export function (${ashName}.*;)`))
+  ).map((match) => match[1]);
+  return matches;
+}
