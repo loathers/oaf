@@ -382,13 +382,13 @@ export class KOLClient {
 
   async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo> {
     const leaderboard = await this.tryRequestWithLogin("museum.php", {
-      floor: -1,
+      floor: 0,
       place: "leaderboards",
       whichboard: leaderboardId,
     });
 
     const document = parser.parseFromString(leaderboard);
-    const [result, basement, board, ...boards] = select("//table", document);
+    const [board, ...boards] = select("//table", document);
 
     return {
       name: select(".//text()", (board as Node).firstChild as ChildNode)
