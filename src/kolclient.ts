@@ -398,10 +398,7 @@ export class KOLClient {
       boards: boards.slice(1).map((subboard) => {
         const rows = select("./tr", subboard as Node);
         return {
-          name: select(".//text()", rows[0] as Node)
-            .map((node) => (node as Node).nodeValue)
-            .join("")
-            .trim(),
+          name: ((select(".//text()", rows[0] as Node)[0] as Node).nodeValue || "").trim(),
           runs: [],
           // runs: select("./td//tr", rows[1] as Node)
           //   .slice(2)
