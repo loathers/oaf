@@ -364,7 +364,7 @@ export class Item implements Thing {
     let foldGroup = "";
     if (withAddl && this._foldGroup) {
       foldGroup = `\nFolds into: ${this._foldGroup
-        .filter((item) => item.name() === this.name())
+        .filter((item) => item.name() !== this.name())
         .slice(0, 7)
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
@@ -380,7 +380,7 @@ export class Item implements Thing {
         .filter((item) => item.price.minPrice)
         .sort((a, b) => (a.price.minPrice as number) - (b.price.minPrice as number));
       if (tradeables.length > 0) {
-        if (tradeables[0].item.get().id !== this._item.id) {
+        if (tradeables[0].item.get().id === this._item.id) {
           foldGroup += "(This item is the cheapest in its fold group)";
         } else {
           const cheapest = tradeables[0].item;
