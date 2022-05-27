@@ -81,8 +81,8 @@ type SubboardInfo = {
 
 type RunInfo = {
   player: string;
-  days: number;
-  turns: number;
+  days: string;
+  turns: string;
 };
 
 function sanitiseBlueText(blueText: string): string {
@@ -420,11 +420,8 @@ export class KOLClient {
                       .replace(/&amp;nbsp;/g, "") //I hate TPTB so much
                       .trim()
                       .toString(),
-                    days:
-                      rowText.length > 2
-                        ? parseInt(rowText[rowText.length - 2].toString().replace(/\,/g, "")) || 0
-                        : 0,
-                    turns: parseInt(rowText[rowText.length - 1].toString().replace(/\,/g, "")) || 0,
+                    days: rowText.length > 2 ? rowText[rowText.length - 2].toString() || "0" : "0",
+                    turns: rowText[rowText.length - 1].toString() || "0",
                   };
                 }),
             };
