@@ -233,7 +233,7 @@ export class DiscordClient {
     this.attachCommand(
       "mafiawiki",
       async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
-      "Alias for !mafia."
+      "Alias for mafia."
     );
     this.attachCommand(
       "help",

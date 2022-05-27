@@ -1,7 +1,10 @@
-import { Message } from "discord.js";
+import { Message, MessageEmbed } from "discord.js";
+import { runInThisContext } from "vm";
+import { PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
+import { KOLClient } from "./kolclient";
 
-export function attachKoLCommands(client: DiscordClient) {
+export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
   client.attachCommand("item", item, "Print the +item drop required to cap a drop.");
   client.attachCommand("level", level, "Finds the stats and substats needed for a given level.");
   client.attachCommand("stat", stat, "Finds the substats and level for a given mainstat total.");
@@ -38,10 +41,20 @@ export function attachKoLCommands(client: DiscordClient) {
     reverseFairy,
     "Print the fairy weight necessary to supply a particular item drop."
   );
+  client.attachCommand(
+    "leaderboard",
+    (message, args) => leaderboard(message, args, kolClient),
+    "Print the specified leaderboard."
+  );
+  client.attachCommand(
+    "lb",
+    (message, args) => leaderboard(message, args, kolClient),
+    "Alias for leaderboard."
+  );
 }
 
 function item(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a drop rate.");
     return;
   }
@@ -62,7 +75,7 @@ function item(message: Message, args: string[]): void {
 }
 
 function fairy(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a fairy weight.");
     return;
   }
@@ -81,7 +94,7 @@ function fairy(message: Message, args: string[]): void {
 }
 
 function lep(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a leprechaun weight.");
     return;
   }
@@ -100,7 +113,7 @@ function lep(message: Message, args: string[]): void {
 }
 
 function volley(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a volleyball weight.");
     return;
   }
@@ -145,7 +158,7 @@ class StatBlock {
 }
 
 function level(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a level.");
     return;
   }
@@ -173,7 +186,7 @@ function level(message: Message, args: string[]): void {
 }
 
 function stat(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a mainstat.");
     return;
   }
@@ -207,7 +220,7 @@ function stat(message: Message, args: string[]): void {
 }
 
 function substat(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a substat total.");
     return;
   }
@@ -235,7 +248,7 @@ function substat(message: Message, args: string[]): void {
 }
 
 function reverseLep(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply a meat drop value.");
     return;
   }
@@ -257,7 +270,7 @@ function reverseLep(message: Message, args: string[]): void {
 }
 
 function reverseFairy(message: Message, args: string[]): void {
-  if (args.length === 0) {
+  if (args.length <= 1) {
     message.channel.send("Please supply an item drop value.");
     return;
   }
@@ -276,4 +289,63 @@ function reverseFairy(message: Message, args: string[]): void {
       1.25
     ).toFixed(1)} lbs.`
   );
+}
+
+async function leaderboard(message: Message, args: string[], kolClient: KOLClient): Promise<void> {
+  if (args.length <= 1) {
+    message.channel.send("Please supply a leaderboard id.");
+    return;
+  }
+
+  let board =
+    PATH_MAPPINGS.get(args.slice(1).join("").toLowerCase().replace(/\W/g, "")) ||
+    parseInt(args[1]) ||
+    0;
+  if (board > 2000) board = board === new Date(Date.now()).getFullYear() ? 999 : 998 + 2015 - board;
+  const sentMessage = await message.channel.send(`Fetching leaderboard ${board}...`);
+  const leaderboardInfo = await kolClient.getLeaderboard(board);
+  if (!leaderboardInfo || leaderboardInfo.name === "Weird Leaderboards") {
+    sentMessage.edit("I don't think that's a real leaderboard, sorry.");
+  } else if (leaderboardInfo.boards.length === 0) {
+    sentMessage.edit({
+      content: null,
+      embeds: [
+        new MessageEmbed()
+          .setTitle(leaderboardInfo.name || "...")
+          .setDescription("I wasn't able to understand this leaderboard, sorry.")
+          .setFooter({
+            text: "Problems? Message DocRostov#7004 on discord.",
+            iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+          }),
+      ],
+    });
+  } else {
+    sentMessage.edit({
+      content: null,
+      embeds: [
+        new MessageEmbed()
+          .setTitle(leaderboardInfo.name || "...")
+          .addFields(
+            leaderboardInfo.boards.map((subboard) => {
+              const runs = subboard.runs.map(
+                (run) => `${run.player} - ${run.days ? `${run.days}/` : ""}${run.turns}`
+              );
+              if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
+              if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
+              if (runs.length) runs.splice(0, 0, "🥇 Gold Star 🥇");
+              return {
+                title: subboard.name || "...",
+                name: subboard.name || "...",
+                value: runs.join("\n").slice(0, 1024) || "No runs yet!",
+                inline: true,
+              };
+            })
+          )
+          .setFooter({
+            text: "Problems? Message DocRostov#7004 on discord.",
+            iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+          }),
+      ],
+    });
+  }
 }

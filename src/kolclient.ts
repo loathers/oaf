@@ -2,9 +2,22 @@ import axios from "axios";
 import { decode } from "html-entities";
 import { cleanString, indent, toWikiLink } from "./utils";
 import { Mutex } from "async-mutex";
+import { DOMParser } from "xmldom";
+import { select, SelectedValue } from "xpath";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();
+
+const parser = new DOMParser({
+  locator: {},
+  errorHandler: {
+    warning: function (w) {},
+    error: function (e) {},
+    fatalError: function (e) {
+      console.error(e);
+    },
+  },
+});
 
 type MallPrice = {
   formattedMallPrice: string;
@@ -54,6 +67,22 @@ type DetailedDreadStatus = {
   forest: DreadForestStatus;
   village: DreadVillageStatus;
   castle: DreadCastleStatus;
+};
+
+type LeaderboardInfo = {
+  name: string;
+  boards: SubboardInfo[];
+};
+
+type SubboardInfo = {
+  name: string;
+  runs: RunInfo[];
+};
+
+type RunInfo = {
+  player: string;
+  days: string;
+  turns: string;
 };
 
 function sanitiseBlueText(blueText: string): string {
@@ -349,5 +378,59 @@ export class KOLClient {
       action: "joinclan",
       confirm: "on",
     });
+  }
+
+  async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo | undefined> {
+    try {
+      const leaderboard = await this.tryRequestWithLogin("museum.php", {
+        floor: 1,
+        place: "leaderboards",
+        whichboard: leaderboardId,
+      });
+
+      const document = parser.parseFromString(leaderboard);
+      const [board, ...boards] = select("//table", document);
+
+      return {
+        name: select(".//text()", (board as Node).firstChild as ChildNode)
+          .map((node) => (node as Node).nodeValue)
+          .join("")
+          .replace(/\s+/g, " ")
+          .trim(),
+        boards: boards
+          .slice(1)
+          .filter(
+            (board) =>
+              (select("./tr//text()", board as Node)[0] as Node)?.nodeValue?.match(
+                /^((Fast|Funn|B)est|Most Goo)/
+              ) && select("./tr", board as Node).length > 1
+          )
+          .map((subboard) => {
+            const rows = select("./tr", subboard as Node);
+            return {
+              name: ((select(".//text()", rows[0] as Node)[0] as Node)?.nodeValue || "").trim(),
+              runs: select("./td//tr", rows[1] as Node)
+                .slice(2)
+                .map((node) => {
+                  const rowText = select(".//text()", node as Node).map((text) =>
+                    text.toString().replace(/&amp;nbsp;/g, "")
+                  );
+                  const hasTwoNumbers = !!parseInt(rowText[rowText.length - 2]);
+                  return {
+                    player: rowText
+                      .slice(0, rowText.length - (hasTwoNumbers ? 2 : 1))
+                      .join("")
+                      .trim()
+                      .toString(),
+                    days: hasTwoNumbers ? rowText[rowText.length - 2].toString() || "0" : "",
+                    turns: rowText[rowText.length - 1].toString() || "0",
+                  };
+                }),
+            };
+          }),
+      };
+    } catch (error) {
+      return undefined;
+    }
   }
 }
