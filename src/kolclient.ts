@@ -412,15 +412,17 @@ export class KOLClient {
               runs: select("./td//tr", rows[1] as Node)
                 .slice(2)
                 .map((node) => {
-                  const rowText = select(".//text()", node as Node);
+                  const rowText = select(".//text()", node as Node).map((text) =>
+                    text.toString().replace(/&amp;nbsp;/g, "")
+                  );
+                  const hasTwoNumbers = parseInt(rowText[rowText.length - 2]) !== 0;
                   return {
                     player: rowText
-                      .slice(0, rowText.length - 2)
+                      .slice(0, rowText.length - (hasTwoNumbers ? 2 : 1))
                       .join("")
-                      .replace(/&amp;nbsp;/g, "") //I hate TPTB so much
                       .trim()
                       .toString(),
-                    days: rowText.length > 2 ? rowText[rowText.length - 2].toString() || "0" : "0",
+                    days: hasTwoNumbers ? rowText[rowText.length - 2].toString() || "0" : "0",
                     turns: rowText[rowText.length - 1].toString() || "0",
                   };
                 }),
