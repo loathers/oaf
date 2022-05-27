@@ -328,11 +328,10 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
               if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
               if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
               if (runs.length) runs.splice(0, 0, "🥇 Gold Star 🥇");
-              console.log(runs.join("\n"));
               return {
                 title: subboard.name || "...",
                 name: subboard.name || "...",
-                value: runs.join("\n") || "No runs yet!",
+                value: runs.join("\n").slice(0, 1024) || "No runs yet!",
                 inline: true,
               };
             })
