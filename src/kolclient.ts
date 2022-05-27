@@ -396,6 +396,7 @@ export class KOLClient {
         .join("")
         .trim(),
       boards: boards
+        .slice(1)
         .filter((board) =>
           (select("./tr//text()", board as Node)[0] as Node)?.nodeValue?.startsWith("Fastest")
         )
@@ -403,14 +404,13 @@ export class KOLClient {
           const rows = select("./tr", subboard as Node);
           return {
             name: ((select(".//text()", rows[0] as Node)[0] as Node)?.nodeValue || "").trim(),
-            runs: [],
-            // runs: select("./td//tr", rows[1] as Node)
-            //   .slice(2)
-            //   .map((node) => ({
-            //     player: select(".//a//text()", node as Node)[0].toString(),
-            //     days: 0,
-            //     turns: 0,
-            //   })),
+            runs: select("./td//tr", rows[1] as Node)
+              .slice(2)
+              .map((node) => ({
+                player: select(".//a//text()", node as Node)[0].toString(),
+                days: 0,
+                turns: 0,
+              })),
           };
         }),
     };
