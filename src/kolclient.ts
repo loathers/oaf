@@ -388,7 +388,7 @@ export class KOLClient {
     });
 
     const document = parser.parseFromString(leaderboard);
-    const [board, ...boards] = select("//table", document);
+    const [result, board, ...boards] = select("//table", document);
 
     return {
       name: select(".//text()", (board as Node).firstChild as ChildNode)
