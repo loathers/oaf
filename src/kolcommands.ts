@@ -1,5 +1,6 @@
 import { Message, MessageEmbed } from "discord.js";
 import { runInThisContext } from "vm";
+import { PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 
@@ -290,7 +291,9 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
     message.channel.send("Please supply a leaderboard id.");
     return;
   }
-  const board = parseInt(args[1]) || 0;
+
+  let board = PATH_MAPPINGS.get(args[1].toLowerCase().replace(/\W/g, "")) || parseInt(args[1]) || 0;
+  if (board > 2000) board = 999 + board - new Date(Date.now()).getFullYear();
   const sentMessage = await message.channel.send(`Fetching leaderboard ${board}`);
   const leaderboardInfo = await kolClient.getLeaderboard(board);
   if (!leaderboardInfo) {
