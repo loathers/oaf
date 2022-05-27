@@ -301,31 +301,38 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
       embeds: [
         new MessageEmbed()
           .setTitle(leaderboardInfo.name || "...")
-          .addField(
-            leaderboardInfo.name || "...",
-            "I wasn't able to understand this leaderboard, sorry."
-          ),
+          .setDescription("I wasn't able to understand this leaderboard, sorry.")
+          .setFooter({
+            text: "Problems? Message DocRostov#7004 on discord.",
+            iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+          }),
       ],
     });
   } else {
     sentMessage.edit({
       content: null,
       embeds: [
-        new MessageEmbed().setTitle(leaderboardInfo.name || "...").addFields(
-          leaderboardInfo.boards.map((subboard) => {
-            const runs = subboard.runs.map((run) => `${run.player} ${run.days}/${run.turns}`);
-            if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
-            if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
-            if (runs.length) runs.splice(0, 0, "🥇 Gold Star 🥇");
-            console.log(runs.join("\n"));
-            return {
-              title: subboard.name || "...",
-              name: subboard.name || "...",
-              value: runs.join("\n") || "No runs yet!",
-              inline: true,
-            };
-          })
-        ),
+        new MessageEmbed()
+          .setTitle(leaderboardInfo.name || "...")
+          .addFields(
+            leaderboardInfo.boards.map((subboard) => {
+              const runs = subboard.runs.map((run) => `${run.player} ${run.days}/${run.turns}`);
+              if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
+              if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
+              if (runs.length) runs.splice(0, 0, "🥇 Gold Star 🥇");
+              console.log(runs.join("\n"));
+              return {
+                title: subboard.name || "...",
+                name: subboard.name || "...",
+                value: runs.join("\n") || "No runs yet!",
+                inline: true,
+              };
+            })
+          )
+          .setFooter({
+            text: "Problems? Message DocRostov#7004 on discord.",
+            iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+          }),
       ],
     });
   }
