@@ -330,7 +330,7 @@ export class Item implements Thing {
     }
 
     let zapGroup = "";
-    if (withAddl && this._zapGroup) {
+    if (this._zapGroup) {
       zapGroup = `\nZaps into: ${this._zapGroup
         .filter((item) => item.name() !== this.name())
         .slice(0, 7)
@@ -362,7 +362,7 @@ export class Item implements Thing {
     }
 
     let foldGroup = "";
-    if (withAddl && this._foldGroup) {
+    if (this._foldGroup) {
       foldGroup = `\nFolds into: ${this._foldGroup
         .filter((item) => item.name() !== this.name())
         .slice(0, 7)

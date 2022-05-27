@@ -240,7 +240,12 @@ export const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
 ]);
 
 export const PACKAGES: Map<string, string> = new Map([
-  ["packet of maygfly bait", "mayfly bait necklace"],
+  ["iceberglet", "ice pick"],
+  ["great ball of frozen fire", "evil flaming eyeball pendant"],
+  ["naughty origami kit", "naughty paper shuriken"],
+  ["packet of mayfly bait", "mayfly bait necklace"],
+  ["container of spooky putty", "spooky putty sheet"],
+  ["stinky cheese ball", "stinky cheese diaper"],
   ["grumpy bumpkin's pumpkin seed catalog", "packet of pumpkin seeds"],
   ["make-your-own-vampire-fangs kit", "plastic vampire fangs"],
   ["mint salton pepper's peppermint seed catalog", "peppermint pip packet"],
@@ -299,12 +304,41 @@ const ghostlings: [string, string][] = [
   ["greedy ghostling", "box o' ghosts"],
 ];
 
+const foldables: [string, string][] = [
+  ["ice baby", "iceberglet"],
+  ["ice pick", "iceberglet"],
+  ["ice skates", "iceberglet"],
+  ["ice sickle", "iceberglet"],
+  ["liar's pants", "great ball of frozen fire"],
+  ["flaming juggler's balls", "great ball of frozen fire"],
+  ["flaming pink shirt", "great ball of frozen fire"],
+  ["flaming familiar doppelgänger", "great ball of frozen fire"],
+  ["evil flaming eyeball pendant", "great ball of frozen fire"],
+  ["naughty paper shuriken", "naughty origami kit"],
+  ["origami pasties", "naughty origami kit"],
+  ["origami riding crop", "naughty origami kit"],
+  ['origami "gentlemen\'s" magazine', "naughty origami kit"],
+  ["naughty fortune teller", "naughty origami kit"],
+  ["spooky putty mitre", "container of spooky putty"],
+  ["spooky putty leotard", "container of spooky putty"],
+  ["spooky putty ball", "container of spooky putty"],
+  ["spooky putty sheet", "container of spooky putty"],
+  ["spooky putty snake", "container of spooky putty"],
+  ["stinky cheese sword", "stinky cheese ball"],
+  ["stinky cheese diaper", "stinky cheese ball"],
+  ["stinky cheese wheel", "stinky cheese ball"],
+  ["stinky cheese eye", "stinky cheese ball"],
+  ["staff of queso escusado", "stinky cheese ball"],
+];
+
 const reversed: [string, string][] = Array.from(PACKAGES.keys()).map((key) => [
   PACKAGES.get(key) || "",
   key,
 ]);
 
-export const REVERSE_PACKAGES: Map<string, string> = new Map(reversed.concat(ghostlings));
+export const REVERSE_PACKAGES: Map<string, string> = new Map(
+  reversed.concat(ghostlings).concat(foldables)
+);
 
 export const ORB_RESPONSES: string[] = [
   "It is certain.",
