@@ -420,8 +420,8 @@ export class KOLClient {
                       .replace(/&amp;nbsp;/g, "") //I hate TPTB so much
                       .trim()
                       .toString(),
-                    days: parseInt(rowText[rowText.length - 2].toString()) || 0,
-                    turns: parseInt(rowText[rowText.length - 1].toString()) || 0,
+                    days: parseInt(rowText[rowText.length - 2].toString().replace(/\,/g, "")) || 0,
+                    turns: parseInt(rowText[rowText.length - 1].toString().replace(/\,/g, "")) || 0,
                   };
                 }),
             };
