@@ -292,7 +292,10 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
     return;
   }
 
-  let board = PATH_MAPPINGS.get(args[1].toLowerCase().replace(/\W/g, "")) || parseInt(args[1]) || 0;
+  let board =
+    PATH_MAPPINGS.get(args.slice(1).join("").toLowerCase().replace(/\W/g, "")) ||
+    parseInt(args[1]) ||
+    0;
   if (board > 2000) board = board === new Date(Date.now()).getFullYear() ? 999 : 998 + 2015 - board;
   const sentMessage = await message.channel.send(`Fetching leaderboard ${board}...`);
   const leaderboardInfo = await kolClient.getLeaderboard(board);
