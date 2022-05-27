@@ -171,16 +171,15 @@ export class KOLClient {
         ? unlimitedPrice
         : minPrice
       : minPrice;
-    let formattedMinPrice = limitedMatch ? limitedMatch[1] : null;
-    formattedMinPrice = unlimitedMatch
-      ? !minPrice || unlimitedPrice < minPrice
+    const formattedMinPrice = minPrice
+      ? minPrice === unlimitedPrice
         ? unlimitedMatch[1]
-        : formattedMinPrice
-      : formattedMinPrice;
+        : limitedMatch[1]
+      : "";
     return {
       mallPrice: unlimitedPrice,
       limitedMallPrice: limitedPrice,
-      formattedMinPrice: formattedMinPrice || "",
+      formattedMinPrice: formattedMinPrice,
       minPrice: minPrice,
       formattedMallPrice: unlimitedMatch ? unlimitedMatch[1] : "",
       formattedLimitedMallPrice: limitedMatch ? limitedMatch[1] : "",
