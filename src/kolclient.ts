@@ -416,6 +416,7 @@ export class KOLClient {
                     text.toString().replace(/&amp;nbsp;/g, "")
                   );
                   const hasTwoNumbers = parseInt(rowText[rowText.length - 2]) !== 0;
+                  console.log(parseInt(rowText[rowText.length - 2]));
                   return {
                     player: rowText
                       .slice(0, rowText.length - (hasTwoNumbers ? 2 : 1))
