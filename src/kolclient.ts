@@ -410,11 +410,17 @@ export class KOLClient {
               name: ((select(".//text()", rows[0] as Node)[0] as Node)?.nodeValue || "").trim(),
               runs: select("./td//tr", rows[1] as Node)
                 .slice(2)
-                .map((node) => ({
-                  player: select(".//a//text()", node as Node)[0].toString(),
-                  days: 0,
-                  turns: 0,
-                })),
+                .map((node) => {
+                  const rowText = select(".//text()", node as Node);
+                  return {
+                    player: rowText
+                      .slice(0, rowText.length - 2)
+                      .join("")
+                      .toString(),
+                    days: parseInt(rowText[rowText.length - 2].toString()) || 0,
+                    turns: parseInt(rowText[rowText.length - 1].toString()) || 0,
+                  };
+                }),
             };
           }),
       };
