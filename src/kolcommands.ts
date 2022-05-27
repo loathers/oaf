@@ -46,6 +46,11 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
     (message, args) => leaderboard(message, args, kolClient),
     "Print the specified leaderboard."
   );
+  client.attachCommand(
+    "lb",
+    (message, args) => leaderboard(message, args, kolClient),
+    "Alias for leaderboard."
+  );
 }
 
 function item(message: Message, args: string[]): void {
