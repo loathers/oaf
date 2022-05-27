@@ -298,8 +298,13 @@ export class Item implements Thing {
 
     let price_section = "";
     if (this._item.tradeable) {
-      const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
-        await client.getMallPrice(this._item.id);
+      const {
+        mallPrice,
+        limitedMallPrice,
+        minPrice,
+        formattedMallPrice,
+        formattedLimitedMallPrice,
+      } = await client.getMallPrice(this._item.id);
       if (mallPrice) {
         price_section += `Mall Price: [${formattedMallPrice} meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${this._item.id}&timespan=1&noanim=0)`;
         if (limitedMallPrice && limitedMallPrice < mallPrice)
@@ -337,6 +342,24 @@ export class Item implements Thing {
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
         .join(", ")}${this._zapGroup.length > 8 ? " ...and more." : ""}\n`;
+
+      const tradeables = (
+        await Promise.all(
+          this._zapGroup
+            .filter((item) => item.get().tradeable)
+            .map(async (item) => ({ item: item, price: await client.getMallPrice(item.get().id) }))
+        )
+      )
+        .filter((item) => item.price.minPrice)
+        .sort((a, b) => (a.price.minPrice as number) - (b.price.minPrice as number));
+      if (tradeables.length > 0) {
+        const cheapest = tradeables[0].item;
+        zapGroup += `Cheapest: [${cheapest.get().name}](${toWikiLink(cheapest.get().name)}} @ [${
+          tradeables[0].price.minPrice
+        } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
+          cheapest.get().id
+        }&timespan=1&noanim=0)\n`;
+      }
     }
 
     let foldGroup = "";
@@ -347,6 +370,24 @@ export class Item implements Thing {
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
         .join(", ")}${this._foldGroup.length > 8 ? " ...and more." : ""}\n`;
+
+      const tradeables = (
+        await Promise.all(
+          this._foldGroup
+            .filter((item) => item.get().tradeable)
+            .map(async (item) => ({ item: item, price: await client.getMallPrice(item.get().id) }))
+        )
+      )
+        .filter((item) => item.price.minPrice)
+        .sort((a, b) => (a.price.minPrice as number) - (b.price.minPrice as number));
+      if (tradeables.length > 0) {
+        const cheapest = tradeables[0].item;
+        foldGroup += `Cheapest: [${cheapest.get().name}](${toWikiLink(cheapest.get().name)}} @ [${
+          tradeables[0].price.minPrice
+        } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
+          cheapest.get().id
+        }&timespan=1&noanim=0)\n`;
+      }
     }
 
     if (blueText && (autosell || price_section)) blueText += "\n";
