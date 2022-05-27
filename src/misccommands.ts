@@ -130,10 +130,7 @@ async function createReminder(message: Message, args: string[], databaseConnecti
     );
     return;
   }
-  const reminderText = message.content.split(" ").slice(2).join(" ") || "Time's up!";
-  if (reminderText.length > 128) {
-    message.channel.send("Reminders have a maximum length of 128 characters.");
-  }
+  const reminderText = "⏰";
   if (timeMatcher.test(args[1])) {
     const timeMatch = timeMatcher.exec(args[1]);
     const timeToWait =
@@ -143,7 +140,6 @@ async function createReminder(message: Message, args: string[], databaseConnecti
       60 * 1000 * parseInt(timeMatch?.groups?.minutes || "0") +
       1000 * parseInt(timeMatch?.groups?.seconds || "0");
     const reminderTime = Date.now() + timeToWait;
-    const reminderText = message.content.split(" ").slice(2).join(" ") || "Time's up!";
 
     setTimeout(
       () =>
