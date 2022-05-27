@@ -162,8 +162,8 @@ export class KOLClient {
     });
     const unlimitedMatch = prices.match(/<td>unlimited:<\/td><td><b>(?<unlimitedPrice>[\d\,]+)/);
     const limitedMatch = prices.match(/<td>limited:<\/td><td><b>(?<limitedPrice>[\d\,]+)/);
-    const unlimitedPrice = parseInt(unlimitedMatch[1].replace(/,/g, "")) || 0;
-    const limitedPrice = parseInt(limitedMatch[1].replace(/,/g, ""));
+    const unlimitedPrice = unlimitedMatch ? parseInt(unlimitedMatch[1].replace(/,/g, "")) : 0;
+    const limitedPrice = limitedMatch ? parseInt(limitedMatch[1].replace(/,/g, "")): 0;
     let minPrice = limitedMatch ? limitedPrice : null;
     minPrice = unlimitedMatch
       ? !minPrice || unlimitedPrice < minPrice
@@ -171,8 +171,8 @@ export class KOLClient {
         : minPrice
       : minPrice;
     return {
-      mallPrice: unlimitedMatch ? unlimitedPrice : 0,
-      limitedMallPrice: limitedMatch ? limitedPrice : 0,
+      mallPrice:  unlimitedPrice,
+      limitedMallPrice: limitedPrice,
       minPrice: minPrice,
       formattedMallPrice: unlimitedMatch ? unlimitedMatch[1] : "",
       formattedLimitedMallPrice: limitedMatch ? limitedMatch[1] : "",
