@@ -395,6 +395,7 @@ export class KOLClient {
         name: select(".//text()", (board as Node).firstChild as ChildNode)
           .map((node) => (node as Node).nodeValue)
           .join("")
+          .replace(/\s+/g, " ")
           .trim(),
         boards: boards
           .slice(1)

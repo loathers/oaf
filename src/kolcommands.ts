@@ -296,7 +296,7 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
   if (board > 2000) board = 998 + 2015 - board;
   const sentMessage = await message.channel.send(`Fetching leaderboard ${board}...`);
   const leaderboardInfo = await kolClient.getLeaderboard(board);
-  if (!leaderboardInfo || leaderboardInfo.name === "Weird  Leaderboards") {
+  if (!leaderboardInfo || leaderboardInfo.name === "Weird Leaderboards") {
     sentMessage.edit("I don't think that's a real leaderboard, sorry.");
   } else if (leaderboardInfo.boards.length === 0) {
     sentMessage.edit({
