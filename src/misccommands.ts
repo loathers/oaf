@@ -134,12 +134,13 @@ function createReminder(message: Message, args: string[]) {
       60 * 1000 * parseInt(timeMatch?.groups?.minutes || "0") +
       1000 * parseInt(timeMatch?.groups?.seconds || "0");
     const reminderTime = Date.now() + timeToWait;
+    const reminderText = message.content.split(" ").slice(2).join(" ") || "Time's up!";
 
     setTimeout(
       () =>
         message.channel.send({
-          reply: { messageReference: message },
-          content: message.content.split(" ").slice(2).join(" ") || "Time's up!",
+          reply: { messageReference: message.id },
+          content: reminderText,
         }),
       timeToWait
     );
@@ -150,11 +151,12 @@ function createReminder(message: Message, args: string[]) {
       reminderTime += 24 * 60 * 60 * 1000;
     }
     const timeToWait = reminderTime - Date.now();
+    const reminderText = message.content.split(" ").slice(2).join(" ") || "Time's up!";
     setTimeout(
       () =>
         message.channel.send({
-          reply: { messageReference: message },
-          content: message.content.split(" ").slice(2).join(" ") || "Time's up!",
+          reply: { messageReference: message.id },
+          content: reminderText,
         }),
       timeToWait
     );
