@@ -141,14 +141,16 @@ async function createReminder(message: Message, args: string[], databaseConnecti
       1000 * parseInt(timeMatch?.groups?.seconds || "0");
     const reminderTime = Date.now() + timeToWait;
 
-    setTimeout(
-      () =>
-        message.channel.send({
-          reply: { messageReference: message.id },
-          content: reminderText,
-        }),
-      timeToWait
-    );
+    if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
+      setTimeout(
+        () =>
+          message.channel.send({
+            reply: { messageReference: message.id },
+            content: reminderText,
+          }),
+        timeToWait
+      );
+    }
     message.channel.send(`Okay, I'll remind you in ${args[1]}.`);
     await databaseConnectionPool.query(
       "INSERT INTO reminders(guild_id, channel_id, message_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5);",
@@ -160,14 +162,17 @@ async function createReminder(message: Message, args: string[], databaseConnecti
       reminderTime += 24 * 60 * 60 * 1000;
     }
     const timeToWait = reminderTime - Date.now();
-    setTimeout(
-      () =>
-        message.channel.send({
-          reply: { messageReference: message.id },
-          content: reminderText,
-        }),
-      timeToWait
-    );
+
+    if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
+      setTimeout(
+        () =>
+          message.channel.send({
+            reply: { messageReference: message.id },
+            content: reminderText,
+          }),
+        timeToWait
+      );
+    }
     message.channel.send(`Okay, I'll remind you just after rollover`);
     await databaseConnectionPool.query(
       "INSERT INTO reminders(guild_id, channel_id, message_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5);",
@@ -187,13 +192,15 @@ export async function syncReminders(databaseConnectionPool: Pool, discordClient:
   for (let reminder of reminders.rows) {
     const guild = await discordClient.guilds.fetch(reminder.guild_id);
     const channel = await guild.channels.fetch(reminder.channel_id);
-    setTimeout(() => {
-      try {
-        (channel as TextChannel).send({
-          reply: { messageReference: reminder.message_id },
-          content: reminder.message_contents,
-        });
-      } catch {}
-    }, reminder.reminder_time - now);
+    if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
+      setTimeout(() => {
+        try {
+          (channel as TextChannel).send({
+            reply: { messageReference: reminder.message_id },
+            content: reminder.message_contents,
+          });
+        } catch {}
+      }, reminder.reminder_time - now);
+    }
   }
 }
