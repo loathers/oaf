@@ -295,11 +295,11 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
   sentMessage.edit({
     content: null,
     embeds: [
-      new MessageEmbed().setTitle(leaderboardInfo.name).addFields(
+      new MessageEmbed().setTitle(leaderboardInfo.name || "...").addFields(
         leaderboardInfo.boards.map((subboard) => ({
-          title: subboard.name,
-          name: subboard.name,
-          value: subboard.name,
+          title: subboard.name || "...",
+          name: subboard.name || "...",
+          value: subboard.name || "...",
         }))
       ),
     ],
