@@ -22,8 +22,10 @@ const parser = new DOMParser({
 type MallPrice = {
   formattedMallPrice: string;
   formattedLimitedMallPrice: string;
+  formattedMinPrice: string;
   mallPrice: number;
   limitedMallPrice: number;
+  minPrice: number | null;
 };
 
 type KOLCredentials = {
@@ -190,9 +192,24 @@ export class KOLClient {
     });
     const unlimitedMatch = prices.match(/<td>unlimited:<\/td><td><b>(?<unlimitedPrice>[\d\,]+)/);
     const limitedMatch = prices.match(/<td>limited:<\/td><td><b>(?<limitedPrice>[\d\,]+)/);
+    const unlimitedPrice = unlimitedMatch ? parseInt(unlimitedMatch[1].replace(/,/g, "")) : 0;
+    const limitedPrice = limitedMatch ? parseInt(limitedMatch[1].replace(/,/g, "")) : 0;
+    let minPrice = limitedMatch ? limitedPrice : null;
+    minPrice = unlimitedMatch
+      ? !minPrice || unlimitedPrice < minPrice
+        ? unlimitedPrice
+        : minPrice
+      : minPrice;
+    const formattedMinPrice = minPrice
+      ? minPrice === unlimitedPrice
+        ? unlimitedMatch[1]
+        : limitedMatch[1]
+      : "";
     return {
-      mallPrice: unlimitedMatch ? parseInt(unlimitedMatch[1].replace(/,/g, "")) : 0,
-      limitedMallPrice: limitedMatch ? parseInt(limitedMatch[1].replace(/,/g, "")) : 0,
+      mallPrice: unlimitedPrice,
+      limitedMallPrice: limitedPrice,
+      formattedMinPrice: formattedMinPrice,
+      minPrice: minPrice,
       formattedMallPrice: unlimitedMatch ? unlimitedMatch[1] : "",
       formattedLimitedMallPrice: limitedMatch ? limitedMatch[1] : "",
     };

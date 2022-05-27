@@ -313,40 +313,80 @@ export class Item implements Thing {
     if (withAddl && this._container) {
       container = `\nEnclosed in: **[${this._container.get().name}](${toWikiLink(
         this._container.get().name
-      )})**\n${(await this._container?.buildFullDescription(client, false)).replace(
-        /\n+/g,
-        "\n"
-      )}\n`;
+      )})**\n${await this._container?.buildFullDescription(client, false)}\n`;
     }
 
     let contents = "";
     if (withAddl && this._contents) {
       contents = `\nEncloses: **[${this._contents.get().name}](${toWikiLink(
         this._contents.get().name
-      )})**\n${(await this._contents?.buildFullDescription(client, false)).replace(
-        /\n+/g,
-        "\n"
-      )}\n`;
+      )})**\n${await this._contents?.buildFullDescription(client, false)}\n`;
     }
 
     let zapGroup = "";
-    if (withAddl && this._zapGroup) {
+    if (this._zapGroup) {
       zapGroup = `\nZaps into: ${this._zapGroup
         .filter((item) => item.name() !== this.name())
         .slice(0, 7)
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
         .join(", ")}${this._zapGroup.length > 8 ? " ...and more." : ""}\n`;
+
+      const tradeables = (
+        await Promise.all(
+          this._zapGroup
+            .filter((item) => item.get().tradeable)
+            .map(async (item) => ({ item: item, price: await client.getMallPrice(item.get().id) }))
+        )
+      )
+        .filter((item) => item.price.minPrice)
+        .sort((a, b) => (a.price.minPrice as number) - (b.price.minPrice as number));
+      if (tradeables.length > 0) {
+        if (tradeables[0].item.get().id === this._item.id) {
+          zapGroup += "(This item is the cheapest in its zap group)";
+        } else {
+          const cheapest = tradeables[0].item;
+          zapGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(cheapest.get().name)}) @ [${
+            tradeables[0].price.formattedMinPrice
+          } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
+            cheapest.get().id
+          }&timespan=1&noanim=0))\n`;
+        }
+      }
     }
 
     let foldGroup = "";
-    if (withAddl && this._foldGroup) {
+    if (this._foldGroup) {
       foldGroup = `\nFolds into: ${this._foldGroup
         .filter((item) => item.name() !== this.name())
         .slice(0, 7)
         .map((item) => item.get().name)
         .map((name) => `[${name}](${toWikiLink(name)})`)
         .join(", ")}${this._foldGroup.length > 8 ? " ...and more." : ""}\n`;
+
+      const tradeables = (
+        await Promise.all(
+          this._foldGroup
+            .filter((item) => item.get().tradeable)
+            .map(async (item) => ({ item: item, price: await client.getMallPrice(item.get().id) }))
+        )
+      )
+        .filter((item) => item.price.minPrice)
+        .sort((a, b) => (a.price.minPrice as number) - (b.price.minPrice as number));
+      if (tradeables.length > 0) {
+        if (tradeables[0].item.get().id === this._item.id) {
+          foldGroup += "(This item is the cheapest in its fold group)";
+        } else {
+          const cheapest = tradeables[0].item;
+          foldGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(
+            cheapest.get().name
+          )}) @ [${
+            tradeables[0].price.formattedMinPrice
+          } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
+            cheapest.get().id
+          }&timespan=1&noanim=0))\n`;
+        }
+      }
     }
 
     if (blueText && (autosell || price_section)) blueText += "\n";
