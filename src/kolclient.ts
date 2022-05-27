@@ -416,7 +416,7 @@ export class KOLClient {
                     player: rowText
                       .slice(0, rowText.length - 2)
                       .join("")
-                      .replace(/&nbsp;/g, "")
+                      .replace(/&amp;nbsp;/g, "") //I hate TPTB so much
                       .trim()
                       .toString(),
                     days: parseInt(rowText[rowText.length - 2].toString()) || 0,
