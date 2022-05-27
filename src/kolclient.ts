@@ -395,20 +395,24 @@ export class KOLClient {
         .map((node) => (node as Node).nodeValue)
         .join("")
         .trim(),
-      boards: boards.slice(1).map((subboard) => {
-        const rows = select("./tr", subboard as Node);
-        return {
-          name: ((select(".//text()", rows[0] as Node)[0] as Node)?.nodeValue || "").trim(),
-          runs: [],
-          // runs: select("./td//tr", rows[1] as Node)
-          //   .slice(2)
-          //   .map((node) => ({
-          //     player: select(".//a//text()", node as Node)[0].toString(),
-          //     days: 0,
-          //     turns: 0,
-          //   })),
-        };
-      }),
+      boards: boards
+        .filter((board) =>
+          (select("./tr//text()", board as Node)[0] as Node)?.nodeValue?.startsWith("Fastest")
+        )
+        .map((subboard) => {
+          const rows = select("./tr", subboard as Node);
+          return {
+            name: ((select(".//text()", rows[0] as Node)[0] as Node)?.nodeValue || "").trim(),
+            runs: [],
+            // runs: select("./td//tr", rows[1] as Node)
+            //   .slice(2)
+            //   .map((node) => ({
+            //     player: select(".//a//text()", node as Node)[0].toString(),
+            //     days: 0,
+            //     turns: 0,
+            //   })),
+          };
+        }),
     };
   }
 }
