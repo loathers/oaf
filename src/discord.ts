@@ -373,15 +373,12 @@ export class DiscordClient {
   }
 }
 
-function toAshFunction(functionName: string): string {
-  return functionName
-    .replace(/([A-z])/, (match: string) => "_" + match.toLowerCase())
-    .replace(" ", "_")
-    .replace("__", "_");
+function toJsFunction(functionName: string): string {
+  return functionName.replace(" ", "_").replace(/_([a-z])/, (p1) => p1.toUpperCase());
 }
 
 async function parseJsRef(functionName: string) {
-  const ashName = toAshFunction(functionName);
+  const ashName = toJsFunction(functionName);
   const jsref = await axios(
     "https://raw.githubusercontent.com/Loathing-Associates-Scripting-Society/kolmafia-js/main/index.d.ts"
   );
