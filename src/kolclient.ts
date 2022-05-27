@@ -382,7 +382,7 @@ export class KOLClient {
 
   async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo> {
     const leaderboard = await this.tryRequestWithLogin("museum.php", {
-      floor: 0,
+      floor: 1,
       place: "leaderboards",
       whichboard: leaderboardId,
     });
