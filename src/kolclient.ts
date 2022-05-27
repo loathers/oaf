@@ -401,8 +401,8 @@ export class KOLClient {
           .slice(1)
           .filter(
             (board) =>
-              (select("./tr//text()", board as Node)[0] as Node)?.nodeValue?.startsWith(
-                "Fastest"
+              (select("./tr//text()", board as Node)[0] as Node)?.nodeValue?.match(
+                /^((Fast|Funn|B)est|Most Goo)/
               ) && select("./tr", board as Node).length > 1
           )
           .map((subboard) => {
@@ -420,7 +420,10 @@ export class KOLClient {
                       .replace(/&amp;nbsp;/g, "") //I hate TPTB so much
                       .trim()
                       .toString(),
-                    days: parseInt(rowText[rowText.length - 2].toString().replace(/\,/g, "")) || 0,
+                    days:
+                      rowText.length > 2
+                        ? parseInt(rowText[rowText.length - 2].toString().replace(/\,/g, "")) || 0
+                        : 0,
                     turns: parseInt(rowText[rowText.length - 1].toString().replace(/\,/g, "")) || 0,
                   };
                 }),

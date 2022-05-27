@@ -319,7 +319,9 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
           .setTitle(leaderboardInfo.name || "...")
           .addFields(
             leaderboardInfo.boards.map((subboard) => {
-              const runs = subboard.runs.map((run) => `${run.player} ${run.days}/${run.turns}`);
+              const runs = subboard.runs.map(
+                (run) => `${run.player} ${run.days ? `${run.days}/` : ""}${run.turns}`
+              );
               if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
               if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
               if (runs.length) runs.splice(0, 0, "🥇 Gold Star 🥇");
