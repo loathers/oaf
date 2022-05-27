@@ -1,4 +1,5 @@
 import { Message, MessageEmbed } from "discord.js";
+import { runInThisContext } from "vm";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 
@@ -293,7 +294,19 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
   const sentMessage = await message.channel.send(`Fetching leaderboard ${board}`);
   const leaderboardInfo = await kolClient.getLeaderboard(board);
   if (!leaderboardInfo) {
-    sentMessage.edit("I couldn't understand that leaderboard, sorry.");
+    sentMessage.edit("I don't think that's a real leaderboard, sorry.");
+  } else if (leaderboardInfo.boards.length === 0) {
+    sentMessage.edit({
+      content: null,
+      embeds: [
+        new MessageEmbed()
+          .setTitle(leaderboardInfo.name || "...")
+          .addField(
+            leaderboardInfo.name || "...",
+            "I wasn't able to understand this leaderboard, sorry."
+          ),
+      ],
+    });
   } else {
     sentMessage.edit({
       content: null,
