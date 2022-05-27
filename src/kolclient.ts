@@ -9,6 +9,7 @@ const loginMutex = new Mutex();
 type MallPrice = {
   formattedMallPrice: string;
   formattedLimitedMallPrice: string;
+  formattedMinPrice: string;
   mallPrice: number;
   limitedMallPrice: number;
   minPrice: number | null;
@@ -163,16 +164,23 @@ export class KOLClient {
     const unlimitedMatch = prices.match(/<td>unlimited:<\/td><td><b>(?<unlimitedPrice>[\d\,]+)/);
     const limitedMatch = prices.match(/<td>limited:<\/td><td><b>(?<limitedPrice>[\d\,]+)/);
     const unlimitedPrice = unlimitedMatch ? parseInt(unlimitedMatch[1].replace(/,/g, "")) : 0;
-    const limitedPrice = limitedMatch ? parseInt(limitedMatch[1].replace(/,/g, "")): 0;
+    const limitedPrice = limitedMatch ? parseInt(limitedMatch[1].replace(/,/g, "")) : 0;
     let minPrice = limitedMatch ? limitedPrice : null;
     minPrice = unlimitedMatch
       ? !minPrice || unlimitedPrice < minPrice
         ? unlimitedPrice
         : minPrice
       : minPrice;
+    let formattedMinPrice = limitedMatch ? limitedMatch[1] : null;
+    formattedMinPrice = unlimitedMatch
+      ? !minPrice || unlimitedPrice < minPrice
+        ? unlimitedMatch[1]
+        : formattedMinPrice
+      : formattedMinPrice;
     return {
-      mallPrice:  unlimitedPrice,
+      mallPrice: unlimitedPrice,
       limitedMallPrice: limitedPrice,
+      formattedMinPrice: formattedMinPrice || "",
       minPrice: minPrice,
       formattedMallPrice: unlimitedMatch ? unlimitedMatch[1] : "",
       formattedLimitedMallPrice: limitedMatch ? limitedMatch[1] : "",

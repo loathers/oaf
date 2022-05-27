@@ -352,13 +352,17 @@ export class Item implements Thing {
       )
         .filter((item) => item.price.minPrice)
         .sort((a, b) => (a.price.minPrice as number) - (b.price.minPrice as number));
-      if (tradeables.length > 0 && tradeables[0].item.get().id !== this._item.id) {
-        const cheapest = tradeables[0].item;
-        zapGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(cheapest.get().name)}) @ [${
-          tradeables[0].price.minPrice
-        } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
-          cheapest.get().id
-        }&timespan=1&noanim=0))\n`;
+      if (tradeables.length > 0) {
+        if (tradeables[0].item.get().id !== this._item.id) {
+          zapGroup += "(This item is the cheapest in its zap group)";
+        } else {
+          const cheapest = tradeables[0].item;
+          zapGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(cheapest.get().name)}) @ [${
+            tradeables[0].price.minPrice
+          } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
+            cheapest.get().id
+          }&timespan=1&noanim=0))\n`;
+        }
       }
     }
 
@@ -380,13 +384,19 @@ export class Item implements Thing {
       )
         .filter((item) => item.price.minPrice)
         .sort((a, b) => (a.price.minPrice as number) - (b.price.minPrice as number));
-      if (tradeables.length > 0 && tradeables[0].item.get().id !== this._item.id) {
-        const cheapest = tradeables[0].item;
-        foldGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(cheapest.get().name)}) @ [${
-          tradeables[0].price.minPrice
-        } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
-          cheapest.get().id
-        }&timespan=1&noanim=0))\n`;
+      if (tradeables.length > 0) {
+        if (tradeables[0].item.get().id !== this._item.id) {
+          foldGroup += "(This item is the cheapest in its fold group)";
+        } else {
+          const cheapest = tradeables[0].item;
+          foldGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(
+            cheapest.get().name
+          )}) @ [${
+            tradeables[0].price.minPrice
+          } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
+            cheapest.get().id
+          }&timespan=1&noanim=0))\n`;
+        }
       }
     }
 
