@@ -422,7 +422,7 @@ export class KOLClient {
                       .join("")
                       .trim()
                       .toString(),
-                    days: hasTwoNumbers ? rowText[rowText.length - 2].toString() || "0" : "0",
+                    days: hasTwoNumbers ? rowText[rowText.length - 2].toString() || "0" : "",
                     turns: rowText[rowText.length - 1].toString() || "0",
                   };
                 }),
