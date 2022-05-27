@@ -352,7 +352,7 @@ export class Item implements Thing {
       )
         .filter((item) => item.price.minPrice)
         .sort((a, b) => (a.price.minPrice as number) - (b.price.minPrice as number));
-      if (tradeables.length > 0) {
+      if (tradeables.length > 0 && tradeables[0].item.get().id !== this._item.id) {
         const cheapest = tradeables[0].item;
         zapGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(cheapest.get().name)}) @ [${
           tradeables[0].price.minPrice
@@ -380,7 +380,7 @@ export class Item implements Thing {
       )
         .filter((item) => item.price.minPrice)
         .sort((a, b) => (a.price.minPrice as number) - (b.price.minPrice as number));
-      if (tradeables.length > 0) {
+      if (tradeables.length > 0 && tradeables[0].item.get().id !== this._item.id) {
         const cheapest = tradeables[0].item;
         foldGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(cheapest.get().name)}) @ [${
           tradeables[0].price.minPrice
