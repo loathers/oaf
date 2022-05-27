@@ -300,6 +300,7 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
           title: subboard.name.slice(0, 100) || "...",
           name: subboard.name.slice(0, 100) || "...",
           value: subboard.name.slice(0, 100) || "...",
+          inline: true,
         }))
       ),
     ],
