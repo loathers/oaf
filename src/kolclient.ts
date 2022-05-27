@@ -416,6 +416,8 @@ export class KOLClient {
                     player: rowText
                       .slice(0, rowText.length - 2)
                       .join("")
+                      .replace(/&nbsp/g, "")
+                      .trim()
                       .toString(),
                     days: parseInt(rowText[rowText.length - 2].toString()) || 0,
                     turns: parseInt(rowText[rowText.length - 1].toString()) || 0,
