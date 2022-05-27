@@ -133,14 +133,31 @@ function createReminder(message: Message, args: string[]) {
       60 * 60 * 1000 * parseInt(timeMatch?.groups?.hours || "0") +
       60 * 1000 * parseInt(timeMatch?.groups?.minutes || "0") +
       1000 * parseInt(timeMatch?.groups?.seconds || "0");
+    const reminderTime = Date.now() + timeToWait;
 
     setTimeout(
       () =>
         message.channel.send({
           reply: { messageReference: message },
-          content: args.slice(2).join() || "Time's up!",
+          content: message.content.split(" ").slice(2).join(" ") || "Time's up!",
         }),
       timeToWait
     );
+    message.channel.send(`Okay, I'll remind you in ${args[1]}.`);
+  } else {
+    let reminderTime = new Date(Date.now()).setHours(3, 40);
+    if (reminderTime < Date.now()) {
+      reminderTime += 24 * 60 * 60 * 1000;
+    }
+    const timeToWait = reminderTime - Date.now();
+    setTimeout(
+      () =>
+        message.channel.send({
+          reply: { messageReference: message },
+          content: message.content.split(" ").slice(2).join(" ") || "Time's up!",
+        }),
+      timeToWait
+    );
+    message.channel.send(`Okay, I'll remind you just after rollover`);
   }
 }
