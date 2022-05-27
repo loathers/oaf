@@ -1,8 +1,9 @@
-import { Message, TextChannel } from "discord.js";
+import { Client, Message, NonThreadGuildBasedChannel, TextChannel } from "discord.js";
+import { Pool } from "pg";
 import { ORB_RESPONSES } from "./constants";
 import { DiscordClient } from "./discord";
 
-export function attachMiscCommands(client: DiscordClient) {
+export function attachMiscCommands(client: DiscordClient, databaseConnectionPool: Pool) {
   client.attachCommand("orb", orb, "Consult OAF's miniature crystal ball.");
   client.attachCommand("roll", roll, "Roll the specified dice of the form <x>d<y>.");
   client.attachCommand(
@@ -25,7 +26,11 @@ export function attachMiscCommands(client: DiscordClient) {
     prsWelcome,
     "Links to the PRs and issues assigned to you for a given LASS project"
   );
-  client.attachCommand("remind", createReminder, "Sets a reminder");
+  client.attachCommand(
+    "remind",
+    (message, args) => createReminder(message, args, databaseConnectionPool),
+    "Sets a reminder"
+  );
 }
 
 function orb(message: Message): void {
@@ -118,12 +123,16 @@ function prsWelcome(message: Message, args: string[]): void {
 const timeMatcher =
   /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
 
-function createReminder(message: Message, args: string[]) {
+async function createReminder(message: Message, args: string[], databaseConnectionPool: Pool) {
   if (args.length < 2 || (!timeMatcher.test(args[1]) && args[1] !== "rollover")) {
     message.channel.send(
       'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".'
     );
     return;
+  }
+  const reminderText = message.content.split(" ").slice(2).join(" ") || "Time's up!";
+  if (reminderText.length > 128) {
+    message.channel.send("Reminders have a maximum length of 128 characters.");
   }
   if (timeMatcher.test(args[1])) {
     const timeMatch = timeMatcher.exec(args[1]);
@@ -145,13 +154,16 @@ function createReminder(message: Message, args: string[]) {
       timeToWait
     );
     message.channel.send(`Okay, I'll remind you in ${args[1]}.`);
+    await databaseConnectionPool.query(
+      "INSERT INTO reminders(guild_id, channel_id, message_id, message_contents, reminder_time) VALUES $1, $2, $3, $4, $5;",
+      [message.guildId, message.channelId, message.id, reminderText, reminderTime]
+    );
   } else {
     let reminderTime = new Date(Date.now()).setHours(3, 40);
     if (reminderTime < Date.now()) {
       reminderTime += 24 * 60 * 60 * 1000;
     }
     const timeToWait = reminderTime - Date.now();
-    const reminderText = message.content.split(" ").slice(2).join(" ") || "Time's up!";
     setTimeout(
       () =>
         message.channel.send({
@@ -161,5 +173,31 @@ function createReminder(message: Message, args: string[]) {
       timeToWait
     );
     message.channel.send(`Okay, I'll remind you just after rollover`);
+    await databaseConnectionPool.query(
+      "INSERT INTO reminders(guild_id, channel_id, message_id, message_contents, reminder_time) VALUES $1, $2, $3, $4, $5;",
+      [message.guildId, message.channelId, message.id, reminderText, reminderTime]
+    );
+  }
+}
+
+export async function syncReminders(databaseConnectionPool: Pool, discordClient: Client) {
+  const now = Date.now();
+  const connection = await databaseConnectionPool.connect();
+  await connection.query("BEGIN;");
+  await connection.query("DELETE FROM reminders WHERE reminder_time < $1;", [now]);
+  const reminders = await connection.query("SELECT * FROM reminders", []);
+  await connection.query("COMMIT;");
+  connection.release();
+  for (let reminder of reminders.rows) {
+    const guild = await discordClient.guilds.fetch(reminder.guild_id);
+    const channel = await guild.channels.fetch(reminder.channel_id);
+    setTimeout(() => {
+      try {
+        (channel as TextChannel).send({
+          reply: { messageReference: reminder.message_id },
+          content: reminder.message_contents,
+        });
+      } catch {}
+    }, reminder.reminder_time - now);
   }
 }

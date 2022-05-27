@@ -1,6 +1,6 @@
 import { DiscordClient } from "./discord";
 import { WikiSearcher } from "./wikisearch";
-import { attachMiscCommands } from "./misccommands";
+import { attachMiscCommands, syncReminders } from "./misccommands";
 import { KOLClient } from "./kolclient";
 import { attachClanCommands, syncToDatabase } from "./raidlogs";
 import * as dotenv from "dotenv";
@@ -37,7 +37,7 @@ async function performSetup(): Promise<DiscordClient> {
   const discordClient = new DiscordClient(wikiSearcher);
 
   console.log("Attaching misc commands.");
-  attachMiscCommands(discordClient);
+  attachMiscCommands(discordClient, databaseClientPool);
 
   console.log("Attaching kol commands.");
   attachKoLCommands(discordClient);
@@ -47,6 +47,9 @@ async function performSetup(): Promise<DiscordClient> {
 
   console.log("Attaching wiki commands.");
   discordClient.attachMetaBotCommands();
+
+  console.log("Syncing reminders.");
+  await syncReminders(databaseClientPool, discordClient.client());
 
   return discordClient;
 }
