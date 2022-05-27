@@ -297,9 +297,11 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
     embeds: [
       new MessageEmbed().setTitle(leaderboardInfo.name || "...").addFields(
         leaderboardInfo.boards.map((subboard) => ({
-          title: subboard.name.slice(0, 100) || "...",
-          name: subboard.name.slice(0, 100) || "...",
-          value: subboard.name.slice(0, 100) || "...",
+          title: subboard.name || "...",
+          name: subboard.name || "...",
+          value:
+            subboard.runs.map((run) => `${run.player} ${run.days}/${run.turns}`).join("\n") ||
+            "...",
           inline: true,
         }))
       ),
