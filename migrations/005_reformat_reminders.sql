@@ -1,5 +1,9 @@
-
-ALTER TABLE reminders DROP CONSTRAINT reminders_pkey;
-ALTER TABLE reminders DROP COLUMN message_id;
-ALTER TABLE reminders ADD COLUMN user_id VARCHAR ( 30 ) DEFAULT "0";   
-ALTER TABLE reminders ADD COLUMN id SERIAL PRIMARY KEY;
+DROP TABLE reminders; 
+CREATE TABLE reminders (
+  id SERIAL PRIMARY KEY,
+  guild_id VARCHAR (30) NOT NULL,
+  channel_id VARCHAR (30) NOT NULL,
+  user_id VARCHAR ( 30 ) NOT NULL,
+  message_contents VARCHAR (128) NOT NULL,
+  reminder_time bigint NOT NULL
+);
