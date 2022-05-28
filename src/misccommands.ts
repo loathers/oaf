@@ -167,7 +167,7 @@ const timeMatcher =
   /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
 
 async function createReminder(interaction: CommandInteraction, databaseConnectionPool: Pool) {
-  const time = interaction.options.getString("time", true);
+  const time = interaction.options.getString("when", true);
   const reminderText = interaction.options.getString("reminder", true);
   if (!timeMatcher.test(time) && time !== "rollover") {
     interaction.reply({
