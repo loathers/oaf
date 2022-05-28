@@ -16,7 +16,7 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
       },
     ],
     item,
-    "Finds the +item drop required to cap a drop."
+    "Find the +item drop required to cap a drop."
   );
   client.attachCommand(
     "level",
@@ -29,7 +29,7 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
       },
     ],
     level,
-    "Finds the stats and substats needed for a given level."
+    "Find the stats and substats needed for a given level."
   );
   client.attachCommand(
     "stat",
@@ -42,7 +42,7 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
       },
     ],
     stat,
-    "Finds the substats and level for a given mainstat total."
+    "Find the substats and level for a given mainstat total."
   );
   client.attachCommand(
     "substat",
@@ -55,7 +55,7 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
       },
     ],
     substat,
-    "Finds the mainstat and level for a given substat total"
+    "Find the mainstat and level for a given substat total"
   );
   client.attachCommand(
     "fairy",
@@ -68,20 +68,7 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
       },
     ],
     fairy,
-    "Finds the +item drop supplied by a fairy of a given weight."
-  );
-  client.attachCommand(
-    "volleyball",
-    [
-      {
-        name: "weight",
-        description: "The weight of the volleyball.",
-        type: ApplicationCommandOptionType.Integer,
-        required: true,
-      },
-    ],
-    volley,
-    "Finds the +stat gain supplied by a volleyball of a given weight."
+    "Find the +item drop supplied by a fairy of a given weight."
   );
   client.attachCommand(
     "leprechaun",
@@ -94,29 +81,60 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
       },
     ],
     lep,
-    "Finds the +meat drop supplied by a leprechaun of a given weight."
+    "Find the +meat drop supplied by a leprechaun of a given weight."
   );
-  // client.attachCommand(
-  //   "reverseleprechaun",
-  //   reverseLep,
-  //   "Finds the leprechaun weight necessary to supply a particular meat drop."
-  // );
-  // client.attachCommand("reverselep", reverseLep, "Alias for reverseleprechaun.");
-  // client.attachCommand(
-  //   "reversefairy",
-  //   reverseFairy,
-  //   "Finds the fairy weight necessary to supply a particular item drop."
-  // );
-  // client.attachCommand(
-  //   "leaderboard",
-  //   (message, args) => leaderboard(message, args, kolClient),
-  //   "Finds the specified leaderboard."
-  // );
-  // client.attachCommand(
-  //   "lb",
-  //   (message, args) => leaderboard(message, args, kolClient),
-  //   "Alias for leaderboard."
-  // );
+  client.attachCommand(
+    "volleyball",
+    [
+      {
+        name: "weight",
+        description: "The weight of the volleyball.",
+        type: ApplicationCommandOptionType.Integer,
+        required: true,
+      },
+    ],
+    volley,
+    "Find the +stat gain supplied by a volleyball of a given weight."
+  );
+  client.attachCommand(
+    "reversefairy",
+    [
+      {
+        name: "item",
+        description: "The item drop % you are looking to get from your fairy.",
+        type: ApplicationCommandOptionType.Number,
+        required: true,
+      },
+    ],
+    reverseFairy,
+    "Find the weight necessary to supply a given item drop % from a fairy."
+  );
+  client.attachCommand(
+    "reverseleprechaun",
+    [
+      {
+        name: "meat",
+        description: "The meat drop % you are looking to get from your leprechaun.",
+        type: ApplicationCommandOptionType.Number,
+        required: true,
+      },
+    ],
+    reverseLep,
+    "Find the weight necessary to supply a given meat drop % from a leprechaun."
+  );
+  client.attachCommand(
+    "leaderboard",
+    [
+      {
+        name: "leaderboard",
+        description: "The name or id of the leaderboard you want to display.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => leaderboard(interaction, kolClient),
+    "Display the specified leaderboard."
+  );
 }
 
 function item(interaction: CommandInteraction): void {
@@ -284,43 +302,17 @@ function substat(interaction: CommandInteraction): void {
   );
 }
 
-function reverseLep(message: Message, args: string[]): void {
-  if (args.length <= 1) {
-    message.channel.send("Please supply a meat drop value.");
-    return;
-  }
-  const meatDrop = parseInt(args[1]) || 0;
-  if (meatDrop <= 0) {
-    message.channel.send("Please supply a positive meat drop value.");
-    return;
-  }
-  message.channel.send(
-    `To get ${meatDrop}% meat drop from a leprechaun, it should weigh at least ${(
-      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) /
-      2
-    ).toFixed(1)} lbs, or a Hobo Monkey that weighs at least ${(
-      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) /
-      2 /
-      1.25
-    ).toFixed(1)} lbs.`
-  );
-}
-
-function reverseFairy(message: Message, args: string[]): void {
-  if (args.length <= 1) {
-    message.channel.send("Please supply an item drop value.");
-    return;
-  }
-  const itemDrop = parseInt(args[1]) || 0;
+function reverseFairy(interaction: CommandInteraction): void {
+  const itemDrop = interaction.options.getNumber("item", true);
   if (itemDrop <= 0) {
-    message.channel.send("Please supply a positive item drop.");
+    interaction.reply({ content: "Please supply a positive item drop value.", ephemeral: true });
     return;
   }
-  message.channel.send(
+  interaction.reply(
     `To get ${itemDrop}% item drop from a fairy, it should be weigh at least ${(
       (2 * itemDrop + 61 - Math.sqrt(220 * itemDrop + 3685)) /
       2
-    ).toFixed(1)} lbs, or a Jumpsuited Hounddog that weighs at least ${(
+    ).toFixed(1)} lbs, or be a Jumpsuited Hounddog that weighs at least ${(
       (2 * itemDrop + 61 - Math.sqrt(220 * itemDrop + 3685)) /
       2 /
       1.25
@@ -328,23 +320,36 @@ function reverseFairy(message: Message, args: string[]): void {
   );
 }
 
-async function leaderboard(message: Message, args: string[], kolClient: KOLClient): Promise<void> {
-  if (args.length <= 1) {
-    message.channel.send("Please supply a leaderboard id.");
+function reverseLep(interaction: CommandInteraction): void {
+  const meatDrop = interaction.options.getNumber("meat", true);
+  if (meatDrop <= 0) {
+    interaction.reply({ content: "Please supply a positive meat drop value.", ephemeral: true });
     return;
   }
+  interaction.reply(
+    `To get ${meatDrop}% meat drop from a leprechaun, it should weigh at least ${(
+      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) /
+      2
+    ).toFixed(1)} lbs, or be a Hobo Monkey that weighs at least ${(
+      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) /
+      2 /
+      1.25
+    ).toFixed(1)} lbs.`
+  );
+}
+
+async function leaderboard(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
+  const boardref = interaction.options.getString("board", true);
 
   let board =
-    PATH_MAPPINGS.get(args.slice(1).join("").toLowerCase().replace(/\W/g, "")) ||
-    parseInt(args[1]) ||
-    0;
+    PATH_MAPPINGS.get(boardref.toLowerCase().replace(/\W/g, "")) || parseInt(boardref) || 0;
   if (board > 2000) board = board === new Date(Date.now()).getFullYear() ? 999 : 998 + 2015 - board;
-  const sentMessage = await message.channel.send(`Fetching leaderboard ${board}...`);
+  await interaction.deferReply();
   const leaderboardInfo = await kolClient.getLeaderboard(board);
   if (!leaderboardInfo || leaderboardInfo.name === "Weird Leaderboards") {
-    sentMessage.edit("I don't think that's a real leaderboard, sorry.");
+    interaction.editReply("I don't think that's a real leaderboard, sorry.");
   } else if (leaderboardInfo.boards.length === 0) {
-    sentMessage.edit({
+    interaction.editReply({
       content: null,
       embeds: [
         new MessageEmbed()
@@ -357,7 +362,7 @@ async function leaderboard(message: Message, args: string[], kolClient: KOLClien
       ],
     });
   } else {
-    sentMessage.edit({
+    interaction.editReply({
       content: null,
       embeds: [
         new MessageEmbed()

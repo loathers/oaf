@@ -216,12 +216,7 @@ export class DiscordClient {
       });
       return;
     }
-    await interaction.reply({
-      content: `Finding pizzas for "${letters}"...`,
-      allowedMentions: {
-        parse: [],
-      },
-    });
+    await interaction.deferReply();
     await interaction.editReply({
       content: null,
       embeds: [await this._wikiSearcher.getPizzaEmbed(letters.toLowerCase())],
@@ -253,12 +248,7 @@ export class DiscordClient {
 
   async wikiSearch(interaction: CommandInteraction): Promise<void> {
     const item = interaction.options.getString("term", true);
-    await interaction.reply({
-      content: `Searching for "${item}"...`,
-      allowedMentions: {
-        parse: [],
-      },
-    });
+    await interaction.deferReply();
     const embed = await this._wikiSearcher.getEmbed(item);
     if (embed) {
       interaction.editReply({
@@ -280,12 +270,7 @@ export class DiscordClient {
 
   async mafiawikiSearch(interaction: CommandInteraction): Promise<void> {
     const item = interaction.options.getString("term", true);
-    await interaction.reply({
-      content: `Searching for "${item}"...`,
-      allowedMentions: {
-        parse: [],
-      },
-    });
+    await interaction.deferReply();
     const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
       params: {
         key: process.env.GOOGLE_API_KEY || "",
