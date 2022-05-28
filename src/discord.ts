@@ -152,8 +152,19 @@ export class DiscordClient {
   async onCommand(interaction: Interaction): Promise<void> {
     if (!interaction.isCommand()) return;
     const command = this._commands.get(interaction.commandName);
-    if (command) command.execute(interaction);
-    else interaction.reply(`Command not recognised. Something has gone wrong here.`);
+    try {
+      if (command) command.execute(interaction);
+      else interaction.reply(`Command not recognised. Something has gone wrong here.`);
+    } catch (error) {
+      console.log(error);
+      await (interaction.replied
+        ? interaction.followUp(
+            "OAF recovered from a crash trying to process that command. Please tell Scotch or Phill"
+          )
+        : interaction.reply(
+            "OAF recovered from a crash trying to process that command. Please tell Scotch or Phill"
+          ));
+    }
   }
 
   client(): Client {

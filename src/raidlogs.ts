@@ -266,6 +266,7 @@ async function getSkills(
     for (let player of skillArray.sort()) {
       fields[i++ % 2] += player + "\n";
     }
+    console.log(fields);
 
     await interaction.editReply({
       content: null,
