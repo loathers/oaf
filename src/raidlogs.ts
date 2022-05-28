@@ -272,7 +272,7 @@ async function getSkills(
       embeds: [
         {
           title: "Skills owed",
-          fields: fields.map((skillsOwed) => ({ name: " ", value: skillsOwed, inline: true })),
+          fields: fields.map((skillsOwed) => ({ name: "\u200b", value: skillsOwed, inline: true })),
         },
       ],
     });
