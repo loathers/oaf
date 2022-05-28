@@ -207,17 +207,24 @@ export class DiscordClient {
     });
   }
 
-  async pizzaSearch(letters: string, message: Message): Promise<void> {
-    if (!letters || letters.length < 1 || letters.length > 4) {
-      await message.channel.send(
-        "Invalid pizza length. Please supply a sensible number of letters."
-      );
+  async pizzaSearch(interaction: CommandInteraction): Promise<void> {
+    const letters = interaction.options.getString("letters", true);
+    if (letters.length < 1 || letters.length > 4) {
+      await interaction.reply("Invalid pizza length. Please supply a sensible number of letters.");
       return;
     }
-    const searchingMessage = await message.channel.send(`Finding pizzas for "${letters}"...`);
-    await searchingMessage.edit({
+    await interaction.reply({
+      content: `Finding pizzas for "${letters}"...`,
+      allowedMentions: {
+        parse: [],
+      },
+    });
+    await interaction.editReply({
       content: null,
       embeds: [await this._wikiSearcher.getPizzaEmbed(letters)],
+      allowedMentions: {
+        parse: [],
+      },
     });
   }
 
@@ -294,7 +301,7 @@ export class DiscordClient {
       helpString += `/${command[0].padEnd(15, " ")} ${command[1].description}\n`;
     }
     helpString +=
-      "Additionally, OAF will search the KoL wiki for any term you put in double square brackets.\nFor example: [[Deactivated OAF]]```";
+      "Additionally, OAF will search the KoL wiki for any term you put in double square brackets.\nFor example: [[Deactivated OAF]] will show the details of OAF and its hatchling.```";
     interaction.reply({ content: helpString, ephemeral: true });
   }
 
@@ -303,11 +310,19 @@ export class DiscordClient {
   }
 
   attachMetaBotCommands() {
-    // this.attachCommand(
-    //   "pizza",
-    //   async (message, args) => await this.pizzaSearch(args[1], message),
-    //   "Find what effects a diabolic pizza with the given letters can grant you."
-    // );
+    this.attachCommand(
+      "pizza",
+      [
+        {
+          name: "letters",
+          description: "The first letters of the items you want to bake into a pizza.",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+      async (interaction: CommandInteraction) => await this.pizzaSearch(interaction),
+      "Find what effects a diabolic pizza with the given letters can grant you."
+    );
     this.attachCommand(
       "wiki",
       [
