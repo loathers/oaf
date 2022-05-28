@@ -221,7 +221,7 @@ export class DiscordClient {
     });
     await interaction.editReply({
       content: null,
-      embeds: [await this._wikiSearcher.getPizzaEmbed(letters)],
+      embeds: [await this._wikiSearcher.getPizzaEmbed(letters.toLowerCase())],
       allowedMentions: {
         parse: [],
       },
