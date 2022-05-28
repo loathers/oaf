@@ -1,0 +1,5 @@
+
+ALTER TABLE reminders DROP CONSTRAINT reminders_pkey;
+ALTER TABLE reminders DROP COLUMN message_id;
+ALTER TABLE reminders ADD COLUMN user_id VARCHAR ( 30 ) NOT NULL;   
+ALTER TABLE test1 ADD COLUMN id SERIAL PRIMARY KEY;
