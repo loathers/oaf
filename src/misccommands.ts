@@ -2,6 +2,7 @@ import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import {
   Client,
   CommandInteraction,
+  DMChannel,
   Message,
   NonThreadGuildBasedChannel,
   TextChannel,
@@ -256,20 +257,38 @@ export async function syncReminders(databaseConnectionPool: Pool, discordClient:
   await connection.query("COMMIT;");
   connection.release();
   for (let reminder of reminders.rows) {
-    const guild = await discordClient.guilds.fetch(reminder.guild_id);
-    const channel = await guild.channels.fetch(reminder.channel_id);
-    if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
-      setTimeout(() => {
-        try {
-          (channel as TextChannel).send({
-            content: `<@${reminder.user_id}>`,
-            embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
-            allowedMentions: {
-              users: [reminder.user_id],
-            },
-          });
-        } catch {}
-      }, reminder.reminder_time - now);
+    if (reminder.guild_id) {
+      if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
+        const guild = await discordClient.guilds.fetch(reminder.guild_id);
+        const channel = await guild.channels.fetch(reminder.channel_id);
+        setTimeout(() => {
+          try {
+            (channel as TextChannel).send({
+              content: `<@${reminder.user_id}>`,
+              embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
+              allowedMentions: {
+                users: [reminder.user_id],
+              },
+            });
+          } catch {}
+        }, reminder.reminder_time - now);
+      }
+    } else {
+      if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
+        const user = await discordClient.users.fetch(reminder.user_id);
+        const channel = await user.createDM();
+        setTimeout(() => {
+          try {
+            (channel as DMChannel).send({
+              content: `<@${reminder.user_id}>`,
+              embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
+              allowedMentions: {
+                users: [reminder.user_id],
+              },
+            });
+          } catch {}
+        }, reminder.reminder_time - now);
+      }
     }
   }
   setTimeout(async () => {
