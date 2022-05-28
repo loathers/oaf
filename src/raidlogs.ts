@@ -103,7 +103,7 @@ export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
 }
 
 async function clanStatus(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
-  let messageString = "__DREAD STATUS__\n";
+  let messageString = "";
   await interaction.deferReply();
   try {
     for (let clan of clans) {
@@ -115,7 +115,15 @@ async function clanStatus(interaction: CommandInteraction, kolClient: KOLClient)
         : "Needs capacitor";
       messageString += `**${clan.name}**: ${overview.forest}/${overview.village}/${overview.castle} (${capacitorString})\n`;
     }
-    await interaction.editReply(messageString);
+    await interaction.editReply({
+      content: null,
+      embeds: [
+        {
+          title: "Dread Status",
+          description: messageString,
+        },
+      ],
+    });
   } catch {
     await interaction.editReply(
       "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
@@ -139,6 +147,9 @@ async function detailedClanStatus(
   try {
     const status = await kolClient.getDetailedDreadStatus(clan.id);
     const embed = new MessageEmbed().setTitle(`Status update for ${clan.name}`);
+    embed.setDescription(
+      `${status.overview.forest}/${status.overview.village}/${status.overview.castle}`
+    );
     let forestString = "";
     if (status.overview.forest) {
       if (!status.forest.attic) forestString += "**Cabin attic needs unlocking.**\n";
@@ -193,17 +204,17 @@ async function detailedClanStatus(
     } else castleString += "~~Castle fully cleared.~~\n";
     embed.addFields([
       {
-        name: `__**Forest:**__ ${status.overview.forest} left.`,
+        name: `__**Forest**__`,
         value: forestString,
         inline: true,
       },
       {
-        name: `__**Village:**__ ${status.overview.village} left.`,
+        name: `__**Village**__`,
         value: villageString,
         inline: true,
       },
       {
-        name: `__**Castle:**__ ${status.overview.castle} left.`,
+        name: `__**Castle**__`,
         value: castleString,
         inline: true,
       },
@@ -236,7 +247,6 @@ async function getSkills(
       currentKills.set(entry[0], { ...entry[1] });
     }
     await parseCurrentLogs(kolClient, currentKills);
-    let skillString = "__SKILLS OWED__\n\n";
     let skillArray = [];
     for (let entry of currentKills.entries()) {
       if (!doneWithSkillsList.includes(entry[0])) {
@@ -250,8 +260,22 @@ async function getSkills(
         }
       }
     }
-    skillString += skillArray.sort().join("\n");
-    await interaction.editReply(skillString);
+    skillArray.sort();
+    const fields = ["", "", ""];
+    let i = 0;
+    for (let player of skillArray.sort()) {
+      fields[i++ % 2] += player + "\n";
+    }
+
+    await interaction.editReply({
+      content: null,
+      embeds: [
+        {
+          title: "Skills owed",
+          fields: fields.map((skillsOwed) => ({ name: " ", value: skillsOwed, inline: true })),
+        },
+      ],
+    });
   } catch {
     await interaction.editReply(
       "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
