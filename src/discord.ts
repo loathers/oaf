@@ -283,7 +283,7 @@ export class DiscordClient {
           required: true,
         },
       ],
-      this.wikiSearch,
+      (interaction: CommandInteraction) => this.wikiSearch(interaction),
       "Search the KoL wiki for the given term."
     );
     // this.attachCommand(
@@ -296,6 +296,11 @@ export class DiscordClient {
     //   async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
     //   "Alias for mafia."
     // );
-    this.attachCommand("help", [], this.help, "Display a description of everything OAF can do.");
+    this.attachCommand(
+      "help",
+      [],
+      (interaction: CommandInteraction) => this.help(interaction),
+      "Display a description of everything OAF can do."
+    );
   }
 }

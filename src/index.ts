@@ -51,6 +51,7 @@ async function performSetup(): Promise<DiscordClient> {
   console.log("Syncing reminders.");
   await syncReminders(databaseClientPool, discordClient.client());
 
+  console.log("Registering slash commands.");
   await discordClient.registerSlashCommands();
 
   return discordClient;
