@@ -225,6 +225,9 @@ export class DiscordClient {
     const searchingMessage = await message.channel.send({
       content: `Searching for "${item}"...`,
       reply: { messageReference: message.id },
+      allowedMentions: {
+        parse: [],
+      },
     });
     if (!item.length) {
       await searchingMessage.edit("Need something to search for.");
@@ -242,12 +245,26 @@ export class DiscordClient {
     const item = interaction.options.getString("term", true);
     await interaction.reply({
       content: `Searching for "${item}"...`,
+      allowedMentions: {
+        parse: [],
+      },
     });
     const embed = await this._wikiSearcher.getEmbed(item);
     if (embed) {
-      interaction.editReply({ content: null, embeds: [embed] });
+      interaction.editReply({
+        content: null,
+        embeds: [embed],
+        allowedMentions: {
+          parse: [],
+        },
+      });
     } else {
-      interaction.editReply(`"${item}" wasn't found. Please refine your search.`);
+      interaction.editReply({
+        content: `"${item}" wasn't found. Please refine your search.`,
+        allowedMentions: {
+          parse: [],
+        },
+      });
     }
   }
 
