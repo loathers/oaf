@@ -145,7 +145,7 @@ export class DiscordClient {
         );
         matches.length = 3;
       }
-      //await Promise.all(matches.map((match) => this.wikiSearch(match[1], message)));
+      await Promise.all(matches.map((match) => this.inlineWikiSearch(match[1], message)));
     }
   }
 
@@ -219,6 +219,23 @@ export class DiscordClient {
       content: null,
       embeds: [await this._wikiSearcher.getPizzaEmbed(letters)],
     });
+  }
+
+  async inlineWikiSearch(item: string, message: Message): Promise<void> {
+    const searchingMessage = await message.channel.send({
+      content: `Searching for "${item}"...`,
+      reply: { messageReference: message.id },
+    });
+    if (!item.length) {
+      await searchingMessage.edit("Need something to search for.");
+      return;
+    }
+    const embed = await this._wikiSearcher.getEmbed(item);
+    if (embed) {
+      searchingMessage.edit({ content: null, embeds: [embed] });
+    } else {
+      searchingMessage.edit(`"${item}" wasn't found. Please refine your search.`);
+    }
   }
 
   async wikiSearch(interaction: CommandInteraction): Promise<void> {
