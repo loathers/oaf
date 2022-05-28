@@ -15,7 +15,7 @@ export function attachMiscCommands(client: DiscordClient, databaseConnectionPool
     "orb",
     [
       {
-        name: "ASKTHEORB",
+        name: "asktheorb",
         description: "THE ORB KNOWS ALL",
         type: ApplicationCommandOptionType.String,
         required: false,
@@ -103,8 +103,9 @@ export function attachMiscCommands(client: DiscordClient, databaseConnectionPool
 }
 
 function orb(interaction: CommandInteraction): void {
+  const question = interaction.options.getString("asktheorb");
   interaction.reply(
-    `O.A.F. gazes into the mini crystal ball. "${
+    `${question ? `"${question}", you ask.\n` : ""}O.A.F. gazes into the mini crystal ball. "${
       ORB_RESPONSES[Math.floor(Math.random() * ORB_RESPONSES.length)]
     }", they report.`
   );
