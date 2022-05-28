@@ -293,7 +293,8 @@ export class DiscordClient {
     for (let command of this._commands.entries()) {
       helpString += `/${command[0].padEnd(15, " ")} ${command[1].description}\n`;
     }
-    helpString += "```";
+    helpString +=
+      "Additionally, OAF will search the KoL wiki for any term you put in double square brackets.\nFor example: [[Deactivated OAF]]```";
     interaction.reply({ content: helpString, ephemeral: true });
   }
 
