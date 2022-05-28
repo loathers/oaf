@@ -5,16 +5,21 @@ import {
   MessageReaction,
   PartialUser,
   User,
-  Util,
   Intents,
   PartialMessageReaction,
+  Interaction,
+  CommandInteraction,
 } from "discord.js";
 import { ITEMMATCHER, ROLEMAP } from "./constants";
 import { WikiSearcher } from "./wikisearch";
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { Routes } from "discord-api-types/v9";
+import { REST } from "@discordjs/rest";
 
 type Command = {
   description: string;
-  execute: (message: Message, args: string[]) => void;
+  slashCommand: SlashCommandBuilder;
+  execute: (interaction: CommandInteraction) => void;
 };
 
 export class DiscordClient {
@@ -22,7 +27,6 @@ export class DiscordClient {
   private _wikiSearcher: WikiSearcher;
   private _discordToken: string;
   private _commands: Map<string, Command> = new Map();
-  private _commandSymbol: string;
 
   constructor(wikiSearcher: WikiSearcher) {
     this._client = new Client({
@@ -36,7 +40,6 @@ export class DiscordClient {
     });
     this._wikiSearcher = wikiSearcher;
     this._discordToken = process.env.DISCORD_TOKEN || "";
-    this._commandSymbol = process.env.COMMAND_SYMBOL || "%%%NO COMMAND SYMBOL SET%%%";
 
     this._client.on("ready", () => {
       console.log(`Logged in as ${this._client?.user?.tag}!`);
@@ -52,6 +55,22 @@ export class DiscordClient {
       async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
         this.onReactRemove(reaction, user)
     );
+    this._client.on("interactionCreate", async (interaction: Interaction) =>
+      this.onCommand(interaction)
+    );
+  }
+
+  async registerSlashCommands() {
+    const rest = new REST({ version: "9" }).setToken(this._discordToken);
+    const commandsToRegister = [];
+    for (const command of this._commands) {
+      commandsToRegister.push(command[1].slashCommand.toJSON());
+    }
+    const guild_id = "466605739838930955";
+    const client_id = "592779999455739935";
+    await rest.put(Routes.applicationGuildCommands(client_id, guild_id), {
+      body: commandsToRegister,
+    });
   }
 
   async onReact(
@@ -120,20 +139,14 @@ export class DiscordClient {
         matches.length = 3;
       }
       await Promise.all(matches.map((match) => this.wikiSearch(match[1], message)));
-
-      if (!content.startsWith(this._commandSymbol)) return;
-      const commandString = content
-        .toLowerCase()
-        .split(" ")[0]
-        .substring(this._commandSymbol.length);
-      console.log(`Found command "${commandString}"`);
-      const command = this._commands.get(commandString);
-      if (command) command.execute(message, content.toLowerCase().split(" "));
-      else
-        message.channel.send(
-          `Command not recognised. Try ${this._commandSymbol}help for a list of all commands.`
-        );
     }
+  }
+
+  async onCommand(interaction: Interaction): Promise<void> {
+    if (!interaction.isCommand()) return;
+    const command = this._commands.get(interaction.commandName);
+    if (command) command.execute(interaction);
+    else interaction.reply(`Command not recognised. Something has gone wrong here.`);
   }
 
   client(): Client {
@@ -142,11 +155,13 @@ export class DiscordClient {
 
   attachCommand(
     command: string,
-    functionToCall: (message: Message, args: string[]) => void,
+    functionToCall: (interaction: CommandInteraction) => void,
     description: string = ""
   ): void {
+    const slashCommand = new SlashCommandBuilder().setName(command).setDescription(description);
     this._commands.set(command.toLowerCase(), {
       description: description,
+      slashCommand: slashCommand,
       execute: functionToCall,
     });
   }
@@ -199,15 +214,13 @@ export class DiscordClient {
     }
   }
 
-  async help(message: Message): Promise<void> {
+  async help(interaction: CommandInteraction): Promise<void> {
     let helpString = "```";
     for (let command of this._commands.entries()) {
-      helpString += `${this._commandSymbol}${command[0].padEnd(15, " ")} ${
-        command[1].description
-      }\n`;
+      helpString += `/${command[0].padEnd(15, " ")} ${command[1].description}\n`;
     }
     helpString += "```";
-    message.author.send(helpString);
+    interaction.reply({ content: helpString, ephemeral: true });
   }
 
   start(): void {
@@ -215,30 +228,30 @@ export class DiscordClient {
   }
 
   attachMetaBotCommands() {
-    this.attachCommand(
-      "pizza",
-      async (message, args) => await this.pizzaSearch(args[1], message),
-      "Find what effects a diabolic pizza with the given letters can grant you."
-    );
-    this.attachCommand(
-      "wiki",
-      async (message, args) => await this.wikiSearch(args.slice(1).join(" "), message),
-      "Search the KoL wiki for the given term."
-    );
-    this.attachCommand(
-      "mafia",
-      async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
-      "Search the KoLmafia wiki for the given term."
-    );
-    this.attachCommand(
-      "mafiawiki",
-      async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
-      "Alias for mafia."
-    );
+    // this.attachCommand(
+    //   "pizza",
+    //   async (message, args) => await this.pizzaSearch(args[1], message),
+    //   "Find what effects a diabolic pizza with the given letters can grant you."
+    // );
+    // this.attachCommand(
+    //   "wiki",
+    //   async (message, args) => await this.wikiSearch(args.slice(1).join(" "), message),
+    //   "Search the KoL wiki for the given term."
+    // );
+    // this.attachCommand(
+    //   "mafia",
+    //   async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
+    //   "Search the KoLmafia wiki for the given term."
+    // );
+    // this.attachCommand(
+    //   "mafiawiki",
+    //   async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
+    //   "Alias for mafia."
+    // );
     this.attachCommand(
       "help",
-      async (message) => await this.help(message),
-      "Display this message."
+      async (interaction) => await this.help(interaction),
+      "Display a description of everything OAF can do."
     );
   }
 }

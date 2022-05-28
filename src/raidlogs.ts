@@ -37,31 +37,31 @@ export function attachClanCommands(
   kolClient: KOLClient,
   databaseClientPool: Pool
 ) {
-  discordClient.attachCommand(
-    "status",
-    (message) => clanStatus(message, kolClient),
-    "Get the current status of all monitored Dreadsylvania instances."
-  );
-  discordClient.attachCommand(
-    "clan",
-    (message, args) => detailedClanStatus(message, args[1], kolClient),
-    "Get a detailed current status of the specified Dreadsylvania instance."
-  );
-  discordClient.attachCommand(
-    "skills",
-    (message) => getSkills(message, kolClient, databaseClientPool),
-    "Get a list of everyone currently elgible for Dreadsylvania skills."
-  );
-  discordClient.attachCommand(
-    "done",
-    (message, args) => setDone(message, args.slice(1).join(" "), databaseClientPool),
-    "Set a player as done with Dreadsylvania skills."
-  );
-  discordClient.attachCommand(
-    "undone",
-    (message, args) => setNotDone(message, args.slice(1).join(" "), databaseClientPool),
-    "Set a player as not done with Dreadsylvania skills."
-  );
+  // discordClient.attachCommand(
+  //   "status",
+  //   (message) => clanStatus(message, kolClient),
+  //   "Get the current status of all monitored Dreadsylvania instances."
+  // );
+  // discordClient.attachCommand(
+  //   "clan",
+  //   (message, args) => detailedClanStatus(message, args[1], kolClient),
+  //   "Get a detailed current status of the specified Dreadsylvania instance."
+  // );
+  // discordClient.attachCommand(
+  //   "skills",
+  //   (message) => getSkills(message, kolClient, databaseClientPool),
+  //   "Get a list of everyone currently elgible for Dreadsylvania skills."
+  // );
+  // discordClient.attachCommand(
+  //   "done",
+  //   (message, args) => setDone(message, args.slice(1).join(" "), databaseClientPool),
+  //   "Set a player as done with Dreadsylvania skills."
+  // );
+  // discordClient.attachCommand(
+  //   "undone",
+  //   (message, args) => setNotDone(message, args.slice(1).join(" "), databaseClientPool),
+  //   "Set a player as not done with Dreadsylvania skills."
+  // );
 }
 
 export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {

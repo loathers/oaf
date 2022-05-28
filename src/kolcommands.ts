@@ -5,52 +5,52 @@ import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 
 export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
-  client.attachCommand("item", item, "Print the +item drop required to cap a drop.");
-  client.attachCommand("level", level, "Finds the stats and substats needed for a given level.");
-  client.attachCommand("stat", stat, "Finds the substats and level for a given mainstat total.");
-  client.attachCommand(
-    "substat",
-    substat,
-    "Finds the mainstat and level for a given substat total"
-  );
-  client.attachCommand(
-    "fairy",
-    fairy,
-    "Print the +item drop supplied by a fairy of a given weight."
-  );
-  client.attachCommand(
-    "leprechaun",
-    lep,
-    "Print the +meat drop supplied by a leprechaun of a given weight."
-  );
-  client.attachCommand("lep", lep, "Alias for leprechaun.");
-  client.attachCommand(
-    "volleyball",
-    volley,
-    "Print the +stat drop supplied by a volleyball of a given weight."
-  );
-  client.attachCommand("volley", volley, "Alias for volleyball.");
-  client.attachCommand(
-    "reverseleprechaun",
-    reverseLep,
-    "Print the leprechaun weight necessary to supply a particular meat drop."
-  );
-  client.attachCommand("reverselep", reverseLep, "Alias for reverseleprechaun.");
-  client.attachCommand(
-    "reversefairy",
-    reverseFairy,
-    "Print the fairy weight necessary to supply a particular item drop."
-  );
-  client.attachCommand(
-    "leaderboard",
-    (message, args) => leaderboard(message, args, kolClient),
-    "Print the specified leaderboard."
-  );
-  client.attachCommand(
-    "lb",
-    (message, args) => leaderboard(message, args, kolClient),
-    "Alias for leaderboard."
-  );
+  // client.attachCommand("item", item, "Print the +item drop required to cap a drop.");
+  // client.attachCommand("level", level, "Finds the stats and substats needed for a given level.");
+  // client.attachCommand("stat", stat, "Finds the substats and level for a given mainstat total.");
+  // client.attachCommand(
+  //   "substat",
+  //   substat,
+  //   "Finds the mainstat and level for a given substat total"
+  // );
+  // client.attachCommand(
+  //   "fairy",
+  //   fairy,
+  //   "Print the +item drop supplied by a fairy of a given weight."
+  // );
+  // client.attachCommand(
+  //   "leprechaun",
+  //   lep,
+  //   "Print the +meat drop supplied by a leprechaun of a given weight."
+  // );
+  // client.attachCommand("lep", lep, "Alias for leprechaun.");
+  // client.attachCommand(
+  //   "volleyball",
+  //   volley,
+  //   "Print the +stat drop supplied by a volleyball of a given weight."
+  // );
+  // client.attachCommand("volley", volley, "Alias for volleyball.");
+  // client.attachCommand(
+  //   "reverseleprechaun",
+  //   reverseLep,
+  //   "Print the leprechaun weight necessary to supply a particular meat drop."
+  // );
+  // client.attachCommand("reverselep", reverseLep, "Alias for reverseleprechaun.");
+  // client.attachCommand(
+  //   "reversefairy",
+  //   reverseFairy,
+  //   "Print the fairy weight necessary to supply a particular item drop."
+  // );
+  // client.attachCommand(
+  //   "leaderboard",
+  //   (message, args) => leaderboard(message, args, kolClient),
+  //   "Print the specified leaderboard."
+  // );
+  // client.attachCommand(
+  //   "lb",
+  //   (message, args) => leaderboard(message, args, kolClient),
+  //   "Alias for leaderboard."
+  // );
 }
 
 function item(message: Message, args: string[]): void {
