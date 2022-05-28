@@ -193,21 +193,25 @@ async function detailedClanStatus(
     } else castleString += "~~Castle fully cleared.~~\n";
     embed.addFields([
       {
-        name: `__**Forest:**__ ${status.overview.forest} left`,
+        name: `__**Forest:**__ ${status.overview.forest} left.`,
         value: forestString,
         inline: true,
       },
       {
-        name: `__**Village:**__ ${status.overview.forest} left`,
+        name: `__**Village:**__ ${status.overview.village} left.`,
         value: villageString,
         inline: true,
       },
       {
-        name: `__**Castle:**__ ${status.overview.forest} left`,
+        name: `__**Castle:**__ ${status.overview.castle} left.`,
         value: castleString,
         inline: true,
       },
     ]);
+    embed.setFooter({
+      text: "Problems? Message DocRostov#7004 on discord.",
+      iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+    });
     await interaction.editReply({ content: null, embeds: [embed] });
   } catch {
     await interaction.editReply(
