@@ -13,13 +13,20 @@ import {
 import { ITEMMATCHER, ROLEMAP } from "./constants";
 import { WikiSearcher } from "./wikisearch";
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { Routes } from "discord-api-types/v9";
+import { ApplicationCommandOptionType, Routes } from "discord-api-types/v9";
 import { REST } from "@discordjs/rest";
 
 type Command = {
   description: string;
   slashCommand: SlashCommandBuilder;
   execute: (interaction: CommandInteraction) => void;
+};
+
+type Option = {
+  name: string;
+  description: string;
+  type: ApplicationCommandOptionType;
+  required: boolean;
 };
 
 export class DiscordClient {
@@ -138,7 +145,7 @@ export class DiscordClient {
         );
         matches.length = 3;
       }
-      await Promise.all(matches.map((match) => this.wikiSearch(match[1], message)));
+      //await Promise.all(matches.map((match) => this.wikiSearch(match[1], message)));
     }
   }
 
@@ -155,10 +162,44 @@ export class DiscordClient {
 
   attachCommand(
     command: string,
+    args: Option[],
     functionToCall: (interaction: CommandInteraction) => void,
     description: string = ""
   ): void {
     const slashCommand = new SlashCommandBuilder().setName(command).setDescription(description);
+    for (let arg of args) {
+      const builder = (item: any) =>
+        item.setName(arg.name).setDescription(arg.description).setRequired(arg.required);
+      switch (arg.type) {
+        case ApplicationCommandOptionType.String:
+          slashCommand.addStringOption(builder);
+          break;
+        case ApplicationCommandOptionType.Integer:
+          slashCommand.addIntegerOption(builder);
+          break;
+        case ApplicationCommandOptionType.User:
+          slashCommand.addUserOption(builder);
+          break;
+        case ApplicationCommandOptionType.Channel:
+          slashCommand.addChannelOption(builder);
+          break;
+        case ApplicationCommandOptionType.Role:
+          slashCommand.addRoleOption(builder);
+          break;
+        case ApplicationCommandOptionType.Mentionable:
+          slashCommand.addMentionableOption(builder);
+          break;
+        case ApplicationCommandOptionType.Integer:
+          slashCommand.addIntegerOption(builder);
+          break;
+        case ApplicationCommandOptionType.Number:
+          slashCommand.addNumberOption(builder);
+          break;
+        case ApplicationCommandOptionType.Attachment:
+          slashCommand.addAttachmentOption(builder);
+          break;
+      }
+    }
     this._commands.set(command.toLowerCase(), {
       description: description,
       slashCommand: slashCommand,
@@ -180,17 +221,16 @@ export class DiscordClient {
     });
   }
 
-  async wikiSearch(item: string, message: Message): Promise<void> {
-    const searchingMessage = await message.channel.send(`Searching for "${item}"...`);
-    if (!item.length) {
-      await searchingMessage.edit("Need something to search for.");
-      return;
-    }
+  async wikiSearch(interaction: CommandInteraction): Promise<void> {
+    const item = interaction.options.getString("term", true);
+    await interaction.reply({
+      content: `Searching for "${item}"...`,
+    });
     const embed = await this._wikiSearcher.getEmbed(item);
     if (embed) {
-      searchingMessage.edit({ content: null, embeds: [embed] });
+      interaction.editReply({ content: null, embeds: [embed] });
     } else {
-      searchingMessage.edit(`"${item}" wasn't found. Please refine your search.`);
+      interaction.editReply(`"${item}" wasn't found. Please refine your search.`);
     }
   }
 
@@ -233,11 +273,19 @@ export class DiscordClient {
     //   async (message, args) => await this.pizzaSearch(args[1], message),
     //   "Find what effects a diabolic pizza with the given letters can grant you."
     // );
-    // this.attachCommand(
-    //   "wiki",
-    //   async (message, args) => await this.wikiSearch(args.slice(1).join(" "), message),
-    //   "Search the KoL wiki for the given term."
-    // );
+    this.attachCommand(
+      "wiki",
+      [
+        {
+          name: "term",
+          description: "The term to search for in the wiki.",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+      this.wikiSearch,
+      "Search the KoL wiki for the given term."
+    );
     // this.attachCommand(
     //   "mafia",
     //   async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
@@ -248,10 +296,6 @@ export class DiscordClient {
     //   async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
     //   "Alias for mafia."
     // );
-    this.attachCommand(
-      "help",
-      async (interaction) => await this.help(interaction),
-      "Display a description of everything OAF can do."
-    );
+    this.attachCommand("help", [], this.help, "Display a description of everything OAF can do.");
   }
 }

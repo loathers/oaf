@@ -142,14 +142,14 @@ async function createReminder(message: Message, args: string[], databaseConnecti
     const reminderTime = Date.now() + timeToWait;
 
     if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
-      setTimeout(
-        () =>
-          message.channel.send({
+      setTimeout(() => {
+        try {
+          (message.channel as TextChannel).send({
             reply: { messageReference: message.id },
             content: reminderText,
-          }),
-        timeToWait
-      );
+          });
+        } catch {}
+      }, timeToWait);
     }
     message.channel.send(`Okay, I'll remind you in ${args[1]}.`);
     await databaseConnectionPool.query(
@@ -164,14 +164,14 @@ async function createReminder(message: Message, args: string[], databaseConnecti
     const timeToWait = reminderTime - Date.now();
 
     if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
-      setTimeout(
-        () =>
-          message.channel.send({
+      setTimeout(() => {
+        try {
+          (message.channel as TextChannel).send({
             reply: { messageReference: message.id },
             content: reminderText,
-          }),
-        timeToWait
-      );
+          });
+        } catch {}
+      }, timeToWait);
     }
     message.channel.send(`Okay, I'll remind you just after rollover`);
     await databaseConnectionPool.query(
