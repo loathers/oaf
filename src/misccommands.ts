@@ -203,9 +203,9 @@ async function createReminder(interaction: CommandInteraction, databaseConnectio
     const reminderTime = Date.now() + timeToWait;
 
     if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
-      setTimeout(() => {
+      setTimeout(async () => {
         try {
-          (interaction.channel as TextChannel).send({
+          ((interaction.channel as TextChannel) || (await interaction.user.createDM())).send({
             content: `<@${interaction.user.id}>`,
             embeds: [{ title: "⏰⏰⏰", description: reminderText }],
             allowedMentions: {
@@ -230,9 +230,9 @@ async function createReminder(interaction: CommandInteraction, databaseConnectio
     const timeToWait = reminderTime - Date.now();
 
     if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
-      setTimeout(() => {
+      setTimeout(async () => {
         try {
-          (interaction.channel as TextChannel).send({
+          ((interaction.channel as TextChannel) || (await interaction.user.createDM())).send({
             content: `<@${interaction.user.id}>`,
             embeds: [{ title: "⏰⏰⏰", description: reminderText }],
             allowedMentions: {
