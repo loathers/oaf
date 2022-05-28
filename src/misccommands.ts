@@ -212,7 +212,9 @@ async function createReminder(interaction: CommandInteraction, databaseConnectio
               users: [interaction.user.id],
             },
           });
-        } catch {}
+        } catch (error) {
+          console.log(error);
+        }
       }, timeToWait);
     }
     interaction.reply(`Okay, I'll remind you in ${time}.`);
@@ -237,7 +239,9 @@ async function createReminder(interaction: CommandInteraction, databaseConnectio
               users: [interaction.user.id],
             },
           });
-        } catch {}
+        } catch (error) {
+          console.log(error);
+        }
       }, timeToWait);
     }
     interaction.reply(`Okay, I'll remind you just after rollover`);
@@ -270,7 +274,9 @@ export async function syncReminders(databaseConnectionPool: Pool, discordClient:
                 users: [reminder.user_id],
               },
             });
-          } catch {}
+          } catch (error) {
+            console.log(error);
+          }
         }, reminder.reminder_time - now);
       }
     } else {
@@ -286,7 +292,9 @@ export async function syncReminders(databaseConnectionPool: Pool, discordClient:
                 users: [reminder.user_id],
               },
             });
-          } catch {}
+          } catch (error) {
+            console.log(error);
+          }
         }, reminder.reminder_time - now);
       }
     }
