@@ -196,17 +196,17 @@ async function detailedClanStatus(
     } else castleString += "~~Castle fully cleared.~~\n";
     embed.addFields([
       {
-        name: "__**Forest**__",
+        name: `__**Forest:**__ ${status.overview.forest} left`,
         value: forestString,
         inline: true,
       },
       {
-        name: "__**Village**__",
+        name: `__**Village:**__ ${status.overview.forest} left`,
         value: villageString,
         inline: true,
       },
       {
-        name: "__**Castle**__",
+        name: `__**Castle**__ ${status.overview.forest} left`,
         value: castleString,
         inline: true,
       },
