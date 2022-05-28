@@ -15,7 +15,7 @@ export function attachMiscCommands(client: DiscordClient, databaseConnectionPool
     "orb",
     [
       {
-        name: "ASK THE ORB",
+        name: "ASKTHEORB",
         description: "THE ORB KNOWS ALL",
         type: ApplicationCommandOptionType.String,
         required: false,
