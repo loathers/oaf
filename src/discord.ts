@@ -152,7 +152,7 @@ export class DiscordClient {
     if (!interaction.isCommand()) return;
     const command = this._commands.get(interaction.commandName);
     try {
-      if (command) command.execute(interaction);
+      if (command) await command.execute(interaction);
       else interaction.reply(`Command not recognised. Something has gone wrong here.`);
     } catch (error) {
       console.log(error);
