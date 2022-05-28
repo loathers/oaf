@@ -104,11 +104,16 @@ export function attachMiscCommands(client: DiscordClient, databaseConnectionPool
 
 function orb(interaction: CommandInteraction): void {
   const question = interaction.options.getString("asktheorb");
-  interaction.reply(
-    `${question ? `"${question}", you ask.\n` : ""}O.A.F. gazes into the mini crystal ball. "${
+  interaction.reply({
+    content: `${
+      question ? `"${question}", you ask.\n` : ""
+    }O.A.F. gazes into the mini crystal ball. "${
       ORB_RESPONSES[Math.floor(Math.random() * ORB_RESPONSES.length)]
-    }", they report.`
-  );
+    }", they report.`,
+    allowedMentions: {
+      parse: [],
+    },
+  });
 }
 
 function roll(interaction: CommandInteraction): void {
@@ -156,11 +161,14 @@ function prsWelcome(interaction: CommandInteraction): void {
 
   const capitalizedProject = PROJECT_CAPITALISATIONS.get(project) ?? project;
 
-  interaction.reply(
-    `https://github.com/${
+  interaction.reply({
+    content: `https://github.com/${
       capitalizedProject === "kolmafia" ? "kolmafia" : "Loathing-Associates-Scripting-Society"
-    }/${capitalizedProject}/pulls?q=is%3Apr+is%3Aopen+user-review-requested%3A%40me`
-  );
+    }/${capitalizedProject}/pulls?q=is%3Apr+is%3Aopen+user-review-requested%3A%40me`,
+    allowedMentions: {
+      parse: [],
+    },
+  });
 }
 
 const timeMatcher =
