@@ -311,9 +311,12 @@ export class DiscordClient {
     for (let command of this._commands.entries()) {
       helpString += `/${command[0].padEnd(18, " ")} ${command[1].description}\n`;
     }
-    helpString +=
-      "\nAdditionally, OAF will search the KoL wiki for any term you put in double square brackets (Up to three per message).\nFor example, [[Deactivated OAF]] will show the details of OAF and its hatchling.```";
-    interaction.reply({ content: helpString, ephemeral: true });
+    await interaction.reply({ content: helpString, ephemeral: true });
+    await interaction.followUp({
+      content:
+        "```Additionally, OAF will search the KoL wiki for any term you put in double square brackets (Up to three per message).\nFor example, [[Deactivated OAF]] will show the details of OAF and its hatchling.```",
+      ephemeral: true,
+    });
   }
 
   start(): void {
