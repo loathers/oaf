@@ -210,7 +210,10 @@ export class DiscordClient {
   async pizzaSearch(interaction: CommandInteraction): Promise<void> {
     const letters = interaction.options.getString("letters", true);
     if (letters.length < 1 || letters.length > 4) {
-      await interaction.reply("Invalid pizza length. Please supply a sensible number of letters.");
+      await interaction.reply({
+        content: "Invalid pizza length. Please supply a sensible number of letters.",
+        ephemeral: true,
+      });
       return;
     }
     await interaction.reply({
@@ -275,12 +278,14 @@ export class DiscordClient {
     }
   }
 
-  async mafiawikiSearch(item: string, message: Message): Promise<void> {
-    const searchingMessage = await message.channel.send(`Searching for "${item}"...`);
-    if (!item.length) {
-      await searchingMessage.edit("Need something to search for.");
-      return;
-    }
+  async mafiawikiSearch(interaction: CommandInteraction): Promise<void> {
+    const item = interaction.options.getString("term", true);
+    await interaction.reply({
+      content: `Searching for "${item}"...`,
+      allowedMentions: {
+        parse: [],
+      },
+    });
     const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
       params: {
         key: process.env.GOOGLE_API_KEY || "",
@@ -289,9 +294,20 @@ export class DiscordClient {
       },
     });
     if (googleSearchResponse.data.items && googleSearchResponse.data.items.length) {
-      searchingMessage.edit({ content: googleSearchResponse.data.items[0].link });
+      interaction.editReply({
+        content: googleSearchResponse.data.items[0].link,
+        embeds: [],
+        allowedMentions: {
+          parse: [],
+        },
+      });
     } else {
-      searchingMessage.edit(`"${item}" wasn't found. Please refine your search.`);
+      interaction.editReply({
+        content: `"${item}" wasn't found. Please refine your search.`,
+        allowedMentions: {
+          parse: [],
+        },
+      });
     }
   }
 
@@ -336,16 +352,19 @@ export class DiscordClient {
       (interaction: CommandInteraction) => this.wikiSearch(interaction),
       "Search the KoL wiki for the given term."
     );
-    // this.attachCommand(
-    //   "mafia",
-    //   async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
-    //   "Search the KoLmafia wiki for the given term."
-    // );
-    // this.attachCommand(
-    //   "mafiawiki",
-    //   async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
-    //   "Alias for mafia."
-    // );
+    this.attachCommand(
+      "mafia",
+      [
+        {
+          name: "term",
+          description: "The term to search for in the mafia wiki.",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+      async (interaction: CommandInteraction) => await this.mafiawikiSearch(interaction),
+      "Search the KoLmafia wiki for the given term."
+    );
     this.attachCommand(
       "help",
       [],
