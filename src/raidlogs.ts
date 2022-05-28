@@ -1,4 +1,6 @@
-import { Message } from "discord.js";
+import { ApplicationCommandOptionType } from "discord-api-types/v9";
+import { CommandInteraction, Interaction, Message } from "discord.js";
+import { type } from "os";
 import { Pool } from "pg";
 import { KILLMATCHER, SKILLMATCHER } from "./constants";
 import { DiscordClient } from "./discord";
@@ -37,31 +39,57 @@ export function attachClanCommands(
   kolClient: KOLClient,
   databaseClientPool: Pool
 ) {
-  // discordClient.attachCommand(
-  //   "status",
-  //   (message) => clanStatus(message, kolClient),
-  //   "Get the current status of all monitored Dreadsylvania instances."
-  // );
-  // discordClient.attachCommand(
-  //   "clan",
-  //   (message, args) => detailedClanStatus(message, args[1], kolClient),
-  //   "Get a detailed current status of the specified Dreadsylvania instance."
-  // );
-  // discordClient.attachCommand(
-  //   "skills",
-  //   (message) => getSkills(message, kolClient, databaseClientPool),
-  //   "Get a list of everyone currently elgible for Dreadsylvania skills."
-  // );
-  // discordClient.attachCommand(
-  //   "done",
-  //   (message, args) => setDone(message, args.slice(1).join(" "), databaseClientPool),
-  //   "Set a player as done with Dreadsylvania skills."
-  // );
-  // discordClient.attachCommand(
-  //   "undone",
-  //   (message, args) => setNotDone(message, args.slice(1).join(" "), databaseClientPool),
-  //   "Set a player as not done with Dreadsylvania skills."
-  // );
+  discordClient.attachCommand(
+    "status",
+    [],
+    (interaction: CommandInteraction) => clanStatus(interaction, kolClient),
+    "Get the current status of all monitored Dreadsylvania instances."
+  );
+  discordClient.attachCommand(
+    "clan",
+    [
+      {
+        name: "clan",
+        description: "The clan whose status you wish to check.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => detailedClanStatus(interaction, kolClient),
+    "Get a detailed current status of the specified Dreadsylvania instance."
+  );
+  discordClient.attachCommand(
+    "skills",
+    [],
+    (interaction: CommandInteraction) => getSkills(interaction, kolClient, databaseClientPool),
+    "Get a list of everyone currently elgible for Dreadsylvania skills."
+  );
+  discordClient.attachCommand(
+    "done",
+    [
+      {
+        name: "player",
+        description: "The player to set as done with skills.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => setDone(interaction, databaseClientPool),
+    "Set a player as done with Dreadsylvania skills."
+  );
+  discordClient.attachCommand(
+    "undone",
+    [
+      {
+        name: "player",
+        description: "The player to set as not done with skills.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => setNotDone(interaction, databaseClientPool),
+    "Set a player as not done with Dreadsylvania skills."
+  );
 }
 
 export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
@@ -74,11 +102,9 @@ export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
   }
 }
 
-async function clanStatus(message: Message, kolClient: KOLClient): Promise<void> {
+async function clanStatus(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
   let messageString = "__DREAD STATUS__\n";
-  const responseMessage = await message.channel.send(
-    "Fetching status for all clans, watch this space!"
-  );
+  await interaction.deferReply();
   try {
     for (let clan of clans) {
       const overview = await kolClient.getDreadStatusOverview(clan.id);
@@ -89,29 +115,27 @@ async function clanStatus(message: Message, kolClient: KOLClient): Promise<void>
         : "Needs capacitor";
       messageString += `**${clan.name}**: ${overview.forest}/${overview.village}/${overview.castle} (${capacitorString})\n`;
     }
-    await responseMessage.edit(messageString);
+    await interaction.editReply(messageString);
   } catch {
-    await responseMessage.edit(
+    await interaction.editReply(
       "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
     );
   }
 }
 
 async function detailedClanStatus(
-  message: Message,
-  clanName: string,
+  interaction: CommandInteraction,
   kolClient: KOLClient
 ): Promise<void> {
+  const clanName = interaction.options.getString("clan", true);
   const clan = clans.find(
     (clan) => clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName)
   );
   if (!clan) {
-    message.channel.send("Clan not recognised.");
+    interaction.reply({ content: "Clan not recognised.", ephemeral: true });
     return;
   }
-  const responseMessage = await message.channel.send(
-    `Fetching status for clan ${clan.name}, watch this space!!`
-  );
+  await interaction.deferReply();
   try {
     const status = await kolClient.getDetailedDreadStatus(clan.id);
     let returnString = `__**STATUS UPDATE FOR ${clan.name.toUpperCase()}**__\n`;
@@ -168,30 +192,30 @@ async function detailedClanStatus(
       else
         returnString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";
     } else returnString += "~~Castle fully cleared.~~\n";
-    await responseMessage.edit(returnString);
+    await interaction.editReply(returnString);
   } catch {
-    await responseMessage.edit(
+    await interaction.editReply(
       "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
     );
   }
 }
 
 async function getSkills(
-  message: Message,
+  interaction: CommandInteraction,
   kolClient: KOLClient,
   databaseClientPool: Pool
 ): Promise<void> {
-  const sentMessage = await message.channel.send("Calculating skills, watch this space!");
+  await interaction.deferReply();
   const doneWithSkillsList = (
     await databaseClientPool.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
   ).rows.map((result) => result.username.toLowerCase());
   try {
-    await parseOldLogs(kolClient, databaseClientPool, sentMessage);
+    await parseOldLogs(kolClient, databaseClientPool);
     const currentKills: Map<string, DreadParticipation> = new Map();
     for (let entry of killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
-    await parseCurrentLogs(kolClient, currentKills, sentMessage);
+    await parseCurrentLogs(kolClient, currentKills);
     let skillString = "__SKILLS OWED__\n\n";
     let skillArray = [];
     for (let entry of currentKills.entries()) {
@@ -207,27 +231,21 @@ async function getSkills(
       }
     }
     skillString += skillArray.sort().join("\n");
-    await sentMessage.edit(skillString);
+    await interaction.editReply(skillString);
   } catch {
-    await sentMessage.edit(
+    await interaction.editReply(
       "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
     );
   }
 }
 
-async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sentMessage?: Message) {
+async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
   const newlyParsedRaids = [];
   for (let clan of clans) {
-    await sentMessage?.edit(
-      `Calculating skills, watch this space! Parsing completed logs for clan ${clan.name}`
-    );
     const raidsToParse = (await kolClient.getMissingRaidLogs(clan.id, parsedRaids)).filter(
       (id) => !parsedRaids.includes(id)
     );
     for (let raid of raidsToParse) {
-      await sentMessage?.edit(
-        `Calculating skills, watch this space! Parsing logs for clan ${clan.name}, raid #${raid}`
-      );
       const raidLog = await kolClient.getFinishedRaidLog(raid);
       addParticipationFromRaidLog(raidLog, killMap);
       parsedRaids.push(raid);
@@ -249,33 +267,33 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sent
   databaseClient.release();
 }
 
-async function setDone(message: Message, username: string, databaseClientPool: Pool) {
+async function setDone(interaction: CommandInteraction, databaseClientPool: Pool) {
+  const username = interaction.options.getString("player");
+  await interaction.deferReply();
   await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET done_with_skills = TRUE;",
     [username]
   );
-  message.channel.send(`Added user ${username} to players done with skills.`);
+  interaction.reply(`Added user "${username}" to players done with skills.`);
   return;
 }
 
-async function setNotDone(message: Message, username: string, databaseClientPool: Pool) {
+async function setNotDone(interaction: CommandInteraction, databaseClientPool: Pool) {
+  const username = interaction.options.getString("player");
+  await interaction.deferReply();
   await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET done_with_skills = FALSE;",
     [username]
   );
-  message.channel.send(`Removed user ${username} from players done with skills.`);
+  interaction.reply(`Removed user "${username}" to players done with skills.`);
   return;
 }
 
 async function parseCurrentLogs(
   kolClient: KOLClient,
-  mapToUpdate: Map<string, DreadParticipation>,
-  sentMessage?: Message
+  mapToUpdate: Map<string, DreadParticipation>
 ) {
   for (let clan of clans) {
-    await sentMessage?.edit(
-      `Calculating skills, watch this space! Parsing current log for clan ${clan.name}`
-    );
     const raidLog = await kolClient.getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
     addParticipationFromRaidLog(raidLog, mapToUpdate);
