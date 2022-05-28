@@ -311,6 +311,7 @@ export class DiscordClient {
     for (let command of this._commands.entries()) {
       helpString += `/${command[0].padEnd(18, " ")} ${command[1].description}\n`;
     }
+    helpString += "```";
     await interaction.reply({ content: helpString, ephemeral: true });
     await interaction.followUp({
       content:
