@@ -73,9 +73,8 @@ export class DiscordClient {
     for (const command of this._commands) {
       commandsToRegister.push(command[1].slashCommand.toJSON());
     }
-    const guild_id = "466605739838930955";
-    const client_id = "592779999455739935";
-    await rest.put(Routes.applicationGuildCommands(client_id, guild_id), {
+    const client_id = process.env.CLIENT_ID || "";
+    await rest.put(Routes.applicationCommands(client_id), {
       body: commandsToRegister,
     });
   }
