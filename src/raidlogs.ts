@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction, Interaction, Message } from "discord.js";
+import { CommandInteraction, Interaction, Message, MessageEmbed } from "discord.js";
 import { type } from "os";
 import { Pool } from "pg";
 import { KILLMATCHER, SKILLMATCHER } from "./constants";
@@ -138,61 +138,79 @@ async function detailedClanStatus(
   await interaction.deferReply();
   try {
     const status = await kolClient.getDetailedDreadStatus(clan.id);
-    let returnString = `__**STATUS UPDATE FOR ${clan.name.toUpperCase()}**__\n`;
-    returnString += `${status.overview.forest}/${status.overview.village}/${status.overview.castle} kills remaining.\n\n`;
-    returnString += "__FOREST__\n";
+    const embed = new MessageEmbed().setTitle(`Status update for ${clan.name}`);
+    embed.setDescription(
+      `${status.overview.forest}/${status.overview.village}/${status.overview.castle} kills remaining.`
+    );
+    let forestString = "";
     if (status.overview.forest) {
-      if (!status.forest.attic) returnString += "**Cabin attic needs unlocking.**\n";
+      if (!status.forest.attic) forestString += "**Cabin attic needs unlocking.**\n";
       if (status.forest.watchtower)
-        returnString += "Watchtower open, you can grab freddies if you like.\n";
-      if (status.forest.auditor) returnString += "~~Auditor's badge claimed.~~\n";
-      else returnString += "Auditor's badge available. (Cabin -> Basement -> Lockbox)\n";
-      if (status.forest.musicbox) returnString += "~~Intricate music box parts claimed.~~\n";
+        forestString += "Watchtower open, you can grab freddies if you like.\n";
+      if (status.forest.auditor) forestString += "~~Auditor's badge claimed.~~\n";
+      else forestString += "Auditor's badge available. (Cabin -> Basement -> Lockbox)\n";
+      if (status.forest.musicbox) forestString += "~~Intricate music box parts claimed.~~\n";
       else
-        returnString +=
+        forestString +=
           "Intricate music box parts available. (Cabin -> Attic -> Music Box as AT (also banishes spooky from forest))\n";
-      if (status.forest.kiwi) returnString += "~~Blood kiwi claimed.~~\n";
+      if (status.forest.kiwi) forestString += "~~Blood kiwi claimed.~~\n";
       else
-        returnString += "Blood kiwi available. (Tree, Root Around -> Look Up + Climb -> Stomp)\n";
-      if (status.forest.amber) returnString += "~~Moon-amber claimed.~~\n";
+        forestString += "Blood kiwi available. (Tree, Root Around -> Look Up + Climb -> Stomp)\n";
+      if (status.forest.amber) forestString += "~~Moon-amber claimed.~~\n";
       else
-        returnString +=
+        forestString +=
           "Moon-amber available. (Tree -> Climb -> Shiny Thing (requires muscle class)\n";
-    } else returnString += "~~Forest fully cleared.~~\n";
-    returnString += "\n";
-    returnString += "__VILLAGE__\n";
+    } else forestString += "~~Forest fully cleared.~~\n";
+    let villageString = "";
     if (status.overview.village) {
-      if (status.village.schoolhouse) returnString += "Schoolhouse is open, go get your pencils!\n";
-      if (status.village.suite) returnString += "Master suite is open, grab some eau de mort?\n";
-      if (status.village.hanging) returnString += "~~Hanging complete.~~\n";
+      if (status.village.schoolhouse)
+        villageString += "Schoolhouse is open, go get your pencils!\n";
+      if (status.village.suite) villageString += "Master suite is open, grab some eau de mort?\n";
+      if (status.village.hanging) villageString += "~~Hanging complete.~~\n";
       else
-        returnString +=
+        villageString +=
           "Hanging available. (Square, Gallows -> Stand on Trap Door + Gallows -> Pull Lever)\n";
-    } else returnString += "~~Village fully cleared.~~\n";
-    returnString += "\n";
-    returnString += "__CASTLE__\n";
+    } else villageString += "~~Village fully cleared.~~\n";
+    let castleString = "";
     if (status.overview.castle) {
-      if (!status.castle.lab) returnString += "**Lab needs unlocking.**\n";
+      if (!status.castle.lab) castleString += "**Lab needs unlocking.**\n";
       else {
         if (status.overview.capacitor)
-          returnString += status.overview.skills
+          castleString += status.overview.skills
             ? `${status.overview.skills} skill${
                 status.overview.skills != 1 ? "s" : ""
               } available.\n`
             : "~~All skills claimed.~~\n";
-        else returnString += "Machine needs repairing (with skull capacitor).\n";
+        else castleString += "Machine needs repairing (with skull capacitor).\n";
       }
-      if (status.castle.roast) returnString += "~~Dreadful roast claimed.~~\n";
-      else returnString += "Dreadful roast available. (Great Hall -> Dining Room -> Grab roast)\n";
-      if (status.castle.banana) returnString += "~~Wax banana claimed.~~\n";
+      if (status.castle.roast) castleString += "~~Dreadful roast claimed.~~\n";
+      else castleString += "Dreadful roast available. (Great Hall -> Dining Room -> Grab roast)\n";
+      if (status.castle.banana) castleString += "~~Wax banana claimed.~~\n";
       else
-        returnString +=
+        castleString +=
           "Wax banana available. (Great Hall -> Dining Room -> Levitate (requires myst class))\n";
-      if (status.castle.agaricus) returnString += "~~Stinking agaricus claimed.~~\n";
+      if (status.castle.agaricus) castleString += "~~Stinking agaricus claimed.~~\n";
       else
-        returnString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";
-    } else returnString += "~~Castle fully cleared.~~\n";
-    await interaction.editReply(returnString);
+        castleString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";
+    } else castleString += "~~Castle fully cleared.~~\n";
+    embed.addFields([
+      {
+        name: "Forest",
+        value: forestString,
+        inline: true,
+      },
+      {
+        name: "Village",
+        value: villageString,
+        inline: true,
+      },
+      {
+        name: "Castle",
+        value: castleString,
+        inline: true,
+      },
+    ]);
+    await interaction.editReply({ content: null, embeds: [embed] });
   } catch {
     await interaction.editReply(
       "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
