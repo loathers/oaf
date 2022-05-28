@@ -139,9 +139,6 @@ async function detailedClanStatus(
   try {
     const status = await kolClient.getDetailedDreadStatus(clan.id);
     const embed = new MessageEmbed().setTitle(`Status update for ${clan.name}`);
-    embed.setDescription(
-      `${status.overview.forest}/${status.overview.village}/${status.overview.castle} kills remaining.`
-    );
     let forestString = "";
     if (status.overview.forest) {
       if (!status.forest.attic) forestString += "**Cabin attic needs unlocking.**\n";
@@ -206,7 +203,7 @@ async function detailedClanStatus(
         inline: true,
       },
       {
-        name: `__**Castle**__ ${status.overview.forest} left`,
+        name: `__**Castle:**__ ${status.overview.forest} left`,
         value: castleString,
         inline: true,
       },
