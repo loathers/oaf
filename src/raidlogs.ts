@@ -261,18 +261,31 @@ async function getSkills(
       }
     }
     skillArray.sort();
-    const fields = ["\u200b", "\u200b", "\u200b"];
-    let i = 0;
-    for (let player of skillArray.sort()) {
-      fields[i++ % 3] += player + "\n";
-    }
 
     await interaction.editReply({
       content: null,
       embeds: [
         {
           title: "Skills owed",
-          fields: fields.map((skillsOwed) => ({ name: "\u200b", value: skillsOwed, inline: true })),
+          fields: [
+            {
+              name: "\u200b",
+              value: "\u200b" + skillArray.slice(0, skillArray.length / 3).join("\n"),
+              inline: true,
+            },
+            {
+              name: "\u200b",
+              value:
+                "\u200b" +
+                skillArray.slice(skillArray.length / 3, (2 * skillArray.length) / 3).join("\n"),
+              inline: true,
+            },
+            {
+              name: "\u200b",
+              value: "\u200b" + skillArray.slice((2 * skillArray.length) / 3).join("\n"),
+              inline: true,
+            },
+          ],
         },
       ],
     });
