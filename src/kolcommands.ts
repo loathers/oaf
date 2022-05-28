@@ -339,7 +339,7 @@ function reverseLep(interaction: CommandInteraction): void {
 }
 
 async function leaderboard(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
-  const boardref = interaction.options.getString("board", true);
+  const boardref = interaction.options.getString("leaderboard", true);
 
   let board =
     PATH_MAPPINGS.get(boardref.toLowerCase().replace(/\W/g, "")) || parseInt(boardref) || 0;
