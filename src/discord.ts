@@ -5,16 +5,28 @@ import {
   MessageReaction,
   PartialUser,
   User,
-  Util,
   Intents,
   PartialMessageReaction,
+  Interaction,
+  CommandInteraction,
 } from "discord.js";
 import { ITEMMATCHER, ROLEMAP } from "./constants";
 import { WikiSearcher } from "./wikisearch";
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { ApplicationCommandOptionType, Routes } from "discord-api-types/v9";
+import { REST } from "@discordjs/rest";
 
 type Command = {
   description: string;
-  execute: (message: Message, args: string[]) => void;
+  slashCommand: SlashCommandBuilder;
+  execute: (interaction: CommandInteraction) => void;
+};
+
+type Option = {
+  name: string;
+  description: string;
+  type: ApplicationCommandOptionType;
+  required: boolean;
 };
 
 export class DiscordClient {
@@ -22,7 +34,6 @@ export class DiscordClient {
   private _wikiSearcher: WikiSearcher;
   private _discordToken: string;
   private _commands: Map<string, Command> = new Map();
-  private _commandSymbol: string;
 
   constructor(wikiSearcher: WikiSearcher) {
     this._client = new Client({
@@ -36,7 +47,6 @@ export class DiscordClient {
     });
     this._wikiSearcher = wikiSearcher;
     this._discordToken = process.env.DISCORD_TOKEN || "";
-    this._commandSymbol = process.env.COMMAND_SYMBOL || "%%%NO COMMAND SYMBOL SET%%%";
 
     this._client.on("ready", () => {
       console.log(`Logged in as ${this._client?.user?.tag}!`);
@@ -52,6 +62,21 @@ export class DiscordClient {
       async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
         this.onReactRemove(reaction, user)
     );
+    this._client.on("interactionCreate", async (interaction: Interaction) =>
+      this.onCommand(interaction)
+    );
+  }
+
+  async registerSlashCommands() {
+    const rest = new REST({ version: "9" }).setToken(this._discordToken);
+    const commandsToRegister = [];
+    for (const command of this._commands) {
+      commandsToRegister.push(command[1].slashCommand.toJSON());
+    }
+    const client_id = process.env.CLIENT_ID || "";
+    await rest.put(Routes.applicationCommands(client_id), {
+      body: commandsToRegister,
+    });
   }
 
   async onReact(
@@ -119,20 +144,25 @@ export class DiscordClient {
         );
         matches.length = 3;
       }
-      await Promise.all(matches.map((match) => this.wikiSearch(match[1], message)));
+      await Promise.all(matches.map((match) => this.inlineWikiSearch(match[1], message)));
+    }
+  }
 
-      if (!content.startsWith(this._commandSymbol)) return;
-      const commandString = content
-        .toLowerCase()
-        .split(" ")[0]
-        .substring(this._commandSymbol.length);
-      console.log(`Found command "${commandString}"`);
-      const command = this._commands.get(commandString);
-      if (command) command.execute(message, content.toLowerCase().split(" "));
-      else
-        message.channel.send(
-          `Command not recognised. Try ${this._commandSymbol}help for a list of all commands.`
-        );
+  async onCommand(interaction: Interaction): Promise<void> {
+    if (!interaction.isCommand()) return;
+    const command = this._commands.get(interaction.commandName);
+    try {
+      if (command) await command.execute(interaction);
+      else interaction.reply(`Command not recognised. Something has gone wrong here.`);
+    } catch (error) {
+      console.log(error);
+      await (interaction.replied
+        ? interaction.followUp(
+            "OAF recovered from a crash trying to process that command. Please tell Scotch or Phill"
+          )
+        : interaction.reply(
+            "OAF recovered from a crash trying to process that command. Please tell Scotch or Phill"
+          ));
     }
   }
 
@@ -142,31 +172,78 @@ export class DiscordClient {
 
   attachCommand(
     command: string,
-    functionToCall: (message: Message, args: string[]) => void,
+    args: Option[],
+    functionToCall: (interaction: CommandInteraction) => void,
     description: string = ""
   ): void {
+    const slashCommand = new SlashCommandBuilder().setName(command).setDescription(description);
+    for (let arg of args) {
+      const builder = (item: any) =>
+        item.setName(arg.name).setDescription(arg.description).setRequired(arg.required);
+      switch (arg.type) {
+        case ApplicationCommandOptionType.String:
+          slashCommand.addStringOption(builder);
+          break;
+        case ApplicationCommandOptionType.Integer:
+          slashCommand.addIntegerOption(builder);
+          break;
+        case ApplicationCommandOptionType.User:
+          slashCommand.addUserOption(builder);
+          break;
+        case ApplicationCommandOptionType.Channel:
+          slashCommand.addChannelOption(builder);
+          break;
+        case ApplicationCommandOptionType.Role:
+          slashCommand.addRoleOption(builder);
+          break;
+        case ApplicationCommandOptionType.Mentionable:
+          slashCommand.addMentionableOption(builder);
+          break;
+        case ApplicationCommandOptionType.Integer:
+          slashCommand.addIntegerOption(builder);
+          break;
+        case ApplicationCommandOptionType.Number:
+          slashCommand.addNumberOption(builder);
+          break;
+        case ApplicationCommandOptionType.Attachment:
+          slashCommand.addAttachmentOption(builder);
+          break;
+      }
+    }
     this._commands.set(command.toLowerCase(), {
       description: description,
+      slashCommand: slashCommand,
       execute: functionToCall,
     });
   }
 
-  async pizzaSearch(letters: string, message: Message): Promise<void> {
-    if (!letters || letters.length < 1 || letters.length > 4) {
-      await message.channel.send(
-        "Invalid pizza length. Please supply a sensible number of letters."
-      );
+  async pizzaSearch(interaction: CommandInteraction): Promise<void> {
+    const letters = interaction.options.getString("letters", true);
+    if (letters.length < 1 || letters.length > 4) {
+      await interaction.reply({
+        content: "Invalid pizza length. Please supply a sensible number of letters.",
+        ephemeral: true,
+      });
       return;
     }
-    const searchingMessage = await message.channel.send(`Finding pizzas for "${letters}"...`);
-    await searchingMessage.edit({
+    await interaction.deferReply();
+    await interaction.editReply({
       content: null,
-      embeds: [await this._wikiSearcher.getPizzaEmbed(letters)],
+      embeds: [await this._wikiSearcher.getPizzaEmbed(letters.toLowerCase())],
+      allowedMentions: {
+        parse: [],
+      },
     });
   }
 
-  async wikiSearch(item: string, message: Message): Promise<void> {
-    const searchingMessage = await message.channel.send(`Searching for "${item}"...`);
+  async inlineWikiSearch(item: string, message: Message): Promise<void> {
+    const searchingMessage = await message.channel.send({
+      content: `Searching for "${item}"...`,
+      reply: { messageReference: message.id },
+      allowedMentions: {
+        parse: [],
+      },
+    });
     if (!item.length) {
       await searchingMessage.edit("Need something to search for.");
       return;
@@ -179,12 +256,31 @@ export class DiscordClient {
     }
   }
 
-  async mafiawikiSearch(item: string, message: Message): Promise<void> {
-    const searchingMessage = await message.channel.send(`Searching for "${item}"...`);
-    if (!item.length) {
-      await searchingMessage.edit("Need something to search for.");
-      return;
+  async wikiSearch(interaction: CommandInteraction): Promise<void> {
+    const item = interaction.options.getString("term", true);
+    await interaction.deferReply();
+    const embed = await this._wikiSearcher.getEmbed(item);
+    if (embed) {
+      interaction.editReply({
+        content: null,
+        embeds: [embed],
+        allowedMentions: {
+          parse: [],
+        },
+      });
+    } else {
+      interaction.editReply({
+        content: `"${item}" wasn't found. Please refine your search.`,
+        allowedMentions: {
+          parse: [],
+        },
+      });
     }
+  }
+
+  async mafiawikiSearch(interaction: CommandInteraction): Promise<void> {
+    const item = interaction.options.getString("term", true);
+    await interaction.deferReply();
     const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
       params: {
         key: process.env.GOOGLE_API_KEY || "",
@@ -193,21 +289,35 @@ export class DiscordClient {
       },
     });
     if (googleSearchResponse.data.items && googleSearchResponse.data.items.length) {
-      searchingMessage.edit({ content: googleSearchResponse.data.items[0].link });
+      interaction.editReply({
+        content: googleSearchResponse.data.items[0].link,
+        embeds: [],
+        allowedMentions: {
+          parse: [],
+        },
+      });
     } else {
-      searchingMessage.edit(`"${item}" wasn't found. Please refine your search.`);
+      interaction.editReply({
+        content: `"${item}" wasn't found. Please refine your search.`,
+        allowedMentions: {
+          parse: [],
+        },
+      });
     }
   }
 
-  async help(message: Message): Promise<void> {
+  async help(interaction: CommandInteraction): Promise<void> {
     let helpString = "```";
     for (let command of this._commands.entries()) {
-      helpString += `${this._commandSymbol}${command[0].padEnd(15, " ")} ${
-        command[1].description
-      }\n`;
+      helpString += `/${command[0].padEnd(18, " ")} ${command[1].description}\n`;
     }
     helpString += "```";
-    message.author.send(helpString);
+    await interaction.reply({ content: helpString, ephemeral: true });
+    await interaction.followUp({
+      content:
+        "```Additionally, OAF will search the KoL wiki for any term you put in double square brackets (Up to three per message).\nFor example, [[Deactivated OAF]] will show the details of OAF and its hatchling.```",
+      ephemeral: true,
+    });
   }
 
   start(): void {
@@ -217,28 +327,48 @@ export class DiscordClient {
   attachMetaBotCommands() {
     this.attachCommand(
       "pizza",
-      async (message, args) => await this.pizzaSearch(args[1], message),
+      [
+        {
+          name: "letters",
+          description: "The first letters of the items you want to bake into a pizza.",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+      async (interaction: CommandInteraction) => await this.pizzaSearch(interaction),
       "Find what effects a diabolic pizza with the given letters can grant you."
     );
     this.attachCommand(
       "wiki",
-      async (message, args) => await this.wikiSearch(args.slice(1).join(" "), message),
+      [
+        {
+          name: "term",
+          description: "The term to search for in the wiki.",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+      (interaction: CommandInteraction) => this.wikiSearch(interaction),
       "Search the KoL wiki for the given term."
     );
     this.attachCommand(
       "mafia",
-      async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
+      [
+        {
+          name: "term",
+          description: "The term to search for in the mafia wiki.",
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
+      ],
+      async (interaction: CommandInteraction) => await this.mafiawikiSearch(interaction),
       "Search the KoLmafia wiki for the given term."
     );
     this.attachCommand(
-      "mafiawiki",
-      async (message, args) => await this.mafiawikiSearch(args.slice(1).join(" "), message),
-      "Alias for mafia."
-    );
-    this.attachCommand(
       "help",
-      async (message) => await this.help(message),
-      "Display this message."
+      [],
+      (interaction: CommandInteraction) => this.help(interaction),
+      "Display a description of everything OAF can do."
     );
   }
 }

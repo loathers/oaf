@@ -490,3 +490,19 @@ export const ROLEMAP: Map<string, string> = new Map([
   ["🚫", "512522219574919179"],
   ["✅", "754473984661258391"],
 ]);
+
+export const PROJECT_ALIASES: Map<string, string> = new Map([
+  ["garbo", "garbage-collector"],
+  ["freecandy", "freecandydotexe"],
+  ["garfjalen", "kol-scripting-resources"],
+  ["mafia", "kolmafia"],
+  ["oaf", "oaf-js"],
+]);
+
+export const PROJECT_CAPITALISATIONS: Map<string, string> = new Map([
+  ["tourguide", "TourGuide"],
+  ["chit", "ChIT"],
+  ["kol-scripting-resources", "KoL-Scripting-Resources"],
+  ["cagebot", "Cagebot"],
+  ["uberpvpoptimizer", "UberPvPOptimizer"],
+]);

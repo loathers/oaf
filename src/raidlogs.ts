@@ -1,4 +1,6 @@
-import { Message } from "discord.js";
+import { ApplicationCommandOptionType } from "discord-api-types/v9";
+import { CommandInteraction, Interaction, Message, MessageEmbed } from "discord.js";
+import { type } from "os";
 import { Pool } from "pg";
 import { KILLMATCHER, SKILLMATCHER } from "./constants";
 import { DiscordClient } from "./discord";
@@ -39,27 +41,53 @@ export function attachClanCommands(
 ) {
   discordClient.attachCommand(
     "status",
-    (message) => clanStatus(message, kolClient),
+    [],
+    (interaction: CommandInteraction) => clanStatus(interaction, kolClient),
     "Get the current status of all monitored Dreadsylvania instances."
   );
   discordClient.attachCommand(
     "clan",
-    (message, args) => detailedClanStatus(message, args[1], kolClient),
+    [
+      {
+        name: "clan",
+        description: "The clan whose status you wish to check.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => detailedClanStatus(interaction, kolClient),
     "Get a detailed current status of the specified Dreadsylvania instance."
   );
   discordClient.attachCommand(
     "skills",
-    (message) => getSkills(message, kolClient, databaseClientPool),
+    [],
+    (interaction: CommandInteraction) => getSkills(interaction, kolClient, databaseClientPool),
     "Get a list of everyone currently elgible for Dreadsylvania skills."
   );
   discordClient.attachCommand(
     "done",
-    (message, args) => setDone(message, args.slice(1).join(" "), databaseClientPool),
+    [
+      {
+        name: "player",
+        description: "The player to set as done with skills.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => setDone(interaction, databaseClientPool),
     "Set a player as done with Dreadsylvania skills."
   );
   discordClient.attachCommand(
     "undone",
-    (message, args) => setNotDone(message, args.slice(1).join(" "), databaseClientPool),
+    [
+      {
+        name: "player",
+        description: "The player to set as not done with skills.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => setNotDone(interaction, databaseClientPool),
     "Set a player as not done with Dreadsylvania skills."
   );
 }
@@ -74,11 +102,9 @@ export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
   }
 }
 
-async function clanStatus(message: Message, kolClient: KOLClient): Promise<void> {
-  let messageString = "__DREAD STATUS__\n";
-  const responseMessage = await message.channel.send(
-    "Fetching status for all clans, watch this space!"
-  );
+async function clanStatus(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
+  let messageString = "";
+  await interaction.deferReply();
   try {
     for (let clan of clans) {
       const overview = await kolClient.getDreadStatusOverview(clan.id);
@@ -89,110 +115,138 @@ async function clanStatus(message: Message, kolClient: KOLClient): Promise<void>
         : "Needs capacitor";
       messageString += `**${clan.name}**: ${overview.forest}/${overview.village}/${overview.castle} (${capacitorString})\n`;
     }
-    await responseMessage.edit(messageString);
+    await interaction.editReply({
+      content: null,
+      embeds: [
+        {
+          title: "Dread Status",
+          description: messageString,
+        },
+      ],
+    });
   } catch {
-    await responseMessage.edit(
+    await interaction.editReply(
       "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
     );
   }
 }
 
 async function detailedClanStatus(
-  message: Message,
-  clanName: string,
+  interaction: CommandInteraction,
   kolClient: KOLClient
 ): Promise<void> {
+  const clanName = interaction.options.getString("clan", true);
   const clan = clans.find(
     (clan) => clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName)
   );
   if (!clan) {
-    message.channel.send("Clan not recognised.");
+    interaction.reply({ content: "Clan not recognised.", ephemeral: true });
     return;
   }
-  const responseMessage = await message.channel.send(
-    `Fetching status for clan ${clan.name}, watch this space!!`
-  );
+  await interaction.deferReply();
   try {
     const status = await kolClient.getDetailedDreadStatus(clan.id);
-    let returnString = `__**STATUS UPDATE FOR ${clan.name.toUpperCase()}**__\n`;
-    returnString += `${status.overview.forest}/${status.overview.village}/${status.overview.castle} kills remaining.\n\n`;
-    returnString += "__FOREST__\n";
+    const embed = new MessageEmbed().setTitle(`Status update for ${clan.name}`);
+    embed.setDescription(
+      `Kills remaining: ${status.overview.forest}/${status.overview.village}/${status.overview.castle}`
+    );
+    let forestString = "";
     if (status.overview.forest) {
-      if (!status.forest.attic) returnString += "**Cabin attic needs unlocking.**\n";
+      if (!status.forest.attic) forestString += "**Cabin attic needs unlocking.**\n";
       if (status.forest.watchtower)
-        returnString += "Watchtower open, you can grab freddies if you like.\n";
-      if (status.forest.auditor) returnString += "~~Auditor's badge claimed.~~\n";
-      else returnString += "Auditor's badge available. (Cabin -> Basement -> Lockbox)\n";
-      if (status.forest.musicbox) returnString += "~~Intricate music box parts claimed.~~\n";
+        forestString += "Watchtower open, you can grab freddies if you like.\n";
+      if (status.forest.auditor) forestString += "~~Auditor's badge claimed.~~\n";
+      else forestString += "Auditor's badge available.\n(Cabin => Basement => Lockbox)\n";
+      if (status.forest.musicbox) forestString += "~~Intricate music box parts claimed.~~\n";
       else
-        returnString +=
-          "Intricate music box parts available. (Cabin -> Attic -> Music Box as AT (also banishes spooky from forest))\n";
-      if (status.forest.kiwi) returnString += "~~Blood kiwi claimed.~~\n";
+        forestString +=
+          "Intricate music box parts available.\n(Cabin => Attic => Music Box)\n(Requires Accordion Thief)\n(Also banishes spooky from forest)\n";
+      if (status.forest.kiwi) forestString += "~~Blood kiwi claimed.~~\n";
       else
-        returnString += "Blood kiwi available. (Tree, Root Around -> Look Up + Climb -> Stomp)\n";
-      if (status.forest.amber) returnString += "~~Moon-amber claimed.~~\n";
+        forestString += "Blood kiwi available.\n(Tree, Root Around => Look Up + Climb => Stomp)\n";
+      if (status.forest.amber) forestString += "~~Moon-amber claimed.~~\n";
       else
-        returnString +=
-          "Moon-amber available. (Tree -> Climb -> Shiny Thing (requires muscle class)\n";
-    } else returnString += "~~Forest fully cleared.~~\n";
-    returnString += "\n";
-    returnString += "__VILLAGE__\n";
+        forestString +=
+          "Moon-amber available.\n(Tree => Climb => Shiny Thing)\n(Requires muscle class)\n";
+    } else forestString += "~~Forest fully cleared.~~\n";
+    let villageString = "";
     if (status.overview.village) {
-      if (status.village.schoolhouse) returnString += "Schoolhouse is open, go get your pencils!\n";
-      if (status.village.suite) returnString += "Master suite is open, grab some eau de mort?\n";
-      if (status.village.hanging) returnString += "~~Hanging complete.~~\n";
+      if (status.village.schoolhouse)
+        villageString += "Schoolhouse is open, go get your pencils!\n";
+      if (status.village.suite) villageString += "Master suite is open, grab some eau de mort?\n";
+      if (status.village.hanging) villageString += "~~Hanging complete.~~\n";
       else
-        returnString +=
-          "Hanging available. (Square, Gallows -> Stand on Trap Door + Gallows -> Pull Lever)\n";
-    } else returnString += "~~Village fully cleared.~~\n";
-    returnString += "\n";
-    returnString += "__CASTLE__\n";
+        villageString +=
+          "Hanging available.\n(Square, Gallows => Stand on Trap Door + Gallows => Pull Lever)\n";
+    } else villageString += "~~Village fully cleared.~~\n";
+    let castleString = "";
     if (status.overview.castle) {
-      if (!status.castle.lab) returnString += "**Lab needs unlocking.**\n";
+      if (!status.castle.lab) castleString += "**Lab needs unlocking.**\n";
       else {
         if (status.overview.capacitor)
-          returnString += status.overview.skills
+          castleString += status.overview.skills
             ? `${status.overview.skills} skill${
                 status.overview.skills != 1 ? "s" : ""
               } available.\n`
             : "~~All skills claimed.~~\n";
-        else returnString += "Machine needs repairing (with skull capacitor).\n";
+        else castleString += "Machine needs repairing (with skull capacitor).\n";
       }
-      if (status.castle.roast) returnString += "~~Dreadful roast claimed.~~\n";
-      else returnString += "Dreadful roast available. (Great Hall -> Dining Room -> Grab roast)\n";
-      if (status.castle.banana) returnString += "~~Wax banana claimed.~~\n";
+      if (status.castle.roast) castleString += "~~Dreadful roast claimed.~~\n";
+      else castleString += "Dreadful roast available.\n(Great Hall => Dining Room => Grab roast)\n";
+      if (status.castle.banana) castleString += "~~Wax banana claimed.~~\n";
       else
-        returnString +=
-          "Wax banana available. (Great Hall -> Dining Room -> Levitate (requires myst class))\n";
-      if (status.castle.agaricus) returnString += "~~Stinking agaricus claimed.~~\n";
+        castleString +=
+          "Wax banana available.\n(Great Hall => Dining Room => Levitate)\n(Requires myst class)\n";
+      if (status.castle.agaricus) castleString += "~~Stinking agaricus claimed.~~\n";
       else
-        returnString += "Stinking agaricus available. (Dungeons -> Guard Room -> Break off bits)\n";
-    } else returnString += "~~Castle fully cleared.~~\n";
-    await responseMessage.edit(returnString);
+        castleString +=
+          "Stinking agaricus available.\n(Dungeons => Guard Room => Break off bits)\n";
+    } else castleString += "~~Castle fully cleared.~~\n";
+    embed.addFields([
+      {
+        name: `__**Forest**__`,
+        value: forestString,
+        inline: true,
+      },
+      {
+        name: `__**Village**__`,
+        value: villageString,
+        inline: true,
+      },
+      {
+        name: `__**Castle**__`,
+        value: castleString,
+        inline: true,
+      },
+    ]);
+    embed.setFooter({
+      text: "Problems? Message DocRostov#7004 on discord.",
+      iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+    });
+    await interaction.editReply({ content: null, embeds: [embed] });
   } catch {
-    await responseMessage.edit(
+    await interaction.editReply(
       "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
     );
   }
 }
 
 async function getSkills(
-  message: Message,
+  interaction: CommandInteraction,
   kolClient: KOLClient,
   databaseClientPool: Pool
 ): Promise<void> {
-  const sentMessage = await message.channel.send("Calculating skills, watch this space!");
+  await interaction.deferReply();
   const doneWithSkillsList = (
     await databaseClientPool.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
   ).rows.map((result) => result.username.toLowerCase());
   try {
-    await parseOldLogs(kolClient, databaseClientPool, sentMessage);
+    await parseOldLogs(kolClient, databaseClientPool);
     const currentKills: Map<string, DreadParticipation> = new Map();
     for (let entry of killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
-    await parseCurrentLogs(kolClient, currentKills, sentMessage);
-    let skillString = "__SKILLS OWED__\n\n";
+    await parseCurrentLogs(kolClient, currentKills);
     let skillArray = [];
     for (let entry of currentKills.entries()) {
       if (!doneWithSkillsList.includes(entry[0])) {
@@ -206,28 +260,50 @@ async function getSkills(
         }
       }
     }
-    skillString += skillArray.sort().join("\n");
-    await sentMessage.edit(skillString);
-  } catch {
-    await sentMessage.edit(
+    skillArray.sort();
+
+    await interaction.editReply({
+      content: null,
+      embeds: [
+        {
+          title: "Skills owed",
+          fields: [
+            {
+              name: "\u200b",
+              value: "\u200b" + skillArray.slice(0, skillArray.length / 3).join("\n"),
+              inline: true,
+            },
+            {
+              name: "\u200b",
+              value:
+                "\u200b" +
+                skillArray.slice(skillArray.length / 3, (2 * skillArray.length) / 3).join("\n"),
+              inline: true,
+            },
+            {
+              name: "\u200b",
+              value: "\u200b" + skillArray.slice((2 * skillArray.length) / 3).join("\n"),
+              inline: true,
+            },
+          ],
+        },
+      ],
+    });
+  } catch (error) {
+    console.log(error);
+    await interaction.editReply(
       "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
     );
   }
 }
 
-async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sentMessage?: Message) {
+async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
   const newlyParsedRaids = [];
   for (let clan of clans) {
-    await sentMessage?.edit(
-      `Calculating skills, watch this space! Parsing completed logs for clan ${clan.name}`
-    );
     const raidsToParse = (await kolClient.getMissingRaidLogs(clan.id, parsedRaids)).filter(
       (id) => !parsedRaids.includes(id)
     );
     for (let raid of raidsToParse) {
-      await sentMessage?.edit(
-        `Calculating skills, watch this space! Parsing logs for clan ${clan.name}, raid #${raid}`
-      );
       const raidLog = await kolClient.getFinishedRaidLog(raid);
       addParticipationFromRaidLog(raidLog, killMap);
       parsedRaids.push(raid);
@@ -249,33 +325,33 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool, sent
   databaseClient.release();
 }
 
-async function setDone(message: Message, username: string, databaseClientPool: Pool) {
+async function setDone(interaction: CommandInteraction, databaseClientPool: Pool) {
+  const username = interaction.options.getString("player");
+  await interaction.deferReply();
   await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET done_with_skills = TRUE;",
     [username]
   );
-  message.channel.send(`Added user ${username} to players done with skills.`);
+  interaction.reply(`Added user "${username}" to players done with skills.`);
   return;
 }
 
-async function setNotDone(message: Message, username: string, databaseClientPool: Pool) {
+async function setNotDone(interaction: CommandInteraction, databaseClientPool: Pool) {
+  const username = interaction.options.getString("player");
+  await interaction.deferReply();
   await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET done_with_skills = FALSE;",
     [username]
   );
-  message.channel.send(`Removed user ${username} from players done with skills.`);
+  interaction.reply(`Removed user "${username}" to players done with skills.`);
   return;
 }
 
 async function parseCurrentLogs(
   kolClient: KOLClient,
-  mapToUpdate: Map<string, DreadParticipation>,
-  sentMessage?: Message
+  mapToUpdate: Map<string, DreadParticipation>
 ) {
   for (let clan of clans) {
-    await sentMessage?.edit(
-      `Calculating skills, watch this space! Parsing current log for clan ${clan.name}`
-    );
     const raidLog = await kolClient.getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
     addParticipationFromRaidLog(raidLog, mapToUpdate);

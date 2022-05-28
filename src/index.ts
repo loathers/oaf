@@ -36,20 +36,23 @@ async function performSetup(): Promise<DiscordClient> {
   console.log("Creating discord client.");
   const discordClient = new DiscordClient(wikiSearcher);
 
-  console.log("Attaching misc commands.");
-  attachMiscCommands(discordClient, databaseClientPool);
-
   console.log("Attaching kol commands.");
   attachKoLCommands(discordClient, kolClient);
 
   console.log("Attaching clan commands.");
   attachClanCommands(discordClient, kolClient, databaseClientPool);
 
+  console.log("Attaching misc commands.");
+  attachMiscCommands(discordClient, databaseClientPool);
+
   console.log("Attaching wiki commands.");
   discordClient.attachMetaBotCommands();
 
   console.log("Syncing reminders.");
   await syncReminders(databaseClientPool, discordClient.client());
+
+  console.log("Registering slash commands.");
+  await discordClient.registerSlashCommands();
 
   return discordClient;
 }
