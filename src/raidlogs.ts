@@ -261,12 +261,11 @@ async function getSkills(
       }
     }
     skillArray.sort();
-    const fields = ["", "", ""];
+    const fields = ["\u200b", "\u200b", "\u200b"];
     let i = 0;
     for (let player of skillArray.sort()) {
-      fields[i++ % 2] += player + "\n";
+      fields[i++ % 3] += player + "\n";
     }
-    console.log(fields);
 
     await interaction.editReply({
       content: null,
