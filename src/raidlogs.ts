@@ -148,7 +148,7 @@ async function detailedClanStatus(
     const status = await kolClient.getDetailedDreadStatus(clan.id);
     const embed = new MessageEmbed().setTitle(`Status update for ${clan.name}`);
     embed.setDescription(
-      `${status.overview.forest}/${status.overview.village}/${status.overview.castle}`
+      `Kills remaining: ${status.overview.forest}/${status.overview.village}/${status.overview.castle}`
     );
     let forestString = "";
     if (status.overview.forest) {
@@ -276,7 +276,8 @@ async function getSkills(
         },
       ],
     });
-  } catch {
+  } catch (error) {
+    console.log(error);
     await interaction.editReply(
       "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
     );
