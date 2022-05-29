@@ -95,7 +95,7 @@ export function attachMiscCommands(client: DiscordClient, databaseConnectionPool
         name: "reminder",
         description: "What to remind you",
         type: ApplicationCommandOptionType.String,
-        required: true,
+        required: false,
       },
     ],
     (interaction) => createReminder(interaction, databaseConnectionPool),
@@ -177,8 +177,8 @@ const timeMatcher =
 
 async function createReminder(interaction: CommandInteraction, databaseConnectionPool: Pool) {
   const time = interaction.options.getString("when", true);
-  const reminderText = interaction.options.getString("reminder", true);
-  if (!timeMatcher.test(time) && time !== "rollover") {
+  const reminderText = interaction.options.getString("reminder") || "Time's up!";
+  if (!timeMatcher.test(time) && time.toLowerCase() !== "rollover") {
     interaction.reply({
       content: 'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".',
       ephemeral: true,
@@ -192,62 +192,54 @@ async function createReminder(interaction: CommandInteraction, databaseConnectio
     });
     return;
   }
+  let timeToWait = 0;
+  let reminderTime = 0;
   if (timeMatcher.test(time)) {
     const timeMatch = timeMatcher.exec(time);
-    const timeToWait =
+    timeToWait =
       7 * 24 * 60 * 60 * 1000 * parseInt(timeMatch?.groups?.weeks || "0") +
       24 * 60 * 60 * 1000 * parseInt(timeMatch?.groups?.days || "0") +
       60 * 60 * 1000 * parseInt(timeMatch?.groups?.hours || "0") +
       60 * 1000 * parseInt(timeMatch?.groups?.minutes || "0") +
       1000 * parseInt(timeMatch?.groups?.seconds || "0");
-    const reminderTime = Date.now() + timeToWait;
-
-    if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
-      setTimeout(async () => {
-        try {
-          ((interaction.channel as TextChannel) || (await interaction.user.createDM())).send({
-            content: `<@${interaction.user.id}>`,
-            embeds: [{ title: "⏰⏰⏰", description: reminderText }],
-            allowedMentions: {
-              users: [interaction.user.id],
-            },
-          });
-        } catch (error) {
-          console.log(error);
-        }
-      }, timeToWait);
-    }
-    interaction.reply(`Okay, I'll remind you in ${time}.`);
-    await databaseConnectionPool.query(
-      "INSERT INTO reminders(guild_id, channel_id, user_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5);",
-      [interaction.guildId, interaction.channelId, interaction.user.id, reminderText, reminderTime]
-    );
+    reminderTime = Date.now() + timeToWait;
+    await interaction.reply(`Okay, I'll remind you in ${time}.`);
   } else {
-    let reminderTime = new Date(Date.now()).setHours(3, 40);
+    reminderTime = new Date(Date.now()).setHours(3, 40);
     if (reminderTime < Date.now()) {
       reminderTime += 24 * 60 * 60 * 1000;
     }
-    const timeToWait = reminderTime - Date.now();
+    timeToWait = reminderTime - Date.now();
+    await interaction.reply(`Okay, I'll remind you after rollover.`);
+  }
 
-    if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
-      setTimeout(async () => {
-        try {
-          ((interaction.channel as TextChannel) || (await interaction.user.createDM())).send({
-            content: `<@${interaction.user.id}>`,
-            embeds: [{ title: "⏰⏰⏰", description: reminderText }],
-            allowedMentions: {
-              users: [interaction.user.id],
-            },
-          });
-        } catch (error) {
-          console.log(error);
-        }
-      }, timeToWait);
-    }
-    interaction.reply(`Okay, I'll remind you just after rollover`);
+  const reply_id = (await interaction.fetchReply()).id;
+
+  if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
+    setTimeout(async () => {
+      try {
+        ((interaction.channel as TextChannel) || (await interaction.user.createDM())).send({
+          content: `<@${interaction.user.id}>`,
+          embeds: [{ title: "⏰⏰⏰", description: reminderText }],
+          reply: { messageReference: reply_id },
+          allowedMentions: {
+            users: [interaction.user.id],
+          },
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    }, timeToWait);
     await databaseConnectionPool.query(
-      "INSERT INTO reminders(guild_id, channel_id, user_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5);",
-      [interaction.guildId, interaction.channelId, interaction.user.id, reminderText, reminderTime]
+      "INSERT INTO reminders(guild_id, channel_id, user_id, interaction_reply_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5, $6);",
+      [
+        interaction.guildId,
+        interaction.channelId,
+        interaction.user.id,
+        reply_id,
+        reminderText,
+        reminderTime,
+      ]
     );
   }
 }
@@ -273,6 +265,9 @@ export async function syncReminders(databaseConnectionPool: Pool, discordClient:
               allowedMentions: {
                 users: [reminder.user_id],
               },
+              ...(reminder.interaction_reply_id
+                ? { reply: { messageReference: reminder.interaction_reply_id } }
+                : {}),
             });
           } catch (error) {
             console.log(error);
@@ -291,6 +286,9 @@ export async function syncReminders(databaseConnectionPool: Pool, discordClient:
               allowedMentions: {
                 users: [reminder.user_id],
               },
+              ...(reminder.interaction_reply_id
+                ? { reply: { messageReference: reminder.interaction_reply_id } }
+                : {}),
             });
           } catch (error) {
             console.log(error);
