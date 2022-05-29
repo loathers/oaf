@@ -332,7 +332,7 @@ async function setDone(interaction: CommandInteraction, databaseClientPool: Pool
     "INSERT INTO players (username, done_with_skills) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET done_with_skills = TRUE;",
     [username]
   );
-  interaction.reply(`Added user "${username}" to players done with skills.`);
+  interaction.editReply(`Added user "${username}" to players done with skills.`);
   return;
 }
 
@@ -343,7 +343,7 @@ async function setNotDone(interaction: CommandInteraction, databaseClientPool: P
     "INSERT INTO players (username, done_with_skills) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET done_with_skills = FALSE;",
     [username]
   );
-  interaction.reply(`Removed user "${username}" to players done with skills.`);
+  interaction.editReply(`Removed user "${username}" to players done with skills.`);
   return;
 }
 
