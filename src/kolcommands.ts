@@ -244,7 +244,7 @@ function level(interaction: CommandInteraction): void {
   interaction.reply(
     `Level ${
       statBlock.level
-    } requires ${statBlock.mainstat.toLocaleString()} mainstat or ${statBlock.substat.toLocaleString()} total substats..`
+    } requires ${statBlock.mainstat.toLocaleString()} mainstat or ${statBlock.substat.toLocaleString()} total substats.`
   );
 }
 
