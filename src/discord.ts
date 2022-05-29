@@ -306,20 +306,6 @@ export class DiscordClient {
     }
   }
 
-  async help(interaction: CommandInteraction): Promise<void> {
-    let helpString = "```";
-    for (let command of this._commands.entries()) {
-      helpString += `/${command[0].padEnd(18, " ")} ${command[1].description}\n`;
-    }
-    helpString += "```";
-    await interaction.reply({ content: helpString, ephemeral: true });
-    await interaction.followUp({
-      content:
-        "```Additionally, OAF will search the KoL wiki for any term you put in double square brackets (Up to three per message).\nFor example, [[Deactivated OAF]] will show the details of OAF and its hatchling.```",
-      ephemeral: true,
-    });
-  }
-
   start(): void {
     this._client.login(this._discordToken);
   }
@@ -363,12 +349,6 @@ export class DiscordClient {
       ],
       async (interaction: CommandInteraction) => await this.mafiawikiSearch(interaction),
       "Search the KoLmafia wiki for the given term."
-    );
-    this.attachCommand(
-      "help",
-      [],
-      (interaction: CommandInteraction) => this.help(interaction),
-      "Display a description of everything OAF can do."
     );
   }
 }
