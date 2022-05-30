@@ -1,3 +1,4 @@
+import axios from "axios";
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, Message, MessageEmbed } from "discord.js";
 import { PATH_MAPPINGS } from "./constants";
@@ -134,6 +135,19 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
     ],
     (interaction: CommandInteraction) => leaderboard(interaction, kolClient),
     "Display the specified leaderboard."
+  );
+  client.attachCommand(
+    "spadeitems",
+    [
+      {
+        name: "quantity",
+        description: "The number of items to spade.",
+        type: ApplicationCommandOptionType.Number,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => spadeItems(interaction, kolClient),
+    "Spade the existence and tradeability of the specified number of itemIds."
   );
 }
 
@@ -390,4 +404,43 @@ async function leaderboard(interaction: CommandInteraction, kolClient: KOLClient
       ],
     });
   }
+}
+
+async function spadeItems(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
+  const quantity = Math.min(interaction.options.getNumber("quantity", true), 37);
+  const finalId = await findLastItemId();
+  if (finalId < 0) {
+    interaction.reply("Could not identify final itemId. Weird!");
+    return;
+  }
+  const data: { id: number; exists: boolean; tradeable: boolean }[] = [];
+  for (let id = finalId + 1; id <= finalId + quantity; id++) {
+    const spadeData = await kolClient.spadeItem(id);
+    data.push({
+      id,
+      ...spadeData,
+    });
+  }
+  const message = data
+    .map(({ id, exists, tradeable }) => {
+      if (!exists) return `Item ${id} does not exist.`;
+      return `Item ${id} exists and is ${tradeable ? "" : "not "} tradeable.`;
+    })
+    .join("\n");
+
+  interaction.reply(`Searched itemIds starting after ${finalId}:\n${message}`);
+}
+
+async function findLastItemId(): Promise<number> {
+  const itemFile = await axios(
+    "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/items.txt"
+  );
+  const lines = (itemFile.data as string).split(/\n/).reverse();
+  for (const line of lines) {
+    const matcher = line.match(/^(\d+)/);
+    if (matcher) {
+      return parseInt(matcher[1]);
+    }
+  }
+  return -1;
 }
