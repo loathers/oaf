@@ -37,7 +37,7 @@ async function performSetup(): Promise<DiscordClient> {
   const discordClient = new DiscordClient(wikiSearcher);
 
   console.log("Attaching kol commands.");
-  attachKoLCommands(discordClient, kolClient);
+  attachKoLCommands(discordClient, kolClient, wikiSearcher);
 
   console.log("Attaching clan commands.");
   attachClanCommands(discordClient, kolClient, databaseClientPool);

@@ -61,11 +61,16 @@ export class WikiSearcher {
   private _client: KOLClient;
   private _searchApiKey: string;
   private _customSearch: string;
+  private _finalItemId = -1;
 
   constructor(client: KOLClient) {
     this._searchApiKey = process.env.GOOGLE_API_KEY || "";
     this._customSearch = process.env.CUSTOM_SEARCH || "";
     this._client = client;
+  }
+
+  get lastItem(): number {
+    return this._finalItemId;
   }
 
   async downloadMafiaData(): Promise<void> {
@@ -102,6 +107,7 @@ export class WikiSearcher {
     for (let line of itemFile.data.split(/\n/)) {
       try {
         const item = new Item(line, itemMap);
+        if (item.get().id > this._finalItemId) this._finalItemId = item.get().id;
         if (item.name()) {
           this._thingMap.set(item.name(), item);
           if (item.get().types.includes("avatar")) {

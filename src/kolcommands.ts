@@ -4,8 +4,13 @@ import { CommandInteraction, Message, MessageEmbed } from "discord.js";
 import { PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
+import { WikiSearcher } from "./wikisearch";
 
-export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
+export function attachKoLCommands(
+  client: DiscordClient,
+  kolClient: KOLClient,
+  wikiSearcher: WikiSearcher
+) {
   client.attachCommand(
     "item",
     [
@@ -146,7 +151,7 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
         required: true,
       },
     ],
-    (interaction: CommandInteraction) => spadeItems(interaction, kolClient),
+    (interaction: CommandInteraction) => spadeItems(interaction, kolClient, wikiSearcher),
     "Spade the existence and tradeability of the specified number of itemIds."
   );
 }
@@ -406,11 +411,15 @@ async function leaderboard(interaction: CommandInteraction, kolClient: KOLClient
   }
 }
 
-async function spadeItems(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
+async function spadeItems(
+  interaction: CommandInteraction,
+  kolClient: KOLClient,
+  wiki: WikiSearcher
+): Promise<void> {
   const quantity = Math.min(interaction.options.getNumber("quantity", true), 37);
-  const finalId = await findLastItemId();
+  const finalId = wiki.lastItem;
   if (finalId < 0) {
-    interaction.reply("Could not identify final itemId. Weird!");
+    interaction.reply("Our wiki search isn't configured properly!");
     return;
   }
   const data: { id: number; exists: boolean; tradeable: boolean }[] = [];
@@ -429,18 +438,4 @@ async function spadeItems(interaction: CommandInteraction, kolClient: KOLClient)
     .join("\n");
 
   interaction.reply(`Searched itemIds starting after ${finalId}:\n${message}`);
-}
-
-async function findLastItemId(): Promise<number> {
-  const itemFile = await axios(
-    "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/items.txt"
-  );
-  const lines = (itemFile.data as string).split(/\n/).reverse();
-  for (const line of lines) {
-    const matcher = line.match(/^(\d+)/);
-    if (matcher) {
-      return parseInt(matcher[1]);
-    }
-  }
-  return -1;
 }
