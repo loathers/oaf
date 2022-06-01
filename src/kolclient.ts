@@ -531,7 +531,6 @@ export class KOLClient {
       const match = matcher.exec(search)?.groups?.user_id || "";
       return match;
     } catch (error) {
-      console.log(error);
       return "";
     }
   }

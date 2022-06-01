@@ -318,8 +318,6 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
   for (let [player, participation] of killMap.entries()) {
     if (!participation.id) {
       participation.id = await kolClient.getIdForUser(player);
-      console.log(player);
-      console.log(participation.id);
     }
   }
   const databaseClient = await databaseClientPool.connect();
@@ -379,6 +377,7 @@ function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, P
           mapToUpdate.set(matchedKill[1], {
             kills: participation.kills + parseInt(matchedKill[2]),
             skills: participation.skills,
+            id: participation.id,
           });
         } else {
           mapToUpdate.set(matchedKill[1], {
@@ -398,6 +397,7 @@ function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, P
           mapToUpdate.set(matchedSkill[1], {
             kills: participation.kills,
             skills: participation.skills + 1,
+            id: participation.id,
           });
         } else {
           mapToUpdate.set(matchedSkill[1], {
