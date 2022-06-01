@@ -102,7 +102,7 @@ export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
     killMap.set(player.username, {
       kills: player.kills,
       skills: player.skills,
-      //id: player.user_id,
+      id: player.user_id,
     });
   }
 }
