@@ -523,6 +523,8 @@ export class KOLClient {
       const matcher = /href="showplayer.php\?who=(?<user_id>\d+)/;
       const search = await this.tryRequestWithLogin("searchplayer.php", {
         searchstring: name,
+        searching: "Yep.",
+        for: "",
         startswith: 1,
         hardcoreonly: 0,
       });
