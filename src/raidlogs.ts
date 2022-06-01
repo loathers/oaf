@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, Interaction, Message, MessageEmbed } from "discord.js";
 import { type } from "os";
 import { Pool } from "pg";
-import { KILLMATCHER, SKILLMATCHER } from "./constants";
+import { DREAD_BOSS_MAPPINGS, KILLMATCHER, SKILLMATCHER } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 
@@ -204,17 +204,17 @@ async function detailedClanStatus(
     } else castleString += "~~Castle fully cleared.~~\n";
     embed.addFields([
       {
-        name: `__**Forest**__`,
+        name: `__**Forest**__ (${DREAD_BOSS_MAPPINGS.get(status.overview.bosses[0])})`,
         value: forestString,
         inline: true,
       },
       {
-        name: `__**Village**__`,
+        name: `__**Village**__ (${DREAD_BOSS_MAPPINGS.get(status.overview.bosses[1])})`,
         value: villageString,
         inline: true,
       },
       {
-        name: `__**Castle**__`,
+        name: `__**Castle**__ (${DREAD_BOSS_MAPPINGS.get(status.overview.bosses[2])})`,
         value: castleString,
         inline: true,
       },

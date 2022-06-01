@@ -506,3 +506,13 @@ export const PROJECT_CAPITALISATIONS: Map<string, string> = new Map([
   ["cagebot", "Cagebot"],
   ["uberpvpoptimizer", "UberPvPOptimizer"],
 ]);
+
+export const DREAD_BOSS_MAPPINGS: Map<string, string> = new Map([
+  ["werewolf", "Air Wolf"],
+  ["bugbear", "Falls-From-Sky"],
+  ["zombie", "Zombie HOA"],
+  ["ghost", "Mayor Ghost"],
+  ["vampire", "Drunkula"],
+  ["skeleton", "Unkillable Skeleton"],
+  ["unknown", "Boss unknown"],
+]);
