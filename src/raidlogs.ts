@@ -102,7 +102,7 @@ export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
     killMap.set(player.username, {
       kills: player.kills,
       skills: player.skills,
-      id: player.user_id,
+      //id: player.user_id,
     });
   }
 }
@@ -318,6 +318,8 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
   for (let [player, participation] of killMap.entries()) {
     if (!participation.id) {
       participation.id = await kolClient.getIdForUser(player);
+      console.log(player);
+      console.log(participation.id);
     }
   }
   const databaseClient = await databaseClientPool.connect();

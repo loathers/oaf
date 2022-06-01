@@ -525,6 +525,7 @@ export class KOLClient {
         searching: "Yep.",
         for: name,
         startswith: 1,
+        hardcoreonly: 0,
       });
       return matcher.exec(search)?.groups?.user_id || "";
     } catch (error) {
