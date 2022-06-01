@@ -39,6 +39,7 @@ type DreadStatus = {
   village: number;
   castle: number;
   skills: number;
+  bosses: string[];
   capacitor: boolean;
 };
 
@@ -288,6 +289,54 @@ export class KOLClient {
     const castle = raidLog.match(
       /Your clan has defeated <b>(?<castle>[\d,]+)<\/b> monster\(s\) in the Castle/
     );
+
+    type MonsterData = {
+      kills: number;
+      banishes: number;
+    };
+
+    const monsters: Map<string, MonsterData> = new Map([
+      ["bugbear", { kills: 0, banishes: 0 }],
+      ["werewolf", { kills: 0, banishes: 0 }],
+      ["ghost", { kills: 0, banishes: 0 }],
+      ["zombie", { kills: 0, banishes: 0 }],
+      ["vampire", { kills: 0, banishes: 0 }],
+      ["skeleton", { kills: 0, banishes: 0 }],
+    ]);
+
+    const pairs = [
+      ["bugbear", "werewolf"],
+      ["ghost", "zombie"],
+      ["vampire", "skeleton"],
+    ];
+
+    for (const monster of monsters.keys()) {
+      const monsterKillRegex = new RegExp(`defeated (.*?) ${monster} x ([0-9]+)`, "gi");
+      const monsterBanishRegex = /drove some (.*?) out of the (.*?) \(1 turn\)/gi;
+      let match;
+      while ((match = monsterKillRegex.exec(raidLog)) !== null) {
+        (monsters.get(monster) as MonsterData).kills += parseInt(match[2]);
+      }
+      while ((match = monsterBanishRegex.exec(raidLog)) !== null) {
+        (monsters.get(monster) as MonsterData).banishes++;
+      }
+    }
+    const bosses: string[] = [];
+    for (let [monster1, monster2] of pairs) {
+      const monster1data = monsters.get(monster1) as MonsterData;
+      const monster2data = monsters.get(monster2) as MonsterData;
+      if (monster1data.banishes > monster2data.banishes) {
+        bosses.push(monster2);
+      } else if (monster2data.banishes > monster1data.banishes) {
+        bosses.push(monster1);
+      } else if (monster1data.kills > monster2data.kills + 50) {
+        bosses.push(monster1);
+      } else if (monster2data.kills > monster1data.kills + 50) {
+        bosses.push(monster2);
+      } else {
+        bosses.push("unknown");
+      }
+    }
     const capacitor = raidLog.match(/fixed The Machine \(1 turn\)/);
     const skills = raidLog.match(/used The Machine, assisted by/g);
     return {
@@ -295,6 +344,7 @@ export class KOLClient {
       village: 1000 - (village ? parseInt(village.groups?.village.replace(",", "") || "0") : 0),
       castle: 1000 - (castle ? parseInt(castle.groups?.castle.replace(",", "") || "0") : 0),
       skills: skills ? 3 - skills.length : 3,
+      bosses: bosses,
       capacitor: !!capacitor,
     };
   }
