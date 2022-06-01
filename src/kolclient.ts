@@ -528,11 +528,10 @@ export class KOLClient {
         startswith: 1,
         hardcoreonly: 0,
       });
-      console.log(search);
       const match = matcher.exec(search)?.groups?.user_id || "";
-      console.log(match);
       return match;
     } catch (error) {
+      console.log(error);
       return "";
     }
   }
