@@ -522,14 +522,11 @@ export class KOLClient {
     try {
       const matcher = /href="showplayer.php\?who=(?<user_id>\d+)/;
       const search = await this.tryRequestWithLogin("searchplayer.php", {
-        searching: "Yep.",
-        for: name,
+        searchstring: name,
         startswith: 1,
         hardcoreonly: 0,
       });
-      console.log(search);
       const match = matcher.exec(search)?.groups?.user_id || "";
-      console.log(match);
       return match;
     } catch (error) {
       return "";
