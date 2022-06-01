@@ -520,7 +520,7 @@ export class KOLClient {
   }
   async getIdForUser(name: string): Promise<string> {
     try {
-      const matcher = /<b><a target=mainpane href="showplayer.php\?who=(?<user_id>\d+)/;
+      const matcher = /href="showplayer.php\?who=(?<user_id>\d+)/;
       const search = await this.tryRequestWithLogin("searchplayer.php", {
         searching: "Yep.",
         for: name,
