@@ -27,12 +27,13 @@ const clans: Clan[] = [
 
 let parsedRaids: string[] = [];
 
-type DreadParticipation = {
+type PlayerData = {
+  id?: string;
   kills: number;
   skills: number;
 };
 
-const killMap: Map<string, DreadParticipation> = new Map();
+const killMap: Map<string, PlayerData> = new Map();
 
 export function attachClanCommands(
   discordClient: DiscordClient,
@@ -98,7 +99,11 @@ export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
   );
 
   for (let player of (await databaseClientPool.query("SELECT * FROM players;")).rows) {
-    killMap.set(player.username, { kills: player.kills, skills: player.skills });
+    killMap.set(player.username, {
+      kills: player.kills,
+      skills: player.skills,
+      id: player.user_id,
+    });
   }
 }
 
@@ -242,7 +247,7 @@ async function getSkills(
   ).rows.map((result) => result.username.toLowerCase());
   try {
     await parseOldLogs(kolClient, databaseClientPool);
-    const currentKills: Map<string, DreadParticipation> = new Map();
+    const currentKills: Map<string, PlayerData> = new Map();
     for (let entry of killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
@@ -253,9 +258,9 @@ async function getSkills(
         const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
         if (owedSkills > 0) {
           skillArray.push(
-            `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}: ${owedSkills} skill${
-              owedSkills > 1 ? "s" : ""
-            }.`
+            `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}${
+              entry[1].id ? ` (#${entry[1].id})` : ""
+            } ${owedSkills} skill${owedSkills > 1 ? "s" : ""}.`
           );
         }
       }
@@ -310,6 +315,11 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
       newlyParsedRaids.push(raid);
     }
   }
+  for (let [player, participation] of killMap.entries()) {
+    if (!participation.id) {
+      participation.id = await kolClient.getIdForUser(player);
+    }
+  }
   const databaseClient = await databaseClientPool.connect();
   await databaseClient.query("BEGIN;");
   for (let raid of newlyParsedRaids) {
@@ -317,8 +327,8 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
   }
   for (let [player, participation] of killMap.entries()) {
     await databaseClient.query(
-      "INSERT INTO players (username, kills, skills) VALUES ($1, $2, $3) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3;",
-      [player, participation.kills, participation.skills]
+      "INSERT INTO players (username, kills, skills, user_id) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3, user_id = $4;",
+      [player, participation.kills, participation.skills, participation.id]
     );
   }
   await databaseClient.query("COMMIT;");
@@ -347,10 +357,7 @@ async function setNotDone(interaction: CommandInteraction, databaseClientPool: P
   return;
 }
 
-async function parseCurrentLogs(
-  kolClient: KOLClient,
-  mapToUpdate: Map<string, DreadParticipation>
-) {
+async function parseCurrentLogs(kolClient: KOLClient, mapToUpdate: Map<string, PlayerData>) {
   for (let clan of clans) {
     const raidLog = await kolClient.getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
@@ -358,10 +365,7 @@ async function parseCurrentLogs(
   }
 }
 
-function addParticipationFromRaidLog(
-  raidLog: string,
-  mapToUpdate: Map<string, DreadParticipation>
-): void {
+function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, PlayerData>): void {
   const skillLines = raidLog.toLowerCase().match(new RegExp(SKILLMATCHER, "g"));
   const killLines = raidLog.toLowerCase().match(new RegExp(KILLMATCHER, "g"));
   if (killLines) {

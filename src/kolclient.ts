@@ -3,7 +3,7 @@ import { decode } from "html-entities";
 import { cleanString, indent, toWikiLink } from "./utils";
 import { Mutex } from "async-mutex";
 import { DOMParser } from "xmldom";
-import { select, SelectedValue } from "xpath";
+import { select } from "xpath";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();
@@ -517,5 +517,18 @@ export class KOLClient {
       exists: true,
       tradeable: !fleaMarketPage.includes("That item cannot be sold or transferred."),
     };
+  }
+  async getIdForUser(name: string): Promise<string> {
+    try {
+      const matcher = /<b><a target=mainpane href="showplayer.php\?who=(?<user_id>\d+)/;
+      const search = await this.tryRequestWithLogin("searchplayer.php", {
+        searching: "Yep.",
+        for: name,
+        startswith: 1,
+      });
+      return matcher.exec(search)?.groups?.user_id || "";
+    } catch (error) {
+      return "";
+    }
   }
 }
