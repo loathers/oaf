@@ -416,10 +416,11 @@ async function spadeItems(
   kolClient: KOLClient,
   wiki: WikiSearcher
 ): Promise<void> {
+  interaction.deferReply();
   const quantity = Math.min(interaction.options.getNumber("quantity", true), 37);
   const finalId = wiki.lastItem;
   if (finalId < 0) {
-    interaction.reply("Our wiki search isn't configured properly!");
+    interaction.editReply("Our wiki search isn't configured properly!");
     return;
   }
   const data: { id: number; exists: boolean; tradeable: boolean }[] = [];
@@ -437,5 +438,5 @@ async function spadeItems(
     })
     .join("\n");
 
-  interaction.reply(`Searched itemIds starting after ${finalId}:\n${message}`);
+  interaction.editReply(`Searched itemIds starting after ${finalId}:\n${message}`);
 }
