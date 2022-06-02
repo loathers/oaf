@@ -428,12 +428,14 @@ async function getBrains(interaction: CommandInteraction, kolClient: KOLClient):
   ];
   const classMap: Map<string, string[]> = new Map();
   for (let player of killMap.keys()) {
-    const details = await kolClient.getBasicDetailsForUser(player);
-    if (details.level >= 15 && !!killMap.get(player)?.skills) {
-      if (!classMap.has(details.class)) {
-        classMap.set(details.class, []);
+    if (!!killMap.get(player)?.skills) {
+      const details = await kolClient.getBasicDetailsForUser(player);
+      if (details.level >= 15) {
+        if (!classMap.has(details.class)) {
+          classMap.set(details.class, []);
+        }
+        classMap.get(details.class)?.push(player);
       }
-      classMap.get(details.class)?.push(player);
     }
   }
   interaction.editReply({
