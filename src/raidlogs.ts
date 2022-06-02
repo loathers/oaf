@@ -264,9 +264,9 @@ async function getSkills(
         const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
         if (owedSkills > 0) {
           skillArray.push(
-            `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}${
-              entry[1].id ? ` (#${entry[1].id})` : ""
-            } ${owedSkills} skill${owedSkills > 1 ? "s" : ""}.`
+            `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)} ${owedSkills} skill${
+              owedSkills > 1 ? "s" : ""
+            }.`
           );
         }
       }
