@@ -500,4 +500,22 @@ export class KOLClient {
       return undefined;
     }
   }
+
+  async spadeItem(itemId: number): Promise<{ exists: boolean; tradeable: boolean }> {
+    const equipPage = await this.tryRequestWithLogin("inv_equip.php", {
+      which: 2,
+      action: "equip",
+      whichitem: itemId,
+    });
+    if (equipPage.includes("Nopers.")) return { exists: false, tradeable: false };
+    const fleaMarketPage = await this.tryRequestWithLogin("town_sellflea.php", {
+      whichitem: itemId,
+      sellprice: "",
+      selling: "Yep.",
+    });
+    return {
+      exists: true,
+      tradeable: !fleaMarketPage.includes("That item cannot be sold or transferred."),
+    };
+  }
 }

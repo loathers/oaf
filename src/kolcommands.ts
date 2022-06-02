@@ -1,10 +1,16 @@
+import axios from "axios";
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, Message, MessageEmbed } from "discord.js";
 import { PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
+import { WikiSearcher } from "./wikisearch";
 
-export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
+export function attachKoLCommands(
+  client: DiscordClient,
+  kolClient: KOLClient,
+  wikiSearcher: WikiSearcher
+) {
   client.attachCommand(
     "item",
     [
@@ -134,6 +140,19 @@ export function attachKoLCommands(client: DiscordClient, kolClient: KOLClient) {
     ],
     (interaction: CommandInteraction) => leaderboard(interaction, kolClient),
     "Display the specified leaderboard."
+  );
+  client.attachCommand(
+    "spadeitems",
+    [
+      {
+        name: "quantity",
+        description: "The number of items to spade.",
+        type: ApplicationCommandOptionType.Number,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => spadeItems(interaction, kolClient, wikiSearcher),
+    "Spade the existence and tradeability of the specified number of itemIds."
   );
 }
 
@@ -390,4 +409,33 @@ async function leaderboard(interaction: CommandInteraction, kolClient: KOLClient
       ],
     });
   }
+}
+
+async function spadeItems(
+  interaction: CommandInteraction,
+  kolClient: KOLClient,
+  wiki: WikiSearcher
+): Promise<void> {
+  const quantity = Math.min(interaction.options.getNumber("quantity", true), 37);
+  const finalId = wiki.lastItem;
+  if (finalId < 0) {
+    interaction.reply("Our wiki search isn't configured properly!");
+    return;
+  }
+  const data: { id: number; exists: boolean; tradeable: boolean }[] = [];
+  for (let id = finalId + 1; id <= finalId + quantity; id++) {
+    const spadeData = await kolClient.spadeItem(id);
+    data.push({
+      id,
+      ...spadeData,
+    });
+  }
+  const message = data
+    .map(({ id, exists, tradeable }) => {
+      if (!exists) return `Item ${id} does not exist.`;
+      return `Item ${id} exists and is ${tradeable ? "" : "not "} tradeable.`;
+    })
+    .join("\n");
+
+  interaction.reply(`Searched itemIds starting after ${finalId}:\n${message}`);
 }
