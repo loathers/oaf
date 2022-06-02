@@ -453,6 +453,18 @@ export class KOLClient {
     });
   }
 
+  async addToWhitelist(playerId: string, clanId: number): Promise<void> {
+    return await clanActionMutex.runExclusive(async () => {
+      await this.whitelist(clanId);
+      await this.tryRequestWithLogin("clan_whitelist.php", {
+        addwho: playerId,
+        level: 2,
+        title: "",
+        action: "add",
+      });
+    });
+  }
+
   async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo | undefined> {
     try {
       const leaderboard = await this.tryRequestWithLogin("museum.php", {
@@ -527,7 +539,7 @@ export class KOLClient {
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
     try {
       const matcher =
-        /href="showplayer.php\?who=(?<user_id>\d+)\D+(clan=\d+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]+)\<\/td\>/;
+        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]+)\<\/td\>/;
       const search = await this.tryRequestWithLogin("searchplayer.php", {
         searchstring: name,
         searching: "Yep.",

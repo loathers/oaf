@@ -1,6 +1,5 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CacheType, CommandInteraction, Interaction, Message, MessageEmbed } from "discord.js";
-import { type } from "os";
+import { CommandInteraction, GuildMemberRoleManager, MessageEmbed } from "discord.js";
 import { Pool } from "pg";
 import { DREAD_BOSS_MAPPINGS, KILLMATCHER, SKILLMATCHER } from "./constants";
 import { DiscordClient } from "./discord";
@@ -12,7 +11,7 @@ type Clan = {
   id: number;
 };
 
-const clans: Clan[] = [
+const dreadClans: Clan[] = [
   {
     name: "Collaborative Dungeon Running 1",
     synonyms: ["cdr1", "1"],
@@ -24,6 +23,16 @@ const clans: Clan[] = [
     id: 2047008363,
   },
 ];
+
+const nonDreadClans: Clan[] = [
+  {
+    name: "Collaborative Dungeon Running Central",
+    synonyms: ["central"],
+    id: 2047008364,
+  },
+];
+
+const allClans = dreadClans.concat(nonDreadClans);
 
 let parsedRaids: string[] = [];
 
@@ -97,6 +106,19 @@ export function attachClanCommands(
     (interaction: CommandInteraction) => getBrains(interaction, kolClient),
     "Find players whose brains can be drained for Dreadsylvania skills."
   );
+  discordClient.attachCommand(
+    "whitelist",
+    [
+      {
+        name: "player",
+        description: "The name of the player to add to the whitelists.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => whitelist(interaction, kolClient),
+    "Adds a player to the Dreadsylvania clan whitelists."
+  );
 }
 
 export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
@@ -117,7 +139,7 @@ async function clanStatus(interaction: CommandInteraction, kolClient: KOLClient)
   let messageString = "";
   await interaction.deferReply();
   try {
-    for (let clan of clans) {
+    for (let clan of dreadClans) {
       const overview = await kolClient.getDreadStatusOverview(clan.id);
       const capacitorString = overview.capacitor
         ? `${!overview.castle ? 0 : overview.skills} skill${
@@ -147,7 +169,7 @@ async function detailedClanStatus(
   kolClient: KOLClient
 ): Promise<void> {
   const clanName = interaction.options.getString("clan", true);
-  const clan = clans.find(
+  const clan = dreadClans.find(
     (clan) => clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName)
   );
   if (!clan) {
@@ -312,7 +334,7 @@ async function getSkills(
 
 async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
   const newlyParsedRaids = [];
-  for (let clan of clans) {
+  for (let clan of dreadClans) {
     const raidsToParse = (await kolClient.getMissingRaidLogs(clan.id, parsedRaids)).filter(
       (id) => !parsedRaids.includes(id)
     );
@@ -366,7 +388,7 @@ async function setNotDone(interaction: CommandInteraction, databaseClientPool: P
 }
 
 async function parseCurrentLogs(kolClient: KOLClient, mapToUpdate: Map<string, PlayerData>) {
-  for (let clan of clans) {
+  for (let clan of dreadClans) {
     const raidLog = await kolClient.getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
     addParticipationFromRaidLog(raidLog, mapToUpdate);
@@ -451,7 +473,7 @@ async function getBrains(interaction: CommandInteraction, kolClient: KOLClient):
           if (!classMap.has(playerClass)) {
             return {
               name: `**__${playerClass}__**`,
-              value: "None available",
+              value: "None available.",
               inline: true,
             };
           }
@@ -467,4 +489,33 @@ async function getBrains(interaction: CommandInteraction, kolClient: KOLClient):
       },
     ],
   });
+}
+
+async function whitelist(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
+  const roles = interaction.member?.roles as GuildMemberRoleManager;
+  if (
+    roles.cache.some(
+      (role) => role.id === "473316929768128512" || role.id === "466624206126448641"
+    ) ||
+    interaction.user.id === "145957353487990784"
+  ) {
+    const player = interaction.options.getString("player", true);
+    interaction.deferReply();
+    const playerData = await kolClient.getBasicDetailsForUser(player);
+    if (!playerData.id) {
+      interaction.editReply({ content: "Player not found." });
+      return;
+    }
+    for (let clan of allClans) {
+      await kolClient.addToWhitelist(playerData.id, clan.id);
+    }
+    interaction.editReply({
+      content: `Added player ${player} (#${playerData.id}) to all managed clan whitelists.`,
+    });
+  } else {
+    interaction.reply({
+      content: "You are not permitted to edit clan whitelists.",
+      ephemeral: true,
+    });
+  }
 }
