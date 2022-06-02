@@ -436,6 +436,7 @@ async function getBrains(interaction: CommandInteraction, kolClient: KOLClient):
       classMap.get(details.class)?.push(player);
     }
   }
+  console.log(classMap.entries());
   interaction.editReply({
     content: null,
     embeds: [
