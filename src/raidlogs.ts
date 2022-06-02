@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction, Interaction, Message, MessageEmbed } from "discord.js";
+import { CacheType, CommandInteraction, Interaction, Message, MessageEmbed } from "discord.js";
 import { type } from "os";
 import { Pool } from "pg";
 import { DREAD_BOSS_MAPPINGS, KILLMATCHER, SKILLMATCHER } from "./constants";
@@ -27,12 +27,13 @@ const clans: Clan[] = [
 
 let parsedRaids: string[] = [];
 
-type DreadParticipation = {
+type PlayerData = {
+  id?: string;
   kills: number;
   skills: number;
 };
 
-const killMap: Map<string, DreadParticipation> = new Map();
+const killMap: Map<string, PlayerData> = new Map();
 
 export function attachClanCommands(
   discordClient: DiscordClient,
@@ -90,6 +91,12 @@ export function attachClanCommands(
     (interaction: CommandInteraction) => setNotDone(interaction, databaseClientPool),
     "Set a player as not done with Dreadsylvania skills."
   );
+  discordClient.attachCommand(
+    "brains",
+    [],
+    (interaction: CommandInteraction) => getBrains(interaction, kolClient),
+    "Find players whose brains can be drained for Dreadsylvania skills."
+  );
 }
 
 export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
@@ -98,7 +105,11 @@ export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
   );
 
   for (let player of (await databaseClientPool.query("SELECT * FROM players;")).rows) {
-    killMap.set(player.username, { kills: player.kills, skills: player.skills });
+    killMap.set(player.username, {
+      kills: player.kills,
+      skills: player.skills,
+      id: player.user_id,
+    });
   }
 }
 
@@ -242,7 +253,7 @@ async function getSkills(
   ).rows.map((result) => result.username.toLowerCase());
   try {
     await parseOldLogs(kolClient, databaseClientPool);
-    const currentKills: Map<string, DreadParticipation> = new Map();
+    const currentKills: Map<string, PlayerData> = new Map();
     for (let entry of killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
@@ -253,7 +264,7 @@ async function getSkills(
         const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
         if (owedSkills > 0) {
           skillArray.push(
-            `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}: ${owedSkills} skill${
+            `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)} ${owedSkills} skill${
               owedSkills > 1 ? "s" : ""
             }.`
           );
@@ -310,6 +321,11 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
       newlyParsedRaids.push(raid);
     }
   }
+  for (let [player, participation] of killMap.entries()) {
+    if (!participation.id) {
+      participation.id = (await kolClient.getBasicDetailsForUser(player)).id;
+    }
+  }
   const databaseClient = await databaseClientPool.connect();
   await databaseClient.query("BEGIN;");
   for (let raid of newlyParsedRaids) {
@@ -317,8 +333,8 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
   }
   for (let [player, participation] of killMap.entries()) {
     await databaseClient.query(
-      "INSERT INTO players (username, kills, skills) VALUES ($1, $2, $3) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3;",
-      [player, participation.kills, participation.skills]
+      "INSERT INTO players (username, kills, skills, user_id) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3, user_id = $4;",
+      [player, participation.kills, participation.skills, participation.id]
     );
   }
   await databaseClient.query("COMMIT;");
@@ -347,10 +363,7 @@ async function setNotDone(interaction: CommandInteraction, databaseClientPool: P
   return;
 }
 
-async function parseCurrentLogs(
-  kolClient: KOLClient,
-  mapToUpdate: Map<string, DreadParticipation>
-) {
+async function parseCurrentLogs(kolClient: KOLClient, mapToUpdate: Map<string, PlayerData>) {
   for (let clan of clans) {
     const raidLog = await kolClient.getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
@@ -358,10 +371,7 @@ async function parseCurrentLogs(
   }
 }
 
-function addParticipationFromRaidLog(
-  raidLog: string,
-  mapToUpdate: Map<string, DreadParticipation>
-): void {
+function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, PlayerData>): void {
   const skillLines = raidLog.toLowerCase().match(new RegExp(SKILLMATCHER, "g"));
   const killLines = raidLog.toLowerCase().match(new RegExp(KILLMATCHER, "g"));
   if (killLines) {
@@ -373,6 +383,7 @@ function addParticipationFromRaidLog(
           mapToUpdate.set(matchedKill[1], {
             kills: participation.kills + parseInt(matchedKill[2]),
             skills: participation.skills,
+            id: participation.id,
           });
         } else {
           mapToUpdate.set(matchedKill[1], {
@@ -392,6 +403,7 @@ function addParticipationFromRaidLog(
           mapToUpdate.set(matchedSkill[1], {
             kills: participation.kills,
             skills: participation.skills + 1,
+            id: participation.id,
           });
         } else {
           mapToUpdate.set(matchedSkill[1], {
@@ -402,4 +414,55 @@ function addParticipationFromRaidLog(
       }
     }
   }
+}
+
+async function getBrains(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
+  interaction.deferReply();
+  const baseClasses = [
+    "Seal Clubber",
+    "Turtle Tamer",
+    "Pastamancer",
+    "Sauceror",
+    "Disco Bandit",
+    "Accordion Thief",
+  ];
+  const classMap: Map<string, string[]> = new Map();
+  for (let player of killMap.keys()) {
+    if (!!killMap.get(player)?.skills) {
+      const details = await kolClient.getBasicDetailsForUser(player);
+      if (details.level >= 15) {
+        if (!classMap.has(details.class)) {
+          classMap.set(details.class, []);
+        }
+        classMap.get(details.class)?.push(player);
+      }
+    }
+  }
+  interaction.editReply({
+    content: null,
+    embeds: [
+      {
+        title: "Potentially available brains",
+        description:
+          "Somersaulter, kenny kamAKAzi, and 3BH can pilot dread multis for any class of brain, subject to multi restrictions.",
+        fields: baseClasses.map((playerClass) => {
+          if (!classMap.has(playerClass)) {
+            return {
+              name: `**__${playerClass}__**`,
+              value: "None available",
+              inline: true,
+            };
+          }
+          return {
+            name: `**__${playerClass}__**`,
+            value: (classMap.get(playerClass) as string[])
+              .sort()
+              .map((name) => name.charAt(0).toUpperCase() + name.slice(1))
+              .join("\n"),
+            inline: true,
+          };
+        }),
+      },
+    ],
+  });
 }

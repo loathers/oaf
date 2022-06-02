@@ -1,0 +1,1 @@
+ALTER TABLE players ADD COLUMN user_id VARCHAR (8);

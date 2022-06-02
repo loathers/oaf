@@ -56,6 +56,7 @@ export function attachMiscCommands(client: DiscordClient, databaseConnectionPool
     ],
     async (interaction: CommandInteraction) =>
       await purge(
+        interaction,
         interaction.channel as TextChannel,
         client,
         interaction.options.getInteger("count", true)
@@ -66,7 +67,7 @@ export function attachMiscCommands(client: DiscordClient, databaseConnectionPool
     "oops",
     [],
     async (interaction: CommandInteraction) =>
-      await purge(interaction.channel as TextChannel, client, 1),
+      await purge(interaction, interaction.channel as TextChannel, client, 1),
     "Purges OAF's last message in this channel."
   );
   client.attachCommand(
@@ -143,7 +144,12 @@ function roll(interaction: CommandInteraction): void {
   }
 }
 
-async function purge(channel: TextChannel, client: DiscordClient, quantity: number): Promise<void> {
+async function purge(
+  interaction: CommandInteraction,
+  channel: TextChannel,
+  client: DiscordClient,
+  quantity: number
+): Promise<void> {
   let purged = 0;
   if (quantity <= 0) return;
   for (let message of await channel.messages.fetch()) {
@@ -153,6 +159,7 @@ async function purge(channel: TextChannel, client: DiscordClient, quantity: numb
       if (purged >= quantity) return;
     }
   }
+  interaction.reply({ content: "Purge complete", ephemeral: true });
 }
 
 function prsWelcome(interaction: CommandInteraction): void {

@@ -3,7 +3,7 @@ import { decode } from "html-entities";
 import { cleanString, indent, toWikiLink } from "./utils";
 import { Mutex } from "async-mutex";
 import { DOMParser } from "xmldom";
-import { select, SelectedValue } from "xpath";
+import { select } from "xpath";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();
@@ -86,6 +86,12 @@ type RunInfo = {
   player: string;
   days: string;
   turns: string;
+};
+
+type PlayerBasicData = {
+  id: string;
+  level: number;
+  class: string;
 };
 
 function sanitiseBlueText(blueText: string): string {
@@ -517,5 +523,26 @@ export class KOLClient {
       exists: true,
       tradeable: !fleaMarketPage.includes("That item cannot be sold or transferred."),
     };
+  }
+  async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
+    try {
+      const matcher =
+        /href="showplayer.php\?who=(?<user_id>\d+)\D+(clan=\d+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]+)\<\/td\>/;
+      const search = await this.tryRequestWithLogin("searchplayer.php", {
+        searchstring: name,
+        searching: "Yep.",
+        for: "",
+        startswith: 1,
+        hardcoreonly: 0,
+      });
+      const match = matcher.exec(search)?.groups;
+      return {
+        id: match?.user_id || "",
+        level: parseInt(match?.level || "0"),
+        class: match?.class || "",
+      };
+    } catch (error) {
+      return { id: "", level: 0, class: "Unknown" };
+    }
   }
 }
