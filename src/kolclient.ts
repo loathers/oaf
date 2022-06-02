@@ -535,7 +535,9 @@ export class KOLClient {
         startswith: 1,
         hardcoreonly: 0,
       });
+      console.log(search);
       const match = matcher.exec(search)?.groups;
+      console.log(match);
       return {
         id: match?.user_id || "",
         level: parseInt(match?.level || "0"),
