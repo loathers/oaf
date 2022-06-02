@@ -511,6 +511,9 @@ async function whitelist(interaction: CommandInteraction, kolClient: KOLClient):
       content: `Added player ${player} (#${playerData.id}) to all managed clan whitelists.`,
     });
   } else {
-    interaction.reply({ content: "You are not permitted to edit clan whitelists." });
+    interaction.reply({
+      content: "You are not permitted to edit clan whitelists.",
+      ephemeral: true,
+    });
   }
 }

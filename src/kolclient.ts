@@ -457,7 +457,7 @@ export class KOLClient {
     return await clanActionMutex.runExclusive(async () => {
       await this.whitelist(clanId);
       await this.tryRequestWithLogin("clan_whitelist.php", {
-        addWho: playerId,
+        addwho: playerId,
         level: 2,
         title: "",
         action: "add",
