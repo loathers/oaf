@@ -151,12 +151,13 @@ async function purge(
   quantity: number
 ): Promise<void> {
   let purged = 0;
-  if (quantity <= 0) return;
-  for (let message of await channel.messages.fetch()) {
-    if (message[1].author.id === client?.client()?.user?.id) {
-      await message[1].delete();
-      purged += 1;
-      if (purged >= quantity) return;
+  if (quantity > 0) {
+    for (let message of await channel.messages.fetch()) {
+      if (message[1].author.id === client?.client()?.user?.id) {
+        await message[1].delete();
+        purged += 1;
+        if (purged >= quantity) break;
+      }
     }
   }
   interaction.reply({ content: "Purge complete", ephemeral: true });

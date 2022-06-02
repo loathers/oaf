@@ -142,7 +142,7 @@ export function attachKoLCommands(
     "Display the specified leaderboard."
   );
   client.attachCommand(
-    "spadeitems",
+    "spade",
     [],
     (interaction: CommandInteraction) => spadeItems(interaction, kolClient, wikiSearcher),
     "Spade the existence and tradeability of as yet unreleased items."
@@ -431,5 +431,5 @@ async function spadeItems(
     })
     .join("\n");
 
-  interaction.editReply(`Searched itemIds starting after ${finalId}:\n${message}`);
+  interaction.editReply(`Searched items with ids starting after ${finalId}:\n${message}`);
 }
