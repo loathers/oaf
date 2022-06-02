@@ -451,7 +451,7 @@ async function getBrains(interaction: CommandInteraction, kolClient: KOLClient):
           }
           return {
             name: `**__${playerClass}__**`,
-            value: (classMap.get(playerClass) as string[]).join("\n"),
+            value: (classMap.get(playerClass) as string[]).sort().join("\n"),
             inline: true,
           };
         }),

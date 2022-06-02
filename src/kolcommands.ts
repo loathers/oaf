@@ -434,7 +434,7 @@ async function spadeItems(
   const message = data
     .map(({ id, exists, tradeable }) => {
       if (!exists) return `Item ${id} does not exist.`;
-      return `Item ${id} exists and is ${tradeable ? "" : "not "} tradeable.`;
+      return `Item ${id} exists and is${tradeable ? "" : " not"} tradeable.`;
     })
     .join("\n");
 
