@@ -88,6 +88,12 @@ type RunInfo = {
   turns: string;
 };
 
+type PlayerBasicData = {
+  id: string;
+  level: number;
+  class: string;
+};
+
 function sanitiseBlueText(blueText: string): string {
   return decode(
     blueText
@@ -518,9 +524,9 @@ export class KOLClient {
       tradeable: !fleaMarketPage.includes("That item cannot be sold or transferred."),
     };
   }
-  async getIdForUser(name: string): Promise<string> {
+  async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
     try {
-      const matcher = /href="showplayer.php\?who=(?<user_id>\d+)/;
+      const matcher = /href="showplayer.php\?who=(?<user_id>\d+)\D+(?<level>\d+)/;
       const search = await this.tryRequestWithLogin("searchplayer.php", {
         searchstring: name,
         searching: "Yep.",
@@ -528,10 +534,10 @@ export class KOLClient {
         startswith: 1,
         hardcoreonly: 0,
       });
-      const match = matcher.exec(search)?.groups?.user_id || "";
-      return match;
+      const match = matcher.exec(search)?.groups;
+      return { id: match?.user_id || "", level: parseInt(match?.level || "0"), class: "Unknown" };
     } catch (error) {
-      return "";
+      return { id: "", level: 0, class: "Unknown" };
     }
   }
 }

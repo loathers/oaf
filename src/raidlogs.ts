@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction, Interaction, Message, MessageEmbed } from "discord.js";
+import { CacheType, CommandInteraction, Interaction, Message, MessageEmbed } from "discord.js";
 import { type } from "os";
 import { Pool } from "pg";
 import { DREAD_BOSS_MAPPINGS, KILLMATCHER, SKILLMATCHER } from "./constants";
@@ -90,6 +90,12 @@ export function attachClanCommands(
     ],
     (interaction: CommandInteraction) => setNotDone(interaction, databaseClientPool),
     "Set a player as not done with Dreadsylvania skills."
+  );
+  discordClient.attachCommand(
+    "brains",
+    [],
+    (interaction: CommandInteraction) => getBrains(interaction, kolClient),
+    "Find players whose brains can be drained for Dreadsylvania skills."
   );
 }
 
@@ -317,7 +323,7 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
   }
   for (let [player, participation] of killMap.entries()) {
     if (!participation.id) {
-      participation.id = await kolClient.getIdForUser(player);
+      participation.id = (await kolClient.getBasicDetailsForUser(player)).id;
     }
   }
   const databaseClient = await databaseClientPool.connect();
@@ -408,4 +414,48 @@ function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, P
       }
     }
   }
+}
+
+async function getBrains(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
+  interaction.deferReply();
+  const baseClasses = [
+    "Seal Clubber",
+    "Turtle Tamer",
+    "Pastamancer",
+    "Sauceror",
+    "Disco Bandit",
+    "Accordion Thief",
+  ];
+  const classMap: Map<string, string[]> = new Map();
+  for (let player of killMap.keys()) {
+    const details = await kolClient.getBasicDetailsForUser(player);
+    if (details.level >= 15) {
+      if (!classMap.has(details.class)) {
+        classMap.set(details.class, []);
+      }
+      classMap.get(details.class)?.push(player);
+    }
+  }
+  interaction.editReply({
+    content: null,
+    embeds: [
+      {
+        title: "Potentially available brains",
+        fields: baseClasses.map((playerClass) => {
+          if (!classMap.has(playerClass)) {
+            return {
+              name: `**__${playerClass}__**`,
+              value: "None available",
+              inline: true,
+            };
+          }
+          return {
+            name: `**__${playerClass}__**`,
+            value: (classMap.get(playerClass) as string[]).join("\n"),
+            inline: true,
+          };
+        }),
+      },
+    ],
+  });
 }
