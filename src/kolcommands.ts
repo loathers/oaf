@@ -143,16 +143,9 @@ export function attachKoLCommands(
   );
   client.attachCommand(
     "spadeitems",
-    [
-      {
-        name: "quantity",
-        description: "The number of items to spade.",
-        type: ApplicationCommandOptionType.Number,
-        required: true,
-      },
-    ],
+    [],
     (interaction: CommandInteraction) => spadeItems(interaction, kolClient, wikiSearcher),
-    "Spade the existence and tradeability of the specified number of itemIds."
+    "Spade the existence and tradeability of as yet unreleased items."
   );
 }
 
@@ -417,19 +410,19 @@ async function spadeItems(
   wiki: WikiSearcher
 ): Promise<void> {
   interaction.deferReply();
-  const quantity = Math.min(interaction.options.getNumber("quantity", true), 37);
   const finalId = wiki.lastItem;
   if (finalId < 0) {
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
   }
   const data: { id: number; exists: boolean; tradeable: boolean }[] = [];
-  for (let id = finalId + 1; id <= finalId + quantity; id++) {
+  for (let id = finalId + 1; id <= finalId + 37; id++) {
     const spadeData = await kolClient.spadeItem(id);
     data.push({
       id,
       ...spadeData,
     });
+    if (!spadeData.exists) break;
   }
   const message = data
     .map(({ id, exists, tradeable }) => {
