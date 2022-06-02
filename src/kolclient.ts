@@ -527,7 +527,7 @@ export class KOLClient {
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
     try {
       const matcher =
-        /href="showplayer.php\?who=(?<user_id>\d+)\D+(clan=\d+\D+)?\d+\D*(?<level>\d+)\D+valign=top>(?<class>^<+)\<\/td\>/;
+        /href="showplayer.php\?who=(?<user_id>\d+)\D+(clan=\d+\D+)?\d+\D*(?<level>\d+)\D+valign=top>(?<class>[^<]+)\<\/td\>/;
       const search = await this.tryRequestWithLogin("searchplayer.php", {
         searchstring: name,
         searching: "Yep.",
@@ -535,9 +535,11 @@ export class KOLClient {
         startswith: 1,
         hardcoreonly: 0,
       });
-      console.log(search);
       const match = matcher.exec(search)?.groups;
-      console.log(match);
+      if (name === "phillammon") {
+        console.log(search);
+        console.log(match);
+      }
       return {
         id: match?.user_id || "",
         level: parseInt(match?.level || "0"),
