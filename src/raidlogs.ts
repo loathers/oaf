@@ -441,6 +441,8 @@ async function getBrains(interaction: CommandInteraction, kolClient: KOLClient):
     embeds: [
       {
         title: "Potentially available brains",
+        description:
+          "Somersaulter, kenny kamAKAzi, and 3BH can pilot dread multis for any class of brain, subject to multi restrictions.",
         fields: baseClasses.map((playerClass) => {
           if (!classMap.has(playerClass)) {
             return {
@@ -451,7 +453,10 @@ async function getBrains(interaction: CommandInteraction, kolClient: KOLClient):
           }
           return {
             name: `**__${playerClass}__**`,
-            value: (classMap.get(playerClass) as string[]).sort().join("\n"),
+            value: (classMap.get(playerClass) as string[])
+              .sort()
+              .map((name) => name.charAt(0).toUpperCase() + name.slice(1))
+              .join("\n"),
             inline: true,
           };
         }),
