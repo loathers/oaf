@@ -453,6 +453,20 @@ export class KOLClient {
     });
   }
 
+  async addToWhitelist(playerId: string, clanId: number): Promise<void> {
+    return await clanActionMutex.runExclusive(async () => {
+      await this.whitelist(clanId);
+      console.log(
+        await this.tryRequestWithLogin("clan_whitelist.php", {
+          addWho: playerId,
+          level: 2,
+          title: "",
+          action: "add",
+        })
+      );
+    });
+  }
+
   async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo | undefined> {
     try {
       const leaderboard = await this.tryRequestWithLogin("museum.php", {
