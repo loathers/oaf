@@ -134,7 +134,7 @@ const spadeData = {
     ],
     visitMatch: /You can't equip an off-hand item while wielding a 2-handed weapon/,
     ifTrue: "off-hand item",
-    ifFalse: "not an off-hand item",
+    ifFalse: "",
     additionalData: undefined,
   },
   familiarEquip: {
@@ -148,7 +148,7 @@ const spadeData = {
     ],
     visitMatch: /Only a specific familiar type \( (^\)*) \) can equip this item/,
     ifTrue: "a familiar equipment",
-    ifFalse: "not a familiar equipment",
+    ifFalse: "",
     additionalData: "familiar",
   },
 } as const;

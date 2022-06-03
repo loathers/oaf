@@ -423,9 +423,9 @@ async function spadeItems(
   const message = data
     .map(
       ({ id, exists, tradeable, offHand, familiarEquip, familiar }) =>
-        `Item ${id} ${exists} and is ${tradeable}. It is ${familiarEquip} and ${offHand}.${
-          familiar ? `Also, great news: it's associated with the familiar ${familiar}!` : ""
-        }`
+        `Item ${id} ${exists} and is ${tradeable}. It is ${
+          familiarEquip || offHand || "not an off-hand or familiar equip"
+        }.${familiar ? `Also, great news: it's associated with the familiar ${familiar}!` : ""}`
     )
     .join("\n");
 
