@@ -401,7 +401,6 @@ export class KOLClient {
   }
 
   async getMissingRaidLogs(clanId: number, parsedRaids: string[]): Promise<string[]> {
-    const raidLog = await this.getRaidLog(clanId);
     return await clanActionMutex.runExclusive(async () => {
       await this.whitelist(clanId);
       let raidLogs = await this.tryRequestWithLogin("clan_oldraidlogs.php", {});
