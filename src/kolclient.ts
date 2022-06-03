@@ -104,9 +104,10 @@ const spadeData = {
         selling: "Yep.",
       },
     ],
-    visitText: "Nopers.",
+    visitMatch: "Nopers.",
     ifTrue: "does not exist",
     ifFalse: "exists",
+    additionalData: undefined,
   },
   tradeable: {
     url: (id: number) => [
@@ -117,9 +118,10 @@ const spadeData = {
         selling: "Yep.",
       },
     ],
-    visitText: "That item cannot be sold or transferred.",
+    visitMatch: "That item cannot be sold or transferred.",
     ifTrue: "non-tradeable",
     ifFalse: "tradeable",
+    additionalData: undefined,
   },
   offHand: {
     url: (id: number) => [
@@ -130,13 +132,28 @@ const spadeData = {
         whichitem: id,
       },
     ],
-    visitText: "You can't equip an off-hand item while wielding a 2-handed weapon.",
+    visitMatch: "You can't equip an off-hand item while wielding a 2-handed weapon.",
     ifTrue: "off-hand item",
     ifFalse: "not an off-hand item",
+    additionalData: undefined,
+  },
+  familiarEquip: {
+    url: (id: number) => [
+      "inv_equip.php",
+      {
+        action: "equip",
+        which: 2,
+        whichitem: id,
+      },
+    ],
+    visitMatch: "Only a specific familiar type ( (^)*) ) can equip this item.",
+    ifTrue: "a familiar equipment",
+    ifFalse: "not a familiar equipment",
+    additionalData: "familiar",
   },
 } as const;
 type SpadeDataType = keyof typeof spadeData;
-type SpadedItem = { [x in keyof typeof spadeData]: string } & { id: number };
+type SpadedItem = { [x in keyof typeof spadeData]: string } & { id: number; familiar?: string };
 
 function sanitiseBlueText(blueText: string): string {
   return decode(
@@ -566,9 +583,16 @@ export class KOLClient {
   async spadeItem(itemId: number): Promise<SpadedItem> {
     const data: { [x in string]: string } = {};
     for (const property in spadeData) {
-      const { url, visitText, ifTrue, ifFalse } = spadeData[property as SpadeDataType];
-      const page = await this.tryRequestWithLogin(...(url(itemId) as [string, object]));
-      data[property] = page.includes(visitText) ? ifTrue : ifFalse;
+      const { url, visitMatch, ifTrue, ifFalse, additionalData } =
+        spadeData[property as SpadeDataType];
+      const rawpage = await this.tryRequestWithLogin(...(url(itemId) as [string, object]));
+      const page = rawpage.data as string;
+      const match = new RegExp(visitMatch).exec(page);
+      data[property] = match ? ifTrue : ifFalse;
+      if (additionalData && match) {
+        const text = match[1];
+        data[additionalData] = text
+      }
     }
     return { ...data, id: itemId } as SpadedItem;
   }
