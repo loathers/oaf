@@ -153,7 +153,7 @@ const spadeData = {
   },
 } as const;
 type SpadeDataType = keyof typeof spadeData;
-type SpadedItem = { [x in keyof typeof spadeData]: string } & { id: number; familiar?: string };
+type SpadedItem = { [x in SpadeDataType]: string } & { id: number; familiar?: string };
 
 function sanitiseBlueText(blueText: string): string {
   return decode(
@@ -591,7 +591,7 @@ export class KOLClient {
       data[property] = match ? ifTrue : ifFalse;
       if (additionalData && match) {
         const text = match[1];
-        data[additionalData] = text
+        data[additionalData] = text;
       }
     }
     return { ...data, id: itemId } as SpadedItem;
