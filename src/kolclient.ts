@@ -585,8 +585,7 @@ export class KOLClient {
     for (const property in spadeData) {
       const { url, visitMatch, ifTrue, ifFalse, additionalData } =
         spadeData[property as SpadeDataType];
-      const rawpage = await this.tryRequestWithLogin(...(url(itemId) as [string, object]));
-      const page = rawpage.data as string;
+      const page = (await this.tryRequestWithLogin(...(url(itemId) as [string, object]))) as string;
       const match = visitMatch.exec(page);
       data[property] = match ? ifTrue : ifFalse;
       if (additionalData && match) {
