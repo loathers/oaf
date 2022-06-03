@@ -1,6 +1,5 @@
-import axios from "axios";
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import { CommandInteraction, MessageEmbed } from "discord.js";
 import { PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
