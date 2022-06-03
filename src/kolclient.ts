@@ -104,7 +104,7 @@ const spadeData = {
         selling: "Yep.",
       },
     ],
-    visitMatch: "Nopers.",
+    visitMatch: /Nopers/,
     ifTrue: "does not exist",
     ifFalse: "exists",
     additionalData: undefined,
@@ -118,7 +118,7 @@ const spadeData = {
         selling: "Yep.",
       },
     ],
-    visitMatch: "That item cannot be sold or transferred.",
+    visitMatch: /That item cannot be sold or transferred/,
     ifTrue: "non-tradeable",
     ifFalse: "tradeable",
     additionalData: undefined,
@@ -132,7 +132,7 @@ const spadeData = {
         whichitem: id,
       },
     ],
-    visitMatch: "You can't equip an off-hand item while wielding a 2-handed weapon.",
+    visitMatch: /You can't equip an off-hand item while wielding a 2-handed weapon/,
     ifTrue: "off-hand item",
     ifFalse: "not an off-hand item",
     additionalData: undefined,
@@ -146,7 +146,7 @@ const spadeData = {
         whichitem: id,
       },
     ],
-    visitMatch: "Only a specific familiar type ( (^)*) ) can equip this item.",
+    visitMatch: /Only a specific familiar type \( (^\)*) \) can equip this item/,
     ifTrue: "a familiar equipment",
     ifFalse: "not a familiar equipment",
     additionalData: "familiar",
@@ -587,7 +587,7 @@ export class KOLClient {
         spadeData[property as SpadeDataType];
       const rawpage = await this.tryRequestWithLogin(...(url(itemId) as [string, object]));
       const page = rawpage.data as string;
-      const match = new RegExp(visitMatch).exec(page);
+      const match = visitMatch.exec(page);
       data[property] = match ? ifTrue : ifFalse;
       if (additionalData && match) {
         const text = match[1];
