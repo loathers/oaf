@@ -118,7 +118,7 @@ const spadeData = {
       },
     ],
     visitText: "That item cannot be sold or transferred.",
-    ifTrue: "untradeable",
+    ifTrue: "non-tradeable",
     ifFalse: "tradeable",
   },
   offHand: {
