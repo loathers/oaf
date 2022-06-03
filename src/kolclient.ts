@@ -607,6 +607,15 @@ export class KOLClient {
     return { id: itemId, exists, tradeable, itemtype, additionalInfo };
   }
 
+  async spadeFamiliar(famId: number): Promise<string> {
+    const page = await this.tryRequestWithLogin("desc_familiar.php", { which: famId });
+
+    if (page.includes("No familiar was found.")) return "none";
+
+    const name = /<font face=Arial,Helvetica><center><b>(^<+)<\/b>/.exec(page)?.[1];
+    return name ?? "none";
+  }
+
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
     try {
       const matcher =

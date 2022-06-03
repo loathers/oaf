@@ -141,10 +141,16 @@ export function attachKoLCommands(
     "Display the specified leaderboard."
   );
   client.attachCommand(
-    "spade",
+    "spadeitems",
     [],
     (interaction: CommandInteraction) => spadeItems(interaction, kolClient, wikiSearcher),
     "Spade the existence and tradeability of as yet unreleased items."
+  );
+  client.attachCommand(
+    "spadefamiliar",
+    [],
+    (interaction: CommandInteraction) => spadeFamiliars(interaction, kolClient, wikiSearcher),
+    "Spade the existence of as-of-yet unreleased familiars."
   );
 }
 
@@ -431,4 +437,29 @@ async function spadeItems(
     .join("\n");
 
   interaction.editReply(`Searched items with ids starting after ${finalId}:\n${message}`);
+}
+
+async function spadeFamiliars(
+  interaction: CommandInteraction,
+  kolClient: KOLClient,
+  wiki: WikiSearcher
+): Promise<void> {
+  interaction.deferReply();
+  const finalId = wiki.lastFamiliar;
+  if (finalId < 0) {
+    interaction.editReply("Our wiki search isn't configured properly!");
+    return;
+  }
+  const data = [`Spading familiars with ids after ${finalId}.`];
+  for (let id = finalId + 1; id <= finalId + 37; id++) {
+    const name = await kolClient.spadeFamiliar(id);
+    if (name === "none") {
+      data.push(`No familiar ${id} found. Sorry!`);
+      break;
+    } else {
+      data.push(`Familiar ${id} exists, and is called ${name}.`);
+    }
+  }
+
+  interaction.editReply(data.join("\n"));
 }
