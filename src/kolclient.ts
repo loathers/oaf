@@ -94,6 +94,37 @@ type PlayerBasicData = {
   class: string;
 };
 
+const spadeData = {
+  exists: {
+    url: (id: number) => [
+      "town_sellflea.php",
+      {
+        whichitem: id,
+        sellprice: "",
+        selling: "Yep.",
+      },
+    ],
+    visitText: "Nopers.",
+    ifTrue: "does not exist",
+    ifFalse: "exists",
+  },
+  tradeable: {
+    url: (id: number) => [
+      "town_sellflea.php",
+      {
+        whichitem: id,
+        sellprice: "",
+        selling: "Yep.",
+      },
+    ],
+    visitText: "That item cannot be sold or transferred.",
+    ifTrue: "untradeable",
+    ifFalse: "tradeable",
+  },
+} as const;
+type SpadeDataType = keyof typeof spadeData;
+type SpadedItem = { [x in keyof typeof spadeData]: string } & { id: number };
+
 function sanitiseBlueText(blueText: string): string {
   return decode(
     blueText
@@ -519,23 +550,16 @@ export class KOLClient {
     }
   }
 
-  async spadeItem(itemId: number): Promise<{ exists: boolean; tradeable: boolean }> {
-    const equipPage = await this.tryRequestWithLogin("inv_equip.php", {
-      which: 2,
-      action: "equip",
-      whichitem: itemId,
-    });
-    if (equipPage.includes("Nopers.")) return { exists: false, tradeable: false };
-    const fleaMarketPage = await this.tryRequestWithLogin("town_sellflea.php", {
-      whichitem: itemId,
-      sellprice: "",
-      selling: "Yep.",
-    });
-    return {
-      exists: true,
-      tradeable: !fleaMarketPage.includes("That item cannot be sold or transferred."),
-    };
+  async spadeItem(itemId: number): Promise<SpadedItem> {
+    const data: { [x in string]: string } = {};
+    for (const property in spadeData) {
+      const { url, visitText, ifTrue, ifFalse } = spadeData[property as SpadeDataType];
+      const page = await this.tryRequestWithLogin(...(url(itemId) as [string, object]));
+      data[property] = page.includes(visitText) ? ifTrue : ifFalse;
+    }
+    return { ...data, id: itemId } as SpadedItem;
   }
+
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
     try {
       const matcher =

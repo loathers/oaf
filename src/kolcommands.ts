@@ -415,20 +415,14 @@ async function spadeItems(
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
   }
-  const data: { id: number; exists: boolean; tradeable: boolean }[] = [];
+  const data = [];
   for (let id = finalId + 1; id <= finalId + 37; id++) {
     const spadeData = await kolClient.spadeItem(id);
-    data.push({
-      id,
-      ...spadeData,
-    });
-    if (!spadeData.exists) break;
+    data.push(spadeData);
+    if (spadeData.exists === "does not exist") break;
   }
   const message = data
-    .map(({ id, exists, tradeable }) => {
-      if (!exists) return `Item ${id} does not exist.`;
-      return `Item ${id} exists and is${tradeable ? "" : " not"} tradeable.`;
-    })
+    .map(({ id, exists, tradeable }) => `Item ${id} ${exists} and is ${tradeable}.`)
     .join("\n");
 
   interaction.editReply(`Searched items with ids starting after ${finalId}:\n${message}`);
