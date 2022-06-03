@@ -97,11 +97,11 @@ type PlayerBasicData = {
 const spadeData = {
   exists: {
     url: (id: number) => [
-      "town_sellflea.php",
+      "inv_equip.php",
       {
+        action: "equip",
+        which: 2,
         whichitem: id,
-        sellprice: "",
-        selling: "Yep.",
       },
     ],
     visitMatch: /Nopers/,
