@@ -1,6 +1,5 @@
-import axios from "axios";
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction, Message, MessageEmbed } from "discord.js";
+import { CommandInteraction, MessageEmbed } from "discord.js";
 import { PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
@@ -415,20 +414,19 @@ async function spadeItems(
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
   }
-  const data: { id: number; exists: boolean; tradeable: boolean }[] = [];
+  const data = [];
   for (let id = finalId + 1; id <= finalId + 37; id++) {
     const spadeData = await kolClient.spadeItem(id);
-    data.push({
-      id,
-      ...spadeData,
-    });
-    if (!spadeData.exists) break;
+    data.push(spadeData);
+    if (spadeData.exists === "does not exist") break;
   }
   const message = data
-    .map(({ id, exists, tradeable }) => {
-      if (!exists) return `Item ${id} does not exist.`;
-      return `Item ${id} exists and is${tradeable ? "" : " not"} tradeable.`;
-    })
+    .map(
+      ({ id, exists, tradeable, offHand, familiarEquip, familiar }) =>
+        `Item ${id} ${exists} and is ${tradeable}. It is ${
+          familiarEquip || offHand || "not an off-hand or familiar equip"
+        }.${familiar ? `Also, great news: it's associated with the familiar ${familiar}!` : ""}`
+    )
     .join("\n");
 
   interaction.editReply(`Searched items with ids starting after ${finalId}:\n${message}`);

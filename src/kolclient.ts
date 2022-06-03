@@ -94,6 +94,67 @@ type PlayerBasicData = {
   class: string;
 };
 
+const spadeData = {
+  exists: {
+    url: (id: number) => [
+      "inv_equip.php",
+      {
+        action: "equip",
+        which: 2,
+        whichitem: id,
+      },
+    ],
+    visitMatch: /Nopers/,
+    ifTrue: "does not exist",
+    ifFalse: "exists",
+    additionalData: undefined,
+  },
+  tradeable: {
+    url: (id: number) => [
+      "town_sellflea.php",
+      {
+        whichitem: id,
+        sellprice: "",
+        selling: "Yep.",
+      },
+    ],
+    visitMatch: /That item cannot be sold or transferred/,
+    ifTrue: "non-tradeable",
+    ifFalse: "tradeable",
+    additionalData: undefined,
+  },
+  offHand: {
+    url: (id: number) => [
+      "inv_equip.php",
+      {
+        action: "equip",
+        which: 2,
+        whichitem: id,
+      },
+    ],
+    visitMatch: /You can't equip an off-hand item while wielding a 2-handed weapon/,
+    ifTrue: "off-hand item",
+    ifFalse: "",
+    additionalData: undefined,
+  },
+  familiarEquip: {
+    url: (id: number) => [
+      "inv_equip.php",
+      {
+        action: "equip",
+        which: 2,
+        whichitem: id,
+      },
+    ],
+    visitMatch: /Only a specific familiar type \( (^\)*) \) can equip this item/,
+    ifTrue: "a familiar equipment",
+    ifFalse: "",
+    additionalData: "familiar",
+  },
+} as const;
+type SpadeDataType = keyof typeof spadeData;
+type SpadedItem = { [x in SpadeDataType]: string } & { id: number; familiar?: string };
+
 function sanitiseBlueText(blueText: string): string {
   return decode(
     blueText
@@ -518,23 +579,22 @@ export class KOLClient {
     }
   }
 
-  async spadeItem(itemId: number): Promise<{ exists: boolean; tradeable: boolean }> {
-    const equipPage = await this.tryRequestWithLogin("inv_equip.php", {
-      which: 2,
-      action: "equip",
-      whichitem: itemId,
-    });
-    if (equipPage.includes("Nopers.")) return { exists: false, tradeable: false };
-    const fleaMarketPage = await this.tryRequestWithLogin("town_sellflea.php", {
-      whichitem: itemId,
-      sellprice: "",
-      selling: "Yep.",
-    });
-    return {
-      exists: true,
-      tradeable: !fleaMarketPage.includes("That item cannot be sold or transferred."),
-    };
+  async spadeItem(itemId: number): Promise<SpadedItem> {
+    const data: { [x in string]: string } = {};
+    for (const property in spadeData) {
+      const { url, visitMatch, ifTrue, ifFalse, additionalData } =
+        spadeData[property as SpadeDataType];
+      const page = (await this.tryRequestWithLogin(...(url(itemId) as [string, object]))) as string;
+      const match = visitMatch.exec(page);
+      data[property] = match ? ifTrue : ifFalse;
+      if (additionalData && match) {
+        const text = match[1];
+        data[additionalData] = text;
+      }
+    }
+    return { ...data, id: itemId } as SpadedItem;
   }
+
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
     try {
       const matcher =
