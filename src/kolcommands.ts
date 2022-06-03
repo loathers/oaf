@@ -421,7 +421,10 @@ async function spadeItems(
     if (spadeData.exists === "does not exist") break;
   }
   const message = data
-    .map(({ id, exists, tradeable }) => `Item ${id} ${exists} and is ${tradeable}.`)
+    .map(
+      ({ id, exists, tradeable, offHand }) =>
+        `Item ${id} ${exists} and is a ${tradeable} ${offHand}.`
+    )
     .join("\n");
 
   interaction.editReply(`Searched items with ids starting after ${finalId}:\n${message}`);

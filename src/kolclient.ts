@@ -121,6 +121,19 @@ const spadeData = {
     ifTrue: "untradeable",
     ifFalse: "tradeable",
   },
+  offHand: {
+    url: (id: number) => [
+      "inv_equip.php",
+      {
+        action: "equip",
+        which: 2,
+        whichitem: id,
+      },
+    ],
+    visitText: "You can't equip an off-hand item while wielding a 2-handed weapon.",
+    ifTrue: "off-hand item",
+    ifFalse: "not an off-hand item",
+  },
 } as const;
 type SpadeDataType = keyof typeof spadeData;
 type SpadedItem = { [x in keyof typeof spadeData]: string } & { id: number };
