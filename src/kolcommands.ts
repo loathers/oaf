@@ -439,7 +439,7 @@ async function spadeItems(
   kolClient: KOLClient,
   wiki: WikiSearcher
 ): Promise<void> {
-  interaction.deferReply();
+  await interaction.deferReply();
   const finalId = wiki.lastItem;
   if (finalId < 0) {
     interaction.editReply("Our wiki search isn't configured properly!");
@@ -469,7 +469,7 @@ async function spadeFamiliars(
   kolClient: KOLClient,
   wiki: WikiSearcher
 ): Promise<void> {
-  interaction.deferReply();
+  await interaction.deferReply();
   const finalId = wiki.lastFamiliar;
   if (finalId < 0) {
     interaction.editReply("Our wiki search isn't configured properly!");
