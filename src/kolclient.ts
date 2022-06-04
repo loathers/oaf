@@ -151,6 +151,19 @@ const spadeData = {
     ifFalse: "",
     additionalData: "familiar",
   },
+  food: {
+    url: (id: number) => [
+      "inv_eat.php",
+      {
+        which: 1,
+        whichitem: id,
+      },
+    ],
+    visitMatch: /You don't have the item you're trying to use/,
+    ifTrue: "edible",
+    ifFalse: "",
+    additionalData: undefined,
+  },
 } as const;
 type SpadeDataType = keyof typeof spadeData;
 type SpadedItem = { [x in SpadeDataType]: string } & { id: number; familiar?: string };
