@@ -141,16 +141,21 @@ export function attachKoLCommands(
     "Display the specified leaderboard."
   );
   client.attachCommand(
-    "spadeitems",
-    [],
-    (interaction: CommandInteraction) => spadeItems(interaction, kolClient, wikiSearcher),
-    "Spade the existence and tradeability of as yet unreleased items."
-  );
-  client.attachCommand(
-    "spadefamiliar",
-    [],
-    (interaction: CommandInteraction) => spadeFamiliars(interaction, kolClient, wikiSearcher),
-    "Spade the existence of as-of-yet unreleased familiars."
+    "spade",
+    [
+      {
+        name: "spadeable",
+        description: "What to spade.",
+        type: ApplicationCommandOptionType.String,
+        choices: [
+          { name: "Familiars", value: "familiar" },
+          { name: "Items", value: "item" },
+        ],
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => spade(interaction, kolClient, wikiSearcher),
+    "Spade the existence and tradeability of as yet unreleased stuff."
   );
 }
 
@@ -406,6 +411,26 @@ async function leaderboard(interaction: CommandInteraction, kolClient: KOLClient
           }),
       ],
     });
+  }
+}
+
+async function spade(
+  interaction: CommandInteraction,
+  kolClient: KOLClient,
+  wiki: WikiSearcher
+): Promise<void> {
+  switch (interaction.options.getString("spadeable", true)) {
+    case "item":
+      await spadeItems(interaction, kolClient, wiki);
+      return;
+    case "familiar":
+      await spadeFamiliars(interaction, kolClient, wiki);
+      return;
+    default:
+      await interaction.reply({
+        content: "It shouldn't be possible to see this message. Please report it.",
+        ephemeral: true,
+      });
   }
 }
 
