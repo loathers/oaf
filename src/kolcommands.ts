@@ -473,6 +473,25 @@ async function spadeItems(
   });
 }
 
+function itemTypeEnumToString(itemtype: ItemType): string {
+  switch (itemtype) {
+    case ItemType.Food:
+      return "Food";
+    case ItemType.Booze:
+      return "Booze";
+    case ItemType.Spleen:
+      return "Spleen Item";
+    case ItemType.Offhand:
+      return "Offhand";
+    case ItemType.Offhand:
+      return "Familiar Equipment";
+    case ItemType.Unknown:
+    //fall thru
+    default:
+      return "Unknown Item Type";
+  }
+}
+
 async function spadeFamiliars(
   interaction: CommandInteraction,
   kolClient: KOLClient,
@@ -496,22 +515,4 @@ async function spadeFamiliars(
   }
 
   interaction.editReply(data.join("\n"));
-}
-function itemTypeEnumToString(itemtype: ItemType): string {
-  switch (itemtype) {
-    case ItemType.Food:
-      return "Food";
-    case ItemType.Booze:
-      return "Booze";
-    case ItemType.Spleen:
-      return "Spleen Item";
-    case ItemType.Offhand:
-      return "Offhand";
-    case ItemType.Offhand:
-      return "Familiar Equipment";
-    case ItemType.Unknown:
-    //fall thru
-    default:
-      return "Unknown Item Type";
-  }
 }
