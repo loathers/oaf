@@ -383,14 +383,16 @@ export class KOLClient {
     for (let [monster1, monster2] of pairs) {
       const monster1data = monsters.get(monster1) as MonsterData;
       const monster2data = monsters.get(monster2) as MonsterData;
+      if (monster1data.kills > monster2data.kills + 50) {
+        monster2data.kills++;
+      } else if (monster2data.kills > monster1data.kills + 50) {
+        monster1data.kills++;
+      }
+      //ELSE IF CHAIN BREAKS HERE
       if (monster1data.banishes > monster2data.banishes) {
         bosses.push(monster2);
       } else if (monster2data.banishes > monster1data.banishes) {
         bosses.push(monster1);
-      } else if (monster1data.kills > monster2data.kills + 50) {
-        bosses.push(monster1);
-      } else if (monster2data.kills > monster1data.kills + 50) {
-        bosses.push(monster2);
       } else {
         bosses.push("unknown");
       }
