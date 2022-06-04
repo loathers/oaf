@@ -421,11 +421,11 @@ async function spadeItems(
     if (!spadeData.exists) break;
   }
   const message = data
-    .map(({ id, exists, tradeable, offHand, familiarEquip, food, familiar }) =>
+    .map(({ id, exists, tradeable, itemtype, additionalInfo }) =>
       exists
-        ? `Item ${id} exists and is ${tradeable}. It is ${
-            familiarEquip || offHand || food || "unknown what it is"
-          }.${familiar ? ` Also, great news: it's associated with the familiar ${familiar}!` : ""}`
+        ? `Item ${id} exists and is ${tradeable ? "tradeable" : "untradeable"}. It is ${
+            itemtype ? itemtype : "of an unknown type"
+          }. ${additionalInfo ? additionalInfo : ""}`
         : `Item ${id} does not exist.`
     )
     .join("\n");

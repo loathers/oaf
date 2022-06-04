@@ -94,36 +94,8 @@ type PlayerBasicData = {
   class: string;
 };
 
-const spadeData = {
-  exists: {
-    url: (id: number) => [
-      "inv_equip.php",
-      {
-        action: "equip",
-        which: 2,
-        whichitem: id,
-      },
-    ],
-    visitMatch: /Nopers/,
-    ifTrue: false,
-    ifFalse: true,
-    additionalData: undefined,
-  },
-  tradeable: {
-    url: (id: number) => [
-      "town_sellflea.php",
-      {
-        whichitem: id,
-        sellprice: "",
-        selling: "Yep.",
-      },
-    ],
-    visitMatch: /That item cannot be sold or transferred/,
-    ifTrue: "non-tradeable",
-    ifFalse: "tradeable",
-    additionalData: undefined,
-  },
-  offHand: {
+const spadeData = [
+  {
     url: (id: number) => [
       "inv_equip.php",
       {
@@ -137,7 +109,7 @@ const spadeData = {
     ifFalse: "",
     additionalData: undefined,
   },
-  familiarEquip: {
+  {
     url: (id: number) => [
       "inv_equip.php",
       {
@@ -151,7 +123,7 @@ const spadeData = {
     ifFalse: "",
     additionalData: "familiar",
   },
-  food: {
+  {
     url: (id: number) => [
       "inv_eat.php",
       {
@@ -164,9 +136,15 @@ const spadeData = {
     ifFalse: "",
     additionalData: undefined,
   },
-} as const;
-type SpadeDataType = keyof typeof spadeData;
-type SpadedItem = { [x in SpadeDataType]: string } & { id: number; familiar?: string };
+];
+
+type SpadedItem = {
+  id: number;
+  exists: boolean;
+  tradeable: boolean;
+  itemtype?: string;
+  additionalInfo?: string;
+};
 
 function sanitiseBlueText(blueText: string): string {
   return decode(
@@ -593,19 +571,38 @@ export class KOLClient {
   }
 
   async spadeItem(itemId: number): Promise<SpadedItem> {
-    const data: { [x in string]: string | boolean } = {};
-    for (const property in spadeData) {
-      const { url, visitMatch, ifTrue, ifFalse, additionalData } =
-        spadeData[property as SpadeDataType];
-      const page = (await this.tryRequestWithLogin(...(url(itemId) as [string, object]))) as string;
-      const match = visitMatch.exec(page);
-      data[property] = match ? ifTrue : ifFalse;
-      if (additionalData && match) {
-        const text = match[1];
-        data[additionalData] = text;
+    let itemtype = "";
+    let additionalInfo = "";
+    const exists = !/Nopers/.test(
+      await this.tryRequestWithLogin("inv_equip.php", {
+        action: "equip",
+        which: 2,
+        whichitem: itemId,
+      })
+    );
+    const tradeable = !/That item cannot be sold or transferred/.test(
+      await this.tryRequestWithLogin("town_sellflea.php", {
+        whichitem: itemId,
+        sellprice: "",
+        selling: "Yep.",
+      })
+    );
+    if (exists) {
+      for (let property of spadeData) {
+        const { url, visitMatch, ifTrue, ifFalse, additionalData } = property;
+        const page = (await this.tryRequestWithLogin(
+          ...(url(itemId) as [string, object])
+        )) as string;
+        const match = visitMatch.exec(page);
+        itemtype = match ? ifTrue : ifFalse;
+        if (additionalData && match) {
+          const text = match[1];
+          additionalInfo = text;
+        }
+        if (itemtype) break;
       }
     }
-    return { ...data, id: itemId } as SpadedItem;
+    return { id: itemId, exists, tradeable, itemtype, additionalInfo };
   }
 
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
