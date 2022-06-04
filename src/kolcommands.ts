@@ -468,7 +468,7 @@ async function spadeItems(
           inline: true,
         })),
         footer: {
-          text: `OAF can detect Food, Booze, Spleen Items, Offhands and Familiar Equipment. Unknown indicates none of these.`,
+          text: `OAF can detect Food, Booze, Spleen Items, Offhands and Familiar Equipment. No type indicates none of these.`,
         },
       },
     ],
@@ -490,7 +490,7 @@ function itemTypeEnumToString(itemtype: ItemType): string {
     case ItemType.Unknown:
     //fall thru
     default:
-      return "Unknown Item Type";
+      return "";
   }
 }
 
