@@ -465,9 +465,11 @@ async function spadeItems(
                 additionalInfo ? `\n${additionalInfo}` : ""
               }`
             : "Does not exist",
-          footer: `OAF can detect Food, Booze, Spleen Items, Offhands and Familiar Equipment. Unknown indicates none of these.`,
           inline: true,
         })),
+        footer: {
+          text: `OAF can detect Food, Booze, Spleen Items, Offhands and Familiar Equipment. Unknown indicates none of these.`,
+        },
       },
     ],
   });
