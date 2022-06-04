@@ -465,6 +465,7 @@ async function spadeItems(
                 additionalInfo ? `\n${additionalInfo}` : ""
               }`
             : "Does not exist",
+          footer: `OAF can detect Food, Booze, Spleen Items, Offhands and Familiar Equipment. Unknown indicates none of these.`,
           inline: true,
         })),
       },
@@ -505,7 +506,7 @@ function itemTypeEnumToString(itemtype: ItemType): string {
     case ItemType.Spleen:
       return "Spleen Item";
     case ItemType.Offhand:
-      return "Offhand Equipment";
+      return "Offhand";
     case ItemType.Offhand:
       return "Familiar Equipment";
     case ItemType.Unknown:
