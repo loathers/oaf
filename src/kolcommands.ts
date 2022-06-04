@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
-import { PATH_MAPPINGS } from "./constants";
+import { ItemType, PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 import { WikiSearcher } from "./wikisearch";
@@ -451,17 +451,25 @@ async function spadeItems(
     data.push(spadeData);
     if (!spadeData.exists) break;
   }
-  const message = data
-    .map(({ id, exists, tradeable, itemtype, additionalInfo }) =>
-      exists
-        ? `Item ${id} exists and is ${tradeable ? "tradeable" : "untradeable"}. It is ${
-            itemtype ? itemtype : "of an unknown type"
-          }. ${additionalInfo ? additionalInfo : ""}`
-        : `Item ${id} does not exist.`
-    )
-    .join("\n");
 
-  interaction.editReply(`Searched items with ids starting after ${finalId}:\n${message}`);
+  interaction.editReply({
+    content: null,
+    embeds: [
+      {
+        title: "Spaded items",
+        description: `Searched items with ids starting after ${finalId}:`,
+        fields: data.map(({ id, exists, tradeable, itemtype, additionalInfo }) => ({
+          name: `Item ${id}`,
+          value: exists
+            ? `${tradeable ? "Tradeable" : "Untradeable"}\n${itemTypeEnumToString(itemtype)}${
+                additionalInfo ? `\n${additionalInfo}` : ""
+              }`
+            : "Does not exist",
+          inline: true,
+        })),
+      },
+    ],
+  });
 }
 
 async function spadeFamiliars(
@@ -487,4 +495,22 @@ async function spadeFamiliars(
   }
 
   interaction.editReply(data.join("\n"));
+}
+function itemTypeEnumToString(itemtype: ItemType): string {
+  switch (itemtype) {
+    case ItemType.Food:
+      return "Food";
+    case ItemType.Booze:
+      return "Booze";
+    case ItemType.Spleen:
+      return "Spleen Item";
+    case ItemType.Offhand:
+      return "Offhand Equipment";
+    case ItemType.Offhand:
+      return "Familiar Equipment";
+    case ItemType.Unknown:
+    //fall thru
+    default:
+      return "Unknown Item Type";
+  }
 }
