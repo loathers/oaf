@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
-import { ItemType, PATH_MAPPINGS } from "./constants";
+import { ItemType, ITEM_SPADING_TYPES, PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 import { WikiSearcher } from "./wikisearch";
@@ -461,37 +461,20 @@ async function spadeItems(
         fields: data.map(({ id, exists, tradeable, itemtype, additionalInfo }) => ({
           name: `Item ${id}`,
           value: exists
-            ? `${tradeable ? "Tradeable" : "Untradeable"}\n${itemTypeEnumToString(itemtype)}${
+            ? `${tradeable ? "Tradeable" : "Untradeable"}\n${ITEM_SPADING_TYPES[itemtype]}${
                 additionalInfo ? `\n${additionalInfo}` : ""
               }`
             : "Does not exist",
           inline: true,
         })),
         footer: {
-          text: `OAF can detect Food, Booze, Spleen Items, Offhands and Familiar Equipment. No type indicates none of these.`,
+          text: `OAF can detect the following item types: ${Object.values(ITEM_SPADING_TYPES)
+            .filter((type) => type)
+            .join(", ")}. If no type is shown, the item is none of these.`,
         },
       },
     ],
   });
-}
-
-function itemTypeEnumToString(itemtype: ItemType): string {
-  switch (itemtype) {
-    case ItemType.Food:
-      return "Food";
-    case ItemType.Booze:
-      return "Booze";
-    case ItemType.Spleen:
-      return "Spleen Item";
-    case ItemType.Offhand:
-      return "Offhand";
-    case ItemType.Offhand:
-      return "Familiar Equipment";
-    case ItemType.Unknown:
-    //fall thru
-    default:
-      return "";
-  }
 }
 
 async function spadeFamiliars(

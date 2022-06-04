@@ -526,6 +526,15 @@ export enum ItemType {
   Unknown,
 }
 
+export const ITEM_SPADING_TYPES: Record<ItemType, string> = {
+  [ItemType.Food]: "Food",
+  [ItemType.Booze]: "Booze",
+  [ItemType.Spleen]: "Spleen Item",
+  [ItemType.Offhand]: "Offhand",
+  [ItemType.FamiliarEquip]: "Familiar Equipment",
+  [ItemType.Unknown]: "",
+};
+
 export const ITEM_SPADING_CALLS = [
   {
     url: (id: number) => [
