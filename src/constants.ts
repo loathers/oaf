@@ -516,3 +516,77 @@ export const DREAD_BOSS_MAPPINGS: Map<string, string> = new Map([
   ["skeleton", "Unkillable Skeleton"],
   ["unknown", "Boss unknown"],
 ]);
+
+export enum ItemType {
+  Food,
+  Booze,
+  Spleen,
+  Offhand,
+  FamiliarEquip,
+  Unknown,
+}
+
+export const ITEM_SPADING_CALLS = [
+  {
+    url: (id: number) => [
+      "inv_equip.php",
+      {
+        action: "equip",
+        which: 2,
+        whichitem: id,
+      },
+    ],
+    visitMatch: /You can't equip an off-hand item while wielding a 2-handed weapon/,
+    type: ItemType.Offhand,
+    additionalData: false,
+  },
+  {
+    url: (id: number) => [
+      "inv_equip.php",
+      {
+        action: "equip",
+        which: 2,
+        whichitem: id,
+      },
+    ],
+    visitMatch: /Only a specific familiar type \((?<addl>^\)*)\) can equip this item/,
+    type: ItemType.FamiliarEquip,
+    additionalData: true,
+  },
+  {
+    url: (id: number) => [
+      "inv_eat.php",
+      {
+        which: 1,
+        whichitem: id,
+      },
+    ],
+    visitMatch: /You don't have the item you're trying to use/,
+    type: ItemType.Food,
+    additionalData: false,
+  },
+  {
+    url: (id: number) => [
+      "inv_booze.php",
+      {
+        which: 1,
+        whichitem: id,
+      },
+    ],
+    visitMatch: /You don't have the item you're trying to use/,
+    type: ItemType.Booze,
+    additionalData: false,
+  },
+  {
+    url: (id: number) => [
+      "inv_spleen.php",
+      {
+        which: 1,
+        whichitem: id,
+      },
+    ],
+    visitMatch: /You don't have the item you're trying to use/,
+    type: ItemType.Spleen,
+    additionalData: false,
+  },
+];

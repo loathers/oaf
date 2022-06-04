@@ -62,6 +62,7 @@ export class WikiSearcher {
   private _searchApiKey: string;
   private _customSearch: string;
   private _finalItemId = -1;
+  private _finalFamiliarId = -1;
 
   constructor(client: KOLClient) {
     this._searchApiKey = process.env.GOOGLE_API_KEY || "";
@@ -71,6 +72,10 @@ export class WikiSearcher {
 
   get lastItem(): number {
     return this._finalItemId;
+  }
+
+  get lastFamiliar(): number {
+    return this._finalFamiliarId;
   }
 
   async downloadMafiaData(): Promise<void> {
@@ -189,6 +194,7 @@ export class WikiSearcher {
     for (let line of familiarFile.data.split(/\n/)) {
       try {
         const familiar = new Familiar(line);
+        if (this._finalFamiliarId < familiar.get().id) this._finalFamiliarId = familiar.get().id;
         if (familiar.name()) {
           const hatchling = this._thingMap.get(familiar.get().larva.toLowerCase()) as Item;
           familiar.addHatchling(hatchling);

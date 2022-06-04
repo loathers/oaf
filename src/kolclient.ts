@@ -4,6 +4,7 @@ import { cleanString, indent, toWikiLink } from "./utils";
 import { Mutex } from "async-mutex";
 import { DOMParser } from "xmldom";
 import { select } from "xpath";
+import { ItemType, ITEM_SPADING_CALLS } from "./constants";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();
@@ -94,55 +95,11 @@ type PlayerBasicData = {
   class: string;
 };
 
-const spadeData = [
-  {
-    url: (id: number) => [
-      "inv_equip.php",
-      {
-        action: "equip",
-        which: 2,
-        whichitem: id,
-      },
-    ],
-    visitMatch: /You can't equip an off-hand item while wielding a 2-handed weapon/,
-    ifTrue: "off-hand item",
-    ifFalse: "",
-    additionalData: undefined,
-  },
-  {
-    url: (id: number) => [
-      "inv_equip.php",
-      {
-        action: "equip",
-        which: 2,
-        whichitem: id,
-      },
-    ],
-    visitMatch: /Only a specific familiar type \( (^\)*) \) can equip this item/,
-    ifTrue: "a familiar equipment",
-    ifFalse: "",
-    additionalData: "familiar",
-  },
-  {
-    url: (id: number) => [
-      "inv_eat.php",
-      {
-        which: 1,
-        whichitem: id,
-      },
-    ],
-    visitMatch: /You don't have the item you're trying to use/,
-    ifTrue: "edible",
-    ifFalse: "",
-    additionalData: undefined,
-  },
-];
-
 type SpadedItem = {
   id: number;
   exists: boolean;
   tradeable: boolean;
-  itemtype?: string;
+  itemtype: ItemType;
   additionalInfo?: string;
 };
 
@@ -573,7 +530,7 @@ export class KOLClient {
   }
 
   async spadeItem(itemId: number): Promise<SpadedItem> {
-    let itemtype = "";
+    let itemtype = ItemType.Unknown;
     let additionalInfo = "";
     const exists = !/Nopers/.test(
       await this.tryRequestWithLogin("inv_equip.php", {
@@ -590,21 +547,31 @@ export class KOLClient {
       })
     );
     if (exists) {
-      for (let property of spadeData) {
-        const { url, visitMatch, ifTrue, ifFalse, additionalData } = property;
+      for (let property of ITEM_SPADING_CALLS) {
+        const { url, visitMatch, type, additionalData } = property;
         const page = (await this.tryRequestWithLogin(
           ...(url(itemId) as [string, object])
         )) as string;
-        const match = visitMatch.exec(page);
-        itemtype = match ? ifTrue : ifFalse;
-        if (additionalData && match) {
-          const text = match[1];
-          additionalInfo = text;
+        const match = visitMatch.test(page);
+        if (match) {
+          itemtype = type;
+          if (additionalData) {
+            additionalInfo = visitMatch.exec(page)?.groups?.addl || "";
+          }
+          break;
         }
-        if (itemtype) break;
       }
     }
     return { id: itemId, exists, tradeable, itemtype, additionalInfo };
+  }
+
+  async spadeFamiliar(famId: number): Promise<string> {
+    const page = await this.tryRequestWithLogin("desc_familiar.php", { which: famId });
+
+    if (page.includes("No familiar was found.")) return "none";
+
+    const name = /<font face=Arial,Helvetica><center><b>(^<+)<\/b>/.exec(page)?.[1];
+    return name ?? "none";
   }
 
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {

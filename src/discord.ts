@@ -27,6 +27,7 @@ type Option = {
   description: string;
   type: ApplicationCommandOptionType;
   required: boolean;
+  choices?: { name: string; value: string }[];
 };
 
 export class DiscordClient {
@@ -179,7 +180,12 @@ export class DiscordClient {
     const slashCommand = new SlashCommandBuilder().setName(command).setDescription(description);
     for (let arg of args) {
       const builder = (item: any) =>
-        item.setName(arg.name).setDescription(arg.description).setRequired(arg.required);
+        item
+          .setName(arg.name)
+          .setDescription(arg.description)
+          .setRequired(arg.required)
+          .addChoices(...(arg.choices || []));
+
       switch (arg.type) {
         case ApplicationCommandOptionType.String:
           slashCommand.addStringOption(builder);

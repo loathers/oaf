@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
-import { PATH_MAPPINGS } from "./constants";
+import { ItemType, PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 import { WikiSearcher } from "./wikisearch";
@@ -142,9 +142,20 @@ export function attachKoLCommands(
   );
   client.attachCommand(
     "spade",
-    [],
-    (interaction: CommandInteraction) => spadeItems(interaction, kolClient, wikiSearcher),
-    "Spade the existence and tradeability of as yet unreleased items."
+    [
+      {
+        name: "spadeable",
+        description: "What to spade.",
+        type: ApplicationCommandOptionType.String,
+        choices: [
+          { name: "Familiars", value: "familiar" },
+          { name: "Items", value: "item" },
+        ],
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => spade(interaction, kolClient, wikiSearcher),
+    "Spade the existence and tradeability of as yet unreleased stuff."
   );
 }
 
@@ -403,12 +414,32 @@ async function leaderboard(interaction: CommandInteraction, kolClient: KOLClient
   }
 }
 
+async function spade(
+  interaction: CommandInteraction,
+  kolClient: KOLClient,
+  wiki: WikiSearcher
+): Promise<void> {
+  switch (interaction.options.getString("spadeable", true)) {
+    case "item":
+      await spadeItems(interaction, kolClient, wiki);
+      return;
+    case "familiar":
+      await spadeFamiliars(interaction, kolClient, wiki);
+      return;
+    default:
+      await interaction.reply({
+        content: "It shouldn't be possible to see this message. Please report it.",
+        ephemeral: true,
+      });
+  }
+}
+
 async function spadeItems(
   interaction: CommandInteraction,
   kolClient: KOLClient,
   wiki: WikiSearcher
 ): Promise<void> {
-  interaction.deferReply();
+  await interaction.deferReply();
   const finalId = wiki.lastItem;
   if (finalId < 0) {
     interaction.editReply("Our wiki search isn't configured properly!");
@@ -420,15 +451,70 @@ async function spadeItems(
     data.push(spadeData);
     if (!spadeData.exists) break;
   }
-  const message = data
-    .map(({ id, exists, tradeable, itemtype, additionalInfo }) =>
-      exists
-        ? `Item ${id} exists and is ${tradeable ? "tradeable" : "untradeable"}. It is ${
-            itemtype ? itemtype : "of an unknown type"
-          }. ${additionalInfo ? additionalInfo : ""}`
-        : `Item ${id} does not exist.`
-    )
-    .join("\n");
 
-  interaction.editReply(`Searched items with ids starting after ${finalId}:\n${message}`);
+  interaction.editReply({
+    content: null,
+    embeds: [
+      {
+        title: "Spaded items",
+        description: `Searched items with ids starting after ${finalId}:`,
+        fields: data.map(({ id, exists, tradeable, itemtype, additionalInfo }) => ({
+          name: `Item ${id}`,
+          value: exists
+            ? `${tradeable ? "Tradeable" : "Untradeable"}\n${itemTypeEnumToString(itemtype)}${
+                additionalInfo ? `\n${additionalInfo}` : ""
+              }`
+            : "Does not exist",
+          inline: true,
+        })),
+        footer: {
+          text: `OAF can detect Food, Booze, Spleen Items, Offhands and Familiar Equipment. No type indicates none of these.`,
+        },
+      },
+    ],
+  });
+}
+
+function itemTypeEnumToString(itemtype: ItemType): string {
+  switch (itemtype) {
+    case ItemType.Food:
+      return "Food";
+    case ItemType.Booze:
+      return "Booze";
+    case ItemType.Spleen:
+      return "Spleen Item";
+    case ItemType.Offhand:
+      return "Offhand";
+    case ItemType.Offhand:
+      return "Familiar Equipment";
+    case ItemType.Unknown:
+    //fall thru
+    default:
+      return "";
+  }
+}
+
+async function spadeFamiliars(
+  interaction: CommandInteraction,
+  kolClient: KOLClient,
+  wiki: WikiSearcher
+): Promise<void> {
+  await interaction.deferReply();
+  const finalId = wiki.lastFamiliar;
+  if (finalId < 0) {
+    interaction.editReply("Our wiki search isn't configured properly!");
+    return;
+  }
+  const data = [`Spading familiars with ids after ${finalId}.`];
+  for (let id = finalId + 1; id <= finalId + 37; id++) {
+    const name = await kolClient.spadeFamiliar(id);
+    if (name === "none") {
+      data.push(`No familiar ${id} found. Sorry!`);
+      break;
+    } else {
+      data.push(`Familiar ${id} exists, and is called ${name}.`);
+    }
+  }
+
+  interaction.editReply(data.join("\n"));
 }
