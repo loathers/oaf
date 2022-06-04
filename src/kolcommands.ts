@@ -418,14 +418,14 @@ async function spadeItems(
   for (let id = finalId + 1; id <= finalId + 37; id++) {
     const spadeData = await kolClient.spadeItem(id);
     data.push(spadeData);
-    if (spadeData.exists === "does not exist") break;
+    if (!spadeData.exists) break;
   }
   const message = data
     .map(
-      ({ id, exists, tradeable, offHand, familiarEquip, familiar, food }) =>
-        `Item ${id} ${exists} and is ${tradeable}. It is ${
-          familiarEquip || offHand || food || "not an off-hand or familiar equip"
-        }.${familiar ? `Also, great news: it's associated with the familiar ${familiar}!` : ""}`
+      ({ id, exists, tradeable, offHand, familiarEquip, familiar }) =>
+        exists ? `Item ${id} exists and is ${tradeable}. It is ${
+          familiarEquip || offHand || food || "unknown what it is"
+        }.${familiar ? `Also, great news: it's associated with the familiar ${familiar}!` : `Item ${id} does not exist.`}`
     )
     .join("\n");
 

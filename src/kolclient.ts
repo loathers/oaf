@@ -105,8 +105,8 @@ const spadeData = {
       },
     ],
     visitMatch: /Nopers/,
-    ifTrue: "does not exist",
-    ifFalse: "exists",
+    ifTrue: false,
+    ifFalse: true,
     additionalData: undefined,
   },
   tradeable: {
@@ -593,7 +593,7 @@ export class KOLClient {
   }
 
   async spadeItem(itemId: number): Promise<SpadedItem> {
-    const data: { [x in string]: string } = {};
+    const data: { [x in string]: string | boolean } = {};
     for (const property in spadeData) {
       const { url, visitMatch, ifTrue, ifFalse, additionalData } =
         spadeData[property as SpadeDataType];
