@@ -189,18 +189,21 @@ async function detailedClanStatus(
       if (status.forest.watchtower)
         forestString += "Watchtower open, you can grab freddies if you like.\n";
       if (status.forest.auditor) forestString += "~~Auditor's badge claimed.~~\n";
-      else forestString += "Auditor's badge available.\n(Cabin => Basement => Lockbox)\n";
+      else
+        forestString +=
+          "Auditor's badge available.\n\u00a0\u00a0*(Cabin => Basement => Lockbox)*\n";
       if (status.forest.musicbox) forestString += "~~Intricate music box parts claimed.~~\n";
       else
         forestString +=
-          "Intricate music box parts available.\n(Cabin => Attic => Music Box)\n(Requires Accordion Thief)\n(Also banishes spooky from forest)\n";
+          "Intricate music box parts available.\n\u00a0\u00a0*(Cabin => Attic => Music Box)*\n\u00a0\u00a0*(Requires Accordion Thief)*\n\u00a0\u00a0*(Also banishes spooky from forest)*\n";
       if (status.forest.kiwi) forestString += "~~Blood kiwi claimed.~~\n";
       else
-        forestString += "Blood kiwi available.\n(Tree, Root Around => Look Up + Climb => Stomp)\n";
+        forestString +=
+          "Blood kiwi available.\n\u00a0\u00a0*(Tree, Root Around => Look Up + Climb => Stomp)*\n";
       if (status.forest.amber) forestString += "~~Moon-amber claimed.~~\n";
       else
         forestString +=
-          "Moon-amber available.\n(Tree => Climb => Shiny Thing)\n(Requires muscle class)\n";
+          "Moon-amber available.\n\u00a0\u00a0*(Tree => Climb => Shiny Thing)*\n\u00a0\u00a0*(Requires muscle class)*\n";
     } else forestString += "~~Forest fully cleared.~~\n";
     let villageString = "";
     if (status.overview.village) {
@@ -210,7 +213,7 @@ async function detailedClanStatus(
       if (status.village.hanging) villageString += "~~Hanging complete.~~\n";
       else
         villageString +=
-          "Hanging available.\n(Square, Gallows => Stand on Trap Door + Gallows => Pull Lever)\n";
+          "Hanging available.\n\u00a0\u00a0*(Square, Gallows => Stand on Trap Door + Gallows => Pull Lever)*\n";
     } else villageString += "~~Village fully cleared.~~\n";
     let castleString = "";
     if (status.overview.castle) {
@@ -225,15 +228,17 @@ async function detailedClanStatus(
         else castleString += "Machine needs repairing (with skull capacitor).\n";
       }
       if (status.castle.roast) castleString += "~~Dreadful roast claimed.~~\n";
-      else castleString += "Dreadful roast available.\n(Great Hall => Dining Room => Grab roast)\n";
+      else
+        castleString +=
+          "Dreadful roast available.\n\u00a0\u00a0*(Great Hall => Dining Room => Grab roast)*\n";
       if (status.castle.banana) castleString += "~~Wax banana claimed.~~\n";
       else
         castleString +=
-          "Wax banana available.\n(Great Hall => Dining Room => Levitate)\n(Requires myst class)\n";
+          "Wax banana available.\n\u00a0\u00a0*(Great Hall => Dining Room => Levitate)*\n\u00a0\u00a0*(Requires myst class)*\n";
       if (status.castle.agaricus) castleString += "~~Stinking agaricus claimed.~~\n";
       else
         castleString +=
-          "Stinking agaricus available.\n(Dungeons => Guard Room => Break off bits)\n";
+          "Stinking agaricus available.\n\u00a0\u00a0*(Dungeons => Guard Room => Break off bits)*\n";
     } else castleString += "~~Castle fully cleared.~~\n";
     embed.addFields([
       {
