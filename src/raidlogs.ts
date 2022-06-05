@@ -208,8 +208,11 @@ async function detailedClanStatus(
     let villageString = "";
     if (status.overview.village) {
       if (status.village.schoolhouse)
-        villageString += "Schoolhouse is open, go get your pencils!\n";
-      if (status.village.suite) villageString += "Master suite is open, grab some eau de mort?\n";
+        villageString +=
+          "Schoolhouse is open, go get your pencils!\n\u00a0\u00a0\u00a0\u00a0*Square \u2192 Schoolhouse \u2192 Desk*\n";
+      if (status.village.suite)
+        villageString +=
+          "Master suite is open, grab some eau de mort?\n\u00a0\u00a0\u00a0\u00a0*Duke's Estate \u2192 Master Suite \u2192 Nightstand*\n";
       if (status.village.hanging) villageString += "~~Hanging complete.~~\n";
       else
         villageString +=
