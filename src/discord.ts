@@ -248,6 +248,7 @@ export class DiscordClient {
       reply: { messageReference: message.id },
       allowedMentions: {
         parse: [],
+        repliedUser: false,
       },
     });
     if (!item.length) {
@@ -256,9 +257,22 @@ export class DiscordClient {
     }
     const embed = await this._wikiSearcher.getEmbed(item);
     if (embed) {
-      searchingMessage.edit({ content: null, embeds: [embed] });
+      searchingMessage.edit({
+        content: null,
+        embeds: [embed],
+        allowedMentions: {
+          parse: [],
+          repliedUser: false,
+        },
+      });
     } else {
-      searchingMessage.edit(`"${item}" wasn't found. Please refine your search.`);
+      searchingMessage.edit({
+        content: `"${item}" wasn't found. Please refine your search.`,
+        allowedMentions: {
+          parse: [],
+          repliedUser: false,
+        },
+      });
     }
   }
 
