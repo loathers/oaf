@@ -1,13 +1,15 @@
 # OAF-JS
 ## A Discord Bot for the Ascension Speed Society
-Welcome to O.A.F.! This is a bot built specifically for the Ascension Speed Society, a Discord server based around speedrunning in the Kingdom of Loathing. It has a truly startling number of features. It has (probably) changed since you last used it, so please read the following overview to understand how to use O.A.F. 2.0.
+Welcome to O.A.F.! This is a bot built specifically for the Ascension Speed Society, a Discord server based around speedrunning in the Kingdom of Loathing. It has a truly startling number of features. It has (probably) changed since you last used it, so please read the following overview to understand how to use OAF: The Next Generation. 
 
 ## General Usage
 Formerly, OAF was invoked using ! commands. **This is no longer the case.** To invoke OAF, you now use *slash* commands. To see OAF options in the Discord window, all you have to do is type a single backslash; when you do, a long list of possible commands is spawned, like so:
 
 ![image](https://user-images.githubusercontent.com/8014761/172405756-b030ee08-9c5d-4cff-9dbd-157e8ffbc7bb.png)
 
-This should (in theory) make OAF relatively self-documenting, as each command has its own string describing the action. For the purposes of thorough documentation, we will also document these all here, starting from the most-used commands to the least-used commands.
+This should (in theory) make OAF relatively self-documenting, as each command has its own string describing the action. For the purposes of thorough documentation, we will also document these all here, starting from the most-used commands to the least-used commands. (Please note that this readme was last updated on June 7th, 2022; we will try to keep this up-to-date, but there may be small syntax changes in the coming months as we identify issues in usage.)
+
+------------------------------
 
 ## Core OAF Commands
 ### /wiki
@@ -29,7 +31,7 @@ Similar to /wiki, /mafia searches the [KOLMafia Wiki](https://wiki.kolmafia.us/i
 ![image](https://user-images.githubusercontent.com/8014761/172417662-236b2ea3-6da0-488f-a76a-30c5cdf81848.png)
 
 ### /remind
-When invoked, this command generates a reminder that can be used to remind yourself to do things, either in-game or out-of-game. The command has a "when" option, in which you'll put how long in the future you want the reminder to be (formatted as "1d2h" or "3h" or "30m"). If you would like OAF to ping you ten minutes after rollover, you can also use `rollover` as the when parameter. As seen in the screenshot, you can (and should) put a specific message in the reminder outlining what it is you want to be reminded of, as well.
+When invoked, this command generates a reminder that can be used to remind yourself to do things, either in-game or out-of-game. The command has a "when" option, in which you'll put how long in the future you want the reminder to be (formatted as "1d2h" or "3h" or "30m"). If you would like OAF to ping you ten minutes after rollover, you can also use `rollover` as the "when" parameter. As seen in the screenshot, you can (and should) put a specific message in the reminder outlining what it is you want to be reminded of.
 
 ![image](https://user-images.githubusercontent.com/8014761/172413083-1bf7ea24-f342-4423-8d59-4c97fa7b2fb6.png)
 
@@ -39,7 +41,7 @@ When invoked, this command tests the Kingdom for the existence of new items. The
 ![image](https://user-images.githubusercontent.com/8014761/172412074-0ea3fdcb-2482-4feb-88b0-d4fa816c7fe8.png)
 
 ### /leaderboard
-When invoked, this command generates a path ascension leaderboard, showing the gold, silver, and bronze finishers for that particular season. The boards are associated with the # in the board's URL, which is roughly correlated to [Path ID](https://kol.coldfront.net/thekolwiki/index.php/Paths_by_number) but (annoyingly) not entirely correlated. Still, this is useful whenever you want to see what the native KOL Boards showed for a challenge path in the distant past, or (more usefully) the current path when the season is competitive in the last month or so.
+When invoked, this command generates a path ascension leaderboard, showing the gold, silver, and bronze finishers for that particular season (or, if it is an active board, the current holders of those categorizations). The boards are associated with the # in the board's URL, which is roughly correlated to [Path ID](https://kol.coldfront.net/thekolwiki/index.php/Paths_by_number) but (annoyingly) not entirely correlated. Still, this is useful whenever you want to see what the native KOL Boards showed for a challenge path in the distant past, or (more usefully) the current path when the season is competitive in the last month or so.
 
 ![image](https://user-images.githubusercontent.com/8014761/172418964-be08e036-afa8-46ea-9fc1-4adc46a254ef.png)
 
