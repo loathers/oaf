@@ -329,8 +329,8 @@ export class DiscordClient {
   async reloadMafiaData(interaction: CommandInteraction): Promise<void> {
     await interaction.deferReply();
     if (await this._wikiSearcher.conditionallyReloadMafiaData())
-      interaction.reply("Information reloaded from KoLMafia Github data files.");
-    else interaction.reply("Information reloaded too recently, try again later.");
+      interaction.editReply("Information reloaded from KoLMafia Github data files.");
+    else interaction.editReply("Information reloaded too recently, try again later.");
   }
 
   start(): void {
