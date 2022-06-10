@@ -326,6 +326,13 @@ export class DiscordClient {
     }
   }
 
+  async reloadMafiaData(interaction: CommandInteraction): Promise<void> {
+    await interaction.deferReply();
+    if (await this._wikiSearcher.conditionallyReloadMafiaData())
+      interaction.reply("Information reloaded from KoLMafia Github data files.");
+    else interaction.reply("Information reloaded too recently, try again later.");
+  }
+
   start(): void {
     this._client.login(this._discordToken);
   }
@@ -369,6 +376,12 @@ export class DiscordClient {
       ],
       async (interaction: CommandInteraction) => await this.mafiawikiSearch(interaction),
       "Search the KoLmafia wiki for the given term."
+    );
+    this.attachCommand(
+      "rescan",
+      [],
+      async (interaction: CommandInteraction) => await this.reloadMafiaData(interaction),
+      "Reload OAF's in-game information from mafia's datafiles."
     );
   }
 }
