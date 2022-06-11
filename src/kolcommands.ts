@@ -40,7 +40,7 @@ export function attachKoLCommands(
     "stat",
     [
       {
-        name: "droprate",
+        name: "stat",
         description: "The amount of mainstat you are reaching.",
         type: ApplicationCommandOptionType.Integer,
         required: true,
@@ -271,7 +271,7 @@ function level(interaction: CommandInteraction): void {
 }
 
 function stat(interaction: CommandInteraction): void {
-  const mainstat = interaction.options.getInteger("mainstat", true);
+  const mainstat = interaction.options.getInteger("stat", true);
   if (mainstat <= 0) {
     interaction.reply({ content: `Please supply a positive mainstat.`, ephemeral: true });
     return;
