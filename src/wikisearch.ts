@@ -63,6 +63,7 @@ export class WikiSearcher {
   private _customSearch: string;
   private _finalItemId = -1;
   private _finalFamiliarId = -1;
+  private _lastDownloadTime = -1;
 
   constructor(client: KOLClient) {
     this._searchApiKey = process.env.GOOGLE_API_KEY || "";
@@ -225,11 +226,20 @@ export class WikiSearcher {
     }
 
     this._pizzaTreeRoot.addPizzaToEffects();
+    this._lastDownloadTime = Date.now();
   }
 
   async reloadMafiaData(): Promise<void> {
     this._thingMap.clear();
-    this.downloadMafiaData();
+    await this.downloadMafiaData();
+  }
+
+  async conditionallyReloadMafiaData(): Promise<boolean> {
+    if (this._lastDownloadTime < Date.now() - 3600000) {
+      await this.reloadMafiaData();
+      return true;
+    }
+    return false;
   }
 
   async getEmbed(item: string): Promise<MessageEmbed | undefined> {

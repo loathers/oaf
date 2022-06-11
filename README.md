@@ -21,6 +21,8 @@ When invoked, this can be used to look up any term in the [KOL Wiki](https://kol
 - *Quality:* If it's food or booze, the quality rating of the item in question.
 - *Equipment Type:* If it's equipment, what kind of equipment it is (sword vs club, 1 vs 2 handed, et cetera)
 
+If this in-game information becomes out of date, OAF can be told to reload data from Mafia's data files with **/rescan**.
+
 This command has two possible invocations. You can invoke the following outcome either by typing `/wiki tamarind-flavored chewing gum` or `[[tamarind-flavored chewing gum]]`.
 
 ![image](https://user-images.githubusercontent.com/8014761/172411077-4fe06955-25d3-47b7-ba42-18f6e5e79601.png)
