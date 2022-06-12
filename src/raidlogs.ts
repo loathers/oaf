@@ -371,7 +371,7 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
 }
 
 async function setDone(interaction: CommandInteraction, databaseClientPool: Pool) {
-  const username = interaction.options.getString("player");
+  const username = interaction.options.getString("player")?.toLowerCase();
   await interaction.deferReply();
   await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET done_with_skills = TRUE;",
@@ -382,7 +382,7 @@ async function setDone(interaction: CommandInteraction, databaseClientPool: Pool
 }
 
 async function setNotDone(interaction: CommandInteraction, databaseClientPool: Pool) {
-  const username = interaction.options.getString("player");
+  const username = interaction.options.getString("player")?.toLowerCase();
   await interaction.deferReply();
   await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET done_with_skills = FALSE;",
