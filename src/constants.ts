@@ -296,6 +296,7 @@ export const PACKAGES: Map<string, string> = new Map([
   ["retrospecs try-at-home kit", "retrospecs"],
   ["fresh can of paint", "fresh coat of paint"],
   ["mint condition magnifying glass", "cursed magnifying glass"],
+  ["packaged june cleaver", "june cleaver"],
 ]);
 
 const ghostlings: [string, string][] = [
