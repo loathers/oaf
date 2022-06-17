@@ -231,6 +231,7 @@ export class WikiSearcher {
 
   async reloadMafiaData(): Promise<void> {
     this._thingMap.clear();
+    this._pizzaTreeRoot = new PizzaNode("");
     await this.downloadMafiaData();
   }
 
