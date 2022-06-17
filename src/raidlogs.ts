@@ -40,6 +40,7 @@ type PlayerData = {
   id?: string;
   kills: number;
   skills: number;
+  brainiac: boolean;
 };
 
 const killMap: Map<string, PlayerData> = new Map();
@@ -101,7 +102,7 @@ export function attachClanCommands(
     "Set a player as not done with Dreadsylvania skills."
   );
   discordClient.attachCommand(
-    "braniac",
+    "brainiac",
     [
       {
         name: "player",
@@ -110,11 +111,11 @@ export function attachClanCommands(
         required: true,
       },
     ],
-    (interaction: CommandInteraction) => setBraniac(interaction, databaseClientPool),
+    (interaction: CommandInteraction) => setbrainiac(interaction, databaseClientPool),
     "Set a player as always available for Dreadsylvania skills."
   );
   discordClient.attachCommand(
-    "unbraniac",
+    "unbrainiac",
     [
       {
         name: "player",
@@ -123,7 +124,7 @@ export function attachClanCommands(
         required: true,
       },
     ],
-    (interaction: CommandInteraction) => setUnBraniac(interaction, databaseClientPool),
+    (interaction: CommandInteraction) => setUnbrainiac(interaction, databaseClientPool),
     "Unset a player as always available for Dreadsylvania skills."
   );
   discordClient.attachCommand(
@@ -157,6 +158,7 @@ export async function syncToDatabase(databaseClientPool: Pool): Promise<void> {
       kills: player.kills,
       skills: player.skills,
       id: player.user_id,
+      brainiac: player.brainiac,
     });
   }
 }
@@ -397,7 +399,7 @@ async function parseOldLogs(kolClient: KOLClient, databaseClientPool: Pool) {
 }
 
 async function setDone(interaction: CommandInteraction, databaseClientPool: Pool) {
-  const username = interaction.options.getString("player")?.toLowerCase();
+  const username = interaction.options.getString("player", true).toLowerCase();
   await interaction.deferReply();
   await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET done_with_skills = TRUE;",
@@ -408,7 +410,7 @@ async function setDone(interaction: CommandInteraction, databaseClientPool: Pool
 }
 
 async function setNotDone(interaction: CommandInteraction, databaseClientPool: Pool) {
-  const username = interaction.options.getString("player")?.toLowerCase();
+  const username = interaction.options.getString("player", true).toLowerCase();
   await interaction.deferReply();
   await databaseClientPool.query(
     "INSERT INTO players (username, done_with_skills) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET done_with_skills = FALSE;",
@@ -418,26 +420,34 @@ async function setNotDone(interaction: CommandInteraction, databaseClientPool: P
   return;
 }
 
-async function setBraniac(interaction: CommandInteraction, databaseClientPool: Pool) {
-  const username = interaction.options.getString("player")?.toLowerCase();
+async function setbrainiac(interaction: CommandInteraction, databaseClientPool: Pool) {
+  const username = interaction.options.getString("player", true).toLowerCase();
   await interaction.deferReply();
   await databaseClientPool.query(
-    "INSERT INTO players (username, braniac) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET braniac = TRUE;",
+    "INSERT INTO players (username, brainiac) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET brainiac = TRUE;",
     [username]
   );
+  if (killMap.has(username)) (killMap.get(username) as PlayerData).brainiac = true;
+  else
+    killMap.set(username, {
+      kills: 0,
+      skills: 0,
+      brainiac: true,
+    });
   interaction.editReply(
     `Added user "${username}" to the list of players always available to help with skills.`
   );
   return;
 }
 
-async function setUnBraniac(interaction: CommandInteraction, databaseClientPool: Pool) {
-  const username = interaction.options.getString("player")?.toLowerCase();
+async function setUnbrainiac(interaction: CommandInteraction, databaseClientPool: Pool) {
+  const username = interaction.options.getString("player", true).toLowerCase();
   await interaction.deferReply();
   await databaseClientPool.query(
-    "INSERT INTO players (username, braniac) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET braniac = FALSE;",
+    "INSERT INTO players (username, brainiac) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET brainiac = FALSE;",
     [username]
   );
+  if (killMap.has(username)) (killMap.get(username) as PlayerData).brainiac = false;
   interaction.editReply(
     `Removed user "${username}" from the list of players always available to help with skills.`
   );
@@ -465,11 +475,13 @@ function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, P
             kills: participation.kills + parseInt(matchedKill[2]),
             skills: participation.skills,
             id: participation.id,
+            brainiac: participation.brainiac,
           });
         } else {
           mapToUpdate.set(matchedKill[1], {
             kills: parseInt(matchedKill[2]),
             skills: 0,
+            brainiac: false,
           });
         }
       }
@@ -485,11 +497,13 @@ function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, P
             kills: participation.kills,
             skills: participation.skills + 1,
             id: participation.id,
+            brainiac: participation.brainiac,
           });
         } else {
           mapToUpdate.set(matchedSkill[1], {
             kills: 0,
             skills: 1,
+            brainiac: false,
           });
         }
       }
@@ -509,7 +523,8 @@ async function getBrains(interaction: CommandInteraction, kolClient: KOLClient):
   ];
   const classMap: Map<string, string[]> = new Map();
   for (let player of killMap.keys()) {
-    if (!!killMap.get(player)?.skills) {
+    const playerEntry = killMap.get(player);
+    if (!!playerEntry?.skills || playerEntry?.brainiac) {
       const details = await kolClient.getBasicDetailsForUser(player);
       if (details.level >= 15) {
         if (!classMap.has(details.class)) {
