@@ -577,9 +577,9 @@ export class KOLClient {
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
     try {
       const matcher =
-        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]+)\<\/td\>/;
+        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]+)\<\/td\>/i;
       const search = await this.tryRequestWithLogin("searchplayer.php", {
-        searchstring: name,
+        searchstring: name.replace(/\_/g, "\\_"),
         searching: "Yep.",
         for: "",
         startswith: 1,
