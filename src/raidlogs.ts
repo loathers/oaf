@@ -101,6 +101,32 @@ export function attachClanCommands(
     "Set a player as not done with Dreadsylvania skills."
   );
   discordClient.attachCommand(
+    "braniac",
+    [
+      {
+        name: "player",
+        description: "The player to set as always available for brain draining.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => setBraniac(interaction, databaseClientPool),
+    "Set a player as always available for Dreadsylvania skills."
+  );
+  discordClient.attachCommand(
+    "unbraniac",
+    [
+      {
+        name: "player",
+        description: "The player to unset as always available for brain draining.",
+        type: ApplicationCommandOptionType.String,
+        required: true,
+      },
+    ],
+    (interaction: CommandInteraction) => setUnBraniac(interaction, databaseClientPool),
+    "Unset a player as always available for Dreadsylvania skills."
+  );
+  discordClient.attachCommand(
     "brains",
     [],
     (interaction: CommandInteraction) => getBrains(interaction, kolClient),
@@ -389,6 +415,32 @@ async function setNotDone(interaction: CommandInteraction, databaseClientPool: P
     [username]
   );
   interaction.editReply(`Removed user "${username}" from the list of players done with skills.`);
+  return;
+}
+
+async function setBraniac(interaction: CommandInteraction, databaseClientPool: Pool) {
+  const username = interaction.options.getString("player")?.toLowerCase();
+  await interaction.deferReply();
+  await databaseClientPool.query(
+    "INSERT INTO players (username, braniac) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET braniac = TRUE;",
+    [username]
+  );
+  interaction.editReply(
+    `Added user "${username}" to the list of players always available to help with skills.`
+  );
+  return;
+}
+
+async function setUnBraniac(interaction: CommandInteraction, databaseClientPool: Pool) {
+  const username = interaction.options.getString("player")?.toLowerCase();
+  await interaction.deferReply();
+  await databaseClientPool.query(
+    "INSERT INTO players (username, braniac) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET braniac = FALSE;",
+    [username]
+  );
+  interaction.editReply(
+    `Removed user "${username}" from the list of players always available to help with skills.`
+  );
   return;
 }
 
