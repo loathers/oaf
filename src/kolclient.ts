@@ -578,7 +578,7 @@ export class KOLClient {
     const page = await this.tryRequestWithLogin("runskillz.php", {
       action: "Skillz",
       whichskill: skillId,
-      targetPlayer: "1",
+      targetplayer: "1",
       quantity: 1,
     });
 
