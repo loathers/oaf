@@ -529,5 +529,9 @@ async function spadeSkills(
     }
   }
 
+  if (data.length === 0) {
+    data.push("No new skills found");
+  }
+
   interaction.editReply(data.join("\n"));
 }
