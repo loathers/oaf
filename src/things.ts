@@ -517,6 +517,10 @@ export class Skill implements Thing {
     return this._name;
   }
 
+  block(): number {
+    return Math.floor(this._skill.id / 1000);
+  }
+
   async buildDescription(client: KOLClient): Promise<string> {
     let description = "";
     switch (this._skill.type) {

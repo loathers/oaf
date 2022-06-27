@@ -63,6 +63,7 @@ export class WikiSearcher {
   private _customSearch: string;
   private _finalItemId = -1;
   private _finalFamiliarId = -1;
+  private _finalSkillIds: { [block: number]: number } = {};
   private _lastDownloadTime = -1;
 
   constructor(client: KOLClient) {
@@ -77,6 +78,10 @@ export class WikiSearcher {
 
   get lastFamiliar(): number {
     return this._finalFamiliarId;
+  }
+
+  get lastSkills(): { [block: number]: number } {
+    return this._finalSkillIds;
   }
 
   async downloadMafiaData(): Promise<void> {
@@ -101,6 +106,10 @@ export class WikiSearcher {
     for (let line of skillFile.data.split(/\n/)) {
       try {
         const skill = new Skill(line);
+        const block = skill.block();
+        if (skill._skill.id > (this._finalSkillIds[block] || 0)) {
+          this._finalSkillIds[block] = skill._skill.id;
+        }
         if (skill.name()) {
           this._thingMap.set(skill.name(), skill);
         }

@@ -150,6 +150,7 @@ export function attachKoLCommands(
         choices: [
           { name: "Familiars", value: "familiar" },
           { name: "Items", value: "item" },
+          { name: "Skills", value: "skill" },
         ],
         required: true,
       },
@@ -426,6 +427,9 @@ async function spade(
     case "familiar":
       await spadeFamiliars(interaction, kolClient, wiki);
       return;
+    case "skill":
+      await spadeSkills(interaction, kolClient, wiki);
+      return;
     default:
       await interaction.reply({
         content: "It shouldn't be possible to see this message. Please report it.",
@@ -496,6 +500,32 @@ async function spadeFamiliars(
       break;
     } else {
       data.push(`Familiar ${id} exists, and is called ${name}.`);
+    }
+  }
+
+  interaction.editReply(data.join("\n"));
+}
+
+async function spadeSkills(
+  interaction: CommandInteraction,
+  kolClient: KOLClient,
+  wiki: WikiSearcher
+): Promise<void> {
+  await interaction.deferReply();
+  const finalSkills = wiki.lastSkills;
+  if (Object.keys(finalSkills).length === 0) {
+    interaction.editReply("Our wiki search isn't configured properly!");
+    return;
+  }
+  const data = [];
+  for (const finalId of Object.values(finalSkills)) {
+    for (let id = finalId + 1; id <= finalId + 37; id++) {
+      const exists = await kolClient.spadeSkill(id);
+      if (exists) {
+        data.push(`Skill ${id} exists`);
+      } else {
+        break;
+      }
     }
   }
 
