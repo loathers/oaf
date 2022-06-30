@@ -107,7 +107,8 @@ export class WikiSearcher {
       try {
         const skill = new Skill(line);
         const block = skill.block();
-        if (skill._skill.id > (this._finalSkillIds[block] || 0)) {
+        // We only care about the 0 and 7 blocks realistically
+        if ([0, 7].includes(block) && skill._skill.id > (this._finalSkillIds[block] || 0)) {
           this._finalSkillIds[block] = skill._skill.id;
         }
         if (skill.name()) {
