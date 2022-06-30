@@ -574,6 +574,18 @@ export class KOLClient {
     return name ?? "none";
   }
 
+  async spadeSkill(skillId: number): Promise<boolean> {
+    const page = await this.tryRequestWithLogin("runskillz.php", {
+      action: "Skillz",
+      whichskill: skillId,
+      targetplayer: "1",
+      quantity: 1,
+    });
+
+    // If the skill doesn't exist on the dev server, the response ends with an exclamation mark
+    return page.includes("You don't have that skill.");
+  }
+
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {
     try {
       const matcher =
