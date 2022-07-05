@@ -5,6 +5,8 @@ import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 import { WikiSearcher } from "./wikisearch";
 
+const HORIZON = 37;
+
 export function attachKoLCommands(
   client: DiscordClient,
   kolClient: KOLClient,
@@ -450,7 +452,7 @@ async function spadeItems(
     return;
   }
   const data = [];
-  for (let id = finalId + 1; id <= finalId + 37; id++) {
+  for (let id = finalId + 1; id <= finalId + HORIZON; id++) {
     const spadeData = await kolClient.spadeItem(id);
     data.push(spadeData);
     if (!spadeData.exists) break;
@@ -493,7 +495,7 @@ async function spadeFamiliars(
     return;
   }
   const data = [`Spading familiars with ids after ${finalId}.`];
-  for (let id = finalId + 1; id <= finalId + 37; id++) {
+  for (let id = finalId + 1; id <= finalId + HORIZON; id++) {
     const name = await kolClient.spadeFamiliar(id);
     if (name === "none") {
       data.push(`No familiar ${id} found. Sorry!`);
@@ -519,7 +521,7 @@ async function spadeSkills(
   }
   const data = [];
   for (const finalId of Object.values(finalSkills)) {
-    for (let id = finalId + 1; id <= finalId + 37; id++) {
+    for (let id = finalId + 1; id <= finalId + HORIZON; id++) {
       const exists = await kolClient.spadeSkill(id);
       if (exists) {
         data.push(`Skill ${id} exists`);
