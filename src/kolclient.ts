@@ -308,15 +308,19 @@ export class KOLClient {
     type MonsterData = {
       kills: number;
       banishes: number;
+      regex: RegExp;
     };
 
     const monsters: Map<string, MonsterData> = new Map([
-      ["bugbear", { kills: 0, banishes: 0 }],
-      ["werewolf", { kills: 0, banishes: 0 }],
-      ["ghost", { kills: 0, banishes: 0 }],
-      ["zombie", { kills: 0, banishes: 0 }],
-      ["vampire", { kills: 0, banishes: 0 }],
-      ["skeleton", { kills: 0, banishes: 0 }],
+      ["bugbear", { kills: 0, banishes: 0, regex: /defeated\s+Falls\-From\-Sky/ }],
+      ["werewolf", { kills: 0, banishes: 0, regex: /defeated\s+The Great Wolf of the Air/ }],
+      ["ghost", { kills: 0, banishes: 0, regex: /defeated\s+Mayor Ghost/ }],
+      [
+        "zombie",
+        { kills: 0, banishes: 0, regex: /defeated\s+the Zombie Homeowners\' Association/ },
+      ],
+      ["vampire", { kills: 0, banishes: 0, regex: /defeated\s+Count Drunkula/ }],
+      ["skeleton", { kills: 0, banishes: 0, regex: /defeated\s+The Unkillable Skeleton/ }],
     ]);
 
     const pairs = [
@@ -346,7 +350,11 @@ export class KOLClient {
         monster1data.banishes++;
       }
       //ELSE IF CHAIN BREAKS HERE
-      if (monster1data.banishes > monster2data.banishes) {
+      if (monster1data.regex.test(raidLog)) {
+        bosses.push(`x${monster1}`);
+      } else if (monster2data.regex.test(raidLog)) {
+        bosses.push(`x${monster2}`);
+      } else if (monster1data.banishes > monster2data.banishes) {
         bosses.push(monster2);
       } else if (monster2data.banishes > monster1data.banishes) {
         bosses.push(monster1);

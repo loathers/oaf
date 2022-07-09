@@ -516,6 +516,12 @@ export const DREAD_BOSS_MAPPINGS: Map<string, string> = new Map([
   ["ghost", "Mayor Ghost"],
   ["vampire", "Drunkula"],
   ["skeleton", "Unkillable Skeleton"],
+  ["xwerewolf", "~~Air Wolf~~"],
+  ["xbugbear", "~~Falls-From-Sky~~"],
+  ["xzombie", "~~Zombie HOA~~"],
+  ["xghost", "~~Mayor Ghost~~"],
+  ["xvampire", "~~Drunkula~~"],
+  ["xskeleton", "~~Unkillable Skeleton~~"],
   ["unknown", "Boss unknown"],
 ]);
 
