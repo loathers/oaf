@@ -8,6 +8,7 @@ import { PACKAGES, REVERSE_PACKAGES } from "./constants";
 type FoundName = {
   name: string;
   url: string;
+  image?: string;
 };
 
 class PizzaNode {
@@ -263,6 +264,8 @@ export class WikiSearcher {
     if (this._thingMap.has(foundName.name.toLowerCase())) {
       const thing = this._thingMap.get(foundName.name.toLowerCase());
       await thing?.addToEmbed(embed, this._client);
+    } else if (foundName.image) {
+      embed.setThumbnail(foundName.image);
     }
     return embed;
   }
@@ -286,7 +289,8 @@ export class WikiSearcher {
       const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
       if (directResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(directResponseUrl, directWikiResponse.data);
-        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: directResponseUrl });
+        const image = imageFromWikiPage(directResponseUrl, directWikiResponse.data)
+        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: directResponseUrl, image });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error: any) {
@@ -422,6 +426,14 @@ function nameFromWikiPage(url: string, data: any): string {
     default:
       return result;
   }
+}
+
+function imageFromWikiPage(url: string, data: any): string {
+  // As far as I know this is always the first relevant image
+  const imageMatch = String(data).match(
+    /https\:\/\/kol.coldfront.net\/thekolwiki\/images\/.*?\.gif/
+  );
+  return imageMatch?.[0] ?? "";
 }
 
 function emoteNamesFromEmotes(emoteString: string) {
