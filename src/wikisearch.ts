@@ -289,7 +289,7 @@ export class WikiSearcher {
       const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
       if (directResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(directResponseUrl, directWikiResponse.data);
-        const image = imageFromWikiPage(directResponseUrl, directWikiResponse.data)
+        const image = imageFromWikiPage(directResponseUrl, directWikiResponse.data);
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: directResponseUrl, image });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
@@ -305,7 +305,8 @@ export class WikiSearcher {
       const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
       if (searchResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(searchResponseUrl, wikiSearchResponse.data);
-        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: searchResponseUrl });
+        const image = imageFromWikiPage(searchResponseUrl, wikiSearchResponse.data);
+        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: searchResponseUrl, image });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error: any) {
@@ -320,7 +321,12 @@ export class WikiSearcher {
       const crushedSearchResponseUrl = String(crushedWikiSearchResponse.request.res.responseUrl);
       if (crushedSearchResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(crushedSearchResponseUrl, crushedWikiSearchResponse.data);
-        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: crushedSearchResponseUrl });
+        const image = imageFromWikiPage(crushedSearchResponseUrl, crushedWikiSearchResponse.data);
+        this._nameMap.set(searchTerm.toLowerCase(), {
+          name: name,
+          url: crushedSearchResponseUrl,
+          image,
+        });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error: any) {
@@ -336,10 +342,13 @@ export class WikiSearcher {
           q: cleanedSearchTerm,
         },
       });
-      const name = nameFromWikiPage(googleSearchResponse.data.items[0].link, "");
+      const googledPage = await axios(googleSearchResponse.data.items[0].link);
+      const name = nameFromWikiPage(googleSearchResponse.data.items[0].link, googledPage.data);
+      const image = imageFromWikiPage(googleSearchResponse.data.items[0].link, googledPage.data);
       this._nameMap.set(searchTerm.toLowerCase(), {
         name: name,
         url: googleSearchResponse.data.items[0].link,
+        image,
       });
       return this._nameMap.get(searchTerm.toLowerCase());
     } catch (error: any) {
@@ -429,10 +438,12 @@ function nameFromWikiPage(url: string, data: any): string {
 }
 
 function imageFromWikiPage(url: string, data: any): string {
+  console.log(`Finding image in page ${url}`);
   // As far as I know this is always the first relevant image
   const imageMatch = String(data).match(
     /https\:\/\/kol.coldfront.net\/thekolwiki\/images\/.*\.gif/
   );
+  console.log(imageMatch);
   return imageMatch?.[0] ?? "";
 }
 
