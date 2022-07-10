@@ -268,7 +268,7 @@ export class WikiSearcher {
     } else if (foundName.image) {
       console.log("Image found");
       console.log(foundName.image);
-      embed.setThumbnail(foundName.image);
+      embed.setImage(foundName.image);
     }
     return embed;
   }
