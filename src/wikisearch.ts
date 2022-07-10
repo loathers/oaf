@@ -442,7 +442,7 @@ function nameFromWikiPage(url: string, data: any): string {
 function imageFromWikiPage(url: string, data: any): string {
   // As far as I know this is always the first relevant image
   const imageMatch = String(data).match(
-    /https\:\/\/kol.coldfront.net\/thekolwiki\/images\/.*\.gif/
+    /https\:\/\/kol.coldfront.net\/thekolwiki\/images\/[^\"\']*\.gif/
   );
   return imageMatch ? imageMatch[0] : "";
 }
