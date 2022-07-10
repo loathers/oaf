@@ -270,6 +270,7 @@ export class WikiSearcher {
       console.log(foundName.image);
       embed.setImage(foundName.image);
     }
+    console.log(embed);
     return embed;
   }
 
