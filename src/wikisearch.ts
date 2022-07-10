@@ -266,6 +266,8 @@ export class WikiSearcher {
       await thing?.addToEmbed(embed, this._client);
     } else if (foundName.image) {
       embed.setImage(foundName.image.replace("https", "http"));
+    } else {
+      embed.setImage("http://kol.coldfront.net/thekolwiki/vis_sig.jpg");
     }
     return embed;
   }
