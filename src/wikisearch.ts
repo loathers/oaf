@@ -438,13 +438,11 @@ function nameFromWikiPage(url: string, data: any): string {
 }
 
 function imageFromWikiPage(url: string, data: any): string {
-  console.log(`Finding image in page ${url}`);
   // As far as I know this is always the first relevant image
   const imageMatch = String(data).match(
     /https\:\/\/kol.coldfront.net\/thekolwiki\/images\/.*\.gif/
   );
-  console.log(imageMatch);
-  return imageMatch?.[0] ?? "";
+  return imageMatch ? imageMatch[0] : "";
 }
 
 function emoteNamesFromEmotes(emoteString: string) {
