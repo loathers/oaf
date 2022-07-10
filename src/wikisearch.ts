@@ -265,7 +265,9 @@ export class WikiSearcher {
       const thing = this._thingMap.get(foundName.name.toLowerCase());
       await thing?.addToEmbed(embed, this._client);
     } else if (foundName.image) {
-      embed.setThumbnail(foundName.image);
+      embed.setImage(foundName.image.replace("https", "http"));
+    } else {
+      embed.setImage("http://kol.coldfront.net/thekolwiki/vis_sig.jpg");
     }
     return embed;
   }
@@ -289,7 +291,7 @@ export class WikiSearcher {
       const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
       if (directResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(directResponseUrl, directWikiResponse.data);
-        const image = imageFromWikiPage(directResponseUrl, directWikiResponse.data)
+        const image = imageFromWikiPage(directResponseUrl, directWikiResponse.data);
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: directResponseUrl, image });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
@@ -305,7 +307,8 @@ export class WikiSearcher {
       const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
       if (searchResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(searchResponseUrl, wikiSearchResponse.data);
-        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: searchResponseUrl });
+        const image = imageFromWikiPage(searchResponseUrl, wikiSearchResponse.data);
+        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: searchResponseUrl, image });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error: any) {
@@ -320,7 +323,12 @@ export class WikiSearcher {
       const crushedSearchResponseUrl = String(crushedWikiSearchResponse.request.res.responseUrl);
       if (crushedSearchResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(crushedSearchResponseUrl, crushedWikiSearchResponse.data);
-        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: crushedSearchResponseUrl });
+        const image = imageFromWikiPage(crushedSearchResponseUrl, crushedWikiSearchResponse.data);
+        this._nameMap.set(searchTerm.toLowerCase(), {
+          name: name,
+          url: crushedSearchResponseUrl,
+          image,
+        });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error: any) {
@@ -336,10 +344,13 @@ export class WikiSearcher {
           q: cleanedSearchTerm,
         },
       });
-      const name = nameFromWikiPage(googleSearchResponse.data.items[0].link, "");
+      const googledPage = await axios(googleSearchResponse.data.items[0].link);
+      const name = nameFromWikiPage(googleSearchResponse.data.items[0].link, googledPage.data);
+      const image = imageFromWikiPage(googleSearchResponse.data.items[0].link, googledPage.data);
       this._nameMap.set(searchTerm.toLowerCase(), {
         name: name,
         url: googleSearchResponse.data.items[0].link,
+        image,
       });
       return this._nameMap.get(searchTerm.toLowerCase());
     } catch (error: any) {
@@ -433,7 +444,7 @@ function imageFromWikiPage(url: string, data: any): string {
   const imageMatch = String(data).match(
     /https\:\/\/kol.coldfront.net\/thekolwiki\/images\/.*\.gif/
   );
-  return imageMatch?.[0] ?? "";
+  return imageMatch ? imageMatch[0] : "";
 }
 
 function emoteNamesFromEmotes(emoteString: string) {
