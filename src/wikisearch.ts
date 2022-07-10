@@ -262,15 +262,11 @@ export class WikiSearcher {
       iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
     });
     if (this._thingMap.has(foundName.name.toLowerCase())) {
-      console.log("In thingmap");
       const thing = this._thingMap.get(foundName.name.toLowerCase());
       await thing?.addToEmbed(embed, this._client);
     } else if (foundName.image) {
-      console.log("Image found");
-      console.log(foundName.image);
       embed.setImage(foundName.image.replace("https", "http"));
     }
-    console.log(embed);
     return embed;
   }
 
