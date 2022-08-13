@@ -80,6 +80,7 @@ export class Item implements Thing {
     } else if (!this._item.discardable) tradeability_section += "Cannot be discarded.\n";
 
     const data = itemMap.get(this._name) || [];
+    let desc = `(Item ${this._item.id})\n`;
 
     if (this._item.types.includes("food")) {
       const advRange = data[4].split("-");
@@ -88,7 +89,7 @@ export class Item implements Thing {
         advRange.length > 1
           ? (parseInt(advRange[0]) + parseInt(advRange[1])) / 2
           : parseInt(data[4]);
-      let desc = `**${this.mapQuality(data[3])} food** (Size ${data[1]}${
+      desc += `**${this.mapQuality(data[3])} food** (Size ${data[1]}${
         data[2] !== "1" ? `, requires level ${data[2]}` : ""
       })`;
       if (data[4] !== "0") {
@@ -118,7 +119,7 @@ export class Item implements Thing {
         advRange.length > 1
           ? (parseInt(advRange[0]) + parseInt(advRange[1])) / 2
           : parseInt(data[4]);
-      let desc = `**${this.mapQuality(data[3])} booze** (Potency ${data[1]}${
+      desc += `**${this.mapQuality(data[3])} booze** (Potency ${data[1]}${
         data[2] !== "1" ? `, requires level ${data[2]}` : ""
       })`;
       if (data[4] !== "0") {
@@ -148,7 +149,7 @@ export class Item implements Thing {
         advRange.length > 1
           ? (parseInt(advRange[0]) + parseInt(advRange[1])) / 2
           : parseInt(data[4]);
-      let desc = `**${this.mapQuality(data[3])} spleen item** (Toxicity ${data[1]}${
+      desc += `**${this.mapQuality(data[3])} spleen item** (Toxicity ${data[1]}${
         data[2] !== "1" ? `, requires level ${data[2]}` : ""
       })`;
       if (data[4] !== "0") {
@@ -456,7 +457,9 @@ export class Effect implements Thing {
 
   async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
-    let description = `**Effect**\n${await client.getEffectDescription(this._effect.descId)}\n\n`;
+    let description = `**Effect**\n(Effect ${this.get().id})\n${await client.getEffectDescription(
+      this._effect.descId
+    )}\n\n`;
     if (this._effect.hookah) {
       if (this._pizza) {
         description += `Pizza: ${this._pizza.letters.padEnd(4, "✱")} (${
@@ -522,7 +525,7 @@ export class Skill implements Thing {
   }
 
   async buildDescription(client: KOLClient): Promise<string> {
-    let description = "";
+    let description = `(Skill ${this._skill.id})\n`;
     switch (this._skill.type) {
       case 0:
         description += "**Passive Skill**";
@@ -736,7 +739,7 @@ export class Monster implements Thing {
   }
 
   async buildDescription(client: KOLClient): Promise<string> {
-    let description = "**Monster**\n";
+    let description = `**Monster**\n(Monster ${this._monster.id})\n`;
     const atk = this._monster.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
     const def = this._monster.parameters.match(/Def: (?<def>\-?[\d]+)/);
     const hp = this._monster.parameters.match(/HP: (?<hp>\-?[\d]+)/);
