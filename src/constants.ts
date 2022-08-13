@@ -440,6 +440,10 @@ export const PATH_MAPPINGS: Map<string, number> = new Map([
   ["greyyou", 46],
   ["grayyou", 46],
   ["journeyman", 47],
+  ["dinosaur", 48],
+  ["fallofthedinosaurs", 48],
+  ["fotd", 48],
+  ["dinosaurs", 48],
   ["standard", 999],
 ]);
 
