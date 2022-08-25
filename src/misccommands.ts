@@ -173,7 +173,7 @@ function prsWelcome(interaction: CommandInteraction): void {
   interaction.reply({
     content: `https://github.com/${
       capitalizedProject === "kolmafia" ? "kolmafia" : "Loathing-Associates-Scripting-Society"
-    }/${capitalizedProject}/pulls?q=is%3Apr+is%3Aopen+user-review-requested%3A%40me`,
+    }/${capitalizedProject}/pulls`,
     allowedMentions: {
       parse: [],
     },
