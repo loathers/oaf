@@ -298,6 +298,7 @@ export const PACKAGES: Map<string, string> = new Map([
   ["mint condition magnifying glass", "cursed magnifying glass"],
   ["packaged june cleaver", "june cleaver"],
   ["designer sweatpants (new old stock)", "designer sweatpants"],
+  ["unopened tiny stillsuit", "tiny stillsuit"],
 ]);
 
 const ghostlings: [string, string][] = [
