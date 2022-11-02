@@ -1,11 +1,12 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
-import { ItemType, ITEM_SPADING_TYPES, PATH_MAPPINGS } from "./constants";
+import { ITEM_SPADING_TYPES, PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 import { WikiSearcher } from "./wikisearch";
 
-const HORIZON = 37;
+// This is the maximum number of items we can have in our embeds
+const HORIZON = 25;
 
 export function attachKoLCommands(
   client: DiscordClient,
@@ -155,6 +156,12 @@ export function attachKoLCommands(
           { name: "Skills", value: "skill" },
         ],
         required: true,
+      },
+      {
+        name: "startAt",
+        description: "Familiar or Item ID to start spading with",
+        type: ApplicationCommandOptionType.Number,
+        required: false,
       },
     ],
     (interaction: CommandInteraction) => spade(interaction, kolClient, wikiSearcher),
@@ -446,13 +453,16 @@ async function spadeItems(
   wiki: WikiSearcher
 ): Promise<void> {
   await interaction.deferReply();
+  const requestedStart = interaction.options.getInteger("startAt", false);
   const finalId = wiki.lastItem;
-  if (finalId < 0) {
+  if (finalId < 0 && !requestedStart) {
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
   }
+
+  const start = Math.max(requestedStart || 0, finalId + 1);
   const data = [];
-  for (let id = finalId + 1; id <= finalId + HORIZON; id++) {
+  for (let id = start; id <= start + HORIZON; id++) {
     const spadeData = await kolClient.spadeItem(id);
     data.push(spadeData);
     if (!spadeData.exists) break;
@@ -489,13 +499,16 @@ async function spadeFamiliars(
   wiki: WikiSearcher
 ): Promise<void> {
   await interaction.deferReply();
+  const requestedStart = interaction.options.getInteger("startAt", false);
   const finalId = wiki.lastFamiliar;
-  if (finalId < 0) {
+  if (finalId < 0 && !requestedStart) {
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
   }
+
+  const start = Math.max(requestedStart || 0, finalId + 1);
   const data = [`Spading familiars with ids after ${finalId}.`];
-  for (let id = finalId + 1; id <= finalId + HORIZON; id++) {
+  for (let id = start + 1; id <= start + HORIZON; id++) {
     const name = await kolClient.spadeFamiliar(id);
     if (name === "none") {
       data.push(`No familiar ${id} found. Sorry!`);
