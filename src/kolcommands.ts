@@ -459,7 +459,7 @@ async function spadeItems(
     return;
   }
 
-  const start = requestedStart ? Math.max(requestedStart, finalId + 1) : finalId + 1;
+  const start = Math.max(requestedStart ?? 0, finalId + 1);
   const data = [];
   for (let id = start; id <= start + HORIZON; id++) {
     const spadeData = await kolClient.spadeItem(id);
@@ -505,7 +505,7 @@ async function spadeFamiliars(
     return;
   }
 
-  const start = requestedStart ? Math.max(requestedStart, finalId + 1) : finalId + 1;
+  const start = Math.max(requestedStart ?? 0, finalId + 1);
   const data = [`Spading familiars with ids after ${finalId}.`];
   for (let id = start + 1; id <= start + HORIZON; id++) {
     const name = await kolClient.spadeFamiliar(id);
