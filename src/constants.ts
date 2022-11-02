@@ -299,6 +299,8 @@ export const PACKAGES: Map<string, string> = new Map([
   ["packaged june cleaver", "june cleaver"],
   ["designer sweatpants (new old stock)", "designer sweatpants"],
   ["unopened tiny stillsuit", "tiny stillsuit"],
+  ["packaged jurassic parka", "jurassic parka"],
+  ["boxed autumn-aton", "autumn-aton"],
 ]);
 
 const ghostlings: [string, string][] = [
