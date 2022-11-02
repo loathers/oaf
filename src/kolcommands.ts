@@ -158,7 +158,7 @@ export function attachKoLCommands(
       },
       {
         name: "startAt",
-        description: "Familiar or Skill ID to start spading with",
+        description: "Familiar or Item ID to start spading with",
         type: ApplicationCommandOptionType.Number,
         required: false,
       },
