@@ -578,7 +578,7 @@ export class KOLClient {
 
     if (page.includes("No familiar was found.")) return "none";
 
-    const name = /<font face=Arial,Helvetica><center><b>(^<+)<\/b>/.exec(page)?.[1];
+    const name = /<font face=Arial,Helvetica><center><b>([^<]+)<\/b>/.exec(page)?.[1];
     return name ?? "none";
   }
 
