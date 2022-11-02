@@ -1,11 +1,12 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
-import { ItemType, ITEM_SPADING_TYPES, PATH_MAPPINGS } from "./constants";
+import { ITEM_SPADING_TYPES, PATH_MAPPINGS } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 import { WikiSearcher } from "./wikisearch";
 
-const HORIZON = 37;
+// This is the maximum number of items we can have in our embeds
+const HORIZON = 25;
 
 export function attachKoLCommands(
   client: DiscordClient,
