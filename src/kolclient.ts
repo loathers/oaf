@@ -540,15 +540,26 @@ export class KOLClient {
   async spadeItem(itemId: number): Promise<SpadedItem> {
     let itemtype = ItemType.Unknown;
     let additionalInfo = "";
+
+    const pageCache = new Map<string, Promise<string>>();
+    const cachedRequest = async (url: string, parameters: object) => {
+      const currentValue = pageCache.get(url);
+      if (currentValue) return currentValue;
+
+      const pagetext = await this.tryRequestWithLogin(url, parameters);
+      pageCache.set(url, pagetext);
+      return pagetext;
+    };
+    
     const exists = !/Nopers/.test(
-      await this.tryRequestWithLogin("inv_equip.php", {
+      await cachedRequest("inv_equip.php", {
         action: "equip",
         which: 2,
         whichitem: itemId,
       })
     );
     const tradeable = !/That item cannot be sold or transferred/.test(
-      await this.tryRequestWithLogin("town_sellflea.php", {
+      await cachedRequest("town_sellflea.php", {
         whichitem: itemId,
         sellprice: "",
         selling: "Yep.",
@@ -557,7 +568,7 @@ export class KOLClient {
     if (exists) {
       for (let property of ITEM_SPADING_CALLS) {
         const { url, visitMatch, type, additionalData } = property;
-        const page = (await this.tryRequestWithLogin(
+        const page = (await cachedRequest(
           ...(url(itemId) as [string, object])
         )) as string;
         const match = visitMatch.test(page);
