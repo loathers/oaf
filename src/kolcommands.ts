@@ -507,8 +507,8 @@ async function spadeFamiliars(
   }
 
   const start = Math.max(requestedStart || 0, finalId + 1);
-  const data = [`Spading familiars with ids after ${finalId}.`];
-  for (let id = start + 1; id <= start + HORIZON; id++) {
+  const data = [`Spading familiars with ids after ${finalId + 1}.`];
+  for (let id = start; id <= start + HORIZON; id++) {
     const name = await kolClient.spadeFamiliar(id);
     if (name === "none") {
       data.push(`No familiar ${id} found. Sorry!`);
