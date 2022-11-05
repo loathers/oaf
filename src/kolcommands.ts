@@ -453,7 +453,7 @@ async function spadeItems(
   wiki: WikiSearcher
 ): Promise<void> {
   await interaction.deferReply();
-  const requestedStart = interaction.options.getInteger("startAt", false);
+  const requestedStart = interaction.options.getInteger("start", false);
   const finalId = wiki.lastItem;
   if (finalId < 0 && !requestedStart) {
     interaction.editReply("Our wiki search isn't configured properly!");
@@ -499,7 +499,7 @@ async function spadeFamiliars(
   wiki: WikiSearcher
 ): Promise<void> {
   await interaction.deferReply();
-  const requestedStart = interaction.options.getInteger("startAt", false);
+  const requestedStart = interaction.options.getInteger("start", false);
   const finalId = wiki.lastFamiliar;
   if (finalId < 0 && !requestedStart) {
     interaction.editReply("Our wiki search isn't configured properly!");
