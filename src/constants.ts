@@ -537,7 +537,8 @@ export enum ItemType {
   Booze,
   Spleen,
   Offhand,
-  FamiliarEquip,
+  SpecificFamiliarEquip,
+  GenericFamiliarEquipment,
   Unknown,
 }
 
@@ -546,7 +547,8 @@ export const ITEM_SPADING_TYPES: Record<ItemType, string> = {
   [ItemType.Booze]: "Booze",
   [ItemType.Spleen]: "Spleen Item",
   [ItemType.Offhand]: "Offhand",
-  [ItemType.FamiliarEquip]: "Familiar Equipment",
+  [ItemType.SpecificFamiliarEquip]: "Familiar Equipment (Specific)",
+  [ItemType.GenericFamiliarEquipment]: "Familiar Equipment (Generic)",
   [ItemType.Unknown]: "",
 };
 
@@ -574,7 +576,7 @@ export const ITEM_SPADING_CALLS = [
       },
     ],
     visitMatch: /Only a specific familiar type \((?<addl>^\)*)\) can equip this item/,
-    type: ItemType.FamiliarEquip,
+    type: ItemType.SpecificFamiliarEquip,
     additionalData: true,
   },
   {
@@ -614,3 +616,8 @@ export const ITEM_SPADING_CALLS = [
     additionalData: false,
   },
 ];
+
+export enum SpadingFamiliars {
+  DEFAULT = 198,
+  GHOST = 282,
+}

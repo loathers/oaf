@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
-import { ITEM_SPADING_TYPES, PATH_MAPPINGS } from "./constants";
+import { ItemType, ITEM_SPADING_TYPES, PATH_MAPPINGS, SpadingFamiliars } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 import { WikiSearcher } from "./wikisearch";
@@ -467,6 +467,17 @@ async function spadeItems(
     data.push(spadeData);
     if (!spadeData.exists) break;
   }
+
+  // This is separated from the rest of our spading requests to stop us from constantly juggling familiars
+  await kolClient.ensureFamiliar(SpadingFamiliars.GHOST);
+  for (const spadeData of data) {
+    if (spadeData.itemtype !== ItemType.Unknown) continue;
+
+    if (await kolClient.isGenericEquipment(spadeData.id)) {
+      spadeData.itemtype = ItemType.GenericFamiliarEquipment;
+    }
+  }
+  await kolClient.ensureFamiliar(SpadingFamiliars.DEFAULT);
 
   interaction.editReply({
     content: null,
