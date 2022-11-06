@@ -473,7 +473,7 @@ async function spadeItems(
     embeds: [
       {
         title: "Spaded items",
-        description: `Searched items with ids starting after ${finalId}:`,
+        description: `Searched items with ids starting with ${start}:`,
         fields: data.map(({ id, exists, tradeable, itemtype, additionalInfo }) => ({
           name: `Item ${id}`,
           value: exists
@@ -507,7 +507,7 @@ async function spadeFamiliars(
   }
 
   const start = Math.max(requestedStart || 0, finalId + 1);
-  const data = [`Spading familiars with ids after ${finalId + 1}.`];
+  const data = [`Spading familiars with ids starting with ${start}.`];
   for (let id = start; id <= start + HORIZON; id++) {
     const name = await kolClient.spadeFamiliar(id);
     if (name === "none") {
