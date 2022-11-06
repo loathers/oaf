@@ -556,16 +556,14 @@ export class KOLClient {
     );
     if (exists) {
       for (let property of ITEM_SPADING_CALLS) {
-        const { url, visitMatch, type, additionalData } = property;
+        const { url, visitMatch, type } = property;
         const page = (await this.tryRequestWithLogin(
           ...(url(itemId) as [string, object])
         )) as string;
+        
         const match = visitMatch.test(page);
         if (match) {
           itemtype = type;
-          if (additionalData) {
-            additionalInfo = visitMatch.exec(page)?.groups?.addl || "";
-          }
           break;
         }
       }
@@ -633,5 +631,19 @@ export class KOLClient {
         })
       )
     );
+  }
+
+  async getEquipmentFamiliar(itemId: number): Promise<string | null> {
+    const responseText: string = await this.tryRequestWithLogin(        "inv_equip.php",
+    {
+      action: "equip",
+      which: 2,
+      whichitem: itemId,
+    });
+
+    const match = /Only a specific familiar type \((?<addl>^\)*)\) can equip this item/.exec(responseText);
+
+    if (!match) return null;
+    return match[1]
   }
 }

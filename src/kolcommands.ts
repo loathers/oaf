@@ -460,6 +460,7 @@ async function spadeItems(
     return;
   }
 
+  await kolClient.ensureFamiliar(SpadingFamiliars.GHOST);
   const start = Math.max(requestedStart || 0, finalId + 1);
   const data = [];
   for (let id = start; id <= start + HORIZON; id++) {
@@ -467,17 +468,19 @@ async function spadeItems(
     data.push(spadeData);
     if (!spadeData.exists) break;
   }
+  await kolClient.ensureFamiliar(SpadingFamiliars.DEFAULT);
 
   // This is separated from the rest of our spading requests to stop us from constantly juggling familiars
-  await kolClient.ensureFamiliar(SpadingFamiliars.GHOST);
   for (const spadeData of data) {
-    if (spadeData.itemtype !== ItemType.Unknown) continue;
+    if (spadeData.itemtype !== ItemType.GenericFamiliarEquipment) continue;
 
-    if (await kolClient.isGenericEquipment(spadeData.id)) {
-      spadeData.itemtype = ItemType.GenericFamiliarEquipment;
+    const familiar = await kolClient.getEquipmentFamiliar(spadeData.id);
+    if (familiar) {
+      spadeData.itemtype = ItemType.SpecificFamiliarEquip;
+      spadeData.additionalInfo = familiar;
     }
   }
-  await kolClient.ensureFamiliar(SpadingFamiliars.DEFAULT);
+
 
   interaction.editReply({
     content: null,
