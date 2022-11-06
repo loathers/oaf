@@ -560,7 +560,7 @@ export class KOLClient {
         const page = (await this.tryRequestWithLogin(
           ...(url(itemId) as [string, object])
         )) as string;
-        
+
         const match = visitMatch.test(page);
         if (match) {
           itemtype = type;
@@ -621,29 +621,18 @@ export class KOLClient {
     });
   }
 
-  async isGenericEquipment(itemId: number): Promise<boolean> {
-    return Boolean(
-      /Ghosts can't wear equipment/.exec(
-        await this.tryRequestWithLogin("inv_equip.php", {
-          action: "equip",
-          which: 2,
-          whichitem: itemId,
-        })
-      )
-    );
-  }
-
   async getEquipmentFamiliar(itemId: number): Promise<string | null> {
-    const responseText: string = await this.tryRequestWithLogin(        "inv_equip.php",
-    {
+    const responseText: string = await this.tryRequestWithLogin("inv_equip.php", {
       action: "equip",
       which: 2,
       whichitem: itemId,
     });
 
-    const match = /Only a specific familiar type \((?<addl>^\)*)\) can equip this item/.exec(responseText);
+    const match = /Only a specific familiar type \((?<addl>^\)*)\) can equip this item/.exec(
+      responseText
+    );
 
     if (!match) return null;
-    return match[1]
+    return match[1];
   }
 }
