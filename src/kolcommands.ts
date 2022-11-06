@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
-import { ITEM_SPADING_TYPES, PATH_MAPPINGS } from "./constants";
+import { ItemType, ITEM_SPADING_TYPES, PATH_MAPPINGS, SpadingFamiliars } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 import { WikiSearcher } from "./wikisearch";
@@ -158,9 +158,9 @@ export function attachKoLCommands(
         required: true,
       },
       {
-        name: "startAt",
+        name: "start",
         description: "Familiar or Item ID to start spading with",
-        type: ApplicationCommandOptionType.Number,
+        type: ApplicationCommandOptionType.Integer,
         required: false,
       },
     ],
@@ -453,7 +453,7 @@ async function spadeItems(
   wiki: WikiSearcher
 ): Promise<void> {
   await interaction.deferReply();
-  const requestedStart = interaction.options.getInteger("startAt", false);
+  const requestedStart = interaction.options.getInteger("start", false);
   const finalId = wiki.lastItem;
   if (finalId < 0 && !requestedStart) {
     interaction.editReply("Our wiki search isn't configured properly!");
@@ -468,12 +468,23 @@ async function spadeItems(
     if (!spadeData.exists) break;
   }
 
+  // This is separated from the rest of our spading requests to stop us from constantly juggling familiars
+  await kolClient.ensureFamiliar(SpadingFamiliars.GHOST);
+  for (const spadeData of data) {
+    if (spadeData.itemtype !== ItemType.Unknown) continue;
+
+    if (await kolClient.isGenericEquipment(spadeData.id)) {
+      spadeData.itemtype = ItemType.GenericFamiliarEquipment;
+    }
+  }
+  await kolClient.ensureFamiliar(SpadingFamiliars.DEFAULT);
+
   interaction.editReply({
     content: null,
     embeds: [
       {
         title: "Spaded items",
-        description: `Searched items with ids starting after ${finalId}:`,
+        description: `Searched items with ids starting with ${start}:`,
         fields: data.map(({ id, exists, tradeable, itemtype, additionalInfo }) => ({
           name: `Item ${id}`,
           value: exists
@@ -499,7 +510,7 @@ async function spadeFamiliars(
   wiki: WikiSearcher
 ): Promise<void> {
   await interaction.deferReply();
-  const requestedStart = interaction.options.getInteger("startAt", false);
+  const requestedStart = interaction.options.getInteger("start", false);
   const finalId = wiki.lastFamiliar;
   if (finalId < 0 && !requestedStart) {
     interaction.editReply("Our wiki search isn't configured properly!");
@@ -507,8 +518,8 @@ async function spadeFamiliars(
   }
 
   const start = Math.max(requestedStart || 0, finalId + 1);
-  const data = [`Spading familiars with ids after ${finalId}.`];
-  for (let id = start + 1; id <= start + HORIZON; id++) {
+  const data = [`Spading familiars with ids starting with ${start}.`];
+  for (let id = start; id <= start + HORIZON; id++) {
     const name = await kolClient.spadeFamiliar(id);
     if (name === "none") {
       data.push(`No familiar ${id} found. Sorry!`);

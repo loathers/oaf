@@ -626,4 +626,23 @@ export class KOLClient {
       return { id: "", level: 0, class: "Unknown" };
     }
   }
+
+  async ensureFamiliar(familiarId: number): Promise<void> {
+    await this.tryRequestWithLogin("familiar.php", {
+      action: "newfam",
+      newfam: familiarId.toFixed(0),
+    });
+  }
+
+  async isGenericEquipment(itemId: number): Promise<boolean> {
+    return Boolean(
+      /Ghosts can't wear equipment/.exec(
+        await this.tryRequestWithLogin("inv_equip.php", {
+          action: "equip",
+          which: 2,
+          whichitem: itemId,
+        })
+      )
+    );
+  }
 }
