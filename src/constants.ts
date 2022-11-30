@@ -537,7 +537,8 @@ export enum ItemType {
   Booze,
   Spleen,
   Offhand,
-  FamiliarEquip,
+  SpecificFamiliarEquip,
+  GenericFamiliarEquipment,
   Unknown,
 }
 
@@ -546,7 +547,8 @@ export const ITEM_SPADING_TYPES: Record<ItemType, string> = {
   [ItemType.Booze]: "Booze",
   [ItemType.Spleen]: "Spleen Item",
   [ItemType.Offhand]: "Offhand",
-  [ItemType.FamiliarEquip]: "Familiar Equipment",
+  [ItemType.SpecificFamiliarEquip]: "Familiar Equipment (Specific)",
+  [ItemType.GenericFamiliarEquipment]: "Familiar Equipment (Generic)",
   [ItemType.Unknown]: "",
 };
 
@@ -562,7 +564,6 @@ export const ITEM_SPADING_CALLS = [
     ],
     visitMatch: /You can't equip an off-hand item while wielding a 2-handed weapon/,
     type: ItemType.Offhand,
-    additionalData: false,
   },
   {
     url: (id: number) => [
@@ -573,9 +574,8 @@ export const ITEM_SPADING_CALLS = [
         whichitem: id,
       },
     ],
-    visitMatch: /Only a specific familiar type \((?<addl>^\)*)\) can equip this item/,
-    type: ItemType.FamiliarEquip,
-    additionalData: true,
+    visitMatch: /Ghosts can't wear equipment/,
+    type: ItemType.GenericFamiliarEquipment,
   },
   {
     url: (id: number) => [
@@ -587,7 +587,6 @@ export const ITEM_SPADING_CALLS = [
     ],
     visitMatch: /You don't have the item you're trying to use/,
     type: ItemType.Food,
-    additionalData: false,
   },
   {
     url: (id: number) => [
@@ -599,7 +598,6 @@ export const ITEM_SPADING_CALLS = [
     ],
     visitMatch: /You don't have the item you're trying to use/,
     type: ItemType.Booze,
-    additionalData: false,
   },
   {
     url: (id: number) => [
@@ -611,6 +609,10 @@ export const ITEM_SPADING_CALLS = [
     ],
     visitMatch: /You don't have the item you're trying to use/,
     type: ItemType.Spleen,
-    additionalData: false,
   },
-];
+] as const;
+
+export enum SpadingFamiliars {
+  DEFAULT = 198,
+  GHOST = 282,
+}
