@@ -505,7 +505,7 @@ export class KOLClient {
           .filter(
             (board) =>
               (select("./tr//text()", board as Node)[0] as Node)?.nodeValue?.match(
-                /^((Fast|Funn|B)est|Most Goo)/
+                /^((Fast|Funn|B)est|Most (Goo|Elf))/
               ) && select("./tr", board as Node).length > 1
           )
           .map((subboard) => {
