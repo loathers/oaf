@@ -447,6 +447,8 @@ export const PATH_MAPPINGS: Map<string, number> = new Map([
   ["fallofthedinosaurs", 48],
   ["fotd", 48],
   ["dinosaurs", 48],
+  ["crimbo22", 49],
+  ["gratitude", 49],
   ["standard", 999],
 ]);
 
