@@ -461,7 +461,7 @@ async function spadeItems(
   }
 
   await kolClient.ensureFamiliar(SpadingFamiliars.GHOST);
-  const start = Math.max(requestedStart || 0, finalId + 1);
+  const start = requestedStart ?? finalId + 1;
   const data = [];
   for (let id = start; id <= start + HORIZON; id++) {
     const spadeData = await kolClient.spadeItem(id);
@@ -480,7 +480,6 @@ async function spadeItems(
       spadeData.additionalInfo = familiar;
     }
   }
-
 
   interaction.editReply({
     content: null,
