@@ -475,9 +475,9 @@ async function spadeItems(
     if (spadeData.itemtype !== ItemType.GenericFamiliarEquipment) continue;
 
     const familiar = await kolClient.getEquipmentFamiliar(spadeData.id);
-    if (familiar) {
+    if (familiar !== null) {
       spadeData.itemtype = ItemType.SpecificFamiliarEquip;
-      spadeData.additionalInfo = familiar;
+      spadeData.additionalInfo = familiar || "unknown";
     }
   }
 

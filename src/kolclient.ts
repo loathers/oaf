@@ -628,7 +628,7 @@ export class KOLClient {
       whichitem: itemId,
     });
 
-    const match = /Only a specific familiar type \((?<addl>^\)*)\) can equip this item/.exec(
+    const match = /Only a specific familiar type \(([^\)]*)\) can equip this item/.exec(
       responseText
     );
 
