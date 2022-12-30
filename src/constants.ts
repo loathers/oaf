@@ -535,24 +535,14 @@ export const DREAD_BOSS_MAPPINGS: Map<string, string> = new Map([
 ]);
 
 export enum ItemType {
-  Food,
-  Booze,
-  Spleen,
-  Offhand,
-  SpecificFamiliarEquip,
-  GenericFamiliarEquipment,
-  Unknown,
+  Food = "Food",
+  Booze = "Booze",
+  Spleen = "Spleen Item",
+  Offhand = "Offhand",
+  SpecificFamiliarEquip = "Familiar Equipment (Specific)",
+  GenericFamiliarEquipment =  "Familiar Equipment (Generic)",
+  Unknown = "",
 }
-
-export const ITEM_SPADING_TYPES: Record<ItemType, string> = {
-  [ItemType.Food]: "Food",
-  [ItemType.Booze]: "Booze",
-  [ItemType.Spleen]: "Spleen Item",
-  [ItemType.Offhand]: "Offhand",
-  [ItemType.SpecificFamiliarEquip]: "Familiar Equipment (Specific)",
-  [ItemType.GenericFamiliarEquipment]: "Familiar Equipment (Generic)",
-  [ItemType.Unknown]: "",
-};
 
 export const ITEM_SPADING_CALLS = [
   {

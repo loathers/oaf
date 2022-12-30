@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
-import { ItemType, ITEM_SPADING_TYPES, PATH_MAPPINGS, SpadingFamiliars } from "./constants";
+import { ItemType, PATH_MAPPINGS, SpadingFamiliars } from "./constants";
 import { DiscordClient } from "./discord";
 import { KOLClient } from "./kolclient";
 import { WikiSearcher } from "./wikisearch";
@@ -477,7 +477,7 @@ async function spadeItems(
     const familiar = await kolClient.getEquipmentFamiliar(spadeData.id);
     if (familiar !== null) {
       spadeData.itemtype = ItemType.SpecificFamiliarEquip;
-      spadeData.additionalInfo = familiar || "unknown";
+      spadeData.additionalInfo = familiar.trim() || "Familiar not yet public";
     }
   }
 
@@ -490,14 +490,14 @@ async function spadeItems(
         fields: data.map(({ id, exists, tradeable, itemtype, additionalInfo }) => ({
           name: `Item ${id}`,
           value: exists
-            ? `${tradeable ? "Tradeable" : "Untradeable"}\n${ITEM_SPADING_TYPES[itemtype]}${
+            ? `${tradeable ? "Tradeable" : "Untradeable"}\n${itemtype}${
                 additionalInfo ? `\n${additionalInfo}` : ""
               }`
             : "Does not exist",
           inline: true,
         })),
         footer: {
-          text: `OAF can detect the following item types: ${Object.values(ITEM_SPADING_TYPES)
+          text: `OAF can detect the following item types: ${Object.values(ItemType)
             .filter((type) => type)
             .join(", ")}. If no type is shown, the item is none of these.`,
         },
