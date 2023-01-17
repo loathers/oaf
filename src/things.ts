@@ -34,6 +34,8 @@ export class Item implements Thing {
   _zapGroup: Item[] | undefined;
   _foldGroup: Item[] | undefined;
 
+  private static ILLEGAL_ITEMS = [3836];
+
   constructor(data: string, itemMap: Map<string, string[]>) {
     this._item = this.parseItemData(data);
     this._name = this._item.name.toLowerCase();
@@ -301,7 +303,9 @@ export class Item implements Thing {
     if (this._item.tradeable) {
       const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
         await client.getMallPrice(this._item.id);
-      if (mallPrice) {
+      if (Item.ILLEGAL_ITEMS.includes(this._item.id)) {
+        price_section = "Tis a sin, in my eyes";
+      } else if (mallPrice) {
         price_section += `Mall Price: [${formattedMallPrice} meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${this._item.id}&timespan=1&noanim=0)`;
         if (limitedMallPrice && limitedMallPrice < mallPrice)
           price_section += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
