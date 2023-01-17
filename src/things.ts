@@ -304,7 +304,7 @@ export class Item implements Thing {
       const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
         await client.getMallPrice(this._item.id);
       if (Item.ILLEGAL_ITEMS.includes(this._item.id)) {
-        price_section = "Tis a sin, in my eyes";
+        price_section = "Mall Price: Tis a sin, in my eyes";
       } else if (mallPrice) {
         price_section += `Mall Price: [${formattedMallPrice} meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${this._item.id}&timespan=1&noanim=0)`;
         if (limitedMallPrice && limitedMallPrice < mallPrice)
