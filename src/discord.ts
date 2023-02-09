@@ -223,25 +223,6 @@ export class DiscordClient {
     });
   }
 
-  async pizzaSearch(interaction: CommandInteraction): Promise<void> {
-    const letters = interaction.options.getString("letters", true);
-    if (letters.length < 1 || letters.length > 4) {
-      await interaction.reply({
-        content: "Invalid pizza length. Please supply a sensible number of letters.",
-        ephemeral: true,
-      });
-      return;
-    }
-    await interaction.deferReply();
-    await interaction.editReply({
-      content: null,
-      embeds: [await this._wikiSearcher.getPizzaEmbed(letters.toLowerCase())],
-      allowedMentions: {
-        parse: [],
-      },
-    });
-  }
-
   async inlineWikiSearch(item: string, message: Message): Promise<void> {
     const searchingMessage = await message.channel.send({
       content: `Searching for "${item}"...`,
@@ -276,112 +257,7 @@ export class DiscordClient {
     }
   }
 
-  async wikiSearch(interaction: CommandInteraction): Promise<void> {
-    const item = interaction.options.getString("term", true);
-    await interaction.deferReply();
-    const embed = await this._wikiSearcher.getEmbed(item);
-    if (embed) {
-      interaction.editReply({
-        content: null,
-        embeds: [embed],
-        allowedMentions: {
-          parse: [],
-        },
-      });
-    } else {
-      interaction.editReply({
-        content: `"${item}" wasn't found. Please refine your search.`,
-        allowedMentions: {
-          parse: [],
-        },
-      });
-    }
-  }
-
-  async mafiawikiSearch(interaction: CommandInteraction): Promise<void> {
-    const item = interaction.options.getString("term", true);
-    await interaction.deferReply();
-    const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
-      params: {
-        key: process.env.GOOGLE_API_KEY || "",
-        cx: process.env.MAFIA_CUSTOM_SEARCH || "",
-        q: item,
-      },
-    });
-    if (googleSearchResponse.data.items && googleSearchResponse.data.items.length) {
-      interaction.editReply({
-        content: googleSearchResponse.data.items[0].link,
-        embeds: [],
-        allowedMentions: {
-          parse: [],
-        },
-      });
-    } else {
-      interaction.editReply({
-        content: `"${item}" wasn't found. Please refine your search.`,
-        allowedMentions: {
-          parse: [],
-        },
-      });
-    }
-  }
-
-  async reloadMafiaData(interaction: CommandInteraction): Promise<void> {
-    await interaction.deferReply();
-    if (await this._wikiSearcher.conditionallyReloadMafiaData())
-      interaction.editReply("Information reloaded from KoLMafia Github data files.");
-    else interaction.editReply("Information reloaded too recently, try again later.");
-  }
-
   start(): void {
     this._client.login(this._discordToken);
-  }
-
-  attachMetaBotCommands() {
-    this.attachCommand(
-      "pizza",
-      [
-        {
-          name: "letters",
-          description: "The first letters of the items you want to bake into a pizza.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      async (interaction: CommandInteraction) => await this.pizzaSearch(interaction),
-      "Find what effects a diabolic pizza with the given letters can grant you."
-    );
-    this.attachCommand(
-      "wiki",
-      [
-        {
-          name: "term",
-          description: "The term to search for in the wiki.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      (interaction: CommandInteraction) => this.wikiSearch(interaction),
-      "Search the KoL wiki for the given term."
-    );
-    this.attachCommand(
-      "mafia",
-      [
-        {
-          name: "term",
-          description: "The term to search for in the mafia wiki.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      async (interaction: CommandInteraction) => await this.mafiawikiSearch(interaction),
-      "Search the KoLmafia wiki for the given term."
-    );
-    this.attachCommand(
-      "rescan",
-      [],
-      async (interaction: CommandInteraction) => await this.reloadMafiaData(interaction),
-      "Reload OAF's in-game information from mafia's datafiles."
-    );
   }
 }

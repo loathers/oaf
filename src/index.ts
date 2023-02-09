@@ -33,15 +33,13 @@ async function performSetup(): Promise<DiscordClient> {
 
   const args = { discordClient, kolClient, wikiSearcher, databasePool };
 
+  console.log("Loading commands and syncing relevant data");
   for (const command of Object.values(commands)) {
     command.attach(args);
     if (command.sync) {
       await command.sync(args);
     }
   }
-
-  console.log("Attaching wiki commands.");
-  discordClient.attachMetaBotCommands();
 
   console.log("Registering slash commands.");
   await discordClient.registerSlashCommands();
