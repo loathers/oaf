@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   Client,
   Message,
@@ -10,11 +9,22 @@ import {
   Interaction,
   CommandInteraction,
 } from "discord.js";
-import { ITEMMATCHER, ROLEMAP } from "./constants";
-import { WikiSearcher } from "./wikisearch";
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { ApplicationCommandOptionType, Routes } from "discord-api-types/v9";
 import { REST } from "@discordjs/rest";
+
+import { WikiSearcher } from "./wikisearch";
+
+export const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
+
+export const ROLEMAP: Map<string, string> = new Map([
+  ["🇹", "741479573337800706"],
+  ["♀️", "741479514902757416"],
+  ["♂️", "741479366319538226"],
+  ["👂", "466622497991688202"],
+  ["🚫", "512522219574919179"],
+  ["✅", "754473984661258391"],
+]);
 
 type Command = {
   description: string;
