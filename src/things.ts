@@ -1,6 +1,6 @@
 import { MessageEmbed } from "discord.js";
 import { FamiliarActionTypes, FAMILIAR_CLASSIFCATIONS, HARD_CODED_FAMILIARS } from "./constants";
-import { KOLClient } from "./kolclient";
+import { KOLClient } from "./kol";
 import { cleanString, indent, toWikiLink } from "./utils";
 
 export abstract class Thing {

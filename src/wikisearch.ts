@@ -1,7 +1,7 @@
 import axios from "axios";
 import { MessageEmbed } from "discord.js";
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "./things";
-import { KOLClient } from "./kolclient";
+import { KOLClient } from "./kol";
 import { cleanString } from "./utils";
 import { PACKAGES, REVERSE_PACKAGES } from "./constants";
 
