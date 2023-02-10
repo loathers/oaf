@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
 
+import { toDrop, toWeight } from "../../utils";
 import { Command } from "../type";
 
 function lep(interaction: CommandInteraction): void {
@@ -9,12 +10,10 @@ function lep(interaction: CommandInteraction): void {
     interaction.reply({ content: `Please supply a positive leprechaun weight.`, ephemeral: true });
     return;
   }
+
   interaction.reply(
-    `A ${weight}lb leprechaun provides +${Number(
-      (2 * (Math.sqrt(55 * weight) + weight - 3)).toFixed(2)
-    )}% meat drop. (+${Number(
-      (2 * (Math.sqrt(55 * weight * 1.25) + weight * 1.25 - 3)).toFixed(2)
-    )}% for Hobo Monkey)`
+    `A ${weight}lb leprechaun provides +${toDrop(weight).toFixed(2)}% meat drop. ` +
+      `(+${toDrop(weight, 1.25).toFixed(2)}% for Hobo Monkey)`
   );
 }
 
@@ -24,15 +23,11 @@ function reverseLep(interaction: CommandInteraction): void {
     interaction.reply({ content: "Please supply a positive meat drop value.", ephemeral: true });
     return;
   }
+
   interaction.reply(
-    `To get ${meatDrop}% meat drop from a leprechaun, it should weigh at least ${(
-      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) /
-      2
-    ).toFixed(1)} lbs, or be a Hobo Monkey that weighs at least ${(
-      (meatDrop + 61 - Math.sqrt(110 * meatDrop + 3685)) /
-      2 /
-      1.25
-    ).toFixed(1)} lbs.`
+    `To get ${meatDrop}% meat drop from a leprechaun, ` +
+      `it should weigh at least ${toWeight(meatDrop).toFixed(1)} lbs, ` +
+      `or be a Hobo Monkey that weighs at least ${toWeight(meatDrop).toFixed(1)} lbs.`
   );
 }
 
