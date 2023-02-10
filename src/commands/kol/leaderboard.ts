@@ -1,7 +1,8 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction, MessageEmbed } from "discord.js";
-import { KoLClient } from "../../kol";
+import { CommandInteraction } from "discord.js";
 
+import { createEmbed } from "../../discord";
+import { KoLClient, SubboardInfo } from "../../kol";
 import { Command } from "../type";
 
 const PATH_MAPPINGS: Map<string, number> = new Map([

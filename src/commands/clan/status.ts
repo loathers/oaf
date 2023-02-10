@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
 
-import { clanState, DREAD_CLANS } from "../../clans";
+import { DREAD_CLANS, clanState } from "../../clans";
 import { KoLClient } from "../../kol";
 import { Command } from "../type";
 

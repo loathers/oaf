@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
+
 import { WikiSearcher } from "../../wikisearch";
 import { Command } from "../type";
 

@@ -1,4 +1,5 @@
 import { CommandInteraction } from "discord.js";
+
 import { WikiSearcher } from "../../wikisearch";
 import { Command } from "../type";
 

@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+
 import { DiscordClient } from "../discord";
 import { KoLClient } from "../kol";
 import { WikiSearcher } from "../wikisearch";

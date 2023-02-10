@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
+
 import { Command } from "../type";
 
 async function mafiawikiSearch(interaction: CommandInteraction) {

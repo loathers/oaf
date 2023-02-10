@@ -1,10 +1,11 @@
-import { DiscordClient } from "./discord";
-import { WikiSearcher } from "./wikisearch";
-import { KoLClient } from "./kol";
 import * as dotenv from "dotenv";
-import commands from "./commands";
 import { Pool } from "pg";
 import { migrate } from "postgres-migrations";
+
+import commands from "./commands";
+import { DiscordClient } from "./discord";
+import { KoLClient } from "./kol";
+import { WikiSearcher } from "./wikisearch";
 
 async function performSetup(): Promise<DiscordClient> {
   console.log("Creating KOL client.");

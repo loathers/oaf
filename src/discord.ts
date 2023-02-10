@@ -1,17 +1,18 @@
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { REST } from "@discordjs/rest";
+import { ApplicationCommandOptionType, Routes } from "discord-api-types/v9";
 import {
   Client,
+  CommandInteraction,
+  Intents,
+  Interaction,
   Message,
+  MessageEmbed,
   MessageReaction,
+  PartialMessageReaction,
   PartialUser,
   User,
-  Intents,
-  PartialMessageReaction,
-  Interaction,
-  CommandInteraction,
 } from "discord.js";
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { ApplicationCommandOptionType, Routes } from "discord-api-types/v9";
-import { REST } from "@discordjs/rest";
 
 import { WikiSearcher } from "./wikisearch";
 
@@ -271,3 +272,9 @@ export class DiscordClient {
     this._client.login(this._discordToken);
   }
 }
+
+export const createEmbed = () =>
+  new MessageEmbed().setFooter({
+    text: "Problems? Message DocRostov#7004 on discord.",
+    iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+  });

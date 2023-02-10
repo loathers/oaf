@@ -1,9 +1,10 @@
+import { Mutex } from "async-mutex";
 import axios from "axios";
 import { decode } from "html-entities";
-import { cleanString, indent, toWikiLink } from "./utils";
-import { Mutex } from "async-mutex";
 import { DOMParser } from "xmldom";
 import { select } from "xpath";
+
+import { cleanString, indent, toWikiLink } from "./utils";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();
@@ -72,12 +73,12 @@ type DetailedDreadStatus = {
   castle: DreadCastleStatus;
 };
 
-type LeaderboardInfo = {
+export type LeaderboardInfo = {
   name: string;
   boards: SubboardInfo[];
 };
 
-type SubboardInfo = {
+export type SubboardInfo = {
   name: string;
   runs: RunInfo[];
 };

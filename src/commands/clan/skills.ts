@@ -1,7 +1,8 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
 import { Pool } from "pg";
-import { clanState, DREAD_CLANS, PlayerData } from "../../clans";
+
+import { DREAD_CLANS, PlayerData, clanState } from "../../clans";
 import { KoLClient } from "../../kol";
 import { Command } from "../type";
 
