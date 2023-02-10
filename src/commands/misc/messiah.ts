@@ -9,6 +9,7 @@ const superhero = (text: string) => {
   const skew = 0.261799;
   const width = text.length * 16; // total guess
   const height = Math.ceil(width * Math.tan(skew)); // cool maths
+  // temporarily swapping out impact, the right font, for verdana to see what happens
   return `
       <svg viewBox="0 0 ${width + 5} ${height * 1.1}" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -22,7 +23,7 @@ const superhero = (text: string) => {
           .superhero {
             transform: skew(0, -${skew}rad) scale(1, 1.5);
             font-weight: bold;
-            font-family: Impact;
+            font-family: Verdana; 
             font-size: 2em;
             fill: url(#superhero);
           }
@@ -47,7 +48,7 @@ const command: Command = {
       [
         {
           name: "name",
-          description: "the person who ruined you day",
+          description: "the person who ruined your day",
           type: ApplicationCommandOptionType.String,
           required: true,
         },
