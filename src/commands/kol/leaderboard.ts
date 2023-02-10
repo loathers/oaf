@@ -4,7 +4,7 @@ import { KOLClient } from "../../kol";
 
 import { Command } from "../type";
 
-export const PATH_MAPPINGS: Map<string, number> = new Map([
+const PATH_MAPPINGS: Map<string, number> = new Map([
   ["clan", 8],
   ["clandungeons", 8],
   ["slimetube", 8],

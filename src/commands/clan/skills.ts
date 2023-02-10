@@ -5,8 +5,8 @@ import { clanState, DREAD_CLANS, PlayerData } from "../../clans";
 import { KOLClient } from "../../kol";
 import { Command } from "../type";
 
-export const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
-export const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
+const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
+const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
 
 async function parseCurrentLogs(kolClient: KOLClient, mapToUpdate: Map<string, PlayerData>) {
   for (let clan of DREAD_CLANS) {

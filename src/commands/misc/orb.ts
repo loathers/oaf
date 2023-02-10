@@ -3,7 +3,7 @@ import { CommandInteraction } from "discord.js";
 
 import { Command } from "../type";
 
-export const ORB_RESPONSES: string[] = [
+const ORB_RESPONSES: string[] = [
   "It is certain.",
   "It is decidedly so.",
   "Without a doubt.",

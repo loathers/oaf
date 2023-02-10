@@ -8,12 +8,12 @@ import { Command } from "../type";
 // This is the maximum number of items we can have in our embeds
 const HORIZON = 25;
 
-export enum SpadingFamiliars {
+enum SpadingFamiliars {
   DEFAULT = 198,
   GHOST = 282,
 }
 
-export enum ItemType {
+enum ItemType {
   Food = "Food",
   Booze = "Booze",
   Spleen = "Spleen Item",
@@ -23,7 +23,7 @@ export enum ItemType {
   Unknown = "",
 }
 
-export const ITEM_SPADING_CALLS = [
+const ITEM_SPADING_CALLS = [
   {
     url: (id: number) => [
       "inv_equip.php",

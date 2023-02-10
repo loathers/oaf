@@ -15,9 +15,9 @@ import { REST } from "@discordjs/rest";
 
 import { WikiSearcher } from "./wikisearch";
 
-export const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
+const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
 
-export const ROLEMAP: Map<string, string> = new Map([
+const ROLEMAP: Map<string, string> = new Map([
   ["🇹", "741479573337800706"],
   ["♀️", "741479514902757416"],
   ["♂️", "741479366319538226"],
