@@ -1,6 +1,7 @@
 import axios from "axios";
 import { MessageEmbed } from "discord.js";
 
+import { createEmbed } from "./discord";
 import { KoLClient } from "./kol";
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "./things";
 import { cleanString } from "./utils";
@@ -361,18 +362,18 @@ export class WikiSearcher {
   async getEmbed(item: string): Promise<MessageEmbed | undefined> {
     const foundName = await this.findName(item);
     if (!foundName) return undefined;
-    const embed = new MessageEmbed().setTitle(foundName.name).setURL(foundName.url).setFooter({
-      text: "Problems? Message DocRostov#7004 on discord.",
-      iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
-    });
+
+    const embed = createEmbed().setTitle(foundName.name).setURL(foundName.url);
+
     if (this._thingMap.has(foundName.name.toLowerCase())) {
       const thing = this._thingMap.get(foundName.name.toLowerCase());
-      await thing?.addToEmbed(embed, this._client);
+      thing?.addToEmbed(embed, this._client);
     } else if (foundName.image) {
       embed.setImage(foundName.image.replace("https", "http"));
     } else {
       embed.setImage("http://kol.coldfront.net/thekolwiki/vis_sig.jpg");
     }
+
     return embed;
   }
 
@@ -475,7 +476,7 @@ export class WikiSearcher {
 
     const options = node.options();
     if (options.length > 11) {
-      return new MessageEmbed()
+      return createEmbed()
         .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
         .setDescription(
           `${letters.match(/^[aeiouAEIOU]/) ? "An" : "A"} ${letters.toUpperCase().padEnd(4, "✱")}${
@@ -483,11 +484,7 @@ export class WikiSearcher {
               ? ` (functionally ${letters.slice(0, i).toUpperCase().padEnd(4, "✱")})`
               : ""
           } Diabolic Pizza has too many possible effects to list.`
-        )
-        .setFooter({
-          text: "Problems? Message DocRostov#7004 on discord.",
-          iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
-        });
+        );
     }
     if (options.length === 1) {
       return (await this.getEmbed(options[0].name())) || new MessageEmbed();
@@ -510,13 +507,9 @@ export class WikiSearcher {
       )
     ).join("\n");
 
-    return new MessageEmbed()
+    return createEmbed()
       .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
-      .setDescription(description)
-      .setFooter({
-        text: "Problems? Message DocRostov#7004 on discord.",
-        iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
-      });
+      .setDescription(description);
   }
 }
 
