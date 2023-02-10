@@ -4,29 +4,26 @@ import { CommandInteraction } from "discord.js";
 import { WikiSearcher } from "../../wikisearch";
 import { Command } from "../type";
 
-async function wikiSearch(
-  interaction: CommandInteraction,
-  wikiSearcher: WikiSearcher
-): Promise<void> {
+async function wikiCommand(interaction: CommandInteraction, wikiSearcher: WikiSearcher) {
   const item = interaction.options.getString("term", true);
   await interaction.deferReply();
   const embed = await wikiSearcher.getEmbed(item);
-  if (embed) {
-    interaction.editReply({
-      content: null,
-      embeds: [embed],
-      allowedMentions: {
-        parse: [],
-      },
-    });
-  } else {
-    interaction.editReply({
+  if (!embed) {
+    return interaction.editReply({
       content: `"${item}" wasn't found. Please refine your search.`,
       allowedMentions: {
         parse: [],
       },
     });
   }
+
+  return interaction.editReply({
+    content: null,
+    embeds: [embed],
+    allowedMentions: {
+      parse: [],
+    },
+  });
 }
 
 const command: Command = {
@@ -41,7 +38,7 @@ const command: Command = {
           required: true,
         },
       ],
-      (interaction: CommandInteraction) => wikiSearch(interaction, wikiSearcher),
+      (interaction: CommandInteraction) => wikiCommand(interaction, wikiSearcher),
       "Search the KoL wiki for the given term."
     ),
 };
