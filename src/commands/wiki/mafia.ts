@@ -4,32 +4,42 @@ import { CommandInteraction } from "discord.js";
 
 import { Command } from "../type";
 
-async function mafiawikiSearch(interaction: CommandInteraction) {
+type SearchResponse = {
+  items: [{ link: string }];
+};
+
+async function mafiaCommand(interaction: CommandInteraction) {
   const item = interaction.options.getString("term", true);
+
   await interaction.deferReply();
-  const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
-    params: {
-      key: process.env.GOOGLE_API_KEY || "",
-      cx: process.env.MAFIA_CUSTOM_SEARCH || "",
-      q: item,
-    },
-  });
-  if (googleSearchResponse.data.items && googleSearchResponse.data.items.length) {
-    interaction.editReply({
-      content: googleSearchResponse.data.items[0].link,
-      embeds: [],
-      allowedMentions: {
-        parse: [],
+
+  const googleSearchResponse = await axios.get<SearchResponse>(
+    `https://www.googleapis.com/customsearch/v1`,
+    {
+      params: {
+        key: process.env.GOOGLE_API_KEY || "",
+        cx: process.env.MAFIA_CUSTOM_SEARCH || "",
+        q: item,
       },
-    });
-  } else {
-    interaction.editReply({
+    }
+  );
+
+  if (!googleSearchResponse.data.items?.length) {
+    return interaction.editReply({
       content: `"${item}" wasn't found. Please refine your search.`,
       allowedMentions: {
         parse: [],
       },
     });
   }
+
+  return interaction.editReply({
+    content: googleSearchResponse.data.items[0].link,
+    embeds: [],
+    allowedMentions: {
+      parse: [],
+    },
+  });
 }
 
 const command: Command = {
@@ -44,7 +54,7 @@ const command: Command = {
           required: true,
         },
       ],
-      mafiawikiSearch,
+      mafiaCommand,
       "Search the KoLmafia wiki for the given term."
     ),
 };
