@@ -66,7 +66,7 @@ type DreadCastleStatus = {
   agaricus: boolean;
 };
 
-type DetailedDreadStatus = {
+export type DetailedDreadStatus = {
   overview: DreadStatus;
   forest: DreadForestStatus;
   village: DreadVillageStatus;

@@ -28,3 +28,6 @@ export const toWeight = (modifier: number, power = 1) =>
   (2 * modifier + 61 - Math.sqrt(220 * modifier + 3685)) / (2 * power);
 
 export const lf = new Intl.ListFormat("en");
+
+export const pluralize = (count: number, singular: string, plural?: string) =>
+  count + " " + (count === 1 ? singular : plural || singular + "s");
