@@ -106,7 +106,7 @@ function sanitiseBlueText(blueText: string): string {
   );
 }
 
-export class KOLClient {
+export class KoLClient {
   private _loginParameters: URLSearchParams;
   private _credentials: KOLCredentials = { fetched: -1 };
 

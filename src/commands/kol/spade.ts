@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
 import { DiscordClient } from "../../discord";
-import { KOLClient } from "../../kol";
+import { KoLClient } from "../../kol";
 import { WikiSearcher } from "../../wikisearch";
 import { Command } from "../type";
 
@@ -83,7 +83,7 @@ const ITEM_SPADING_CALLS = [
   },
 ] as const;
 
-async function spadeItem(client: KOLClient, itemId: number) {
+async function spadeItem(client: KoLClient, itemId: number) {
   let itemtype = ItemType.Unknown as ItemType;
   let additionalInfo = "";
   const exists = !/Nopers/.test(
@@ -117,7 +117,7 @@ async function spadeItem(client: KOLClient, itemId: number) {
   return { id: itemId, exists, tradeable, itemtype, additionalInfo };
 }
 
-async function spadeFamiliar(client: KOLClient, famId: number) {
+async function spadeFamiliar(client: KoLClient, famId: number) {
   const page = await client.tryRequestWithLogin("desc_familiar.php", { which: famId });
 
   if (page.includes("No familiar was found.")) return "none";
@@ -126,7 +126,7 @@ async function spadeFamiliar(client: KOLClient, famId: number) {
   return name ?? "none";
 }
 
-async function spadeSkill(client: KOLClient, skillId: number) {
+async function spadeSkill(client: KoLClient, skillId: number) {
   const page = await client.tryRequestWithLogin("runskillz.php", {
     action: "Skillz",
     whichskill: skillId,
@@ -140,7 +140,7 @@ async function spadeSkill(client: KOLClient, skillId: number) {
 
 async function spade(
   interaction: CommandInteraction,
-  kolClient: KOLClient,
+  kolClient: KoLClient,
   wiki: WikiSearcher
 ): Promise<void> {
   switch (interaction.options.getString("spadeable", true)) {
@@ -163,7 +163,7 @@ async function spade(
 
 async function spadeItems(
   interaction: CommandInteraction,
-  kolClient: KOLClient,
+  kolClient: KoLClient,
   wiki: WikiSearcher
 ): Promise<void> {
   await interaction.deferReply();
@@ -222,7 +222,7 @@ async function spadeItems(
 
 async function spadeFamiliars(
   interaction: CommandInteraction,
-  kolClient: KOLClient,
+  kolClient: KoLClient,
   wiki: WikiSearcher
 ): Promise<void> {
   await interaction.deferReply();
@@ -250,7 +250,7 @@ async function spadeFamiliars(
 
 async function spadeSkills(
   interaction: CommandInteraction,
-  kolClient: KOLClient,
+  kolClient: KoLClient,
   wiki: WikiSearcher
 ): Promise<void> {
   await interaction.deferReply();

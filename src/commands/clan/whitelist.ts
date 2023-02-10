@@ -1,10 +1,10 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, GuildMemberRoleManager } from "discord.js";
 import { ALL_CLANS } from "../../clans";
-import { KOLClient } from "../../kol";
+import { KoLClient } from "../../kol";
 import { Command } from "../type";
 
-async function whitelist(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
+async function whitelist(interaction: CommandInteraction, kolClient: KoLClient): Promise<void> {
   const roles = interaction.member?.roles as GuildMemberRoleManager;
   if (
     roles.cache.some(

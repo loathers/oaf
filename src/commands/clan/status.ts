@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
 
 import { clanState, DREAD_CLANS } from "../../clans";
-import { KOLClient } from "../../kol";
+import { KoLClient } from "../../kol";
 import { Command } from "../type";
 
 const DREAD_BOSS_MAPPINGS: Map<string, string> = new Map([
@@ -21,7 +21,7 @@ const DREAD_BOSS_MAPPINGS: Map<string, string> = new Map([
   ["unknown", "Boss unknown"],
 ]);
 
-async function clanStatus(interaction: CommandInteraction, kolClient: KOLClient) {
+async function clanStatus(interaction: CommandInteraction, kolClient: KoLClient) {
   let messageString = "";
   await interaction.deferReply();
   try {
@@ -52,7 +52,7 @@ async function clanStatus(interaction: CommandInteraction, kolClient: KOLClient)
 
 async function detailedClanStatus(
   interaction: CommandInteraction,
-  kolClient: KOLClient
+  kolClient: KoLClient
 ): Promise<void> {
   const clanName = interaction.options.getString("clan", true);
   const clan = DREAD_CLANS.find(

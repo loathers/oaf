@@ -1,7 +1,7 @@
 import axios from "axios";
 import { MessageEmbed } from "discord.js";
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "./things";
-import { KOLClient } from "./kol";
+import { KoLClient } from "./kol";
 import { cleanString } from "./utils";
 
 const PACKAGES = new Map([
@@ -162,7 +162,7 @@ export class WikiSearcher {
   private _nameMap: Map<string, FoundName> = new Map();
   private _thingMap: Map<string, Thing> = new Map();
   private _pizzaTreeRoot: PizzaNode = new PizzaNode("");
-  private _client: KOLClient;
+  private _client: KoLClient;
   private _searchApiKey: string;
   private _customSearch: string;
   private _finalItemId = -1;
@@ -170,7 +170,7 @@ export class WikiSearcher {
   private _finalSkillIds: { [block: number]: number } = {};
   private _lastDownloadTime = -1;
 
-  constructor(client: KOLClient) {
+  constructor(client: KoLClient) {
     this._searchApiKey = process.env.GOOGLE_API_KEY || "";
     this._customSearch = process.env.CUSTOM_SEARCH || "";
     this._client = client;

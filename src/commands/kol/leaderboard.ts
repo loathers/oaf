@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, MessageEmbed } from "discord.js";
-import { KOLClient } from "../../kol";
+import { KoLClient } from "../../kol";
 
 import { Command } from "../type";
 

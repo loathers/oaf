@@ -2,7 +2,7 @@ import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
 import { Pool } from "pg";
 import { clanState, PlayerData } from "../../clans";
-import { KOLClient } from "../../kol";
+import { KoLClient } from "../../kol";
 import { Command } from "../type";
 
 async function setbrainiac(interaction: CommandInteraction, databasePool: Pool) {
@@ -41,7 +41,7 @@ async function setUnbrainiac(interaction: CommandInteraction, databasePool: Pool
   return;
 }
 
-async function getBrains(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
+async function getBrains(interaction: CommandInteraction, kolClient: KoLClient): Promise<void> {
   interaction.deferReply();
   const baseClasses = [
     "Seal Clubber",

@@ -1,11 +1,11 @@
 import { Pool } from "pg";
 import { DiscordClient } from "../discord";
-import { KOLClient } from "../kol";
+import { KoLClient } from "../kol";
 import { WikiSearcher } from "../wikisearch";
 
 type BaseParams = {
   discordClient: DiscordClient;
-  kolClient: KOLClient;
+  kolClient: KoLClient;
   databasePool: Pool;
   wikiSearcher: WikiSearcher;
 };

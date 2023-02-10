@@ -2,13 +2,13 @@ import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
 import { Pool } from "pg";
 import { clanState, DREAD_CLANS, PlayerData } from "../../clans";
-import { KOLClient } from "../../kol";
+import { KoLClient } from "../../kol";
 import { Command } from "../type";
 
 const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
 const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
 
-async function parseCurrentLogs(kolClient: KOLClient, mapToUpdate: Map<string, PlayerData>) {
+async function parseCurrentLogs(kolClient: KoLClient, mapToUpdate: Map<string, PlayerData>) {
   for (let clan of DREAD_CLANS) {
     const raidLog = await kolClient.getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
@@ -65,7 +65,7 @@ function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, P
   }
 }
 
-async function parseOldLogs(kolClient: KOLClient, databasePool: Pool) {
+async function parseOldLogs(kolClient: KoLClient, databasePool: Pool) {
   const newlyParsedRaids = [];
   for (let clan of DREAD_CLANS) {
     const raidsToParse = (
@@ -100,7 +100,7 @@ async function parseOldLogs(kolClient: KOLClient, databasePool: Pool) {
 
 async function getSkills(
   interaction: CommandInteraction,
-  kolClient: KOLClient,
+  kolClient: KoLClient,
   databasePool: Pool
 ): Promise<void> {
   await interaction.deferReply();

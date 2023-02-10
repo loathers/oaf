@@ -1,5 +1,5 @@
 import { MessageEmbed } from "discord.js";
-import { KOLClient } from "./kol";
+import { KoLClient } from "./kol";
 import { cleanString, indent, toWikiLink } from "./utils";
 
 type FamiliarActionTypes =
@@ -245,7 +245,7 @@ const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
 
 export abstract class Thing {
   abstract name(): string;
-  abstract addToEmbed(embed: MessageEmbed, client: KOLClient): void;
+  abstract addToEmbed(embed: MessageEmbed, client: KoLClient): void;
 }
 
 type ItemData = {
@@ -527,7 +527,7 @@ export class Item implements Thing {
     return this._name;
   }
 
-  async buildFullDescription(client: KOLClient, withAddl: boolean = true): Promise<string> {
+  async buildFullDescription(client: KoLClient, withAddl: boolean = true): Promise<string> {
     let description_string = this._shortDescription + (withAddl ? this._addlDescription : "");
 
     let blueText = await client.getItemDescription(this._item.descId);
@@ -637,7 +637,7 @@ export class Item implements Thing {
     return `${description_string}${blueText}${autosell}${price_section}${zapGroup}${foldGroup}${container}${contents}`;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._item.imageUrl}`);
     embed.setDescription(await this.buildFullDescription(client));
   }
@@ -695,7 +695,7 @@ export class Effect implements Thing {
     return this._name;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
     let description = `**Effect**\n(Effect ${this.get().id})\n${await client.getEffectDescription(
       this._effect.descId
@@ -764,7 +764,7 @@ export class Skill implements Thing {
     return Math.floor(this._skill.id / 1000);
   }
 
-  async buildDescription(client: KOLClient): Promise<string> {
+  async buildDescription(client: KoLClient): Promise<string> {
     let description = `(Skill ${this._skill.id})\n`;
     switch (this._skill.type) {
       case 0:
@@ -802,7 +802,7 @@ export class Skill implements Thing {
     return description;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._skill.imageUrl}`);
     if (!this._description) this._description = await this.buildDescription(client);
     embed.setDescription(this._description);
@@ -883,7 +883,7 @@ export class Familiar implements Thing {
     return this._typeString;
   }
 
-  async buildDescription(client: KOLClient): Promise<string> {
+  async buildDescription(client: KoLClient): Promise<string> {
     let description_string = "**Familiar**\n";
     description_string += `${this.parseTypes()}\n`;
     description_string += `Attributes: ${this._familiar.attributes || "None"}\n\n`;
@@ -900,7 +900,7 @@ export class Familiar implements Thing {
     return description_string;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._familiar.imageUrl}`);
     if (!this._description) this._description = await this.buildDescription(client);
     embed.setDescription(this._description);
@@ -978,7 +978,7 @@ export class Monster implements Thing {
     return this._name;
   }
 
-  async buildDescription(client: KOLClient): Promise<string> {
+  async buildDescription(client: KoLClient): Promise<string> {
     let description = `**Monster**\n(Monster ${this._monster.id})\n`;
     const atk = this._monster.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
     const def = this._monster.parameters.match(/Def: (?<def>\-?[\d]+)/);
@@ -1079,7 +1079,7 @@ export class Monster implements Thing {
     return description;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KOLClient): Promise<void> {
+  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
     embed.setThumbnail(
       `http://images.kingdomofloathing.com/adventureimages/${this._monster.imageUrl}`
     );

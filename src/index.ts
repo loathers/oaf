@@ -1,6 +1,6 @@
 import { DiscordClient } from "./discord";
 import { WikiSearcher } from "./wikisearch";
-import { KOLClient } from "./kol";
+import { KoLClient } from "./kol";
 import * as dotenv from "dotenv";
 import commands from "./commands";
 import { Pool } from "pg";
@@ -8,7 +8,7 @@ import { migrate } from "postgres-migrations";
 
 async function performSetup(): Promise<DiscordClient> {
   console.log("Creating KOL client.");
-  const kolClient = new KOLClient();
+  const kolClient = new KoLClient();
 
   console.log("Creating database client pool.");
   const databasePool = new Pool({
