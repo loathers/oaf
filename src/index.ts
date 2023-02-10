@@ -7,6 +7,8 @@ import { DiscordClient } from "./discord";
 import { KoLClient } from "./kol";
 import { WikiSearcher } from "./wikisearch";
 
+dotenv.config();
+
 async function performSetup(): Promise<DiscordClient> {
   console.log("Creating KoL client.");
   const kolClient = new KoLClient();
@@ -47,8 +49,6 @@ async function performSetup(): Promise<DiscordClient> {
 
   return discordClient;
 }
-
-dotenv.config({ path: __dirname + "/.env" });
 
 performSetup().then((discordClient) => {
   console.log("Starting bot.");
