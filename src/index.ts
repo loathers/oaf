@@ -8,7 +8,7 @@ import { KoLClient } from "./kol";
 import { WikiSearcher } from "./wikisearch";
 
 async function performSetup(): Promise<DiscordClient> {
-  console.log("Creating KOL client.");
+  console.log("Creating KoL client.");
   const kolClient = new KoLClient();
 
   console.log("Creating database client pool.");
