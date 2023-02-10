@@ -367,7 +367,7 @@ export class WikiSearcher {
 
     if (this._thingMap.has(foundName.name.toLowerCase())) {
       const thing = this._thingMap.get(foundName.name.toLowerCase());
-      await thing?.addToEmbed(embed, this._client);
+      thing?.addToEmbed(embed, this._client);
     } else if (foundName.image) {
       embed.setImage(foundName.image.replace("https", "http"));
     } else {
