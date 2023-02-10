@@ -3,35 +3,26 @@ import { CommandInteraction } from "discord.js";
 
 import { Command } from "../type";
 
-class StatBlock {
+type Stats = {
   level: number;
   mainstat: number;
   substat: number;
+};
 
-  constructor(level: number, mainstat: number, substat: number) {
-    this.level = level;
-    this.mainstat = mainstat;
-    this.substat = substat;
-  }
-  static fromLevel(level: number): StatBlock {
-    return new StatBlock(
-      level,
-      Math.pow(level, 2) - level * 2 + 5,
-      Math.pow(Math.pow(level - 1, 2) + 4, 2)
-    );
-  }
-  static fromMainstat(mainstat: number): StatBlock {
-    return new StatBlock(
-      1 + Math.floor(Math.sqrt(Math.max(0, mainstat - 4))),
-      mainstat,
-      Math.pow(mainstat, 2)
-    );
-  }
-  static fromSubstat(substat: number): StatBlock {
-    const mainstat = Math.floor(Math.sqrt(Math.max(0, substat)));
-    return new StatBlock(1 + Math.floor(Math.sqrt(Math.max(0, mainstat - 4))), mainstat, substat);
-  }
-}
+const fromLevel = (level: number): Stats => ({
+  level,
+  mainstat: Math.pow(level, 2) - level * 2 + 5,
+  substat: Math.pow(Math.pow(level - 1, 2) + 4, 2),
+});
+
+const fromMainstat = (mainstat: number): Stats => ({
+  level: 1 + Math.floor(Math.sqrt(Math.max(0, mainstat - 4))),
+  mainstat,
+  substat: Math.pow(mainstat, 2),
+});
+
+const fromSubstat = (substat: number): Stats =>
+  fromMainstat(Math.floor(Math.sqrt(Math.max(0, substat))));
 
 function level(interaction: CommandInteraction): void {
   const level = interaction.options.getInteger("level", true);
@@ -49,43 +40,35 @@ function level(interaction: CommandInteraction): void {
     );
     return;
   }
-  const statBlock = StatBlock.fromLevel(level);
+  const { mainstat, substat } = fromLevel(level);
 
   interaction.reply(
-    `Level ${
-      statBlock.level
-    } requires ${statBlock.mainstat.toLocaleString()} mainstat or ${statBlock.substat.toLocaleString()} total substats.`
+    `Level ${level} requires ${mainstat.toLocaleString()} mainstat or ${substat.toLocaleString()} total substats.`
   );
 }
 
-function stat(interaction: CommandInteraction): void {
+function statCommand(interaction: CommandInteraction): void {
   const mainstat = interaction.options.getInteger("stat", true);
   if (mainstat <= 0) {
     interaction.reply({ content: `Please supply a positive mainstat.`, ephemeral: true });
     return;
   }
-  const statBlock = StatBlock.fromMainstat(mainstat);
-  if (statBlock.level >= 255) {
-    interaction.reply(
-      `Mainstat ${mainstat.toLocaleString()} (reached at ${statBlock.substat.toLocaleString()} total substat${
-        statBlock.substat > 1 ? "s" : ""
-      }) reaches maximum level 255.`
-    );
-    return;
+  const { level, substat } = fromMainstat(mainstat);
+
+  let reply = `Mainstat ${mainstat.toLocaleString()} (reached at ${substat.toLocaleString()} total substat${
+    substat > 1 ? "s" : ""
+  }) reaches ${level >= 255 ? "maximum " : ""}level ${level}.`;
+
+  if (level <= 255) {
+    const next = fromLevel(level + 1);
+    reply += ` An additional ${(next.mainstat - mainstat).toLocaleString()} mainstat (requiring ${(
+      next.substat - substat
+    ).toLocaleString()} more substat${
+      next.substat - substat > 1 ? "s" : ""
+    }) is required to reach level ${next.level}.`;
   }
-  const nextLevel = StatBlock.fromLevel(statBlock.level + 1);
-  interaction.reply(
-    `Mainstat ${mainstat.toLocaleString()} (reached at ${statBlock.substat.toLocaleString()} total substats) reaches level ${
-      statBlock.level
-    }.` +
-      ` An additional ${(
-        nextLevel.mainstat - statBlock.mainstat
-      ).toLocaleString()} mainstat (requiring ${(
-        nextLevel.substat - statBlock.substat
-      ).toLocaleString()} more substat${
-        nextLevel.substat - statBlock.substat > 1 ? "s" : ""
-      }) is required to reach level ${nextLevel.level}.`
-  );
+
+  interaction.reply(reply);
 }
 
 function substat(interaction: CommandInteraction): void {
@@ -94,22 +77,22 @@ function substat(interaction: CommandInteraction): void {
     interaction.reply({ content: `Please supply a positive substat.`, ephemeral: true });
     return;
   }
-  const statBlock = StatBlock.fromSubstat(substat);
-  if (statBlock.level >= 255) {
-    interaction.reply(
-      `Substat total ${substat.toLocaleString()} reaches mainstat ${statBlock.mainstat.toLocaleString()} and maximum level 255.`
-    );
-    return;
+
+  const { level, mainstat } = fromSubstat(substat);
+
+  let reply = `Substat total ${substat.toLocaleString()} reaches mainstat ${mainstat.toLocaleString()} and ${
+    level >= 255 ? "maximum " : ""
+  }level ${level}.`;
+
+  if (level < 255) {
+    const next = fromLevel(level + 1);
+
+    reply += ` An additional ${(next.substat - substat).toLocaleString()} total substat${
+      next.substat - substat > 1 ? "s are" : " is"
+    } required to reach level ${next.level}.`;
   }
-  const nextLevel = StatBlock.fromLevel(statBlock.level + 1);
-  interaction.reply(
-    `Substat total ${substat.toLocaleString()} reaches mainstat ${statBlock.mainstat.toLocaleString()} and level ${
-      statBlock.level
-    }.` +
-      ` An additional ${(nextLevel.substat - statBlock.substat).toLocaleString()} total substat${
-        nextLevel.substat - statBlock.substat > 1 ? "s are" : " is"
-      } required to reach level ${nextLevel.level}.`
-  );
+
+  interaction.reply(reply);
 }
 
 const command: Command = {
@@ -124,7 +107,7 @@ const command: Command = {
           required: true,
         },
       ],
-      stat,
+      statCommand,
       "Find the substats and level for a given mainstat total."
     );
     discordClient.attachCommand(
