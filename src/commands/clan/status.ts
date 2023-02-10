@@ -29,10 +29,9 @@ async function clanStatus(interaction: CommandInteraction, kolClient: KoLClient)
   try {
     for (let clan of DREAD_CLANS) {
       const overview = await kolClient.getDreadStatusOverview(clan.id);
+      const skills = overview.castle ? overview.skills : 0;
       const capacitorString = overview.capacitor
-        ? `${!overview.castle ? 0 : overview.skills} skill${
-            !overview.castle || overview.skills != 1 ? "s" : ""
-          } left`
+        ? `${pluralize(skills, "skill")} left`
         : "Needs capacitor";
       messageString += `**${clan.name}**: ${overview.forest}/${overview.village}/${overview.castle} (${capacitorString})\n`;
     }

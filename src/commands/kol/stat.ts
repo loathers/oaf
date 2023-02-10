@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
 
+import { pluralize } from "../../utils";
 import { Command } from "../type";
 
 type Stats = {
@@ -55,17 +56,19 @@ function statCommand(interaction: CommandInteraction): void {
   }
   const { level, substat } = fromMainstat(mainstat);
 
-  let reply = `Mainstat ${mainstat.toLocaleString()} (reached at ${substat.toLocaleString()} total substat${
-    substat > 1 ? "s" : ""
-  }) reaches ${level >= 255 ? "maximum " : ""}level ${level}.`;
+  let reply = `Mainstat ${mainstat.toLocaleString()} (reached at ${pluralize(
+    substat,
+    "total substat"
+  )}) reaches ${level >= 255 ? "maximum " : ""}level ${level}.`;
 
   if (level <= 255) {
     const next = fromLevel(level + 1);
-    reply += ` An additional ${(next.mainstat - mainstat).toLocaleString()} mainstat (requiring ${(
-      next.substat - substat
-    ).toLocaleString()} more substat${
-      next.substat - substat > 1 ? "s" : ""
-    }) is required to reach level ${next.level}.`;
+    reply += ` An additional ${(
+      next.mainstat - mainstat
+    ).toLocaleString()} mainstat (requiring ${pluralize(
+      next.substat - substat,
+      "more substat"
+    )}) is required to reach level ${next.level}.`;
   }
 
   interaction.reply(reply);

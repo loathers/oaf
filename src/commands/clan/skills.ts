@@ -4,6 +4,7 @@ import { Pool } from "pg";
 
 import { DREAD_CLANS, PlayerData, clanState } from "../../clans";
 import { KoLClient } from "../../kol";
+import { pluralize } from "../../utils";
 import { Command } from "../type";
 
 const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
@@ -121,9 +122,10 @@ async function getSkills(
         const owedSkills = Math.floor((entry[1].kills + 450) / 900) - entry[1].skills;
         if (owedSkills > 0) {
           skillArray.push(
-            `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}: ${owedSkills} skill${
-              owedSkills > 1 ? "s" : ""
-            }.`
+            `${entry[0].charAt(0).toUpperCase() + entry[0].slice(1)}: ${pluralize(
+              owedSkills,
+              "skill"
+            )}.`
           );
         }
       }

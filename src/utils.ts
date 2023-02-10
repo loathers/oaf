@@ -30,4 +30,4 @@ export const toWeight = (modifier: number, power = 1) =>
 export const lf = new Intl.ListFormat("en");
 
 export const pluralize = (count: number, singular: string, plural?: string) =>
-  count + " " + (count === 1 ? singular : plural || singular + "s");
+  count.toLocaleString() + " " + (count === 1 ? singular : plural || singular + "s");

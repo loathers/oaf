@@ -1,7 +1,7 @@
 import { MessageEmbed } from "discord.js";
 
 import { KoLClient } from "./kol";
-import { cleanString, indent, toWikiLink } from "./utils";
+import { cleanString, indent, pluralize, toWikiLink } from "./utils";
 
 type FamiliarActionTypes =
   | "none"
@@ -311,6 +311,11 @@ export class Item implements Thing {
     }
   }
 
+  pluralizeAdventures(range: string) {
+    const usePlural = range !== "1";
+    return `${range} adventure${usePlural ? "s" : ""}`;
+  }
+
   buildShortDescription(itemMap: Map<string, string[]>): string {
     let tradeability_section = "";
     if (this._item.quest) tradeability_section += "Quest Item\n";
@@ -334,13 +339,9 @@ export class Item implements Thing {
         data[2] !== "1" ? `, requires level ${data[2]}` : ""
       })`;
       if (data[4] !== "0") {
-        desc += `\n${advRange.length > 1 ? `${advRange[0]}-${advRange[1]}` : data[4]} adventure${
-          data[4] === "1" ? "" : "s"
-        }`;
+        desc += `\n${this.pluralizeAdventures(data[4])}`;
         if (advRange.length > 1 || size > 1) {
-          desc += ` (${
-            advRange.length > 1 ? `Average ${average} adventure${data[4] === "1" ? "" : "s"}` : ""
-          }`;
+          desc += ` (${advRange.length > 1 ? `Average ${pluralize(average, "adventure")}` : ""}`;
           desc += `${
             size > 1
               ? `${advRange.length > 1 ? ", " : ""}${Number(
@@ -364,13 +365,9 @@ export class Item implements Thing {
         data[2] !== "1" ? `, requires level ${data[2]}` : ""
       })`;
       if (data[4] !== "0") {
-        desc += `\n${advRange.length > 1 ? `${advRange[0]}-${advRange[1]}` : data[4]} adventure${
-          data[4] === "1" ? "" : "s"
-        }`;
+        desc += `\n${this.pluralizeAdventures(data[4])}`;
         if (advRange.length > 1 || size > 1) {
-          desc += ` (${
-            advRange.length > 1 ? `Average ${average} adventure${data[4] === "1" ? "" : "s"}` : ""
-          }`;
+          desc += ` (${advRange.length > 1 ? `Average ${pluralize(average, "adventure")}` : ""}`;
           desc += `${
             size > 1
               ? `${advRange.length > 1 ? ", " : ""}${Number(
@@ -394,13 +391,9 @@ export class Item implements Thing {
         data[2] !== "1" ? `, requires level ${data[2]}` : ""
       })`;
       if (data[4] !== "0") {
-        desc += `\n${advRange.length > 1 ? `${advRange[0]}-${advRange[1]}` : data[4]} adventure${
-          data[4] === "1" ? "" : "s"
-        }`;
+        desc += `\n${this.pluralizeAdventures(data[4])}`;
         if (advRange.length > 1 || size > 1) {
-          desc += ` (${
-            advRange.length > 1 ? `Average ${average} adventure${data[4] === "1" ? "" : "s"}` : ""
-          }`;
+          desc += ` (${advRange.length > 1 ? `Average ${pluralize(average, "adventure")}` : ""}`;
           desc += `${
             size > 1
               ? `${advRange.length > 1 ? ", " : ""}${Number(
