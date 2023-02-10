@@ -246,7 +246,7 @@ const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
 
 export abstract class Thing {
   abstract name(): string;
-  abstract addToEmbed(embed: MessageEmbed, client: KoLClient): void;
+  abstract addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void>;
 }
 
 type ItemData = {
