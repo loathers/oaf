@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction } from "discord.js";
-import { DiscordClient } from "../../discord";
+
 import { KoLClient } from "../../kol";
 import { WikiSearcher } from "../../wikisearch";
 import { Command } from "../type";
@@ -138,7 +138,7 @@ async function spadeSkill(client: KoLClient, skillId: number) {
   return page.includes("You don't have that skill.");
 }
 
-async function spade(
+async function spadeCommand(
   interaction: CommandInteraction,
   kolClient: KoLClient,
   wiki: WikiSearcher
@@ -301,7 +301,7 @@ const command: Command = {
           required: false,
         },
       ],
-      (interaction: CommandInteraction) => spade(interaction, kolClient, wikiSearcher),
+      (interaction: CommandInteraction) => spadeCommand(interaction, kolClient, wikiSearcher),
       "Spade the existence and tradeability of as yet unreleased stuff."
     ),
 };
