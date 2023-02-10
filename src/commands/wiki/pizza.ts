@@ -4,7 +4,7 @@ import { CommandInteraction } from "discord.js";
 import { WikiSearcher } from "../../wikisearch";
 import { Command } from "../type";
 
-async function pizzaSearch(interaction: CommandInteraction, wikiSearcher: WikiSearcher) {
+async function pizzaCommand(interaction: CommandInteraction, wikiSearcher: WikiSearcher) {
   const letters = interaction.options.getString("letters", true);
   if (letters.length < 1 || letters.length > 4) {
     await interaction.reply({
@@ -35,7 +35,7 @@ const command: Command = {
           required: true,
         },
       ],
-      async (interaction: CommandInteraction) => await pizzaSearch(interaction, wikiSearcher),
+      async (interaction: CommandInteraction) => await pizzaCommand(interaction, wikiSearcher),
       "Find what effects a diabolic pizza with the given letters can grant you."
     ),
 };
