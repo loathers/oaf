@@ -71,7 +71,7 @@ async function getBrains(interaction: CommandInteraction, kolClient: KoLClient):
       {
         title: "Potentially available brains",
         description:
-          "Somersaulter, kenny kamAKAzi, and 3BH can pilot dread multis for any class of brain, subject to multi restrictions.",
+          "Captain Scotch, kenny kamAKAzi, and 3BH can pilot dread multis for any class of brain, subject to multi restrictions.",
         fields: baseClasses.map((playerClass) => {
           if (!classMap.has(playerClass)) {
             return {
