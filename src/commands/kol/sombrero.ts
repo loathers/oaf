@@ -32,7 +32,7 @@ const command: Command = {
           required: true,
         },
         {
-          name: "monsterLevel",
+          name: "monsterlevel",
           description: "ML modifier",
           type: ApplicationCommandOptionType.Integer,
           required: true,
