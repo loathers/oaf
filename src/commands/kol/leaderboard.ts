@@ -112,58 +112,63 @@ const PATH_MAPPINGS: Map<string, number> = new Map([
   ["standard", 999],
 ]);
 
-async function leaderboard(interaction: CommandInteraction, kolClient: KOLClient): Promise<void> {
-  const boardref = interaction.options.getString("leaderboard", true);
+const parseBoard = (input: string) => {
+  // Path (or other special) board
+  const pathNumber = PATH_MAPPINGS.get(input.toLowerCase().replace(/\W/g, ""));
+  if (pathNumber) return pathNumber;
+  const boardNumber = parseInt(input) || 0;
+  // Board referenced by internal id
+  if (boardNumber <= 2000) return boardNumber;
+  // Current standard year
+  if (boardNumber === new Date().getFullYear()) return 999;
+  // Other standard year
+  return 998 + 2015 - boardNumber;
+};
 
-  let board =
-    PATH_MAPPINGS.get(boardref.toLowerCase().replace(/\W/g, "")) || parseInt(boardref) || 0;
-  if (board > 2000) board = board === new Date(Date.now()).getFullYear() ? 999 : 998 + 2015 - board;
+const formatSubboard = (subboard: SubboardInfo) => {
+  const runs = subboard.runs.map(
+    (run) => `${run.player} - ${run.days ? `${run.days}/` : ""}${run.turns}`
+  );
+  if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
+  if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
+  if (runs.length) runs.splice(0, 0, "🥇 Gold Star 🥇");
+  return {
+    title: subboard.name || "...",
+    name: subboard.name || "...",
+    value: runs.join("\n").slice(0, 1024) || "No runs yet!",
+    inline: true,
+  };
+};
+
+async function leaderboardCommand(interaction: CommandInteraction, kolClient: KoLClient) {
+  const board = parseBoard(interaction.options.getString("leaderboard", true));
   await interaction.deferReply();
-  const leaderboardInfo = await kolClient.getLeaderboard(board);
-  if (!leaderboardInfo || leaderboardInfo.name === "Weird Leaderboards") {
+  const leaderboard = await kolClient.getLeaderboard(board);
+  if (!leaderboard || leaderboard.name === "Weird Leaderboards") {
     interaction.editReply("I don't think that's a real leaderboard, sorry.");
-  } else if (leaderboardInfo.boards.length === 0) {
-    interaction.editReply({
-      content: null,
-      embeds: [
-        new MessageEmbed()
-          .setTitle(leaderboardInfo.name || "...")
-          .setDescription("I wasn't able to understand this leaderboard, sorry.")
-          .setFooter({
-            text: "Problems? Message DocRostov#7004 on discord.",
-            iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
-          }),
-      ],
-    });
-  } else {
-    interaction.editReply({
-      content: null,
-      embeds: [
-        new MessageEmbed()
-          .setTitle(leaderboardInfo.name || "...")
-          .addFields(
-            leaderboardInfo.boards.map((subboard) => {
-              const runs = subboard.runs.map(
-                (run) => `${run.player} - ${run.days ? `${run.days}/` : ""}${run.turns}`
-              );
-              if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
-              if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
-              if (runs.length) runs.splice(0, 0, "🥇 Gold Star 🥇");
-              return {
-                title: subboard.name || "...",
-                name: subboard.name || "...",
-                value: runs.join("\n").slice(0, 1024) || "No runs yet!",
-                inline: true,
-              };
-            })
-          )
-          .setFooter({
-            text: "Problems? Message DocRostov#7004 on discord.",
-            iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
-          }),
-      ],
-    });
+    return;
   }
+
+  if (leaderboard.boards.length === 0) {
+    interaction.editReply({
+      content: null,
+      embeds: [
+        createEmbed()
+          .setTitle(leaderboard.name || "...")
+          .setDescription("I wasn't able to understand this leaderboard, sorry."),
+      ],
+    });
+    return;
+  }
+
+  interaction.editReply({
+    content: null,
+    embeds: [
+      createEmbed()
+        .setTitle(leaderboard.name || "...")
+        .addFields(leaderboard.boards.map(formatSubboard)),
+    ],
+  });
 }
 
 const command: Command = {
@@ -178,7 +183,7 @@ const command: Command = {
           required: true,
         },
       ],
-      (interaction: CommandInteraction) => leaderboard(interaction, kolClient),
+      (interaction: CommandInteraction) => leaderboardCommand(interaction, kolClient),
       "Display the specified leaderboard."
     ),
 };
