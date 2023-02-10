@@ -13,9 +13,10 @@ function item(interaction: CommandInteraction): void {
     interaction.reply(`A 100% drop does not require any item drop bonus to cap.`);
     return;
   }
+
   interaction.reply(
-    `A ${Number(drop.toFixed(1))}% drop requires a +${
-      Math.ceil(10000 / Number(drop.toFixed(1))) - 100
+    `A ${drop.toFixed(1)}% drop requires a +${
+      Math.ceil(10000 / drop) - 100
     }% item drop bonus to cap.`
   );
 }
