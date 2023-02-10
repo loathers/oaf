@@ -47,7 +47,7 @@ const command: Command = {
       [
         {
           name: "name",
-          description: "the person who ruined you day",
+          description: "the person who ruined your day",
           type: ApplicationCommandOptionType.String,
           required: true,
         },
