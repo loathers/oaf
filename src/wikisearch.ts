@@ -1,9 +1,114 @@
 import axios from "axios";
 import { MessageEmbed } from "discord.js";
+
+import { createEmbed } from "./discord";
+import { KoLClient } from "./kol";
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "./things";
-import { KOLClient } from "./kolclient";
 import { cleanString } from "./utils";
-import { PACKAGES, REVERSE_PACKAGES } from "./constants";
+
+const PACKAGES = new Map([
+  ["iceberglet", "ice pick"],
+  ["great ball of frozen fire", "evil flaming eyeball pendant"],
+  ["naughty origami kit", "naughty paper shuriken"],
+  ["packet of mayfly bait", "mayfly bait necklace"],
+  ["container of spooky putty", "spooky putty sheet"],
+  ["stinky cheese ball", "stinky cheese diaper"],
+  ["grumpy bumpkin's pumpkin seed catalog", "packet of pumpkin seeds"],
+  ["make-your-own-vampire-fangs kit", "plastic vampire fangs"],
+  ["mint salton pepper's peppermint seed catalog", "peppermint pip packet"],
+  ["pete & jackie's dragon tooth emporium catalog", "packet of dragon's teeth"],
+  ["folder holder", "over-the-shoulder folder holder"],
+  ["discontent™ winter garden catalog", "packet of winter seeds"],
+  ["ed the undying exhibit crate", "the crown of ed the undying"],
+  ["pack of every card", "deck of every card"],
+  ["diy protonic accelerator kit", "protonic accelerator pack"],
+  ["dear past self package", "time-spinner"],
+  ["suspicious package", "kremlin's greatest briefcase"],
+  ["li-11 motor pool voucher", "asdon martin keyfob"],
+  ["corked genie bottle", "genie bottle"],
+  ["pantogram", "portable pantogram"],
+  ["locked mumming trunk", "mumming trunk"],
+  ["january's garbage tote (unopened)", "january's garbage tote"],
+  ["pokéfam guide to capturing all of them", "packet of tall grass seeds"],
+  ["songboom™ boombox box", "songboom™ boombox"],
+  ["bastille batallion control rig crate", "bastille batallion control rig"],
+  ["latte lovers club card", "latte lovers member's mug"],
+  ["kramco industries packing carton", "kramco sausage-o-matic™"],
+  ["mint condition lil' doctor™ bag", "lil' doctor™ bag"],
+  ["vampyric cloake pattern", "vampyric cloake"],
+  ["fourth of may cosplay saber kit", "fourth of may cosplay saber"],
+  ["rune-strewn spoon coccoon", "hewn moon-rune spoon"],
+  ["beach comb box", "beach comb"],
+  ["unopened eight days a week pill keeper", "eight days a week pill keeper"],
+  ["unopened diabolic pizza cube box", "diabolic pizza cube"],
+  ["mint-in-box powerful glove", "powerful glove"],
+  ["better shrooms and gardens catalog", "packet of mushroom spores"],
+  ["guzzlr application", "guzzlr tablet"],
+  ["bag of iunion stones", "iunion crown"],
+  ["packaged spinmaster™ lathe", "spinmaster™ lathe"],
+  ["bagged cargo cultist shorts", "cargo cultist shorts"],
+  ["packaged knock-off retro superhero cape", "unwrapped knock-off retro superhero cape"],
+  ["box o' ghosts", "greedy ghostling"],
+  ["packaged miniature crystal ball", "miniature crystal ball"],
+  ["emotion chip", "spinal-fluid-covered emotion chip"],
+  ["power seed", "potted power plant"],
+  ["packaged backup camera", "backup camera"],
+  ["packaged familiar scrapbook", "familiar scrapbook"],
+  ["packaged industrial fire extinguisher", "industrial fire extinguisher"],
+  ["packaged daylight shavings helmet", "daylight shavings helmet"],
+  ["packaged cold medicine cabinet", "cold medicine cabinet"],
+  ["undrilled cosmic bowling ball", "cosmic bowling ball"],
+  ["combat lover's locket lockbox", "combat lover's locket"],
+  ["undamaged unbreakable umbrella", "unbreakable umbrella"],
+  ["retrospecs try-at-home kit", "retrospecs"],
+  ["fresh can of paint", "fresh coat of paint"],
+  ["mint condition magnifying glass", "cursed magnifying glass"],
+  ["packaged june cleaver", "june cleaver"],
+  ["designer sweatpants (new old stock)", "designer sweatpants"],
+  ["unopened tiny stillsuit", "tiny stillsuit"],
+  ["packaged jurassic parka", "jurassic parka"],
+  ["boxed autumn-aton", "autumn-aton"],
+]);
+
+const ghostlings: [string, string][] = [
+  ["grinning ghostling", "box o' ghosts"],
+  ["gregarious ghostling", "box o' ghosts"],
+  ["greedy ghostling", "box o' ghosts"],
+];
+
+const foldables: [string, string][] = [
+  ["ice baby", "iceberglet"],
+  ["ice pick", "iceberglet"],
+  ["ice skates", "iceberglet"],
+  ["ice sickle", "iceberglet"],
+  ["liar's pants", "great ball of frozen fire"],
+  ["flaming juggler's balls", "great ball of frozen fire"],
+  ["flaming pink shirt", "great ball of frozen fire"],
+  ["flaming familiar doppelgänger", "great ball of frozen fire"],
+  ["evil flaming eyeball pendant", "great ball of frozen fire"],
+  ["naughty paper shuriken", "naughty origami kit"],
+  ["origami pasties", "naughty origami kit"],
+  ["origami riding crop", "naughty origami kit"],
+  ['origami "gentlemen\'s" magazine', "naughty origami kit"],
+  ["naughty fortune teller", "naughty origami kit"],
+  ["spooky putty mitre", "container of spooky putty"],
+  ["spooky putty leotard", "container of spooky putty"],
+  ["spooky putty ball", "container of spooky putty"],
+  ["spooky putty sheet", "container of spooky putty"],
+  ["spooky putty snake", "container of spooky putty"],
+  ["stinky cheese sword", "stinky cheese ball"],
+  ["stinky cheese diaper", "stinky cheese ball"],
+  ["stinky cheese wheel", "stinky cheese ball"],
+  ["stinky cheese eye", "stinky cheese ball"],
+  ["staff of queso escusado", "stinky cheese ball"],
+];
+
+const reversed: [string, string][] = Array.from(PACKAGES.keys()).map((key) => [
+  PACKAGES.get(key) || "",
+  key,
+]);
+
+const REVERSE_PACKAGES = new Map(reversed.concat(ghostlings).concat(foldables));
 
 type FoundName = {
   name: string;
@@ -59,7 +164,7 @@ export class WikiSearcher {
   private _nameMap: Map<string, FoundName> = new Map();
   private _thingMap: Map<string, Thing> = new Map();
   private _pizzaTreeRoot: PizzaNode = new PizzaNode("");
-  private _client: KOLClient;
+  private _client: KoLClient;
   private _searchApiKey: string;
   private _customSearch: string;
   private _finalItemId = -1;
@@ -67,7 +172,7 @@ export class WikiSearcher {
   private _finalSkillIds: { [block: number]: number } = {};
   private _lastDownloadTime = -1;
 
-  constructor(client: KOLClient) {
+  constructor(client: KoLClient) {
     this._searchApiKey = process.env.GOOGLE_API_KEY || "";
     this._customSearch = process.env.CUSTOM_SEARCH || "";
     this._client = client;
@@ -257,10 +362,9 @@ export class WikiSearcher {
   async getEmbed(item: string): Promise<MessageEmbed | undefined> {
     const foundName = await this.findName(item);
     if (!foundName) return undefined;
-    const embed = new MessageEmbed().setTitle(foundName.name).setURL(foundName.url).setFooter({
-      text: "Problems? Message DocRostov#7004 on discord.",
-      iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
-    });
+
+    const embed = createEmbed().setTitle(foundName.name).setURL(foundName.url);
+
     if (this._thingMap.has(foundName.name.toLowerCase())) {
       const thing = this._thingMap.get(foundName.name.toLowerCase());
       await thing?.addToEmbed(embed, this._client);
@@ -269,6 +373,7 @@ export class WikiSearcher {
     } else {
       embed.setImage("http://kol.coldfront.net/thekolwiki/vis_sig.jpg");
     }
+
     return embed;
   }
 
@@ -371,7 +476,7 @@ export class WikiSearcher {
 
     const options = node.options();
     if (options.length > 11) {
-      return new MessageEmbed()
+      return createEmbed()
         .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
         .setDescription(
           `${letters.match(/^[aeiouAEIOU]/) ? "An" : "A"} ${letters.toUpperCase().padEnd(4, "✱")}${
@@ -379,11 +484,7 @@ export class WikiSearcher {
               ? ` (functionally ${letters.slice(0, i).toUpperCase().padEnd(4, "✱")})`
               : ""
           } Diabolic Pizza has too many possible effects to list.`
-        )
-        .setFooter({
-          text: "Problems? Message DocRostov#7004 on discord.",
-          iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
-        });
+        );
     }
     if (options.length === 1) {
       return (await this.getEmbed(options[0].name())) || new MessageEmbed();
@@ -406,13 +507,9 @@ export class WikiSearcher {
       )
     ).join("\n");
 
-    return new MessageEmbed()
+    return createEmbed()
       .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
-      .setDescription(description)
-      .setFooter({
-        text: "Problems? Message DocRostov#7004 on discord.",
-        iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
-      });
+      .setDescription(description);
   }
 }
 

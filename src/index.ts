@@ -1,19 +1,18 @@
-import { DiscordClient } from "./discord";
-import { WikiSearcher } from "./wikisearch";
-import { attachMiscCommands, syncReminders } from "./misccommands";
-import { KOLClient } from "./kolclient";
-import { attachClanCommands, syncToDatabase } from "./raidlogs";
 import * as dotenv from "dotenv";
-import { attachKoLCommands } from "./kolcommands";
 import { Pool } from "pg";
 import { migrate } from "postgres-migrations";
 
+import commands from "./commands";
+import { DiscordClient } from "./discord";
+import { KoLClient } from "./kol";
+import { WikiSearcher } from "./wikisearch";
+
 async function performSetup(): Promise<DiscordClient> {
-  console.log("Creating KOL client.");
-  const kolClient = new KOLClient();
+  console.log("Creating KoL client.");
+  const kolClient = new KoLClient();
 
   console.log("Creating database client pool.");
-  const databaseClientPool = new Pool({
+  const databasePool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
       rejectUnauthorized: false,
@@ -24,10 +23,7 @@ async function performSetup(): Promise<DiscordClient> {
   const wikiSearcher = new WikiSearcher(kolClient);
 
   console.log("Migrating database.");
-  await migrate({ client: databaseClientPool }, "./migrations");
-
-  console.log("Syncing database.");
-  await syncToDatabase(databaseClientPool);
+  await migrate({ client: databasePool }, "./migrations");
 
   console.log("Downloading mafia data.");
   await wikiSearcher.downloadMafiaData();
@@ -36,20 +32,15 @@ async function performSetup(): Promise<DiscordClient> {
   console.log("Creating discord client.");
   const discordClient = new DiscordClient(wikiSearcher);
 
-  console.log("Attaching kol commands.");
-  attachKoLCommands(discordClient, kolClient, wikiSearcher);
+  const args = { discordClient, kolClient, wikiSearcher, databasePool };
 
-  console.log("Attaching clan commands.");
-  attachClanCommands(discordClient, kolClient, databaseClientPool);
-
-  console.log("Attaching misc commands.");
-  attachMiscCommands(discordClient, databaseClientPool);
-
-  console.log("Attaching wiki commands.");
-  discordClient.attachMetaBotCommands();
-
-  console.log("Syncing reminders.");
-  await syncReminders(databaseClientPool, discordClient.client());
+  console.log("Loading commands and syncing relevant data");
+  for (const command of Object.values(commands)) {
+    command.attach(args);
+    if (command.sync) {
+      await command.sync(args);
+    }
+  }
 
   console.log("Registering slash commands.");
   await discordClient.registerSlashCommands();

@@ -1,10 +1,10 @@
+import { Mutex } from "async-mutex";
 import axios from "axios";
 import { decode } from "html-entities";
-import { cleanString, indent, toWikiLink } from "./utils";
-import { Mutex } from "async-mutex";
 import { DOMParser } from "xmldom";
 import { select } from "xpath";
-import { ItemType, ITEM_SPADING_CALLS } from "./constants";
+
+import { cleanString, indent, toWikiLink } from "./utils";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();
@@ -66,19 +66,19 @@ type DreadCastleStatus = {
   agaricus: boolean;
 };
 
-type DetailedDreadStatus = {
+export type DetailedDreadStatus = {
   overview: DreadStatus;
   forest: DreadForestStatus;
   village: DreadVillageStatus;
   castle: DreadCastleStatus;
 };
 
-type LeaderboardInfo = {
+export type LeaderboardInfo = {
   name: string;
   boards: SubboardInfo[];
 };
 
-type SubboardInfo = {
+export type SubboardInfo = {
   name: string;
   runs: RunInfo[];
 };
@@ -95,14 +95,6 @@ type PlayerBasicData = {
   class: string;
 };
 
-type SpadedItem = {
-  id: number;
-  exists: boolean;
-  tradeable: boolean;
-  itemtype: ItemType;
-  additionalInfo?: string;
-};
-
 function sanitiseBlueText(blueText: string): string {
   return decode(
     blueText
@@ -115,7 +107,7 @@ function sanitiseBlueText(blueText: string): string {
   );
 }
 
-export class KOLClient {
+export class KoLClient {
   private _loginParameters: URLSearchParams;
   private _credentials: KOLCredentials = { fetched: -1 };
 
@@ -193,7 +185,7 @@ export class KOLClient {
     }
   }
 
-  private async tryRequestWithLogin(url: string, parameters: object) {
+  async tryRequestWithLogin(url: string, parameters: object) {
     const result = await this.makeCredentialedRequest(url, parameters);
     if (result) return result;
     await this.logIn();
@@ -535,61 +527,6 @@ export class KOLClient {
     } catch (error) {
       return undefined;
     }
-  }
-
-  async spadeItem(itemId: number): Promise<SpadedItem> {
-    let itemtype = ItemType.Unknown;
-    let additionalInfo = "";
-    const exists = !/Nopers/.test(
-      await this.tryRequestWithLogin("inv_equip.php", {
-        action: "equip",
-        which: 2,
-        whichitem: itemId,
-      })
-    );
-    const tradeable = !/That item cannot be sold or transferred/.test(
-      await this.tryRequestWithLogin("town_sellflea.php", {
-        whichitem: itemId,
-        sellprice: "",
-        selling: "Yep.",
-      })
-    );
-    if (exists) {
-      for (let property of ITEM_SPADING_CALLS) {
-        const { url, visitMatch, type } = property;
-        const page = (await this.tryRequestWithLogin(
-          ...(url(itemId) as [string, object])
-        )) as string;
-
-        const match = visitMatch.test(page);
-        if (match) {
-          itemtype = type;
-          break;
-        }
-      }
-    }
-    return { id: itemId, exists, tradeable, itemtype, additionalInfo };
-  }
-
-  async spadeFamiliar(famId: number): Promise<string> {
-    const page = await this.tryRequestWithLogin("desc_familiar.php", { which: famId });
-
-    if (page.includes("No familiar was found.")) return "none";
-
-    const name = /<font face=Arial,Helvetica><center><b>([^<]+)<\/b>/.exec(page)?.[1];
-    return name ?? "none";
-  }
-
-  async spadeSkill(skillId: number): Promise<boolean> {
-    const page = await this.tryRequestWithLogin("runskillz.php", {
-      action: "Skillz",
-      whichskill: skillId,
-      targetplayer: 1,
-      quantity: 1,
-    });
-
-    // If the skill doesn't exist on the dev server, the response ends with an exclamation mark
-    return page.includes("You don't have that skill.");
   }
 
   async getBasicDetailsForUser(name: string): Promise<PlayerBasicData> {

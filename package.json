@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsc --build",
     "clean": "tsc --build --clean",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/index.js",
+    "format": "prettier --write src/**/*.ts"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +26,7 @@
     "xpath": "^0.0.32"
   },
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.0.0",
     "@types/node": "^17.0.35",
     "@types/pg": "^8.6.5",
     "@types/ws": "^8.5.3",
@@ -33,7 +35,7 @@
     "typescript": "^4.2.4"
   },
   "engines": {
-    "node": "18.2.0",
+    "node": "^18.2.0",
     "npm": "8.9.0"
   }
 }

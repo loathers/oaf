@@ -20,3 +20,14 @@ export function toWikiLink(input: string): string {
 export function clamp(num: number, min: number, max: number): number {
   return num <= min ? min : num >= max ? max : num;
 }
+
+export const toDrop = (weight: number, power = 1) =>
+  Math.sqrt(55 * (weight * power)) + weight * power - 3;
+
+export const toWeight = (modifier: number, power = 1) =>
+  (2 * modifier + 61 - Math.sqrt(220 * modifier + 3685)) / (2 * power);
+
+export const lf = new Intl.ListFormat("en");
+
+export const pluralize = (count: number, singular: string, plural?: string) =>
+  count.toLocaleString() + " " + (count === 1 ? singular : plural || singular + "s");
