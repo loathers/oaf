@@ -30,7 +30,7 @@ async function guessOrg(project: string) {
   return _projectOrgs[project];
 }
 
-async function prsWelcome(interaction: CommandInteraction): Promise<void> {
+async function prsWelcomeCommand(interaction: CommandInteraction): Promise<void> {
   const repo = interaction.options.getString("repository", true);
 
   const project = PROJECT_ALIASES.get(repo.toLowerCase()) ?? repo.toLowerCase();
@@ -61,7 +61,7 @@ const command: Command = {
           required: true,
         },
       ],
-      prsWelcome,
+      prsWelcomeCommand,
       "Links to the PRs and issues assigned to you for a given LASS project"
     ),
 };

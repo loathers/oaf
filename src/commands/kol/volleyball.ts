@@ -3,7 +3,7 @@ import { CommandInteraction } from "discord.js";
 
 import { Command } from "../type";
 
-function volley(interaction: CommandInteraction): void {
+function volleyCommand(interaction: CommandInteraction): void {
   const weight = interaction.options.getInteger("weight", true);
   if (weight <= 0) {
     interaction.reply({ content: `Please supply a positive volleyball weight.`, ephemeral: true });
@@ -24,7 +24,7 @@ const command: Command = {
           required: true,
         },
       ],
-      volley,
+      volleyCommand,
       "Find the +stat gain supplied by a volleyball of a given weight."
     ),
 };

@@ -2,10 +2,9 @@ import { ApplicationCommandOptionType } from "discord-api-types/v9";
 import { CommandInteraction, TextChannel } from "discord.js";
 
 import { DiscordClient } from "../../discord";
-
 import { Command } from "../type";
 
-async function purge(
+async function purgeCommand(
   interaction: CommandInteraction,
   channel: TextChannel,
   client: DiscordClient,
@@ -37,7 +36,7 @@ const command: Command = {
         },
       ],
       async (interaction: CommandInteraction) =>
-        await purge(
+        await purgeCommand(
           interaction,
           interaction.channel as TextChannel,
           discordClient,
@@ -49,7 +48,7 @@ const command: Command = {
       "oops",
       [],
       async (interaction: CommandInteraction) =>
-        await purge(interaction, interaction.channel as TextChannel, discordClient, 1),
+        await purgeCommand(interaction, interaction.channel as TextChannel, discordClient, 1),
       "Purges OAF's last message in this channel."
     );
   },

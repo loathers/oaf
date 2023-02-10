@@ -40,7 +40,7 @@ const ORB_RESPONSES: string[] = [
   "THERE IS AS YET INSUFFICIENT DATA FOR A MEANINGFUL ANSWER",
 ];
 
-function orb(interaction: CommandInteraction): void {
+function orbCommand(interaction: CommandInteraction): void {
   const question = interaction.options.getString("asktheorb");
   interaction.reply({
     content: `${
@@ -66,7 +66,7 @@ const command: Command = {
           required: false,
         },
       ],
-      orb,
+      orbCommand,
       "Consult OAF's miniature crystal ball."
     ),
 };
