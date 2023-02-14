@@ -68,6 +68,9 @@ const PACKAGES = new Map([
   ["unopened tiny stillsuit", "tiny stillsuit"],
   ["packaged jurassic parka", "jurassic parka"],
   ["boxed autumn-aton", "autumn-aton"],
+  ["packaged model train set", "model train set"],
+  ["rock garden guide", "packet of rock seeds"],
+  ["s.i.t. course voucher", "s.i.t. course completion certificate"],
 ]);
 
 const ghostlings: [string, string][] = [
