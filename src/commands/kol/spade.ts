@@ -255,6 +255,12 @@ async function spadeSkills(
 ): Promise<void> {
   await interaction.deferReply();
   const finalSkills = wiki.lastSkills;
+
+  const classId = interaction.options.getInteger("classid", false);
+  if (classId) {
+    finalSkills[classId] = 0;
+  }
+
   if (Object.keys(finalSkills).length === 0) {
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
@@ -266,7 +272,7 @@ async function spadeSkills(
       if (exists) {
         data.push(`Skill ${id} exists`);
       } else {
-        break;
+        continue;
       }
     }
   }
@@ -297,6 +303,12 @@ const command: Command = {
         {
           name: "start",
           description: "Familiar or Item ID to start spading with",
+          type: ApplicationCommandOptionType.Integer,
+          required: false,
+        },
+        {
+          name: "classid",
+          description: "Class ID to spade skills for",
           type: ApplicationCommandOptionType.Integer,
           required: false,
         },
