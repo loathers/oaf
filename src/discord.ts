@@ -1,8 +1,10 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
 import { ApplicationCommandOptionType, Routes } from "discord-api-types/v9";
+import { RESTPostAPIApplicationCommandsJSONBody } from "discord-api-types/v10";
 import {
   Client,
+  Collection,
   CommandInteraction,
   Intents,
   Interaction,
@@ -28,8 +30,7 @@ const ROLEMAP: Map<string, string> = new Map([
 ]);
 
 type Command = {
-  description: string;
-  slashCommand: SlashCommandBuilder;
+  data: SlashCommandBuilder;
   execute: (interaction: CommandInteraction) => void;
 };
 
@@ -45,7 +46,7 @@ export class DiscordClient {
   private _client: Client;
   private _wikiSearcher: WikiSearcher;
   private _discordToken: string;
-  private _commands: Map<string, Command> = new Map();
+  commands = new Collection<string, Command>();
 
   constructor(wikiSearcher: WikiSearcher) {
     this._client = new Client({
@@ -79,16 +80,17 @@ export class DiscordClient {
     );
   }
 
-  async registerSlashCommands() {
+  async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
     const rest = new REST({ version: "9" }).setToken(this._discordToken);
-    const commandsToRegister = [];
-    for (const command of this._commands) {
-      commandsToRegister.push(command[1].slashCommand.toJSON());
-    }
     const client_id = process.env.CLIENT_ID || "";
     await rest.put(Routes.applicationCommands(client_id), {
-      body: commandsToRegister,
+      body: commands,
     });
+  }
+
+  async registerSlashCommands() {
+    const commandsToRegister = [...this.commands.values()].map((c) => c.data.toJSON());
+    await this.registerApplicationCommands(commandsToRegister);
   }
 
   async onReact(
@@ -162,7 +164,7 @@ export class DiscordClient {
 
   async onCommand(interaction: Interaction): Promise<void> {
     if (!interaction.isCommand()) return;
-    const command = this._commands.get(interaction.commandName);
+    const command = this.commands.get(interaction.commandName);
     try {
       if (command) await command.execute(interaction);
       else interaction.reply(`Command not recognised. Something has gone wrong here.`);
@@ -185,10 +187,10 @@ export class DiscordClient {
   attachCommand(
     command: string,
     args: Option[],
-    functionToCall: (interaction: CommandInteraction) => void,
+    execute: (interaction: CommandInteraction) => void,
     description: string = ""
   ): void {
-    const slashCommand = new SlashCommandBuilder().setName(command).setDescription(description);
+    const data = new SlashCommandBuilder().setName(command).setDescription(description);
     for (let arg of args) {
       const builder = (item: any) =>
         item
@@ -199,38 +201,37 @@ export class DiscordClient {
 
       switch (arg.type) {
         case ApplicationCommandOptionType.String:
-          slashCommand.addStringOption(builder);
+          data.addStringOption(builder);
           break;
         case ApplicationCommandOptionType.Integer:
-          slashCommand.addIntegerOption(builder);
+          data.addIntegerOption(builder);
           break;
         case ApplicationCommandOptionType.User:
-          slashCommand.addUserOption(builder);
+          data.addUserOption(builder);
           break;
         case ApplicationCommandOptionType.Channel:
-          slashCommand.addChannelOption(builder);
+          data.addChannelOption(builder);
           break;
         case ApplicationCommandOptionType.Role:
-          slashCommand.addRoleOption(builder);
+          data.addRoleOption(builder);
           break;
         case ApplicationCommandOptionType.Mentionable:
-          slashCommand.addMentionableOption(builder);
+          data.addMentionableOption(builder);
           break;
         case ApplicationCommandOptionType.Integer:
-          slashCommand.addIntegerOption(builder);
+          data.addIntegerOption(builder);
           break;
         case ApplicationCommandOptionType.Number:
-          slashCommand.addNumberOption(builder);
+          data.addNumberOption(builder);
           break;
         case ApplicationCommandOptionType.Attachment:
-          slashCommand.addAttachmentOption(builder);
+          data.addAttachmentOption(builder);
           break;
       }
     }
-    this._commands.set(command.toLowerCase(), {
-      description: description,
-      slashCommand: slashCommand,
-      execute: functionToCall,
+    this.commands.set(command.toLowerCase(), {
+      data,
+      execute,
     });
   }
 

@@ -572,3 +572,6 @@ export class KoLClient {
     return match?.[1] ?? null;
   }
 }
+
+// Singleton
+export const client = new KoLClient();

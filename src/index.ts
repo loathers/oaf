@@ -1,4 +1,7 @@
+import { Collection } from "discord.js";
 import * as dotenv from "dotenv";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 import { Pool } from "pg";
 import { migrate } from "postgres-migrations";
 
@@ -9,6 +12,28 @@ import { WikiSearcher } from "./wikisearch";
 
 dotenv.config();
 
+async function* walk(dir: string): AsyncGenerator<string> {
+  for await (const d of await fs.opendir(dir)) {
+    const entry = path.join(dir, d.name);
+    if (d.isDirectory()) yield* walk(entry);
+    else if (d.isFile()) yield entry;
+  }
+}
+
+async function loadSlashCommands(client: DiscordClient) {
+  const commandsPath = path.join(__dirname, "commands");
+  for await (const filePath of walk(commandsPath)) {
+    if (!/\.(ts|js)$/.test(filePath)) continue;
+    const command = await import(filePath);
+    if ("data" in command && "execute" in command) {
+      client.commands.set(command.data.name, command);
+    }
+  }
+
+  // const commands = [...client.commands.values()].map((c: any) => c.data.toJSON());
+  // await client.registerApplicationCommands(commands);
+}
+
 async function performSetup(): Promise<DiscordClient> {
   console.log("Creating KoL client.");
   const kolClient = new KoLClient();
@@ -16,9 +41,7 @@ async function performSetup(): Promise<DiscordClient> {
   console.log("Creating database client pool.");
   const databasePool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false,
-    },
+    ssl: false,
   });
 
   console.log("Creating wiki searcher.");
@@ -35,6 +58,8 @@ async function performSetup(): Promise<DiscordClient> {
   const discordClient = new DiscordClient(wikiSearcher);
 
   const args = { discordClient, kolClient, wikiSearcher, databasePool };
+
+  await loadSlashCommands(discordClient);
 
   console.log("Loading commands and syncing relevant data");
   for (const command of Object.values(commands)) {
