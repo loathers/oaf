@@ -1,11 +1,11 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
+import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 import { Pool } from "pg";
 
 import { DREAD_CLANS, PlayerData, clanState } from "../../clans";
-import { KoLClient } from "../../kol";
+import { pool } from "../../db";
+import { KoLClient, client } from "../../kol";
 import { pluralize } from "../../utils";
-import { Command } from "../type";
 
 const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
 const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
@@ -18,63 +18,54 @@ async function parseCurrentLogs(kolClient: KoLClient, mapToUpdate: Map<string, P
   }
 }
 
-function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, PlayerData>): void {
+function addParticipantSkills(raidLog: string, mapToUpdate: Map<string, PlayerData>) {
   const skillLines = raidLog.toLowerCase().match(new RegExp(SKILLMATCHER, "g"));
-  const killLines = raidLog.toLowerCase().match(new RegExp(KILLMATCHER, "g"));
-  if (killLines) {
-    for (let kill of killLines) {
-      const matchedKill = kill.match(KILLMATCHER);
-      if (matchedKill) {
-        const participation = mapToUpdate.get(matchedKill[1]);
-        if (participation) {
-          mapToUpdate.set(matchedKill[1], {
-            kills: participation.kills + parseInt(matchedKill[2]),
-            skills: participation.skills,
-            id: participation.id,
-            brainiac: participation.brainiac,
-          });
-        } else {
-          mapToUpdate.set(matchedKill[1], {
-            kills: parseInt(matchedKill[2]),
-            skills: 0,
-            brainiac: false,
-          });
-        }
-      }
-    }
-  }
-  if (skillLines) {
-    for (let skill of skillLines) {
-      const matchedSkill = skill.match(SKILLMATCHER);
-      if (matchedSkill) {
-        const participation = mapToUpdate.get(matchedSkill[1]);
-        if (participation) {
-          mapToUpdate.set(matchedSkill[1], {
-            kills: participation.kills,
-            skills: participation.skills + 1,
-            id: participation.id,
-            brainiac: participation.brainiac,
-          });
-        } else {
-          mapToUpdate.set(matchedSkill[1], {
-            kills: 0,
-            skills: 1,
-            brainiac: false,
-          });
-        }
-      }
-    }
+
+  for (let skill of skillLines || []) {
+    const matchedSkill = skill.match(SKILLMATCHER);
+    if (!matchedSkill) continue;
+
+    const participation = mapToUpdate.get(matchedSkill[1]);
+
+    mapToUpdate.set(matchedSkill[1], {
+      kills: participation?.kills ?? 0,
+      skills: (participation?.skills ?? 0) + 1,
+      id: participation?.id,
+      brainiac: participation?.brainiac ?? false,
+    });
   }
 }
 
-async function parseOldLogs(kolClient: KoLClient, databasePool: Pool) {
+function addParticipantKills(raidLog: string, mapToUpdate: Map<string, PlayerData>) {
+  const killLines = raidLog.toLowerCase().match(new RegExp(KILLMATCHER, "g"));
+  for (let kill of killLines || []) {
+    const matchedKill = kill.match(KILLMATCHER);
+    if (!matchedKill) continue;
+
+    const participation = mapToUpdate.get(matchedKill[1]);
+
+    mapToUpdate.set(matchedKill[1], {
+      kills: (participation?.kills ?? 0) + parseInt(matchedKill[2]),
+      skills: participation?.skills ?? 0,
+      id: participation?.id,
+      brainiac: participation?.brainiac ?? false,
+    });
+  }
+}
+
+function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, PlayerData>): void {
+  addParticipantKills(raidLog, mapToUpdate);
+  addParticipantSkills(raidLog, mapToUpdate);
+}
+
+async function parseOldLogs() {
   const newlyParsedRaids = [];
   for (let clan of DREAD_CLANS) {
-    const raidsToParse = (
-      await kolClient.getMissingRaidLogs(clan.id, clanState.parsedRaids)
-    ).filter((id) => !clanState.parsedRaids.includes(id));
+    const raidsToParse = (await client.getMissingRaidLogs(clan.id, clanState.parsedRaids)).filter(
+      (id) => !clanState.parsedRaids.includes(id)
+    );
     for (let raid of raidsToParse) {
-      const raidLog = await kolClient.getFinishedRaidLog(raid);
+      const raidLog = await client.getFinishedRaidLog(raid);
       addParticipationFromRaidLog(raidLog, clanState.killMap);
       clanState.parsedRaids.push(raid);
       newlyParsedRaids.push(raid);
@@ -82,10 +73,10 @@ async function parseOldLogs(kolClient: KoLClient, databasePool: Pool) {
   }
   for (let [player, participation] of clanState.killMap.entries()) {
     if (!participation.id) {
-      participation.id = (await kolClient.getBasicDetailsForUser(player)).id;
+      participation.id = (await client.getBasicDetailsForUser(player)).id;
     }
   }
-  const databaseClient = await databasePool.connect();
+  const databaseClient = await pool.connect();
   await databaseClient.query("BEGIN;");
   for (let raid of newlyParsedRaids) {
     await databaseClient.query("INSERT INTO tracked_instances(raid_id) VALUES ($1);", [raid]);
@@ -100,22 +91,18 @@ async function parseOldLogs(kolClient: KoLClient, databasePool: Pool) {
   databaseClient.release();
 }
 
-async function getSkills(
-  interaction: CommandInteraction,
-  kolClient: KoLClient,
-  databasePool: Pool
-): Promise<void> {
+export async function execute(interaction: CommandInteraction) {
   await interaction.deferReply();
   const doneWithSkillsList = (
-    await databasePool.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
+    await pool.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
   ).rows.map((result) => result.username.toLowerCase());
   try {
-    await parseOldLogs(kolClient, databasePool);
+    await parseOldLogs();
     const currentKills: Map<string, PlayerData> = new Map();
     for (let entry of clanState.killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
-    await parseCurrentLogs(kolClient, currentKills);
+    await parseCurrentLogs(client, currentKills);
     let skillArray = [];
     for (let entry of currentKills.entries()) {
       if (!doneWithSkillsList.includes(entry[0])) {
@@ -169,63 +156,6 @@ async function getSkills(
   }
 }
 
-async function setDone(interaction: CommandInteraction, databasePool: Pool) {
-  const username = interaction.options.getString("player", true).toLowerCase();
-  await interaction.deferReply();
-  await databasePool.query(
-    "INSERT INTO players (username, done_with_skills) VALUES ($1, TRUE) ON CONFLICT (username) DO UPDATE SET done_with_skills = TRUE;",
-    [username]
-  );
-  interaction.editReply(`Added user "${username}" to the list of players done with skills.`);
-  return;
-}
-
-async function setNotDone(interaction: CommandInteraction, databasePool: Pool) {
-  const username = interaction.options.getString("player", true).toLowerCase();
-  await interaction.deferReply();
-  await databasePool.query(
-    "INSERT INTO players (username, done_with_skills) VALUES ($1, FALSE) ON CONFLICT (username) DO UPDATE SET done_with_skills = FALSE;",
-    [username]
-  );
-  interaction.editReply(`Removed user "${username}" from the list of players done with skills.`);
-  return;
-}
-
-const command: Command = {
-  attach: ({ discordClient, kolClient, databasePool }) => {
-    discordClient.attachCommand(
-      "skills",
-      [],
-      (interaction: CommandInteraction) => getSkills(interaction, kolClient, databasePool),
-      "Get a list of everyone currently elgible for Dreadsylvania skills."
-    );
-    discordClient.attachCommand(
-      "done",
-      [
-        {
-          name: "player",
-          description: "The player to set as done with skills.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      (interaction: CommandInteraction) => setDone(interaction, databasePool),
-      "Set a player as done with Dreadsylvania skills."
-    );
-    discordClient.attachCommand(
-      "undone",
-      [
-        {
-          name: "player",
-          description: "The player to set as not done with skills.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      (interaction: CommandInteraction) => setNotDone(interaction, databasePool),
-      "Set a player as not done with Dreadsylvania skills."
-    );
-  },
-};
-
-export default command;
+export const data = new SlashCommandBuilder()
+  .setName("skills")
+  .setDescription("Get a list of everyone currently elgible for Dreadsylvania skills.");
