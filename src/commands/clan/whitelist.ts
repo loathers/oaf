@@ -25,7 +25,7 @@ async function whitelist(interaction: CommandInteraction, kolClient: KoLClient) 
 
   const roleManager = member.roles as GuildMemberRoleManager;
 
-  if (!PERMITTED_ROLES.some(r => roleManager.cache.has(r))) {
+  if (!PERMITTED_ROLES.some((r) => roleManager.cache.has(r))) {
     interaction.reply({
       content: "You are not permitted to edit clan whitelists.",
       ephemeral: true,
