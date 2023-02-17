@@ -5,33 +5,48 @@ import { ALL_CLANS } from "../../clans";
 import { KoLClient } from "../../kol";
 import { Command } from "../type";
 
-async function whitelist(interaction: CommandInteraction, kolClient: KoLClient): Promise<void> {
-  const roles = interaction.member?.roles as GuildMemberRoleManager;
-  if (
-    roles.cache.some(
-      (role) => role.id === "473316929768128512" || role.id === "466624206126448641"
-    ) ||
-    interaction.user.id === "145957353487990784"
-  ) {
-    const player = interaction.options.getString("player", true);
-    interaction.deferReply();
-    const playerData = await kolClient.getBasicDetailsForUser(player);
-    if (!playerData.id) {
-      interaction.editReply({ content: "Player not found." });
-      return;
-    }
-    for (let clan of ALL_CLANS) {
-      await kolClient.addToWhitelist(playerData.id, clan.id);
-    }
-    interaction.editReply({
-      content: `Added player ${player} (#${playerData.id}) to all managed clan whitelists.`,
+const PERMITTED_ROLES = [
+  // Extended Team
+  "473316929768128512",
+  // Lyft & Aen
+  "466624206126448641",
+];
+
+async function whitelist(interaction: CommandInteraction, kolClient: KoLClient) {
+  const member = interaction.member;
+
+  if (!member) {
+    interaction.reply({
+      content: "You have to perform this action from within a Guild.",
+      ephemeral: true,
     });
-  } else {
+    return;
+  }
+
+  const roleManager = member.roles as GuildMemberRoleManager;
+  const roles = roleManager.cache.map((r) => r.id);
+
+  if (!roles.some((r) => PERMITTED_ROLES.includes(r))) {
     interaction.reply({
       content: "You are not permitted to edit clan whitelists.",
       ephemeral: true,
     });
+    return;
   }
+
+  const player = interaction.options.getString("player", true);
+  interaction.deferReply();
+  const playerData = await kolClient.getBasicDetailsForUser(player);
+  if (!playerData.id) {
+    interaction.editReply({ content: "Player not found." });
+    return;
+  }
+  for (let clan of ALL_CLANS) {
+    await kolClient.addToWhitelist(playerData.id, clan.id);
+  }
+  interaction.editReply({
+    content: `Added player ${player} (#${playerData.id}) to all managed clan whitelists.`,
+  });
 }
 
 const command: Command = {
