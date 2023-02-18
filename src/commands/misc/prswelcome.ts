@@ -8,7 +8,6 @@ const PROJECT_ALIASES: Map<string, string> = new Map([
   ["freecandy", "freecandydotexe"],
   ["garfjalen", "kol-scripting-resources"],
   ["mafia", "kolmafia"],
-  ["oaf", "oaf-js"],
 ]);
 
 const PROJECT_CAPITALISATIONS: Map<string, string> = new Map([
