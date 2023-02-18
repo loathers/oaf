@@ -6,8 +6,7 @@ import { migrate } from "postgres-migrations";
 import commands from "./commands";
 import { pool } from "./db";
 import { DiscordClient } from "./discord";
-import { client as kolClient } from "./kol";
-import { WikiSearcher } from "./wikisearch";
+import { client as kolClient, wikiClient } from "./kol";
 
 dotenv.config();
 
@@ -38,20 +37,17 @@ async function loadSlashCommands(client: DiscordClient) {
 }
 
 async function performSetup(): Promise<DiscordClient> {
-  console.log("Creating wiki searcher.");
-  const wikiSearcher = new WikiSearcher(kolClient);
-
   console.log("Migrating database.");
   await migrate({ client: pool }, "./migrations");
 
   console.log("Downloading mafia data.");
-  await wikiSearcher.downloadMafiaData();
+  await wikiClient.downloadMafiaData();
   console.log("All mafia data downloaded.");
 
   console.log("Creating discord client.");
-  const discordClient = new DiscordClient(wikiSearcher);
+  const discordClient = new DiscordClient(wikiClient);
 
-  const args = { discordClient, kolClient, wikiSearcher, databasePool: pool };
+  const args = { discordClient, kolClient, wikiSearcher: wikiClient, databasePool: pool };
 
   await loadSlashCommands(discordClient);
 

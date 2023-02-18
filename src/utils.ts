@@ -7,7 +7,8 @@ export function indent(textToIndent: string): string {
   )}`;
 }
 
-export function cleanString(input: string): string {
+export function cleanString(input: string | undefined): string {
+  if (!input) return "";
   return decode(input).replace(/<[^>]+>/g, "");
 }
 
