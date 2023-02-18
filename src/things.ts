@@ -1,4 +1,4 @@
-import { MessageEmbed } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
 import { KoLClient } from "./kol";
 import { cleanString, indent, pluralize, toWikiLink } from "./utils";
@@ -246,7 +246,7 @@ const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
 
 export abstract class Thing {
   abstract name(): string;
-  abstract addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void>;
+  abstract addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void>;
 }
 
 type ItemData = {
@@ -631,7 +631,7 @@ export class Item implements Thing {
     return `${description_string}${blueText}${autosell}${price_section}${zapGroup}${foldGroup}${container}${contents}`;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._item.imageUrl}`);
     embed.setDescription(await this.buildFullDescription(client));
   }
@@ -689,7 +689,7 @@ export class Effect implements Thing {
     return this._name;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
     let description = `**Effect**\n(Effect ${this.get().id})\n${await client.getEffectDescription(
       this._effect.descId
@@ -796,7 +796,7 @@ export class Skill implements Thing {
     return description;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._skill.imageUrl}`);
     if (!this._description) this._description = await this.buildDescription(client);
     embed.setDescription(this._description);
@@ -894,7 +894,7 @@ export class Familiar implements Thing {
     return description_string;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._familiar.imageUrl}`);
     if (!this._description) this._description = await this.buildDescription(client);
     embed.setDescription(this._description);
@@ -1073,7 +1073,7 @@ export class Monster implements Thing {
     return description;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(
       `http://images.kingdomofloathing.com/adventureimages/${this._monster.imageUrl}`
     );
