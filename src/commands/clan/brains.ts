@@ -18,7 +18,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Find players whose brains can be drained for Dreadsylvania skills.");
 
 export async function execute(interaction: CommandInteraction) {
-  interaction.deferReply();
+  await interaction.deferReply();
 
   const classMap: Map<string, string[]> = new Map();
 
@@ -36,7 +36,7 @@ export async function execute(interaction: CommandInteraction) {
     classMap.get(details.class)?.push(player);
   }
 
-  interaction.editReply({
+  await interaction.editReply({
     content: null,
     embeds: [
       {
