@@ -10,18 +10,12 @@ export const data = new SlashCommandBuilder()
       .setName("letters")
       .setDescription("The first letters of the items you want to bake into a pizza.")
       .setRequired(true)
+      .setMinLength(1)
+      .setMaxLength(4)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const letters = interaction.options.getString("letters", true);
-
-  if (letters.length < 1 || letters.length > 4) {
-    await interaction.reply({
-      content: "Invalid pizza length. Please supply a sensible number of letters.",
-      ephemeral: true,
-    });
-    return;
-  }
 
   await interaction.deferReply();
   await interaction.editReply({
