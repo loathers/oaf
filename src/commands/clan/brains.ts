@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { clanState } from "../../clans";
 import { client } from "../../kol";
@@ -17,7 +16,7 @@ export const data = new SlashCommandBuilder()
   .setName("brains")
   .setDescription("Find players whose brains can be drained for Dreadsylvania skills.");
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   const classMap: Map<string, string[]> = new Map();

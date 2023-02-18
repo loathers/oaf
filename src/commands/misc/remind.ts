@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { pool } from "../../db";
 import { discordClient } from "../../discord";
@@ -20,7 +19,7 @@ export const data = new SlashCommandBuilder()
     option.setName("reminder").setDescription("What to remind you").setRequired(false)
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const time = interaction.options.getString("when", true);
   const reminderText = interaction.options.getString("reminder") || "Time's up!";
 
@@ -66,6 +65,11 @@ export async function execute(interaction: CommandInteraction) {
   if (timeToWait >= 7 * 24 * 60 * 60 * 1000) return;
 
   const channel = interaction.channel || (await interaction.user.createDM());
+
+  if (!("send" in channel)) {
+    console.log("Skipping reminder because requested is not a text channel", channel.id);
+    return;
+  }
 
   setTimeout(async () => {
     try {
@@ -113,12 +117,9 @@ export async function sync() {
           continue;
         }
 
-        if (!channel.isText()) {
-          console.log(
-            "Skipping reminder because requested is not a text channel",
-            reminder.channel_id
-          );
-          continue;
+        if (!("send" in channel)) {
+          console.log("Skipping reminder because requested is not a text channel", channel.id);
+          return;
         }
 
         setTimeout(() => {

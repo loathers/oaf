@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Pool } from "pg";
 
 import { DREAD_CLANS, PlayerData, clanState } from "../../clans";
@@ -91,7 +90,7 @@ async function parseOldLogs() {
   databaseClient.release();
 }
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   const doneWithSkillsList = (
     await pool.query("SELECT username FROM players WHERE done_with_skills = TRUE;")

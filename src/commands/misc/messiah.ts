@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, MessageAttachment } from "discord.js";
+import { AttachmentBuilder, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import sharp = require("sharp");
 
@@ -40,10 +39,10 @@ const superhero = (text: string) => {
     `;
 };
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const name = interaction.options.getString("name");
   const image = superhero(`jesus christ ${name}`);
   const png = await sharp(Buffer.from(image)).png().toBuffer();
-  const attachment = new MessageAttachment(png, "jesuschrist.png");
+  const attachment = new AttachmentBuilder(png).setName("jesuschrist.png");
   interaction.reply({ files: [attachment] });
 }

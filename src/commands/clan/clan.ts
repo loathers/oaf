@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { DREAD_CLANS } from "../../clans";
 import { createEmbed } from "../../discord";
@@ -149,7 +148,7 @@ function parseCastleStatus(status: DetailedDreadStatus) {
   return summary.join("\n");
 }
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const clanName = interaction.options.getString("clan", true);
   const clan = DREAD_CLANS.find(
     (clan) => clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName)

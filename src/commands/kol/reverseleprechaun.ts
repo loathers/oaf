@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { toWeight } from "../../utils";
 
@@ -14,7 +13,7 @@ export const data = new SlashCommandBuilder()
       .setMinValue(0.1)
   );
 
-export function execute(interaction: CommandInteraction) {
+export function execute(interaction: ChatInputCommandInteraction) {
   const meatDrop = interaction.options.getNumber("meatdrop", true);
 
   interaction.reply(

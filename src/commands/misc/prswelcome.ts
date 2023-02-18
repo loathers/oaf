@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 const PROJECT_ALIASES = new Map<string, string>([
   ["garbo", "garbage-collector"],
@@ -34,7 +33,7 @@ async function guessOrg(project: string) {
   return _projectOrgs[project];
 }
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const repo = interaction.options.getString("repository", true);
 
   const project = PROJECT_ALIASES.get(repo.toLowerCase()) ?? repo.toLowerCase();

@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { client, wikiClient } from "../../kol";
 
@@ -110,7 +109,7 @@ export const data = new SlashCommandBuilder()
     subcommand.setName("skills").setDescription("Spade unreleased skills")
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const subcommand = interaction.options.getSubcommand();
 
   switch (subcommand) {
@@ -131,7 +130,7 @@ export async function execute(interaction: CommandInteraction) {
 
 // Items
 
-async function spadeItems(interaction: CommandInteraction) {
+async function spadeItems(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   const requestedStart = interaction.options.getInteger("start", false);
@@ -227,7 +226,7 @@ async function spadeItem(itemId: number) {
 
 // Familiars
 
-async function spadeFamiliars(interaction: CommandInteraction) {
+async function spadeFamiliars(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   const requestedStart = interaction.options.getInteger("start", false);
@@ -263,7 +262,7 @@ async function spadeFamiliar(famId: number) {
 
 // Skills
 
-async function spadeSkills(interaction: CommandInteraction) {
+async function spadeSkills(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   const finalSkills = wikiClient.lastSkills;

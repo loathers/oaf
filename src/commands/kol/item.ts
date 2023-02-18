@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
   .setName("item")
@@ -13,7 +12,7 @@ export const data = new SlashCommandBuilder()
       .setMaxValue(99.9)
   );
 
-export function execute(interaction: CommandInteraction): void {
+export function execute(interaction: ChatInputCommandInteraction): void {
   const drop = interaction.options.getNumber("droprate", true);
 
   interaction.reply(

@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { clanState } from "../../clans";
 import { pool } from "../../db";
@@ -20,7 +19,7 @@ export const data = new SlashCommandBuilder()
       .setRequired(false)
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const username = interaction.options.getString("player", true).toLowerCase();
   const available = interaction.options.getBoolean("available", false) ?? true;
 

@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { wikiClient } from "../../kol";
 
@@ -10,7 +9,7 @@ export const data = new SlashCommandBuilder()
     option.setName("term").setDescription("The term to search for in the wiki.").setRequired(true)
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const item = interaction.options.getString("term", true);
   await interaction.deferReply();
   const embed = await wikiClient.getEmbed(item);

@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 const sombreroSubstats = (weight: number, ml: number) => (ml / 4) * (0.1 + 0.005 * weight);
 
@@ -17,7 +16,7 @@ export const data = new SlashCommandBuilder()
     option.setName("ml").setDescription("Monster Level modifier").setRequired(true)
   );
 
-export function execute(interaction: CommandInteraction) {
+export function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
   const ml = interaction.options.getInteger("ml", true);
 

@@ -1,18 +1,19 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { REST } from "@discordjs/rest";
-import { Routes } from "discord-api-types/v9";
-import { RESTPostAPIApplicationCommandsJSONBody } from "discord-api-types/v10";
 import {
+  ChatInputCommandInteraction,
   Client,
   Collection,
-  CommandInteraction,
-  Intents,
+  EmbedBuilder,
+  GatewayIntentBits,
   Interaction,
   Message,
-  MessageEmbed,
   MessageReaction,
   PartialMessageReaction,
   PartialUser,
+  Partials,
+  REST,
+  RESTPostAPIApplicationCommandsJSONBody,
+  Routes,
+  SlashCommandBuilder,
   User,
 } from "discord.js";
 
@@ -32,7 +33,7 @@ const ROLEMAP: Map<string, string> = new Map([
 
 type Command = {
   data: SlashCommandBuilder;
-  execute: (interaction: CommandInteraction) => void;
+  execute: (interaction: ChatInputCommandInteraction) => void;
 };
 
 export class DiscordClient {
@@ -43,12 +44,12 @@ export class DiscordClient {
 
   constructor(wikiSearcher: WikiSearcher) {
     this._client = new Client({
-      partials: ["MESSAGE", "REACTION", "USER"],
+      partials: [Partials.Message, Partials.Reaction, Partials.User],
       intents: [
-        Intents.FLAGS.GUILDS,
-        Intents.FLAGS.GUILD_MESSAGES,
-        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-        Intents.FLAGS.DIRECT_MESSAGES,
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.DirectMessages,
       ],
     });
     this._wikiSearcher = wikiSearcher;
@@ -68,13 +69,11 @@ export class DiscordClient {
       async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
         this.onReactRemove(reaction, user)
     );
-    this._client.on("interactionCreate", async (interaction: Interaction) =>
-      this.onCommand(interaction)
-    );
+    this._client.on("interactionCreate", async (interaction) => this.onCommand(interaction));
   }
 
   async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
-    const rest = new REST({ version: "9" }).setToken(this._discordToken);
+    const rest = new REST({ version: "10" }).setToken(this._discordToken);
     const client_id = process.env.CLIENT_ID || "";
     await rest.put(Routes.applicationCommands(client_id), {
       body: commands,
@@ -138,7 +137,7 @@ export class DiscordClient {
       } said "${message.content}" in channel ${message.channel}`
     );
     const content = message.content;
-    if (content && !message.author.bot) {
+    if (content && !message.author.bot && "send" in message.channel) {
       const matches = [...content.matchAll(ITEMMATCHER)];
       if (matches.length > 3) {
         message.channel.send(
@@ -150,8 +149,8 @@ export class DiscordClient {
     }
   }
 
-  async onCommand(interaction: Interaction): Promise<void> {
-    if (!interaction.isCommand()) return;
+  async onCommand(interaction: Interaction) {
+    if (!interaction.isChatInputCommand()) return;
     const command = this.commands.get(interaction.commandName);
     try {
       if (command) await command.execute(interaction);
@@ -173,6 +172,8 @@ export class DiscordClient {
   }
 
   async inlineWikiSearch(item: string, message: Message): Promise<void> {
+    if (!("send" in message.channel)) return;
+
     const searchingMessage = await message.channel.send({
       content: `Searching for "${item}"...`,
       reply: { messageReference: message.id },
@@ -212,7 +213,7 @@ export class DiscordClient {
 }
 
 export const createEmbed = () =>
-  new MessageEmbed().setFooter({
+  new EmbedBuilder().setFooter({
     text: "Problems? Message DocRostov#7004 on discord.",
     iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
   });

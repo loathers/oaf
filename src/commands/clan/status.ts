@@ -1,12 +1,11 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { DREAD_CLANS, clanState } from "../../clans";
 import { pool } from "../../db";
 import { client } from "../../kol";
 import { pluralize } from "../../utils";
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   let messageString = "";
   await interaction.deferReply();
   try {

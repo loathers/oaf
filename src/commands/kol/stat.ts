@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { pluralize } from "../../utils";
 import { fromLevel } from "./level";
@@ -21,7 +20,7 @@ export const data = new SlashCommandBuilder()
       .setMinValue(1)
   );
 
-export function execute(interaction: CommandInteraction): void {
+export function execute(interaction: ChatInputCommandInteraction): void {
   const mainstat = interaction.options.getInteger("stat", true);
 
   const { level, substat } = fromMainstat(mainstat);

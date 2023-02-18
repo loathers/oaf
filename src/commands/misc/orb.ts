@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 const ORB_RESPONSES: string[] = [
   "It is certain.",
@@ -45,7 +44,7 @@ export const data = new SlashCommandBuilder()
     option.setName("asktheorb").setDescription("THE ORB KNOWS ALL").setRequired(false)
   );
 
-export function execute(interaction: CommandInteraction) {
+export function execute(interaction: ChatInputCommandInteraction) {
   const question = interaction.options.getString("asktheorb");
 
   interaction.reply({

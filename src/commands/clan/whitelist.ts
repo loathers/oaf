@@ -1,5 +1,8 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction, GuildMemberRoleManager } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  GuildMemberRoleManager,
+  SlashCommandBuilder,
+} from "discord.js";
 
 import { ALL_CLANS } from "../../clans";
 import { client } from "../../kol";
@@ -21,7 +24,7 @@ export const data = new SlashCommandBuilder()
       .setRequired(true)
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const member = interaction.member;
 
   if (!member) {

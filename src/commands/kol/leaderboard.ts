@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { createEmbed } from "../../discord";
 import { SubboardInfo, client } from "../../kol";
@@ -149,7 +148,7 @@ const formatSubboard = (subboard: SubboardInfo) => {
   };
 };
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const board = parseBoard(interaction.options.getString("leaderboard", true));
   await interaction.deferReply();
 
