@@ -1,26 +1,18 @@
+import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 
-import { WikiSearcher } from "../../wikisearch";
-import { Command } from "../type";
+import { wikiClient } from "../../kol";
 
-async function rescanCommand(interaction: CommandInteraction, wikiSearcher: WikiSearcher) {
+export const data = new SlashCommandBuilder()
+  .setName("rescan")
+  .setDescription("Reload OAF's in-game information from mafia's datafiles.");
+
+async function execute(interaction: CommandInteraction) {
   await interaction.deferReply();
 
-  if (await wikiSearcher.conditionallyReloadMafiaData()) {
+  if (await wikiClient.conditionallyReloadMafiaData()) {
     return interaction.editReply("Information reloaded from KoLMafia Github data files.");
   }
 
   return interaction.editReply("Information reloaded too recently, try again later.");
 }
-
-const command: Command = {
-  attach: ({ discordClient, wikiSearcher }) =>
-    discordClient.attachCommand(
-      "rescan",
-      [],
-      async (interaction: CommandInteraction) => await rescanCommand(interaction, wikiSearcher),
-      "Reload OAF's in-game information from mafia's datafiles."
-    ),
-};
-
-export default command;

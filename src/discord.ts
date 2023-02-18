@@ -89,11 +89,6 @@ export class DiscordClient {
     });
   }
 
-  async registerSlashCommands() {
-    const commandsToRegister = [...this.commands.values()].map((c) => c.data.toJSON());
-    await this.registerApplicationCommands(commandsToRegister);
-  }
-
   async onReact(
     reaction: MessageReaction | PartialMessageReaction,
     user: User | PartialUser
@@ -183,57 +178,6 @@ export class DiscordClient {
 
   client(): Client {
     return this._client;
-  }
-
-  attachCommand(
-    command: string,
-    args: Option[],
-    execute: (interaction: CommandInteraction) => void,
-    description: string = ""
-  ): void {
-    const data = new SlashCommandBuilder().setName(command).setDescription(description);
-    for (let arg of args) {
-      const builder = (item: any) =>
-        item
-          .setName(arg.name)
-          .setDescription(arg.description)
-          .setRequired(arg.required)
-          .addChoices(...(arg.choices || []));
-
-      switch (arg.type) {
-        case ApplicationCommandOptionType.String:
-          data.addStringOption(builder);
-          break;
-        case ApplicationCommandOptionType.Integer:
-          data.addIntegerOption(builder);
-          break;
-        case ApplicationCommandOptionType.User:
-          data.addUserOption(builder);
-          break;
-        case ApplicationCommandOptionType.Channel:
-          data.addChannelOption(builder);
-          break;
-        case ApplicationCommandOptionType.Role:
-          data.addRoleOption(builder);
-          break;
-        case ApplicationCommandOptionType.Mentionable:
-          data.addMentionableOption(builder);
-          break;
-        case ApplicationCommandOptionType.Integer:
-          data.addIntegerOption(builder);
-          break;
-        case ApplicationCommandOptionType.Number:
-          data.addNumberOption(builder);
-          break;
-        case ApplicationCommandOptionType.Attachment:
-          data.addAttachmentOption(builder);
-          break;
-      }
-    }
-    this.commands.set(command.toLowerCase(), {
-      data,
-      execute,
-    });
   }
 
   async inlineWikiSearch(item: string, message: Message): Promise<void> {

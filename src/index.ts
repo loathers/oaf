@@ -3,10 +3,9 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { migrate } from "postgres-migrations";
 
-import commands from "./commands";
 import { pool } from "./db";
 import { DiscordClient, discordClient } from "./discord";
-import { client as kolClient, wikiClient } from "./kol";
+import { wikiClient } from "./kol";
 
 dotenv.config();
 
@@ -32,8 +31,8 @@ async function loadSlashCommands(client: DiscordClient) {
     }
   }
 
-  // const commands = [...client.commands.values()].map((c: any) => c.data.toJSON());
-  // await client.registerApplicationCommands(commands);
+  const commands = [...client.commands.values()].map((c: any) => c.data.toJSON());
+  await client.registerApplicationCommands(commands);
 }
 
 async function performSetup(): Promise<DiscordClient> {
@@ -44,20 +43,8 @@ async function performSetup(): Promise<DiscordClient> {
   await wikiClient.downloadMafiaData();
   console.log("All mafia data downloaded.");
 
-  const args = { discordClient, kolClient, wikiSearcher: wikiClient, databasePool: pool };
-
-  await loadSlashCommands(discordClient);
-
   console.log("Loading commands and syncing relevant data");
-  for (const command of Object.values(commands)) {
-    command.attach(args);
-    if (command.sync) {
-      await command.sync(args);
-    }
-  }
-
-  console.log("Registering slash commands.");
-  await discordClient.registerSlashCommands();
+  await loadSlashCommands(discordClient);
 
   return discordClient;
 }
