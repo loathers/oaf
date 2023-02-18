@@ -1,5 +1,5 @@
 import axios from "axios";
-import { EmbedBuilder } from "discord.js";
+import { EmbedBuilder, hyperlink } from "discord.js";
 
 import { createEmbed } from "./discord";
 import { KoLClient } from "./kol";
@@ -505,7 +505,8 @@ export class WikiSearcher {
       await Promise.all(
         options.map(async (effect) => {
           const foundName = await this.findName(effect.name());
-          return `[${foundName?.name}](${encodeURI(foundName?.url || "")})`;
+          if (!foundName) return "";
+          return hyperlink(foundName.name, encodeURI(foundName?.url || ""));
         })
       )
     ).join("\n");

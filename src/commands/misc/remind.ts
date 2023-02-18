@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, userMention } from "discord.js";
 
 import { pool } from "../../db";
 import { discordClient } from "../../discord";
@@ -74,7 +74,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   setTimeout(async () => {
     try {
       channel.send({
-        content: `<@${interaction.user.id}>`,
+        content: userMention(interaction.user.id),
         embeds: [{ title: "⏰⏰⏰", description: reminderText }],
         reply: { messageReference: reply_id },
         allowedMentions: {
@@ -125,7 +125,7 @@ export async function sync() {
         setTimeout(() => {
           try {
             channel.send({
-              content: `<@${reminder.user_id}>`,
+              content: userMention(reminder.user_id),
               embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
               allowedMentions: {
                 users: [reminder.user_id],
@@ -146,7 +146,7 @@ export async function sync() {
         setTimeout(() => {
           try {
             channel.send({
-              content: `<@${reminder.user_id}>`,
+              content: userMention(reminder.user_id),
               embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
               allowedMentions: {
                 users: [reminder.user_id],
