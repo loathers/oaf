@@ -13,7 +13,7 @@ export const fromMainstat = (mainstat: number) => ({
 export const data = new SlashCommandBuilder()
   .setName("stat")
   .setDescription("Find the substats and level for a given mainstat total.")
-  .addNumberOption((option) =>
+  .addIntegerOption((option) =>
     option
       .setName("stat")
       .setDescription("The amount of mainstat you are reaching.")

@@ -9,7 +9,7 @@ const fromSubstat = (substat: number) => fromMainstat(Math.floor(Math.sqrt(Math.
 export const data = new SlashCommandBuilder()
   .setName("substat")
   .setDescription("Find the mainstat and level for a given substat total")
-  .addNumberOption((option) =>
+  .addIntegerOption((option) =>
     option
       .setName("substat")
       .setDescription("The amount of substat you are reaching.")

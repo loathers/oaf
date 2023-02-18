@@ -4,7 +4,7 @@ import { CommandInteraction } from "discord.js";
 export const data = new SlashCommandBuilder()
   .setName("volleyball")
   .setDescription("Find the +stat gain supplied by a volleyball of a given weight.")
-  .addNumberOption((option) =>
+  .addIntegerOption((option) =>
     option.setName("weight").setDescription("The weight of the volleyball.").setRequired(true)
   );
 

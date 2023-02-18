@@ -35,6 +35,6 @@ export function execute(interaction: CommandInteraction) {
 export const data = new SlashCommandBuilder()
   .setName("level")
   .setDescription("Find the stats and substats needed for a given level.")
-  .addNumberOption((option) =>
+  .addIntegerOption((option) =>
     option.setName("level").setDescription("The level you are looking to reach.").setRequired(true)
   );

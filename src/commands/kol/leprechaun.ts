@@ -6,7 +6,7 @@ import { toDrop } from "../../utils";
 export const data = new SlashCommandBuilder()
   .setName("leprechaun")
   .setDescription("Find the +meat drop supplied by a leprechaun of a given weight.")
-  .addNumberOption((option) =>
+  .addIntegerOption((option) =>
     option.setName("weight").setDescription("The weight of the leprechaun.").setRequired(true)
   );
 

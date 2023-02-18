@@ -21,9 +21,9 @@ export function execute(interaction: CommandInteraction) {
 export const data = new SlashCommandBuilder()
   .setName("sombrero")
   .setDescription("Find the +stat gain supplied by a sombrero of a given weight and ML.")
-  .addNumberOption((option) =>
+  .addIntegerOption((option) =>
     option.setName("weight").setDescription("The weight of the sombrero.").setRequired(true)
   )
-  .addNumberOption((option) =>
+  .addIntegerOption((option) =>
     option.setName("ml").setDescription("Monster Level modifier").setRequired(true)
   );

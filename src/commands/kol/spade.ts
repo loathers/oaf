@@ -88,7 +88,7 @@ export const data = new SlashCommandBuilder()
     subcommand
       .setName("item")
       .setDescription("Spade unreleased items")
-      .addNumberOption((option) =>
+      .addIntegerOption((option) =>
         option
           .setName("start")
           .setDescription("Latest item id from which to start spading.")
@@ -99,7 +99,7 @@ export const data = new SlashCommandBuilder()
     subcommand
       .setName("familiar")
       .setDescription("Spade unreleased familiars")
-      .addNumberOption((option) =>
+      .addIntegerOption((option) =>
         option
           .setName("start")
           .setDescription("Latest familiar id from which to start spading.")

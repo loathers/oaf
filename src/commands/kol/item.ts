@@ -1,6 +1,16 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 
+const data = new SlashCommandBuilder()
+  .setName("item")
+  .setDescription("Find the +item drop required to cap a drop.")
+  .addNumberOption((option) =>
+    option
+      .setName("droprate")
+      .setDescription("The droprate of the item in question.")
+      .setRequired(true)
+  );
+
 export function execute(interaction: CommandInteraction): void {
   const drop = interaction.options.getNumber("droprate", true);
   if (drop <= 0) {
@@ -19,13 +29,3 @@ export function execute(interaction: CommandInteraction): void {
     }% item drop bonus to cap.`
   );
 }
-
-const data = new SlashCommandBuilder()
-  .setName("item")
-  .setDescription("Find the +item drop required to cap a drop.")
-  .addNumberOption((option) =>
-    option
-      .setName("droprate")
-      .setDescription("The droprate of the item in question.")
-      .setRequired(true)
-  );

@@ -18,6 +18,6 @@ export function execute(interaction: CommandInteraction): void {
 export const data = new SlashCommandBuilder()
   .setName("fairy")
   .setDescription("Find the +item drop supplied by a fairy of a given weight.")
-  .addNumberOption((option) =>
+  .addIntegerOption((option) =>
     option.setName("weight").setDescription("The weight of the fairy.").setRequired(true)
   );
