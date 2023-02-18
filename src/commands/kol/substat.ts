@@ -14,14 +14,11 @@ export const data = new SlashCommandBuilder()
       .setName("substat")
       .setDescription("The amount of substat you are reaching.")
       .setRequired(true)
+      .setMinValue(1)
   );
 
 export function execute(interaction: CommandInteraction) {
   const substat = interaction.options.getInteger("substat", true);
-  if (substat <= 0) {
-    interaction.reply({ content: `Please supply a positive substat.`, ephemeral: true });
-    return;
-  }
 
   const { level, mainstat } = fromSubstat(substat);
 

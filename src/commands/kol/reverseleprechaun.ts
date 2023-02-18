@@ -11,14 +11,11 @@ export const data = new SlashCommandBuilder()
       .setName("meatdrop")
       .setDescription("The meat drop % you are looking to get from your leprechaun.")
       .setRequired(true)
+      .setMinValue(0.1)
   );
 
 export function execute(interaction: CommandInteraction) {
   const meatDrop = interaction.options.getNumber("meatdrop", true);
-  if (meatDrop <= 0) {
-    interaction.reply({ content: "Please supply a positive meat drop value.", ephemeral: true });
-    return;
-  }
 
   interaction.reply(
     `To get ${meatDrop}% meat drop from a leprechaun, ` +

@@ -18,14 +18,12 @@ export const data = new SlashCommandBuilder()
       .setName("stat")
       .setDescription("The amount of mainstat you are reaching.")
       .setRequired(true)
+      .setMinValue(1)
   );
 
 export function execute(interaction: CommandInteraction): void {
   const mainstat = interaction.options.getInteger("stat", true);
-  if (mainstat <= 0) {
-    interaction.reply({ content: `Please supply a positive mainstat.`, ephemeral: true });
-    return;
-  }
+
   const { level, substat } = fromMainstat(mainstat);
 
   let reply = `Mainstat ${mainstat.toLocaleString()} (reached at ${pluralize(

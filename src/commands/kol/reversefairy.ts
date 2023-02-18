@@ -11,14 +11,11 @@ export const data = new SlashCommandBuilder()
       .setName("itemdrop")
       .setDescription("The item drop % you are looking to get from your fairy.")
       .setRequired(true)
+      .setMinValue(0.1)
   );
 
 export function execute(interaction: CommandInteraction): void {
   const itemDrop = interaction.options.getNumber("itemdrop", true);
-  if (itemDrop <= 0) {
-    interaction.reply({ content: "Please supply a positive item drop value.", ephemeral: true });
-    return;
-  }
 
   interaction.reply(
     `To get ${itemDrop}% item drop from a fairy, ` +

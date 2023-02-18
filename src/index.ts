@@ -1,5 +1,5 @@
-import * as dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
+
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { migrate } from "postgres-migrations";

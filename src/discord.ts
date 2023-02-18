@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
-import { ApplicationCommandOptionType, Routes } from "discord-api-types/v9";
+import { Routes } from "discord-api-types/v9";
 import { RESTPostAPIApplicationCommandsJSONBody } from "discord-api-types/v10";
 import {
   Client,
@@ -33,14 +33,6 @@ const ROLEMAP: Map<string, string> = new Map([
 type Command = {
   data: SlashCommandBuilder;
   execute: (interaction: CommandInteraction) => void;
-};
-
-type Option = {
-  name: string;
-  description: string;
-  type: ApplicationCommandOptionType;
-  required: boolean;
-  choices?: { name: string; value: string }[];
 };
 
 export class DiscordClient {

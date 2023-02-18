@@ -3,6 +3,16 @@ import { CommandInteraction } from "discord.js";
 
 import { wikiClient } from "../../kol";
 
+export const data = new SlashCommandBuilder()
+  .setName("pizza")
+  .setDescription("Find what effects a diabolic pizza with the given letters can grant you.")
+  .addStringOption((option) =>
+    option
+      .setName("letters")
+      .setDescription("The first letters of the items you want to bake into a pizza.")
+      .setRequired(true)
+  );
+
 export async function execute(interaction: CommandInteraction) {
   const letters = interaction.options.getString("letters", true);
 
@@ -23,13 +33,3 @@ export async function execute(interaction: CommandInteraction) {
     },
   });
 }
-
-export const data = new SlashCommandBuilder()
-  .setName("pizza")
-  .setDescription("Find what effects a diabolic pizza with the given letters can grant you.")
-  .addStringOption((option) =>
-    option
-      .setName("letters")
-      .setDescription("The first letters of the items you want to bake into a pizza.")
-      .setRequired(true)
-  );
