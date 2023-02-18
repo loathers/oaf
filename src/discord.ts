@@ -1,4 +1,5 @@
 import {
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   Client,
   Collection,
@@ -31,9 +32,11 @@ const ROLEMAP: Map<string, string> = new Map([
   ["✅", "754473984661258391"],
 ]);
 
-type Command = {
+export type Command = {
   data: SlashCommandBuilder;
   execute: (interaction: ChatInputCommandInteraction) => void;
+  autocomplete?: (interaction: AutocompleteInteraction) => void;
+  sync?: () => void;
 };
 
 export class DiscordClient {
@@ -69,7 +72,9 @@ export class DiscordClient {
       async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
         this.onReactRemove(reaction, user)
     );
-    this._client.on("interactionCreate", async (interaction) => this.onCommand(interaction));
+    this._client.on("interactionCreate", async (interaction) =>
+      this.onInteractionCreate(interaction)
+    );
   }
 
   async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
@@ -149,21 +154,37 @@ export class DiscordClient {
     }
   }
 
-  async onCommand(interaction: Interaction) {
-    if (!interaction.isChatInputCommand()) return;
-    const command = this.commands.get(interaction.commandName);
-    try {
-      if (command) await command.execute(interaction);
-      else interaction.reply(`Command not recognised. Something has gone wrong here.`);
-    } catch (error) {
-      console.log(error);
-      await (interaction.replied
-        ? interaction.followUp(
-            "OAF recovered from a crash trying to process that command. Please tell Scotch or Phill"
-          )
-        : interaction.reply(
-            "OAF recovered from a crash trying to process that command. Please tell Scotch or Phill"
-          ));
+  async onInteractionCreate(interaction: Interaction) {
+    if (interaction.isChatInputCommand()) {
+      const command = this.commands.get(interaction.commandName);
+
+      if (!command) {
+        console.error(`No command matching ${interaction.commandName} found`);
+        await interaction.reply(`Command not recognised. Something has gone wrong here.`);
+        return;
+      }
+
+      try {
+        await command.execute(interaction);
+      } catch (error) {
+        console.error(error);
+        await (interaction.replied ? interaction.followUp : interaction.reply)(
+          "OAF recovered from a crash trying to process that command. Please tell Scotch or Phill"
+        );
+      }
+    } else if (interaction.isAutocomplete()) {
+      const command = this.commands.get(interaction.commandName);
+
+      if (!command) {
+        console.error(`No command matching ${interaction.commandName} found`);
+        return;
+      }
+
+      try {
+        await command.autocomplete?.(interaction);
+      } catch (error) {
+        console.error(error);
+      }
     }
   }
 

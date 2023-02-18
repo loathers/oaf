@@ -4,7 +4,7 @@ import * as path from "node:path";
 import { migrate } from "postgres-migrations";
 
 import { pool } from "./db";
-import { DiscordClient, discordClient } from "./discord";
+import { Command, DiscordClient, discordClient } from "./discord";
 import { wikiClient } from "./kol";
 
 async function* walk(dir: string): AsyncGenerator<string> {
@@ -19,13 +19,10 @@ async function loadSlashCommands(client: DiscordClient) {
   const commandsPath = path.join(__dirname, "commands");
   for await (const filePath of walk(commandsPath)) {
     if (!/\.(ts|js)$/.test(filePath)) continue;
-    const command = await import(filePath);
+    const command: Command = await import(filePath);
     if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
-
-      if ("sync" in command) {
-        await command.sync();
-      }
+      await command.sync?.();
     } else {
       console.warn("Invalid command file found in command directory", filePath);
     }
