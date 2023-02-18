@@ -7,7 +7,7 @@ export const data = new SlashCommandBuilder()
   .setName("rescan")
   .setDescription("Reload OAF's in-game information from mafia's datafiles.");
 
-async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: CommandInteraction) {
   await interaction.deferReply();
 
   if (await wikiClient.conditionallyReloadMafiaData()) {

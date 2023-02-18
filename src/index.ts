@@ -1,4 +1,5 @@
 import * as dotenv from "dotenv";
+dotenv.config();
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { migrate } from "postgres-migrations";
@@ -6,8 +7,6 @@ import { migrate } from "postgres-migrations";
 import { pool } from "./db";
 import { DiscordClient, discordClient } from "./discord";
 import { wikiClient } from "./kol";
-
-dotenv.config();
 
 async function* walk(dir: string): AsyncGenerator<string> {
   for await (const d of await fs.opendir(dir)) {
@@ -28,6 +27,8 @@ async function loadSlashCommands(client: DiscordClient) {
       if ("sync" in command) {
         await command.sync();
       }
+    } else {
+      console.warn("Invalid command file found in command directory", filePath);
     }
   }
 

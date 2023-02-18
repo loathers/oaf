@@ -86,7 +86,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("Spade the existence and tradeability of as yet unreleased stuff.")
   .addSubcommand((subcommand) =>
     subcommand
-      .setName("item")
+      .setName("items")
       .setDescription("Spade unreleased items")
       .addIntegerOption((option) =>
         option
@@ -97,7 +97,7 @@ export const data = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand
-      .setName("familiar")
+      .setName("familiars")
       .setDescription("Spade unreleased familiars")
       .addIntegerOption((option) =>
         option
@@ -107,18 +107,18 @@ export const data = new SlashCommandBuilder()
       )
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("skill").setDescription("Spade unreleased skills")
+    subcommand.setName("skills").setDescription("Spade unreleased skills")
   );
 
 export async function execute(interaction: CommandInteraction) {
   const subcommand = interaction.options.getSubcommand();
 
   switch (subcommand) {
-    case "item":
+    case "items":
       return await spadeItems(interaction);
-    case "familiar":
+    case "familiars":
       return await spadeFamiliars(interaction);
-    case "skill":
+    case "skills":
       return await spadeSkills(interaction);
     default:
       return await interaction.reply({

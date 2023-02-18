@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 
-const data = new SlashCommandBuilder()
+export const data = new SlashCommandBuilder()
   .setName("item")
   .setDescription("Find the +item drop required to cap a drop.")
   .addNumberOption((option) =>
