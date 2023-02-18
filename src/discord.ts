@@ -16,6 +16,7 @@ import {
   User,
 } from "discord.js";
 
+import { wikiClient } from "./kol";
 import { WikiSearcher } from "./wikisearch";
 
 const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
@@ -279,3 +280,5 @@ export const createEmbed = () =>
     text: "Problems? Message DocRostov#7004 on discord.",
     iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
   });
+
+export const discordClient = new DiscordClient(wikiClient);

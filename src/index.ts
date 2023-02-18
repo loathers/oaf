@@ -5,7 +5,7 @@ import { migrate } from "postgres-migrations";
 
 import commands from "./commands";
 import { pool } from "./db";
-import { DiscordClient } from "./discord";
+import { DiscordClient, discordClient } from "./discord";
 import { client as kolClient, wikiClient } from "./kol";
 
 dotenv.config();
@@ -43,9 +43,6 @@ async function performSetup(): Promise<DiscordClient> {
   console.log("Downloading mafia data.");
   await wikiClient.downloadMafiaData();
   console.log("All mafia data downloaded.");
-
-  console.log("Creating discord client.");
-  const discordClient = new DiscordClient(wikiClient);
 
   const args = { discordClient, kolClient, wikiSearcher: wikiClient, databasePool: pool };
 

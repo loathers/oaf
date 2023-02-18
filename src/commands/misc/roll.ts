@@ -1,12 +1,21 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
+import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 
 import { lf } from "../../utils";
-import { Command } from "../type";
 
-function rollCommand(interaction: CommandInteraction) {
-  const diceCount = interaction.options.getInteger("count", true);
+export const data = new SlashCommandBuilder()
+  .setName("roll")
+  .setDescription("Roll the specified dice of the form.")
+  .addIntegerOption((option) =>
+    option.setName("size").setDescription("Number of sides on each die").setRequired(true)
+  )
+  .addIntegerOption((option) =>
+    option.setName("count").setDescription("Number of dice to roll (default 1)").setRequired(false)
+  );
+
+export function execute(interaction: CommandInteraction) {
   const diceSize = interaction.options.getInteger("size", true);
+  const diceCount = interaction.options.getInteger("count", false) || 1;
   if (diceCount > 100) {
     return interaction.reply(
       "The number of dice you tried to roll is greater than 100. Try 100 or less."
@@ -38,28 +47,3 @@ function rollCommand(interaction: CommandInteraction) {
     )})`
   );
 }
-
-const command: Command = {
-  attach: ({ discordClient }) =>
-    discordClient.attachCommand(
-      "roll",
-      [
-        {
-          name: "count",
-          description: "Number of dice to roll",
-          type: ApplicationCommandOptionType.Integer,
-          required: true,
-        },
-        {
-          name: "size",
-          description: "Number of sides on each die",
-          type: ApplicationCommandOptionType.Integer,
-          required: true,
-        },
-      ],
-      rollCommand,
-      "Roll the specified dice of the form."
-    ),
-};
-
-export default command;

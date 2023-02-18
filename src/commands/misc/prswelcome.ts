@@ -1,9 +1,7 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
+import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 
-import { Command } from "../type";
-
-const PROJECT_ALIASES: Map<string, string> = new Map([
+const PROJECT_ALIASES = new Map<string, string>([
   ["garbo", "garbage-collector"],
   ["freecandy", "freecandydotexe"],
   ["garfjalen", "kol-scripting-resources"],
@@ -11,7 +9,7 @@ const PROJECT_ALIASES: Map<string, string> = new Map([
   ["oaf", "oaf-js"],
 ]);
 
-const PROJECT_CAPITALISATIONS: Map<string, string> = new Map([
+const PROJECT_CAPITALISATIONS = new Map<string, string>([
   ["tourguide", "TourGuide"],
   ["chit", "ChIT"],
   ["kol-scripting-resources", "KoL-Scripting-Resources"],
@@ -19,9 +17,16 @@ const PROJECT_CAPITALISATIONS: Map<string, string> = new Map([
   ["uberpvpoptimizer", "UberPvPOptimizer"],
 ]);
 
-const _projectOrgs: { [key: string]: string } = {
+const _projectOrgs: Record<string, string> = {
   kolmafia: "kolmafia",
 };
+
+export const data = new SlashCommandBuilder()
+  .setName("prswelcome")
+  .setDescription("Links to the PRs and issues assigned to you for a given LASS project")
+  .addStringOption((option) =>
+    option.setName("repository").setDescription("Name of the project to link").setRequired(true)
+  );
 
 async function guessOrg(project: string) {
   if (project in _projectOrgs) return _projectOrgs[project];
@@ -30,7 +35,7 @@ async function guessOrg(project: string) {
   return _projectOrgs[project];
 }
 
-async function prsWelcomeCommand(interaction: CommandInteraction): Promise<void> {
+export async function execute(interaction: CommandInteraction) {
   const repo = interaction.options.getString("repository", true);
 
   const project = PROJECT_ALIASES.get(repo.toLowerCase()) ?? repo.toLowerCase();
@@ -48,22 +53,3 @@ async function prsWelcomeCommand(interaction: CommandInteraction): Promise<void>
     },
   });
 }
-
-const command: Command = {
-  attach: ({ discordClient }) =>
-    discordClient.attachCommand(
-      "prswelcome",
-      [
-        {
-          name: "repository",
-          description: "Name of the project to link",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      prsWelcomeCommand,
-      "Links to the PRs and issues assigned to you for a given LASS project"
-    ),
-};
-
-export default command;
