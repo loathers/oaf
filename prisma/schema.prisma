@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model migrations {
+  id          Int       @id
+  name        String    @unique @db.VarChar(100)
+  hash        String    @db.VarChar(40)
+  executed_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
+model players {
+  username         String  @id @db.VarChar(31)
+  kills            Int     @default(0)
+  skills           Int     @default(0) @db.SmallInt
+  done_with_skills Boolean @default(false)
+  user_id          String? @db.VarChar(8)
+  brainiac         Boolean @default(false)
+}
+
+model reminders {
+  id                   Int     @id @default(autoincrement())
+  guild_id             String? @db.VarChar(30)
+  channel_id           String  @db.VarChar(30)
+  user_id              String  @db.VarChar(30)
+  message_contents     String  @db.VarChar(128)
+  reminder_time        BigInt
+  interaction_reply_id String? @db.VarChar(30)
+}
+
+model tracked_instances {
+  raid_id String @id @db.VarChar(8)
+}
