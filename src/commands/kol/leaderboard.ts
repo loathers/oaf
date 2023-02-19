@@ -1,11 +1,10 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
+import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction } from "discord.js";
 
 import { createEmbed } from "../../discord";
-import { KoLClient, SubboardInfo } from "../../kol";
-import { Command } from "../type";
+import { SubboardInfo, client } from "../../kol";
 
-const PATH_MAPPINGS: Map<string, number> = new Map([
+const PATH_MAPPINGS = new Map([
   ["clan", 8],
   ["clandungeons", 8],
   ["slimetube", 8],
@@ -112,6 +111,16 @@ const PATH_MAPPINGS: Map<string, number> = new Map([
   ["standard", 999],
 ]);
 
+export const data = new SlashCommandBuilder()
+  .setName("leaderboard")
+  .setDescription("Display the specified leaderboard")
+  .addStringOption((option) =>
+    option
+      .setName("leaderboard")
+      .setDescription("The name or id of the leaderboard you want to display.")
+      .setRequired(true)
+  );
+
 const parseBoard = (input: string) => {
   // Path (or other special) board
   const pathNumber = PATH_MAPPINGS.get(input.toLowerCase().replace(/\W/g, ""));
@@ -140,10 +149,11 @@ const formatSubboard = (subboard: SubboardInfo) => {
   };
 };
 
-async function leaderboardCommand(interaction: CommandInteraction, kolClient: KoLClient) {
+export async function execute(interaction: CommandInteraction) {
   const board = parseBoard(interaction.options.getString("leaderboard", true));
   await interaction.deferReply();
-  const leaderboard = await kolClient.getLeaderboard(board);
+
+  const leaderboard = await client.getLeaderboard(board);
   if (!leaderboard || leaderboard.name === "Weird Leaderboards") {
     interaction.editReply("I don't think that's a real leaderboard, sorry.");
     return;
@@ -170,22 +180,3 @@ async function leaderboardCommand(interaction: CommandInteraction, kolClient: Ko
     ],
   });
 }
-
-const command: Command = {
-  attach: ({ discordClient, kolClient }) =>
-    discordClient.attachCommand(
-      "leaderboard",
-      [
-        {
-          name: "leaderboard",
-          description: "The name or id of the leaderboard you want to display.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      (interaction: CommandInteraction) => leaderboardCommand(interaction, kolClient),
-      "Display the specified leaderboard."
-    ),
-};
-
-export default command;

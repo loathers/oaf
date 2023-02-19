@@ -1,9 +1,16 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
+import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction, MessageAttachment } from "discord.js";
 
-import { Command } from "../type";
-
 import sharp = require("sharp");
+
+export const data = new SlashCommandBuilder()
+  .setName("messiah")
+  .setDescription(
+    "Let someone know their actions caused you to lose faith in humanity a little bit"
+  )
+  .addStringOption((option) =>
+    option.setName("name").setDescription("the person who ruined your day").setRequired(true)
+  );
 
 const superhero = (text: string) => {
   const skew = 0.261799;
@@ -33,29 +40,10 @@ const superhero = (text: string) => {
     `;
 };
 
-async function messiahCommand(interaction: CommandInteraction) {
+export async function execute(interaction: CommandInteraction) {
   const name = interaction.options.getString("name");
   const image = superhero(`jesus christ ${name}`);
   const png = await sharp(Buffer.from(image)).png().toBuffer();
   const attachment = new MessageAttachment(png, "jesuschrist.png");
   interaction.reply({ files: [attachment] });
 }
-
-const command: Command = {
-  attach: ({ discordClient }) =>
-    discordClient.attachCommand(
-      "messiah",
-      [
-        {
-          name: "name",
-          description: "the person who ruined your day",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      messiahCommand,
-      "Let someone know their actions caused you to lose faith in humanity a little bit"
-    ),
-};
-
-export default command;

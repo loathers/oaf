@@ -68,7 +68,7 @@ When invoked, this command will spawn a table that includes a lot of information
 ![image](https://user-images.githubusercontent.com/8014761/172420877-1b6eddc2-9c47-4f21-bf3a-b76dc3167bd9.png)
 
 ### /skills
-When invoked, this command shows the number of skills each user is owed according to the number of turns they've spent in our Dreadsylvania dungeons. The way our collaborative dungeons work is that all turns spent churning the dungeons translate to owed skills; OAF is able to look at the skills acquired by individuals and compare them to total involvement in the ASS dungeons to assess how many skills people are owed. To manage this list, use the **/done & /undone** commands to take users off (or add them back) when they have completed all their Dreadsylvania skills (or forget to perm one).
+When invoked, this command shows the number of skills each user is owed according to the number of turns they've spent in our Dreadsylvania dungeons. The way our collaborative dungeons work is that all turns spent churning the dungeons translate to owed skills; OAF is able to look at the skills acquired by individuals and compare them to total involvement in the ASS dungeons to assess how many skills people are owed. To manage this list, use the **/done** command to take users off (or add them back) when they have completed all their Dreadsylvania skills (or forget to perm one).
 
 ![image](https://user-images.githubusercontent.com/8014761/172422468-80769cb7-8b8c-45b5-a554-b4f682c6d46f.png)
 

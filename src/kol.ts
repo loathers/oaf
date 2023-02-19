@@ -5,6 +5,7 @@ import { DOMParser } from "xmldom";
 import { select } from "xpath";
 
 import { cleanString, indent, toWikiLink } from "./utils";
+import { WikiSearcher } from "./wikisearch";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();
@@ -95,7 +96,8 @@ type PlayerBasicData = {
   class: string;
 };
 
-function sanitiseBlueText(blueText: string): string {
+function sanitiseBlueText(blueText: string | undefined): string {
+  if (!blueText) return "";
   return decode(
     blueText
       .replace(/\r/g, "")
@@ -162,7 +164,7 @@ export class KoLClient {
 
   private async makeCredentialedRequest(url: string, parameters: object) {
     try {
-      const request = await axios(`https://www.kingdomofloathing.com/${url}`, {
+      const request = await axios.get<string>(`https://www.kingdomofloathing.com/${url}`, {
         method: "GET",
         headers: {
           cookie: this._credentials.sessionCookies || "",
@@ -209,9 +211,7 @@ export class KoLClient {
         : minPrice
       : minPrice;
     const formattedMinPrice = minPrice
-      ? minPrice === unlimitedPrice
-        ? unlimitedMatch[1]
-        : limitedMatch[1]
+      ? (minPrice === unlimitedPrice ? unlimitedMatch?.[1] : limitedMatch?.[1]) ?? ""
       : "";
     return {
       mallPrice: unlimitedPrice,
@@ -242,22 +242,26 @@ export class KoLClient {
     const melting = description.match(/This item will disappear at the end of the day\./);
     const singleEquip = description.match(/ You may not equip more than one of these at a time\./);
 
-    const meltingString = melting ? "Disappears at rollover\n" : "";
-    const singleEquipString = singleEquip ? "Single equip only.\n" : "";
-    const blueTextString = blueText ? `${sanitiseBlueText(blueText.groups.description)}\n` : "";
-    const effectString = effect
-      ? `Gives ${effect.groups.duration} adventures of **[${cleanString(
-          effect.groups.effect
-        )}](${toWikiLink(cleanString(effect.groups.effect))})**\n${indent(
-          await this.getEffectDescription(effect.groups.descid)
-        )}\n`
-      : "";
-    return `${meltingString}${singleEquipString}${blueTextString}${
-      blueText && effect ? "\n" : ""
-    }${effectString}`;
+    const output = [];
+
+    if (melting) output.push("Disappears at rollover");
+    if (singleEquip) output.push("Single equip only.");
+    if (blueText) output.push(sanitiseBlueText(blueText.groups?.description));
+    if (effect)
+      output.push(
+        `Gives ${effect.groups?.duration} adventures of **[${cleanString(
+          effect.groups?.effect
+        )}](${toWikiLink(cleanString(effect.groups?.effect))})**\n${indent(
+          await this.getEffectDescription(effect.groups?.descid)
+        )}`
+      );
+
+    return output.join("\n");
   }
 
-  async getEffectDescription(descId: string): Promise<string> {
+  async getEffectDescription(descId: string | undefined): Promise<string> {
+    if (!descId) return "";
+
     switch (descId) {
       // Video... Games?
       case "3d5280f646ac2a6b70e64eae72daa263":
@@ -273,7 +277,7 @@ export class KoLClient {
     const blueText = description.match(
       /<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/
     );
-    return blueText ? sanitiseBlueText(blueText.groups.description) : "";
+    return blueText ? sanitiseBlueText(blueText.groups?.description) : "";
   }
 
   async getSkillDescription(id: number): Promise<string> {
@@ -283,7 +287,7 @@ export class KoLClient {
     const blueText = description.match(
       /<blockquote[\s\S]+<[Cc]enter>(?<description>[\s\S]+)<\/[Cc]enter>/
     );
-    return blueText ? sanitiseBlueText(blueText.groups.description) : "";
+    return blueText ? sanitiseBlueText(blueText.groups?.description) : "";
   }
 
   private extractDreadOverview(raidLog: string): DreadStatus {
@@ -419,9 +423,11 @@ export class KoLClient {
       let row = 0;
       let done = false;
       while (!raidLogs.match(/No previous Clan Dungeon records found/) && !done) {
-        for (let id of raidLogs.match(
-          /kisses<\/td><td class=tiny>\[<a href="clan_viewraidlog\.php\?viewlog=(?<id>\d+)/g
-        )) {
+        const matches =
+          raidLogs.match(
+            /kisses<\/td><td class=tiny>\[<a href="clan_viewraidlog\.php\?viewlog=(?<id>\d+)/g
+          ) || [];
+        for (let id of matches) {
           const cleanId = id.replace(/\D/g, "");
           if (parsedRaids.includes(cleanId)) {
             done = true;
@@ -572,3 +578,7 @@ export class KoLClient {
     return match?.[1] ?? null;
   }
 }
+
+// Singletons
+export const client = new KoLClient();
+export const wikiClient = new WikiSearcher(client);

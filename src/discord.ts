@@ -1,8 +1,10 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { REST } from "@discordjs/rest";
-import { ApplicationCommandOptionType, Routes } from "discord-api-types/v9";
+import { Routes } from "discord-api-types/v9";
+import { RESTPostAPIApplicationCommandsJSONBody } from "discord-api-types/v10";
 import {
   Client,
+  Collection,
   CommandInteraction,
   Intents,
   Interaction,
@@ -14,6 +16,7 @@ import {
   User,
 } from "discord.js";
 
+import { wikiClient } from "./kol";
 import { WikiSearcher } from "./wikisearch";
 
 const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
@@ -28,24 +31,15 @@ const ROLEMAP: Map<string, string> = new Map([
 ]);
 
 type Command = {
-  description: string;
-  slashCommand: SlashCommandBuilder;
+  data: SlashCommandBuilder;
   execute: (interaction: CommandInteraction) => void;
-};
-
-type Option = {
-  name: string;
-  description: string;
-  type: ApplicationCommandOptionType;
-  required: boolean;
-  choices?: { name: string; value: string }[];
 };
 
 export class DiscordClient {
   private _client: Client;
   private _wikiSearcher: WikiSearcher;
   private _discordToken: string;
-  private _commands: Map<string, Command> = new Map();
+  commands = new Collection<string, Command>();
 
   constructor(wikiSearcher: WikiSearcher) {
     this._client = new Client({
@@ -79,15 +73,11 @@ export class DiscordClient {
     );
   }
 
-  async registerSlashCommands() {
+  async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
     const rest = new REST({ version: "9" }).setToken(this._discordToken);
-    const commandsToRegister = [];
-    for (const command of this._commands) {
-      commandsToRegister.push(command[1].slashCommand.toJSON());
-    }
     const client_id = process.env.CLIENT_ID || "";
     await rest.put(Routes.applicationCommands(client_id), {
-      body: commandsToRegister,
+      body: commands,
     });
   }
 
@@ -162,7 +152,7 @@ export class DiscordClient {
 
   async onCommand(interaction: Interaction): Promise<void> {
     if (!interaction.isCommand()) return;
-    const command = this._commands.get(interaction.commandName);
+    const command = this.commands.get(interaction.commandName);
     try {
       if (command) await command.execute(interaction);
       else interaction.reply(`Command not recognised. Something has gone wrong here.`);
@@ -180,58 +170,6 @@ export class DiscordClient {
 
   client(): Client {
     return this._client;
-  }
-
-  attachCommand(
-    command: string,
-    args: Option[],
-    functionToCall: (interaction: CommandInteraction) => void,
-    description: string = ""
-  ): void {
-    const slashCommand = new SlashCommandBuilder().setName(command).setDescription(description);
-    for (let arg of args) {
-      const builder = (item: any) =>
-        item
-          .setName(arg.name)
-          .setDescription(arg.description)
-          .setRequired(arg.required)
-          .addChoices(...(arg.choices || []));
-
-      switch (arg.type) {
-        case ApplicationCommandOptionType.String:
-          slashCommand.addStringOption(builder);
-          break;
-        case ApplicationCommandOptionType.Integer:
-          slashCommand.addIntegerOption(builder);
-          break;
-        case ApplicationCommandOptionType.User:
-          slashCommand.addUserOption(builder);
-          break;
-        case ApplicationCommandOptionType.Channel:
-          slashCommand.addChannelOption(builder);
-          break;
-        case ApplicationCommandOptionType.Role:
-          slashCommand.addRoleOption(builder);
-          break;
-        case ApplicationCommandOptionType.Mentionable:
-          slashCommand.addMentionableOption(builder);
-          break;
-        case ApplicationCommandOptionType.Integer:
-          slashCommand.addIntegerOption(builder);
-          break;
-        case ApplicationCommandOptionType.Number:
-          slashCommand.addNumberOption(builder);
-          break;
-        case ApplicationCommandOptionType.Attachment:
-          slashCommand.addAttachmentOption(builder);
-          break;
-      }
-    }
-    this._commands.set(command.toLowerCase(), {
-      description: description,
-      slashCommand: slashCommand,
-      execute: functionToCall,
-    });
   }
 
   async inlineWikiSearch(item: string, message: Message): Promise<void> {
@@ -278,3 +216,5 @@ export const createEmbed = () =>
     text: "Problems? Message DocRostov#7004 on discord.",
     iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
   });
+
+export const discordClient = new DiscordClient(wikiClient);

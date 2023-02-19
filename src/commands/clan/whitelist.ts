@@ -1,9 +1,8 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
+import { SlashCommandBuilder } from "@discordjs/builders";
 import { CommandInteraction, GuildMemberRoleManager } from "discord.js";
 
 import { ALL_CLANS } from "../../clans";
-import { KoLClient } from "../../kol";
-import { Command } from "../type";
+import { client } from "../../kol";
 
 const PERMITTED_ROLES = [
   // Extended Team
@@ -12,7 +11,17 @@ const PERMITTED_ROLES = [
   "466624206126448641",
 ];
 
-async function whitelist(interaction: CommandInteraction, kolClient: KoLClient) {
+export const data = new SlashCommandBuilder()
+  .setName("whitelist")
+  .setDescription("Adds a player to the Dreadsylvania clan whitelists.")
+  .addStringOption((o) =>
+    o
+      .setName("player")
+      .setDescription("The name of the player to add to the whitelists.")
+      .setRequired(true)
+  );
+
+export async function execute(interaction: CommandInteraction) {
   const member = interaction.member;
 
   if (!member) {
@@ -35,34 +44,15 @@ async function whitelist(interaction: CommandInteraction, kolClient: KoLClient) 
 
   const player = interaction.options.getString("player", true);
   interaction.deferReply();
-  const playerData = await kolClient.getBasicDetailsForUser(player);
+  const playerData = await client.getBasicDetailsForUser(player);
   if (!playerData.id) {
     interaction.editReply({ content: "Player not found." });
     return;
   }
   for (let clan of ALL_CLANS) {
-    await kolClient.addToWhitelist(playerData.id, clan.id);
+    await client.addToWhitelist(playerData.id, clan.id);
   }
   interaction.editReply({
     content: `Added player ${player} (#${playerData.id}) to all managed clan whitelists.`,
   });
 }
-
-const command: Command = {
-  attach: ({ discordClient, kolClient }) =>
-    discordClient.attachCommand(
-      "whitelist",
-      [
-        {
-          name: "player",
-          description: "The name of the player to add to the whitelists.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      (interaction: CommandInteraction) => whitelist(interaction, kolClient),
-      "Adds a player to the Dreadsylvania clan whitelists."
-    ),
-};
-
-export default command;

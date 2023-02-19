@@ -1,57 +1,43 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction, TextChannel } from "discord.js";
+import { SlashCommandBuilder } from "@discordjs/builders";
+import { CommandInteraction } from "discord.js";
 
-import { DiscordClient } from "../../discord";
-import { Command } from "../type";
+import { discordClient } from "../../discord";
 
-async function purgeCommand(
-  interaction: CommandInteraction,
-  channel: TextChannel,
-  client: DiscordClient,
-  quantity: number
-): Promise<void> {
+const getOwnUserId = () => discordClient.client().user?.id;
+
+export const data = new SlashCommandBuilder()
+  .setName("purge")
+  .setDescription("Purges the last x messages from OAF in this channel.")
+  .addIntegerOption((option) =>
+    option
+      .setName("count")
+      .setDescription("Quantity of messages to purge (default 1)")
+      .setRequired(false)
+      .setMinValue(1)
+  );
+
+export async function execute(interaction: CommandInteraction) {
+  const channel = interaction.channel;
+
+  if (!channel) {
+    interaction.reply({
+      content: "You have to perform this action from within a Channel.",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const quantity = interaction.options.getInteger("count", false) || 1;
+
   let purged = 0;
-  if (quantity > 0) {
-    for (let message of await channel.messages.fetch()) {
-      if (message[1].author.id === client?.client()?.user?.id) {
-        await message[1].delete();
-        purged += 1;
-        if (purged >= quantity) break;
-      }
+
+  for (let message of (await channel.messages.fetch()) ?? []) {
+    if (purged >= quantity) break;
+    if (message[1].author.id === getOwnUserId()) {
+      await message[1].delete();
+      purged++;
     }
   }
+
   interaction.reply({ content: "Purge complete", ephemeral: true });
 }
-
-const command: Command = {
-  attach: ({ discordClient }) => {
-    discordClient.attachCommand(
-      "purge",
-      [
-        {
-          name: "count",
-          description: "Quantity of messages to purge",
-          type: ApplicationCommandOptionType.Integer,
-          required: true,
-        },
-      ],
-      async (interaction: CommandInteraction) =>
-        await purgeCommand(
-          interaction,
-          interaction.channel as TextChannel,
-          discordClient,
-          interaction.options.getInteger("count", true)
-        ),
-      "Purges the last x messages from OAF in this channel."
-    );
-    discordClient.attachCommand(
-      "oops",
-      [],
-      async (interaction: CommandInteraction) =>
-        await purgeCommand(interaction, interaction.channel as TextChannel, discordClient, 1),
-      "Purges OAF's last message in this channel."
-    );
-  },
-};
-
-export default command;
