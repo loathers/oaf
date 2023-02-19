@@ -1,1 +1,0 @@
-ALTER TABLE reminders ALTER COLUMN guild_id DROP NOT NULL;
