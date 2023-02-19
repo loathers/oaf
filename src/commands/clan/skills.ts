@@ -1,8 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { Pool } from "pg";
 
 import { DREAD_CLANS, PlayerData, clanState } from "../../clans";
-import { pool } from "../../db";
+import { prisma } from "../../db";
 import { KoLClient, client } from "../../kol";
 import { pluralize } from "../../utils";
 
@@ -75,26 +74,36 @@ async function parseOldLogs() {
       participation.id = (await client.getBasicDetailsForUser(player)).id;
     }
   }
-  const databaseClient = await pool.connect();
-  await databaseClient.query("BEGIN;");
-  for (let raid of newlyParsedRaids) {
-    await databaseClient.query("INSERT INTO tracked_instances(raid_id) VALUES ($1);", [raid]);
-  }
-  for (let [player, participation] of clanState.killMap.entries()) {
-    await databaseClient.query(
-      "INSERT INTO players (username, kills, skills, user_id) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3, user_id = $4;",
-      [player, participation.kills, participation.skills, participation.id]
-    );
-  }
-  await databaseClient.query("COMMIT;");
-  databaseClient.release();
+
+  const createTrackedInstances = prisma.tracked_instances.createMany({
+    data: newlyParsedRaids.map((r) => ({ raid_id: r })),
+    skipDuplicates: true,
+  });
+
+  const upsertPlayers = [...clanState.killMap.entries()].map(([player, participation]) =>
+    prisma.players.upsert({
+      where: { username: player },
+      update: { kills: participation.kills, skills: participation.skills },
+      create: {
+        username: player,
+        kills: participation.kills,
+        skills: participation.skills,
+        user_id: participation.id,
+      },
+    })
+  );
+
+  await prisma.$transaction([createTrackedInstances, ...upsertPlayers]);
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
+  // const doneWithSkillsList = (
+  //   await pool.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
+  // ).rows.map((result) => result.username.toLowerCase());
   const doneWithSkillsList = (
-    await pool.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
-  ).rows.map((result) => result.username.toLowerCase());
+    await prisma.players.findMany({ where: { done_with_skills: true }, select: { username: true } })
+  ).map((player) => player.username);
   try {
     await parseOldLogs();
     const currentKills: Map<string, PlayerData> = new Map();

@@ -1,9 +1,7 @@
 import "dotenv/config";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { migrate } from "postgres-migrations";
 
-import { pool } from "./db";
 import { Command, DiscordClient, discordClient } from "./discord";
 import { wikiClient } from "./kol";
 
@@ -33,9 +31,6 @@ async function loadSlashCommands(client: DiscordClient) {
 }
 
 async function performSetup(): Promise<DiscordClient> {
-  console.log("Migrating database.");
-  await migrate({ client: pool }, "./migrations");
-
   console.log("Downloading mafia data.");
   await wikiClient.downloadMafiaData();
   console.log("All mafia data downloaded.");

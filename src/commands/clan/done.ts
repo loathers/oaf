@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { pool } from "../../db";
+import { prisma } from "../../db";
 
 export const data = new SlashCommandBuilder()
   .setName("done")
@@ -24,10 +24,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  await pool.query(
-    "INSERT INTO players (username, done_with_skills) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET done_with_skills = $2;",
-    [username, done]
-  );
+  await prisma.players.upsert({
+    where: { username },
+    update: { done_with_skills: done },
+    create: { username, done_with_skills: done },
+  });
 
-  await interaction.editReply(`${done ? "Added" : "Removed"} user "${username}" ${done ? "to" : "from"} the list of players done with skills.`);
+  await interaction.editReply(
+    `${done ? "Added" : "Removed"} user "${username}" ${
+      done ? "to" : "from"
+    } the list of players done with skills.`
+  );
 }
