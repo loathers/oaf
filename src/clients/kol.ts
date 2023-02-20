@@ -6,7 +6,6 @@ import { DOMParser } from "xmldom";
 import { select } from "xpath";
 
 import { cleanString, indent, toWikiLink } from "../utils";
-import { WikiClient } from "./wiki";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();

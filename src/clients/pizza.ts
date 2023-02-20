@@ -1,8 +1,4 @@
-import { EmbedBuilder, hyperlink } from "discord.js";
-
 import { Effect, Thing } from "../things";
-import { createEmbed } from "./discord";
-import { wikiClient } from "./wiki";
 
 export class PizzaNode {
   children: Map<string, PizzaNode> = new Map();
@@ -32,12 +28,13 @@ export class PizzaTree {
   }
 
   addEffect(name: string, effect: Effect) {
-    function _add(node: PizzaNode) {
-      if (node.letters.length === 4 || name.length === 0 || name.match(/^[^a-z0-9\"\']/)) {
+    function _add(node: PizzaNode, n: string) {
+      // If we have reached 4 letters, exhausted the input or have reached an invalid letter, finish descending.
+      if (node.letters.length === 4 || n.length === 0 || n.match(/^[^a-z0-9\"\']/)) {
         node.effects.push(effect);
         return;
       }
-      const letter = name.charAt(0);
+      const letter = n.charAt(0);
 
       if (!node.children.has(letter)) {
         node.children.set(letter, new PizzaNode(node.letters + letter));
@@ -45,10 +42,10 @@ export class PizzaTree {
 
       const child = node.children.get(letter);
 
-      if (child) _add(child);
+      if (child) _add(child, n.slice(1));
     }
 
-    _add(this.root);
+    _add(this.root, name);
   }
 
   precalculate(): void {
@@ -72,6 +69,7 @@ export class PizzaTree {
 
   build(things: Map<string, Thing>) {
     this.reset();
+
     for (const thing of things.values()) {
       if (!(thing instanceof Effect)) continue;
       if (thing.get().hookah) {
@@ -81,7 +79,7 @@ export class PizzaTree {
     this.precalculate();
   }
 
-  async getEmbed(letters: string): Promise<EmbedBuilder> {
+  findPizzas(letters: string) {
     let node = this.root;
     let i = 0;
     for (; i <= letters.length; i++) {
@@ -90,46 +88,7 @@ export class PizzaTree {
       else break;
     }
 
-    const pizzaName = letters.toUpperCase().padEnd(4, "✱");
-    const functionalName = letters.slice(0, i).toUpperCase().padEnd(4, "✱");
-    const article = letters.match(/^[aeiouAEIOU]/) ? "An" : "A";
-
-    const options = node.options;
-
-    if (options.length === 1) {
-      const name = options[0].name();
-      return (
-        (await wikiClient.getEmbed(name)) ||
-        createEmbed().setTitle("Error").setDescription(`Couldn't create embed for ${name}`)
-      );
-    }
-
-    if (options.length > 11) {
-      return createEmbed()
-        .setTitle(`Possible ${pizzaName} Pizza effects`)
-        .setDescription(
-          `${article} ${pizzaName}${
-            i < letters.length ? ` (functionally ${functionalName})` : ""
-          } pizza has too many possible effects to list.`
-        );
-    }
-
-    const description: string[] = await Promise.all(
-      options.map(async (effect) => {
-        const foundName = await wikiClient.findName(effect.name());
-        return hyperlink(foundName?.name ?? "", encodeURI(foundName?.url || ""));
-      })
-    );
-
-    if (i < letters.length) {
-      description.unshift(
-        `(Note: ${article} ${pizzaName} pizza functions as ${article.toLowerCase()} ${functionalName} pizza)`
-      );
-    }
-
-    return createEmbed()
-      .setTitle(`Possible ${pizzaName} Pizza effects`)
-      .setDescription(description.join("\n"));
+    return [node.options, i] as [options: Effect[], functionalLetters: number];
   }
 }
 
