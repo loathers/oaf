@@ -2,7 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { discordClient } from "../../clients/discord";
 
-const getOwnUserId = () => discordClient.client().user?.id;
+const getOwnUserId = () => discordClient.user?.id;
 
 export const data = new SlashCommandBuilder()
   .setName("purge")

@@ -110,7 +110,7 @@ export async function sync() {
   for (let reminder of reminders.rows) {
     if (reminder.guild_id) {
       if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
-        const channel = await discordClient.client().channels.cache.get(reminder.channel_id);
+        const channel = await discordClient.channels.cache.get(reminder.channel_id);
 
         if (!channel) {
           console.log("Skipping reminder due to nknown channel", reminder.channel_id);
@@ -141,7 +141,7 @@ export async function sync() {
       }
     } else {
       if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
-        const user = await discordClient.client().users.fetch(reminder.user_id);
+        const user = await discordClient.users.fetch(reminder.user_id);
         const channel = await user.createDM();
         setTimeout(() => {
           try {

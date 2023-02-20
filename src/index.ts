@@ -44,6 +44,16 @@ async function performSetup(): Promise<DiscordClient> {
   console.log("Loading commands and syncing relevant data");
   await loadSlashCommands(discordClient);
 
+  // Register message logger
+  discordClient.on("messageCreate", async (message) => {
+    if (message.content.length === 0) return;
+    console.log(
+      new Date(message.createdTimestamp).toLocaleTimeString(),
+      message.author.username,
+      `said "${message.content}" in channel ${message.channel}`
+    );
+  });
+
   return discordClient;
 }
 

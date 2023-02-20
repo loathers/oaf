@@ -6,7 +6,6 @@ import {
   EmbedBuilder,
   GatewayIntentBits,
   Interaction,
-  Message,
   MessageReaction,
   PartialMessageReaction,
   PartialUser,
@@ -17,10 +16,6 @@ import {
   SlashCommandBuilder,
   User,
 } from "discord.js";
-
-import { wikiClient } from "./wiki";
-
-const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
 
 const ROLEMAP: Map<string, string> = new Map([
   ["🇹", "741479573337800706"],
@@ -38,47 +33,47 @@ export type Command = {
   sync?: () => void;
 };
 
-export class DiscordClient {
-  private _client: Client;
-  private _clientId: string;
-  private _discordToken: string;
+export class DiscordClient extends Client {
+  private clientId: string;
   commands = new Collection<string, Command>();
 
   constructor(clientId: string, token: string) {
-    this._client = new Client({
+    super({
       partials: [Partials.Message, Partials.Reaction, Partials.User],
       intents: [
+        GatewayIntentBits.MessageContent,
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.DirectMessages,
       ],
     });
-    this._discordToken = token;
-    this._clientId = clientId;
 
-    this._client.on("ready", () => {
-      console.log(`Logged in as ${this._client?.user?.tag}!`);
+    this.clientId = clientId;
+    this.token = token;
+
+    this.on("ready", () => {
+      console.log(`Logged in as ${this.user?.tag}!`);
     });
-    this._client.on("messageCreate", async (message) => this.onMessage(message));
-    this._client.on(
+
+    this.on(
       "messageReactionAdd",
       async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
         this.onReact(reaction, user)
     );
-    this._client.on(
+
+    this.on(
       "messageReactionRemove",
       async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
         this.onReactRemove(reaction, user)
     );
-    this._client.on("interactionCreate", async (interaction) =>
-      this.onInteractionCreate(interaction)
-    );
+
+    this.on("interactionCreate", async (interaction) => this.onInteractionCreate(interaction));
   }
 
   async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
-    const rest = new REST({ version: "10" }).setToken(this._discordToken);
-    await rest.put(Routes.applicationCommands(this._clientId), {
+    const rest = new REST({ version: "10" }).setToken(this.token || "");
+    await rest.put(Routes.applicationCommands(this.clientId), {
       body: commands,
     });
   }
@@ -133,25 +128,6 @@ export class DiscordClient {
     }
   }
 
-  async onMessage(message: Message): Promise<void> {
-    console.log(
-      `${new Date(message.createdTimestamp).toLocaleTimeString()} ${
-        message.author.username
-      } said "${message.content}" in channel ${message.channel}`
-    );
-    const content = message.content;
-    if (content && !message.author.bot && "send" in message.channel) {
-      const matches = [...content.matchAll(ITEMMATCHER)];
-      if (matches.length > 3) {
-        message.channel.send(
-          "Detected too many wiki invocations in one message. Returning first three invocations only."
-        );
-        matches.length = 3;
-      }
-      await Promise.all(matches.map((match) => this.inlineWikiSearch(match[1], message)));
-    }
-  }
-
   async onInteractionCreate(interaction: Interaction) {
     if (interaction.isChatInputCommand()) {
       const command = this.commands.get(interaction.commandName);
@@ -186,48 +162,8 @@ export class DiscordClient {
     }
   }
 
-  client(): Client {
-    return this._client;
-  }
-
-  async inlineWikiSearch(item: string, message: Message): Promise<void> {
-    if (!("send" in message.channel)) return;
-
-    const searchingMessage = await message.channel.send({
-      content: `Searching for "${item}"...`,
-      reply: { messageReference: message.id },
-      allowedMentions: {
-        parse: [],
-        repliedUser: false,
-      },
-    });
-    if (!item.length) {
-      await searchingMessage.edit("Need something to search for.");
-      return;
-    }
-    const embed = await wikiClient.getEmbed(item);
-    if (embed) {
-      searchingMessage.edit({
-        content: null,
-        embeds: [embed],
-        allowedMentions: {
-          parse: [],
-          repliedUser: false,
-        },
-      });
-    } else {
-      searchingMessage.edit({
-        content: `"${item}" wasn't found. Please refine your search.`,
-        allowedMentions: {
-          parse: [],
-          repliedUser: false,
-        },
-      });
-    }
-  }
-
   start(): void {
-    this._client.login(this._discordToken);
+    this.login(this.token || "");
   }
 }
 
