@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { discordClient } from "../../discord";
+import { discordClient } from "../../clients/discord";
 
 const getOwnUserId = () => discordClient.client().user?.id;
 

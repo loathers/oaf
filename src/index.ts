@@ -3,9 +3,9 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { migrate } from "postgres-migrations";
 
-import { pool } from "./db";
-import { Command, DiscordClient, discordClient } from "./discord";
-import { wikiClient } from "./kol";
+import { databaseClient } from "./clients/db";
+import { Command, DiscordClient, discordClient } from "./clients/discord";
+import { wikiClient } from "./clients/wiki";
 
 async function* walk(dir: string): AsyncGenerator<string> {
   for await (const d of await fs.opendir(dir)) {
@@ -18,7 +18,7 @@ async function* walk(dir: string): AsyncGenerator<string> {
 async function loadSlashCommands(client: DiscordClient) {
   const commandsPath = path.join(__dirname, "commands");
   for await (const filePath of walk(commandsPath)) {
-    if (!/\.(ts|js)$/.test(filePath)) continue;
+    if (!/^[^_].*?\.(ts|js)$/.test(filePath)) continue;
     const command: Command = await import(filePath);
     if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
@@ -34,7 +34,7 @@ async function loadSlashCommands(client: DiscordClient) {
 
 async function performSetup(): Promise<DiscordClient> {
   console.log("Migrating database.");
-  await migrate({ client: pool }, "./migrations");
+  await migrate({ client: databaseClient }, "./migrations");
 
   console.log("Downloading mafia data.");
   await wikiClient.downloadMafiaData();

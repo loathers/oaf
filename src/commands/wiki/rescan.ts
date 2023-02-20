@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { wikiClient } from "../../kol";
+import { wikiClient } from "../../clients/kol";
 
 export const data = new SlashCommandBuilder()
   .setName("rescan")

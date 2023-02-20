@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, userMention } from "discord.js";
 
-import { pool } from "../../db";
-import { discordClient } from "../../discord";
+import { databaseClient } from "../../clients/db";
+import { discordClient } from "../../clients/discord";
 
 const timeMatcher =
   /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
@@ -86,7 +86,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
   }, timeToWait);
 
-  await pool.query(
+  await databaseClient.query(
     "INSERT INTO reminders(guild_id, channel_id, user_id, interaction_reply_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5, $6);",
     [
       interaction.guildId,
@@ -101,7 +101,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 export async function sync() {
   const now = Date.now();
-  const connection = await pool.connect();
+  const connection = await databaseClient.connect();
   await connection.query("BEGIN;");
   await connection.query("DELETE FROM reminders WHERE reminder_time < $1;", [now]);
   const reminders = await connection.query("SELECT * FROM reminders", []);

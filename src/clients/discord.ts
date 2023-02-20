@@ -18,8 +18,7 @@ import {
   User,
 } from "discord.js";
 
-import { wikiClient } from "./kol";
-import { WikiSearcher } from "./wikisearch";
+import { wikiClient } from "./wiki";
 
 const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
 
@@ -41,11 +40,11 @@ export type Command = {
 
 export class DiscordClient {
   private _client: Client;
-  private _wikiSearcher: WikiSearcher;
+  private _clientId: string;
   private _discordToken: string;
   commands = new Collection<string, Command>();
 
-  constructor(wikiSearcher: WikiSearcher) {
+  constructor(clientId: string, token: string) {
     this._client = new Client({
       partials: [Partials.Message, Partials.Reaction, Partials.User],
       intents: [
@@ -55,8 +54,8 @@ export class DiscordClient {
         GatewayIntentBits.DirectMessages,
       ],
     });
-    this._wikiSearcher = wikiSearcher;
-    this._discordToken = process.env.DISCORD_TOKEN || "";
+    this._discordToken = token;
+    this._clientId = clientId;
 
     this._client.on("ready", () => {
       console.log(`Logged in as ${this._client?.user?.tag}!`);
@@ -79,8 +78,7 @@ export class DiscordClient {
 
   async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
     const rest = new REST({ version: "10" }).setToken(this._discordToken);
-    const client_id = process.env.CLIENT_ID || "";
-    await rest.put(Routes.applicationCommands(client_id), {
+    await rest.put(Routes.applicationCommands(this._clientId), {
       body: commands,
     });
   }
@@ -207,7 +205,7 @@ export class DiscordClient {
       await searchingMessage.edit("Need something to search for.");
       return;
     }
-    const embed = await this._wikiSearcher.getEmbed(item);
+    const embed = await wikiClient.getEmbed(item);
     if (embed) {
       searchingMessage.edit({
         content: null,
@@ -239,4 +237,7 @@ export const createEmbed = () =>
     iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
   });
 
-export const discordClient = new DiscordClient(wikiClient);
+export const discordClient = new DiscordClient(
+  process.env.CLIENT_ID || "",
+  process.env.DISCORD_TOKEN || ""
+);

@@ -1,10 +1,10 @@
 import axios from "axios";
 import { EmbedBuilder, hyperlink } from "discord.js";
 
+import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things";
+import { cleanString } from "../utils";
 import { createEmbed } from "./discord";
 import { KoLClient } from "./kol";
-import { Effect, Familiar, Item, Monster, Skill, Thing } from "./things";
-import { cleanString } from "./utils";
 
 const PACKAGES = new Map([
   ["iceberglet", "ice pick"],
@@ -163,11 +163,10 @@ class PizzaNode {
   }
 }
 
-export class WikiSearcher {
+export class WikiClient {
   private _nameMap: Map<string, FoundName> = new Map();
   private _thingMap: Map<string, Thing> = new Map();
   private _pizzaTreeRoot: PizzaNode = new PizzaNode("");
-  private _client: KoLClient;
   private _searchApiKey: string;
   private _customSearch: string;
   private _finalItemId = -1;
@@ -175,10 +174,9 @@ export class WikiSearcher {
   private _finalSkillIds: { [block: number]: number } = {};
   private _lastDownloadTime = -1;
 
-  constructor(client: KoLClient) {
-    this._searchApiKey = process.env.GOOGLE_API_KEY || "";
-    this._customSearch = process.env.CUSTOM_SEARCH || "";
-    this._client = client;
+  constructor(googleApiKey: string, customSearch: string) {
+    this._searchApiKey = googleApiKey;
+    this._customSearch = customSearch;
   }
 
   get lastItem(): number {
@@ -370,7 +368,7 @@ export class WikiSearcher {
 
     if (this._thingMap.has(foundName.name.toLowerCase())) {
       const thing = this._thingMap.get(foundName.name.toLowerCase());
-      await thing?.addToEmbed(embed, this._client);
+      await thing?.addToEmbed(embed);
     } else if (foundName.image) {
       embed.setImage(foundName.image.replace("https", "http"));
     } else {
@@ -554,3 +552,8 @@ function emoteNamesFromEmotes(emoteString: string) {
     return emoteName ? emoteName[1].replace(/:/g, "") : "";
   });
 }
+
+export const wikiClient = new WikiClient(
+  process.env.GOOGLE_API_KEY || "",
+  process.env.CUSTOM_SEARCH || ""
+);
