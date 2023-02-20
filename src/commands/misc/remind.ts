@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, userMention } from "discord.js";
 
 import { pool } from "../../db";
 import { discordClient } from "../../discord";
@@ -20,7 +19,7 @@ export const data = new SlashCommandBuilder()
     option.setName("reminder").setDescription("What to remind you").setRequired(false)
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const time = interaction.options.getString("when", true);
   const reminderText = interaction.options.getString("reminder") || "Time's up!";
 
@@ -67,10 +66,15 @@ export async function execute(interaction: CommandInteraction) {
 
   const channel = interaction.channel || (await interaction.user.createDM());
 
+  if (!("send" in channel)) {
+    console.log("Skipping reminder because requested is not a text channel", channel.id);
+    return;
+  }
+
   setTimeout(async () => {
     try {
       channel.send({
-        content: `<@${interaction.user.id}>`,
+        content: userMention(interaction.user.id),
         embeds: [{ title: "⏰⏰⏰", description: reminderText }],
         reply: { messageReference: reply_id },
         allowedMentions: {
@@ -113,18 +117,15 @@ export async function sync() {
           continue;
         }
 
-        if (!channel.isText()) {
-          console.log(
-            "Skipping reminder because requested is not a text channel",
-            reminder.channel_id
-          );
-          continue;
+        if (!("send" in channel)) {
+          console.log("Skipping reminder because requested is not a text channel", channel.id);
+          return;
         }
 
         setTimeout(() => {
           try {
             channel.send({
-              content: `<@${reminder.user_id}>`,
+              content: userMention(reminder.user_id),
               embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
               allowedMentions: {
                 users: [reminder.user_id],
@@ -145,7 +146,7 @@ export async function sync() {
         setTimeout(() => {
           try {
             channel.send({
-              content: `<@${reminder.user_id}>`,
+              content: userMention(reminder.user_id),
               embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
               allowedMentions: {
                 users: [reminder.user_id],

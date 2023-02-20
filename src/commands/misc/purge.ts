@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { discordClient } from "../../discord";
 
@@ -16,12 +15,20 @@ export const data = new SlashCommandBuilder()
       .setMinValue(1)
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const channel = interaction.channel;
 
   if (!channel) {
     interaction.reply({
       content: "You have to perform this action from within a Channel.",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (!("messages" in channel)) {
+    interaction.reply({
+      content: "The channel type supplied does not support purging.",
       ephemeral: true,
     });
     return;

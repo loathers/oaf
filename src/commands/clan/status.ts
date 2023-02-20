@@ -1,29 +1,36 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, bold } from "discord.js";
 
 import { DREAD_CLANS, clanState } from "../../clans";
 import { pool } from "../../db";
 import { client } from "../../kol";
 import { pluralize } from "../../utils";
 
-export async function execute(interaction: CommandInteraction) {
-  let messageString = "";
+export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
+
   try {
-    for (let clan of DREAD_CLANS) {
-      const overview = await client.getDreadStatusOverview(clan.id);
-      const skills = overview.castle ? overview.skills : 0;
-      const capacitorString = overview.capacitor
-        ? `${pluralize(skills, "skill")} left`
-        : "Needs capacitor";
-      messageString += `**${clan.name}**: ${overview.forest}/${overview.village}/${overview.castle} (${capacitorString})\n`;
-    }
+    const dreadStatus = await Promise.all(
+      DREAD_CLANS.map(async (clan) => {
+        const overview = await client.getDreadStatusOverview(clan.id);
+
+        const skills = overview.castle ? overview.skills : 0;
+
+        const capacitorString = overview.capacitor
+          ? `${pluralize(skills, "skill")} left`
+          : "Needs capacitor";
+
+        return `${bold(clan.name)}: ${overview.forest}/${overview.village}/${
+          overview.castle
+        } (${capacitorString})`;
+      })
+    );
+
     await interaction.editReply({
       content: null,
       embeds: [
         {
           title: "Dread Status",
-          description: messageString,
+          description: dreadStatus.join("\n"),
         },
       ],
     });

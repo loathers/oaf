@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } from "discord.js";
 
 import { clanState } from "../../clans";
 import { client } from "../../kol";
@@ -17,7 +16,7 @@ export const data = new SlashCommandBuilder()
   .setName("brains")
   .setDescription("Find players whose brains can be drained for Dreadsylvania skills.");
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   const classMap: Map<string, string[]> = new Map();
@@ -44,7 +43,7 @@ export async function execute(interaction: CommandInteraction) {
         description:
           "Captain Scotch, kenny kamAKAzi, and 3BH can pilot dread multis for any class of brain, subject to multi restrictions.",
         fields: BASE_CLASSES.map((playerClass) => ({
-          name: `**__${playerClass}__**`,
+          name: bold(underscore(playerClass)),
           value: classMap.has(playerClass)
             ? classMap
                 .get(playerClass)!

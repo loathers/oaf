@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { clamp } from "../../utils";
 
@@ -21,7 +20,7 @@ export const data = new SlashCommandBuilder()
       .setMaxValue(255)
   );
 
-export function execute(interaction: CommandInteraction) {
+export function execute(interaction: ChatInputCommandInteraction) {
   const level = clamp(interaction.options.getInteger("level", true), 1, 255);
 
   const { mainstat, substat } = fromLevel(level);

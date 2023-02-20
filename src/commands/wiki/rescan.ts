@@ -1,5 +1,4 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { wikiClient } from "../../kol";
 
@@ -7,7 +6,7 @@ export const data = new SlashCommandBuilder()
   .setName("rescan")
   .setDescription("Reload OAF's in-game information from mafia's datafiles.");
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   if (await wikiClient.conditionallyReloadMafiaData()) {

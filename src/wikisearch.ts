@@ -1,5 +1,5 @@
 import axios from "axios";
-import { MessageEmbed } from "discord.js";
+import { EmbedBuilder, hyperlink } from "discord.js";
 
 import { createEmbed } from "./discord";
 import { KoLClient } from "./kol";
@@ -362,7 +362,7 @@ export class WikiSearcher {
     return false;
   }
 
-  async getEmbed(item: string): Promise<MessageEmbed | undefined> {
+  async getEmbed(item: string): Promise<EmbedBuilder | undefined> {
     const foundName = await this.findName(item);
     if (!foundName) return undefined;
 
@@ -468,7 +468,7 @@ export class WikiSearcher {
     return undefined;
   }
 
-  async getPizzaEmbed(letters: string): Promise<MessageEmbed> {
+  async getPizzaEmbed(letters: string): Promise<EmbedBuilder> {
     let node = this._pizzaTreeRoot;
     let i = 0;
     for (; i <= letters.length; i++) {
@@ -490,7 +490,7 @@ export class WikiSearcher {
         );
     }
     if (options.length === 1) {
-      return (await this.getEmbed(options[0].name())) || new MessageEmbed();
+      return (await this.getEmbed(options[0].name())) || createEmbed();
     }
     let description = "";
     if (i < letters.length) {
@@ -505,7 +505,8 @@ export class WikiSearcher {
       await Promise.all(
         options.map(async (effect) => {
           const foundName = await this.findName(effect.name());
-          return `[${foundName?.name}](${encodeURI(foundName?.url || "")})`;
+          if (!foundName) return "";
+          return hyperlink(foundName.name, encodeURI(foundName?.url || ""));
         })
       )
     ).join("\n");

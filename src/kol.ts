@@ -1,5 +1,6 @@
 import { Mutex } from "async-mutex";
 import axios from "axios";
+import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
 import { DOMParser } from "xmldom";
 import { select } from "xpath";
@@ -249,11 +250,12 @@ export class KoLClient {
     if (blueText) output.push(sanitiseBlueText(blueText.groups?.description));
     if (effect)
       output.push(
-        `Gives ${effect.groups?.duration} adventures of **[${cleanString(
-          effect.groups?.effect
-        )}](${toWikiLink(cleanString(effect.groups?.effect))})**\n${indent(
-          await this.getEffectDescription(effect.groups?.descid)
-        )}`
+        `Gives ${effect.groups?.duration} adventures of ${bold(
+          hyperlink(
+            cleanString(effect.groups?.effect),
+            toWikiLink(cleanString(effect.groups?.effect))
+          )
+        )}\n${indent(await this.getEffectDescription(effect.groups?.descid))}`
       );
 
     return output.join("\n");

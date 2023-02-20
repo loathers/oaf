@@ -1,4 +1,4 @@
-import { MessageEmbed } from "discord.js";
+import { EmbedBuilder, bold, hyperlink } from "discord.js";
 
 import { KoLClient } from "./kol";
 import { cleanString, indent, pluralize, toWikiLink } from "./utils";
@@ -246,7 +246,7 @@ const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
 
 export abstract class Thing {
   abstract name(): string;
-  abstract addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void>;
+  abstract addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void>;
 }
 
 type ItemData = {
@@ -335,7 +335,7 @@ export class Item implements Thing {
         advRange.length > 1
           ? (parseInt(advRange[0]) + parseInt(advRange[1])) / 2
           : parseInt(data[4]);
-      desc += `**${this.mapQuality(data[3])} food** (Size ${data[1]}${
+      desc += `${bold(`${this.mapQuality(data[3])} food`)} (Size ${data[1]}${
         data[2] !== "1" ? `, requires level ${data[2]}` : ""
       })`;
       if (data[4] !== "0") {
@@ -361,7 +361,7 @@ export class Item implements Thing {
         advRange.length > 1
           ? (parseInt(advRange[0]) + parseInt(advRange[1])) / 2
           : parseInt(data[4]);
-      desc += `**${this.mapQuality(data[3])} booze** (Potency ${data[1]}${
+      desc += `${bold(`${this.mapQuality(data[3])} booze`)} (Potency ${data[1]}${
         data[2] !== "1" ? `, requires level ${data[2]}` : ""
       })`;
       if (data[4] !== "0") {
@@ -387,7 +387,7 @@ export class Item implements Thing {
         advRange.length > 1
           ? (parseInt(advRange[0]) + parseInt(advRange[1])) / 2
           : parseInt(data[4]);
-      desc += `**${this.mapQuality(data[3])} spleen item** (Toxicity ${data[1]}${
+      desc += `${bold(`${this.mapQuality(data[3])} spleen item`)} (Toxicity ${data[1]}${
         data[2] !== "1" ? `, requires level ${data[2]}` : ""
       })`;
       if (data[4] !== "0") {
@@ -409,7 +409,7 @@ export class Item implements Thing {
     if (this._item.types.includes("weapon")) {
       const requirement = (data[2] || ": 0").split(": ");
       const damage = parseInt(data[1]) / 10;
-      let equipString = `**${data[3]}**\n`;
+      let equipString = `${bold(data[3])}\n`;
       equipString += `${Math.round(damage)}-${Math.round(damage * 2)} damage${
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
@@ -421,7 +421,7 @@ export class Item implements Thing {
     if (this._item.types.includes("offhand")) {
       const requirement = (data[2] || ": 0").split(": ");
       const isShield = data[3] === "shield";
-      let equipString = `**Offhand ${isShield ? "Shield" : "Item"}**`;
+      let equipString = bold(`Offhand ${isShield ? "Shield" : "Item"}`);
       equipString += ` (${data[1]} power${
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
@@ -433,7 +433,7 @@ export class Item implements Thing {
     }
     if (this._item.types.includes("container")) {
       const requirement = (data[2] || ": 0").split(": ");
-      let equipString = `**Back Item**`;
+      let equipString = bold(`Back Item`);
       equipString += ` (${data[1]} power${
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
@@ -443,7 +443,7 @@ export class Item implements Thing {
       return equipString;
     }
     if (this._item.types.includes("familiar")) {
-      return `**Familiar Equipment**\n`;
+      return `${bold("Familiar Equipment")}\n`;
     }
     //This is hideous. but hey.
     let equipmentType = "";
@@ -452,7 +452,7 @@ export class Item implements Thing {
     }
     if (equipmentType) {
       const requirement = (data[2] || ": 0").split(": ");
-      let equipString = `**${equipmentType.charAt(0).toUpperCase() + equipmentType.slice(1)}**`;
+      let equipString = bold(equipmentType.charAt(0).toUpperCase() + equipmentType.slice(1));
       equipString += ` (${data[1]} power${
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
@@ -462,39 +462,42 @@ export class Item implements Thing {
       return equipString;
     }
     if (this._item.types.includes("potion")) {
-      if (this._item.types.includes("combat")) return "**Potion** (also usable in combat)\n";
-      return `**Potion**\n${tradeability_section}`;
+      if (this._item.types.includes("combat")) return `${bold("Potion")} (also usable in combat)\n`;
+      return `${bold("Potion")}\n${tradeability_section}`;
     }
     if (this._item.types.includes("reusable")) {
-      if (this._item.types.includes("combat")) return "**Reusable item** (also usable in combat)\n";
-      return `**Reusable item**\n${tradeability_section}`;
+      if (this._item.types.includes("combat"))
+        return `${bold("Reusable item")} (also usable in combat)\n`;
+      return `${bold("Reusable item")}\n${tradeability_section}`;
     }
     if (this._item.types.includes("usable") || this._item.types.includes("multiple")) {
-      if (this._item.types.includes("combat")) return "**Usable item** (also usable in combat)\n";
-      return `**Usable item**\n${tradeability_section}`;
+      if (this._item.types.includes("combat"))
+        return `${bold("Usable item")} (also usable in combat)\n`;
+      return `${bold("Usable item")}\n${tradeability_section}`;
     }
     if (this._item.types.includes("combat")) {
-      return `**Combat item**\n${tradeability_section}`;
+      return `${bold("Combat item")}\n${tradeability_section}`;
     }
     if (this._item.types.includes("combat reusable")) {
-      return `**Reusable combat item**\n${tradeability_section}`;
+      return `${bold("Reusable combat item")}\n${tradeability_section}`;
     }
     if (this._item.types.includes("grow")) {
-      return `**Familiar hatchling**\n${tradeability_section}`;
+      return `${bold("Familiar hatchling")}\n${tradeability_section}`;
     }
-    return `**Miscellaneous Item**\n${tradeability_section}`;
+    return `${bold("Miscellaneous Item")}\n${tradeability_section}`;
   }
 
   addGrowingFamiliar(familiar: Familiar): void {
-    this._addlDescription = `Grows into: **[${familiar.get().name}](${toWikiLink(
-      familiar.get().name
-    )})**\n`;
+    this._addlDescription = `Grows into: ${bold(
+      hyperlink(familiar.get().name, toWikiLink(familiar.get().name))
+    )}\n`;
   }
 
   addEquppingFamiliar(familiar: Familiar): void {
-    this._addlDescription = `Familiar: [${familiar.get().name}](${toWikiLink(
-      familiar.get().name
-    )})\n`;
+    this._addlDescription = `Familiar: ${hyperlink(
+      familiar.get().name,
+      toWikiLink(familiar.get().name)
+    )}\n`;
   }
 
   addContainer(container: Item) {
@@ -521,6 +524,30 @@ export class Item implements Thing {
     return this._name;
   }
 
+  async getMallPrice(client: KoLClient) {
+    if (!this._item.tradeable) return "";
+
+    const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
+      await client.getMallPrice(this._item.id);
+
+    const url = `https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${this._item.id}&timespan=1&noanim=0`;
+
+    if (mallPrice) {
+      let output = `Mall Price: ${hyperlink(`${formattedMallPrice} meat`, url)}`;
+      if (limitedMallPrice && limitedMallPrice < mallPrice) {
+        output += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
+      }
+      return output;
+    } else if (limitedMallPrice) {
+      return `Mall Price: ${hyperlink(
+        `${formattedLimitedMallPrice} meat (only available limited per day)`,
+        url
+      )}`;
+    } else {
+      return "Mall extinct.";
+    }
+  }
+
   async buildFullDescription(client: KoLClient, withAddl: boolean = true): Promise<string> {
     let description_string = this._shortDescription + (withAddl ? this._addlDescription : "");
 
@@ -531,31 +558,20 @@ export class Item implements Thing {
       autosell += `Autosell value: ${this._item.autosell} meat.`;
     }
 
-    let price_section = "";
-    if (this._item.tradeable) {
-      const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
-        await client.getMallPrice(this._item.id);
-      if (mallPrice) {
-        price_section += `Mall Price: [${formattedMallPrice} meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${this._item.id}&timespan=1&noanim=0)`;
-        if (limitedMallPrice && limitedMallPrice < mallPrice)
-          price_section += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
-      } else if (limitedMallPrice)
-        price_section += `Mall Price: [${formattedLimitedMallPrice} meat (only available limited per day)](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${this._item.id}&timespan=1&noanim=0)`;
-      else price_section += "Mall extinct.";
-    }
+    let price_section = await this.getMallPrice(client);
 
     let container = "";
     if (withAddl && this._container) {
-      container = `\nEnclosed in: **[${this._container.get().name}](${toWikiLink(
-        this._container.get().name
-      )})**\n${await this._container?.buildFullDescription(client, false)}\n`;
+      container = `\nEnclosed in: ${bold(
+        hyperlink(this._container.get().name, toWikiLink(this._container.get().name))
+      )}\n${await this._container?.buildFullDescription(client, false)}\n`;
     }
 
     let contents = "";
     if (withAddl && this._contents) {
-      contents = `\nEncloses: **[${this._contents.get().name}](${toWikiLink(
-        this._contents.get().name
-      )})**\n${await this._contents?.buildFullDescription(client, false)}\n`;
+      contents = `\nEncloses: ${bold(
+        hyperlink(this._contents.get().name, toWikiLink(this._contents.get().name))
+      )}\n${await this._contents?.buildFullDescription(client, false)}\n`;
     }
 
     let zapGroup = "";
@@ -564,7 +580,7 @@ export class Item implements Thing {
         .filter((item) => item.name() !== this.name())
         .slice(0, 7)
         .map((item) => item.get().name)
-        .map((name) => `[${name}](${toWikiLink(name)})`)
+        .map((name) => hyperlink(name, toWikiLink(name)))
         .join(", ")}${this._zapGroup.length > 8 ? " ...and more." : ""}\n`;
 
       const tradeables = (
@@ -581,11 +597,15 @@ export class Item implements Thing {
           zapGroup += "(This item is the cheapest in its zap group)";
         } else {
           const cheapest = tradeables[0].item;
-          zapGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(cheapest.get().name)}) @ [${
-            tradeables[0].price.formattedMinPrice
-          } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
-            cheapest.get().id
-          }&timespan=1&noanim=0))\n`;
+          zapGroup += `(Cheapest: ${hyperlink(
+            cheapest.get().name,
+            toWikiLink(cheapest.get().name)
+          )} @ ${hyperlink(
+            `${tradeables[0].price.formattedMinPrice} meat`,
+            `https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
+              cheapest.get().id
+            }&timespan=1&noanim=0`
+          )})\n`;
         }
       }
     }
@@ -596,7 +616,7 @@ export class Item implements Thing {
         .filter((item) => item.name() !== this.name())
         .slice(0, 7)
         .map((item) => item.get().name)
-        .map((name) => `[${name}](${toWikiLink(name)})`)
+        .map((name) => hyperlink(name, toWikiLink(name)))
         .join(", ")}${this._foldGroup.length > 8 ? " ...and more." : ""}\n`;
 
       const tradeables = (
@@ -613,13 +633,15 @@ export class Item implements Thing {
           foldGroup += "(This item is the cheapest in its fold group)";
         } else {
           const cheapest = tradeables[0].item;
-          foldGroup += `(Cheapest: [${cheapest.get().name}](${toWikiLink(
-            cheapest.get().name
-          )}) @ [${
-            tradeables[0].price.formattedMinPrice
-          } meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
-            cheapest.get().id
-          }&timespan=1&noanim=0))\n`;
+          foldGroup += `(Cheapest: ${hyperlink(
+            cheapest.get().name,
+            toWikiLink(cheapest.get().name)
+          )}) @ ${hyperlink(
+            `${tradeables[0].price.formattedMinPrice} meat`,
+            `https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
+              cheapest.get().id
+            }&timespan=1&noanim=0`
+          )})\n`;
         }
       }
     }
@@ -631,7 +653,7 @@ export class Item implements Thing {
     return `${description_string}${blueText}${autosell}${price_section}${zapGroup}${foldGroup}${container}${contents}`;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._item.imageUrl}`);
     embed.setDescription(await this.buildFullDescription(client));
   }
@@ -689,11 +711,11 @@ export class Effect implements Thing {
     return this._name;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
-    let description = `**Effect**\n(Effect ${this.get().id})\n${await client.getEffectDescription(
-      this._effect.descId
-    )}\n\n`;
+    let description = `${bold("Effect")}\n(Effect ${
+      this.get().id
+    })\n${await client.getEffectDescription(this._effect.descId)}\n\n`;
     if (this._effect.hookah) {
       if (this._pizza) {
         description += `Pizza: ${this._pizza.letters.padEnd(4, "✱")} (${
@@ -762,41 +784,42 @@ export class Skill implements Thing {
     let description = `(Skill ${this._skill.id})\n`;
     switch (this._skill.type) {
       case 0:
-        description += "**Passive Skill**";
+        description += bold("Passive Skill");
         break;
       case 1:
       case 2:
       case 3:
       case 4:
-        description += `**Skill**\nCost: ${this._skill.manaCost}mp`;
+        description += `${bold("Skill")}\nCost: ${this._skill.manaCost}mp`;
         break;
       case 5:
-        description += `**Combat Skill**\nCost: ${this._skill.manaCost}mp`;
+        description += `${bold("Combat Skill")}\nCost: ${this._skill.manaCost}mp`;
         break;
       case 6:
-        description += `**Skill (Boris Song)**\nCost: ${this._skill.manaCost}mp`;
+        description += `${bold("Skill (Boris Song)")}\nCost: ${this._skill.manaCost}mp`;
         break;
       case 7:
-        description += `**Combat/Noncombat Skill**\nCost: ${this._skill.manaCost}mp`;
+        description += `${bold("Combat/Noncombat Skill")}\nCost: ${this._skill.manaCost}mp`;
         break;
       case 8:
-        description += `**Combat Passive Skill**`;
+        description += bold("Combat Passive Skill");
         break;
       case 9:
-        description += `**Skill (Expression)**\nCost: ${this._skill.manaCost}mp`;
+        description += `${bold("Skill (Expression)")}\nCost: ${this._skill.manaCost}mp`;
         break;
       case 10:
-        description += `**Skill (Walk)**\nCost: ${this._skill.manaCost}mp`;
+        description += `${bold("Skill (Walk)")}\nCost: ${this._skill.manaCost}mp`;
         break;
       default:
-        "**Skill**";
+        description += bold("Skill");
+        break;
     }
     description += "\n\n";
     description += await client.getSkillDescription(this._skill.id);
     return description;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._skill.imageUrl}`);
     if (!this._description) this._description = await this.buildDescription(client);
     embed.setDescription(this._description);
@@ -878,23 +901,25 @@ export class Familiar implements Thing {
   }
 
   async buildDescription(client: KoLClient): Promise<string> {
-    let description_string = "**Familiar**\n";
+    let description_string = bold("Familiar") + "\n";
     description_string += `${this.parseTypes()}\n`;
     description_string += `Attributes: ${this._familiar.attributes || "None"}\n\n`;
     if (this._familiar.larva)
-      description_string += `Hatchling: [${this._familiar.larva}](${toWikiLink(
-        this._familiar.larva
-      )})\n${(await this._hatchling?.buildFullDescription(client, false))
+      description_string += `Hatchling: ${hyperlink(
+        this._familiar.larva,
+        toWikiLink(this._familiar.larva)
+      )}\n${(await this._hatchling?.buildFullDescription(client, false))
         ?.substring(23)
         .replace(/\n+/g, "\n")}\n`;
     if (this._familiar.item)
-      description_string += `Equipment: [${this._familiar.item}](${toWikiLink(
-        this._familiar.item
-      )})\n${indent((await client.getItemDescription(this._equipment?.get().descId || 0)) || "")}`;
+      description_string += `Equipment: ${hyperlink(
+        this._familiar.item,
+        toWikiLink(this._familiar.item)
+      )}\n${indent((await client.getItemDescription(this._equipment?.get().descId || 0)) || "")}`;
     return description_string;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._familiar.imageUrl}`);
     if (!this._description) this._description = await this.buildDescription(client);
     embed.setDescription(this._description);
@@ -973,7 +998,7 @@ export class Monster implements Thing {
   }
 
   async buildDescription(client: KoLClient): Promise<string> {
-    let description = `**Monster**\n(Monster ${this._monster.id})\n`;
+    let description = `${bold("Monster")}\n(Monster ${this._monster.id})\n`;
     const atk = this._monster.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
     const def = this._monster.parameters.match(/Def: (?<def>\-?[\d]+)/);
     const hp = this._monster.parameters.match(/HP: (?<hp>\-?[\d]+)/);
@@ -1042,9 +1067,9 @@ export class Monster implements Thing {
       for (let drop of this._monster.drops) {
         let dropDesc = "";
         if (drop.attributes.accordion) {
-          dropDesc += `[${drop.item}](${toWikiLink(drop.item)}) (Stealable accordion)\n`;
+          dropDesc += `${hyperlink(drop.item, toWikiLink(drop.item))} (Stealable accordion)\n`;
         } else {
-          dropDesc += `[${drop.item}](${toWikiLink(drop.item)}) (${
+          dropDesc += `${hyperlink(drop.item, toWikiLink(drop.item))} (${
             drop.droprate > 0 ? `${drop.droprate}%` : "Sometimes"
           }`;
           if (drop.attributes.pickpocketOnly) dropDesc += ", pickpocket only";
@@ -1073,7 +1098,7 @@ export class Monster implements Thing {
     return description;
   }
 
-  async addToEmbed(embed: MessageEmbed, client: KoLClient): Promise<void> {
+  async addToEmbed(embed: EmbedBuilder, client: KoLClient): Promise<void> {
     embed.setThumbnail(
       `http://images.kingdomofloathing.com/adventureimages/${this._monster.imageUrl}`
     );

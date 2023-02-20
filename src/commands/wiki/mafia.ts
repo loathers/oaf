@@ -1,6 +1,5 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
 import axios from "axios";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 type SearchResponse = {
   items: [{ link: string }];
@@ -16,7 +15,7 @@ export const data = new SlashCommandBuilder()
       .setRequired(true)
   );
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const item = interaction.options.getString("term", true);
 
   await interaction.deferReply();

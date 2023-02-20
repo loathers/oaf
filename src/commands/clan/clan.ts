@@ -1,5 +1,10 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandInteraction } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  bold,
+  strikethrough,
+  underscore,
+} from "discord.js";
 
 import { DREAD_CLANS } from "../../clans";
 import { createEmbed } from "../../discord";
@@ -13,34 +18,34 @@ const DREAD_BOSS_MAPPINGS = new Map([
   ["ghost", "Mayor Ghost"],
   ["vampire", "Drunkula"],
   ["skeleton", "Unkillable Skeleton"],
-  ["xwerewolf", "~~Air Wolf~~"],
-  ["xbugbear", "~~Falls-From-Sky~~"],
-  ["xzombie", "~~Zombie HOA~~"],
-  ["xghost", "~~Mayor Ghost~~"],
-  ["xvampire", "~~Drunkula~~"],
-  ["xskeleton", "~~Unkillable Skeleton~~"],
+  ["xwerewolf", strikethrough("Air Wolf")],
+  ["xbugbear", strikethrough("Falls-From-Sky")],
+  ["xzombie", strikethrough("Zombie HOA")],
+  ["xghost", strikethrough("Mayor Ghost")],
+  ["xvampire", strikethrough("Drunkula")],
+  ["xskeleton", strikethrough("Unkillable Skeleton")],
   ["unknown", "Boss unknown"],
 ]);
 
 const sidenote = (...steps: string[]) => `\u00a0\u00a0\u00a0\u00a0*${steps.join(" \u2192 ")}*`;
 
 function getForestSummary(status: DetailedDreadStatus) {
-  if (!status.overview.forest) return "~~Forest fully cleared.~~";
+  if (!status.overview.forest) return strikethrough("Forest fully cleared.");
 
   const summary = [];
 
-  if (!status.forest.attic) summary.push("**Cabin attic needs unlocking.**");
+  if (!status.forest.attic) summary.push(bold("Cabin attic needs unlocking."));
 
   if (status.forest.watchtower) summary.push("Watchtower open, you can grab freddies if you like.");
 
   if (status.forest.auditor) {
-    summary.push("~~Auditor's badge claimed.~~");
+    summary.push(strikethrough("Auditor's badge claimed."));
   } else {
     summary.push("Auditor's badge available.", sidenote("Cabin", "Basement", "Lockbox"));
   }
 
   if (status.forest.musicbox) {
-    summary.push("~~Intricate music box parts claimed.~~");
+    summary.push(strikethrough("Intricate music box parts claimed."));
   } else {
     summary.push(
       "Intricate music box parts available.",
@@ -51,7 +56,7 @@ function getForestSummary(status: DetailedDreadStatus) {
   }
 
   if (status.forest.kiwi) {
-    summary.push("~~Blood kiwi claimed.~~");
+    summary.push(strikethrough("Blood kiwi claimed."));
   } else {
     summary.push(
       "Blood kiwi available.",
@@ -62,7 +67,7 @@ function getForestSummary(status: DetailedDreadStatus) {
   }
 
   if (status.forest.amber) {
-    summary.push("~~Moon-amber claimed.~~");
+    summary.push(strikethrough("Moon-amber claimed."));
   } else {
     summary.push(
       "Moon-amber available.",
@@ -75,7 +80,7 @@ function getForestSummary(status: DetailedDreadStatus) {
 }
 
 function getVillageSummary(status: DetailedDreadStatus) {
-  if (!status.overview.village) return "~~Village fully cleared.~~";
+  if (!status.overview.village) return strikethrough("Village fully cleared.");
 
   const summary = [];
 
@@ -94,7 +99,7 @@ function getVillageSummary(status: DetailedDreadStatus) {
   }
 
   if (status.village.hanging) {
-    summary.push("~~Hanging complete.~~");
+    summary.push(strikethrough("Hanging complete."));
   } else {
     summary.push(
       "Hanging available.",
@@ -107,28 +112,28 @@ function getVillageSummary(status: DetailedDreadStatus) {
 }
 
 function parseCastleStatus(status: DetailedDreadStatus) {
-  if (!status.overview.castle) return "~~Castle fully cleared.~~";
+  if (!status.overview.castle) return strikethrough("Castle fully cleared.");
 
   const summary = [];
 
   if (!status.castle.lab) {
-    summary.push("**Lab needs unlocking.**");
+    summary.push(bold("Lab needs unlocking."));
   } else if (!status.overview.capacitor) {
     summary.push("Machine needs repairing (with skull capacitor).");
   } else if (!status.overview.skills) {
-    summary.push("~~All skills claimed.~~");
+    summary.push(strikethrough("All skills claimed."));
   } else {
     summary.push(`${pluralize(status.overview.skills, "skill")} available.`);
   }
 
   if (status.castle.roast) {
-    summary.push("~~Dreadful roast claimed.~~");
+    summary.push(strikethrough("Dreadful roast claimed."));
   } else {
     summary.push("Dreadful roast available.", sidenote("Great Hall", "Dining Room", "Grab roast"));
   }
 
   if (status.castle.banana) {
-    summary.push("~~Wax banana claimed.~~");
+    summary.push(strikethrough("Wax banana claimed."));
   } else {
     summary.push(
       "Wax banana available.",
@@ -138,7 +143,7 @@ function parseCastleStatus(status: DetailedDreadStatus) {
   }
 
   if (status.castle.agaricus) {
-    summary.push("~~Stinking agaricus claimed.~~");
+    summary.push(strikethrough("Stinking agaricus claimed."));
   } else {
     summary.push(
       "Stinking agaricus available.",
@@ -149,7 +154,7 @@ function parseCastleStatus(status: DetailedDreadStatus) {
   return summary.join("\n");
 }
 
-export async function execute(interaction: CommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const clanName = interaction.options.getString("clan", true);
   const clan = DREAD_CLANS.find(
     (clan) => clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName)
@@ -169,15 +174,21 @@ export async function execute(interaction: CommandInteraction) {
 
     embed.addFields([
       {
-        name: `__**Forest**__ (${DREAD_BOSS_MAPPINGS.get(status.overview.bosses[0])})`,
+        name: `${underscore(bold("Forest"))} (${DREAD_BOSS_MAPPINGS.get(
+          status.overview.bosses[0]
+        )})`,
         value: getForestSummary(status),
       },
       {
-        name: `__**Village**__ (${DREAD_BOSS_MAPPINGS.get(status.overview.bosses[1])})`,
+        name: `${underscore(bold("Village"))} (${DREAD_BOSS_MAPPINGS.get(
+          status.overview.bosses[1]
+        )})`,
         value: getVillageSummary(status),
       },
       {
-        name: `__**Castle**__ (${DREAD_BOSS_MAPPINGS.get(status.overview.bosses[2])})`,
+        name: `${underscore(bold("Castle"))} (${DREAD_BOSS_MAPPINGS.get(
+          status.overview.bosses[2]
+        )})`,
         value: parseCastleStatus(status),
       },
     ]);
