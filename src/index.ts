@@ -38,7 +38,7 @@ async function performSetup(): Promise<DiscordClient> {
   await migrate({ client: databaseClient }, "./migrations");
 
   console.log("Downloading mafia data.");
-  await wikiClient.downloadMafiaData();
+  await wikiClient.loadMafiaData();
   console.log("All mafia data downloaded.");
 
   console.log("Loading commands and syncing relevant data");

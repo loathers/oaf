@@ -1,5 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
+import { pizzaTree } from "../../clients/pizza";
 import { wikiClient } from "../../clients/wiki";
 
 export const data = new SlashCommandBuilder()
@@ -20,7 +21,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   await interaction.editReply({
     content: null,
-    embeds: [await wikiClient.getPizzaEmbed(letters.toLowerCase())],
+    embeds: [await pizzaTree.getEmbed(letters.toLowerCase())],
     allowedMentions: {
       parse: [],
     },

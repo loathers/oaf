@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  if (await wikiClient.conditionallyReloadMafiaData()) {
+  if (await wikiClient.reloadMafiaData()) {
     return interaction.editReply("Information reloaded from KoLMafia Github data files.");
   }
 
