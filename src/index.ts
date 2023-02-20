@@ -18,7 +18,7 @@ async function* walk(dir: string): AsyncGenerator<string> {
 async function loadSlashCommands(client: DiscordClient) {
   const commandsPath = path.join(__dirname, "commands");
   for await (const filePath of walk(commandsPath)) {
-    if (!/^[^_].*?\.(ts|js)$/.test(filePath)) continue;
+    if (!/\/[^_][^\/]*.(ts|js)$/.test(filePath)) continue;
     const command: Command = await import(filePath);
     if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
@@ -30,6 +30,7 @@ async function loadSlashCommands(client: DiscordClient) {
 
   const commands = [...client.commands.values()].map((c: any) => c.data.toJSON());
   await client.registerApplicationCommands(commands);
+  console.log(`Loaded ${commands.length} commands`);
 }
 
 async function performSetup(): Promise<DiscordClient> {

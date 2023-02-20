@@ -75,19 +75,19 @@ async function parseOldLogs() {
       participation.id = (await kolClient.getBasicDetailsForUser(player)).id;
     }
   }
-  const databaseClient = await databaseClient.connect();
-  await databaseClient.query("BEGIN;");
+  const poolClient = await databaseClient.connect();
+  await poolClient.query("BEGIN;");
   for (let raid of newlyParsedRaids) {
-    await databaseClient.query("INSERT INTO tracked_instances(raid_id) VALUES ($1);", [raid]);
+    await poolClient.query("INSERT INTO tracked_instances(raid_id) VALUES ($1);", [raid]);
   }
   for (let [player, participation] of clanState.killMap.entries()) {
-    await databaseClient.query(
+    await poolClient.query(
       "INSERT INTO players (username, kills, skills, user_id) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3, user_id = $4;",
       [player, participation.kills, participation.skills, participation.id]
     );
   }
-  await databaseClient.query("COMMIT;");
-  databaseClient.release();
+  await poolClient.query("COMMIT;");
+  poolClient.release();
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {

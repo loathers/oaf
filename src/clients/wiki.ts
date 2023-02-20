@@ -4,7 +4,6 @@ import { EmbedBuilder, hyperlink } from "discord.js";
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things";
 import { cleanString } from "../utils";
 import { createEmbed } from "./discord";
-import { KoLClient } from "./kol";
 
 const PACKAGES = new Map([
   ["iceberglet", "ice pick"],
