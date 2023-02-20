@@ -169,7 +169,7 @@ export class DiscordClient {
       } catch (error) {
         console.error(error);
         await (interaction.replied ? interaction.followUp : interaction.reply)(
-          "OAF recovered from a crash trying to process that command. Please tell Scotch or Phill"
+          "OAF recovered from a crash trying to process that command. Please tell Captain Scotch or report to #mafia-and-scripting"
         );
       }
     } else if (interaction.isAutocomplete()) {

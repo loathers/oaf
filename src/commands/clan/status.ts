@@ -9,7 +9,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   try {
-    const status = await Promise.all(
+    const dreadStatus = await Promise.all(
       DREAD_CLANS.map(async (clan) => {
         const overview = await client.getDreadStatusOverview(clan.id);
 
@@ -30,7 +30,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       embeds: [
         {
           title: "Dread Status",
-          description: status.join("\n"),
+          description: dreadStatus.join("\n"),
         },
       ],
     });
