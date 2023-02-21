@@ -46,7 +46,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const player = interaction.options.getString("player", true);
-  interaction.deferReply();
+  await interaction.deferReply();
   const playerData = await kolClient.getBasicDetailsForUser(player);
   if (!playerData.id) {
     interaction.editReply({ content: "Player not found." });

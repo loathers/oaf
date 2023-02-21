@@ -16,21 +16,16 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  await interaction.deferReply({ ephemeral: true });
   const channel = interaction.channel;
 
   if (!channel) {
-    interaction.reply({
-      content: "You have to perform this action from within a Channel.",
-      ephemeral: true,
-    });
+    await interaction.editReply("You have to perform this action from within a Channel.");
     return;
   }
 
   if (!("messages" in channel)) {
-    interaction.reply({
-      content: "The channel type supplied does not support purging.",
-      ephemeral: true,
-    });
+    await interaction.editReply("The channel type supplied does not support purging.");
     return;
   }
 
@@ -46,5 +41,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
   }
 
-  interaction.reply({ content: "Purge complete", ephemeral: true });
+  await interaction.editReply("Purge complete");
 }
