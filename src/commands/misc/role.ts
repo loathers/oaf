@@ -1,31 +1,10 @@
-import {
-  ChatInputCommandInteraction,
-  GuildMember,
-  MessageReaction,
-  PartialMessageReaction,
-  PartialUser,
-  Role,
-  SlashCommandBuilder,
-  User,
-} from "discord.js";
-
-import { discordClient } from "../../clients/discord";
-
-const ROLES_CHANNEL = "741479910886866944";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 const THEY_THEM = "741479573337800706";
 const HE_HIM = "741479366319538226";
 const SHE_HER = "741479514902757416";
 const LISTENER = "466622497991688202";
 const NO_ALERTS = "512522219574919179";
-
-const EMOJI_TO_ROLE = new Map([
-  ["🇹", THEY_THEM],
-  ["♀️", SHE_HER],
-  ["♂️", HE_HIM],
-  ["👂", LISTENER],
-  ["🚫", NO_ALERTS],
-]);
 
 export const data = new SlashCommandBuilder()
   .setName("role")
@@ -49,32 +28,8 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((subcommand) =>
     subcommand
       .setName("alerts")
-      .setDescription("Let us know how you want to be notified on the server")
-      .addStringOption((option) =>
-        option
-          .setName("choice")
-          .setDescription("Select your perferred alerts. These are mutually exclusive")
-          .addChoices(
-            { name: "Listener (occasional alerts)", value: LISTENER },
-            { name: "No alerts (no alerrts)", value: NO_ALERTS }
-          )
-          .setRequired(true)
-      )
+      .setDescription("Toggle whether you receive listener alerts on the server")
   );
-
-async function resolveRoleMutices(member: GuildMember, role: Role, via: string) {
-  if (role.id === LISTENER || role.id === NO_ALERTS) {
-    const other = role.guild.roles.cache.get(role.id === LISTENER ? NO_ALERTS : LISTENER);
-    if (!other) return false;
-    await member.roles.remove(
-      other,
-      `Removed automatically as member added ${role.name} via ${via}`
-    );
-  }
-
-  await member.roles.add(role, `Member added via ${via}`);
-  return true;
-}
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
@@ -111,17 +66,27 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       );
     }
     case "alerts": {
-      const roleId = interaction.options.getString("choice", true);
-      const role = member.guild.roles.cache.get(roleId);
+      const listener = member.guild.roles.cache.get(LISTENER);
+      const noAlerts = member.guild.roles.cache.get(NO_ALERTS);
 
-      if (!role || !resolveRoleMutices(member, role, "slash command")) {
+      if (!listener || !noAlerts) {
         return await interaction.editReply(
           `Relevant role(s) not found. Is this being used on the right Guild?`
         );
       }
 
+      const desired = !member.roles.cache.some((r) => r.id === LISTENER);
+
+      if (desired) {
+        await member.roles.add(LISTENER, "Member added via slash command");
+        await member.roles.remove(NO_ALERTS, 'Adding "listener" automatically removes "no alerts"');
+      } else {
+        await member.roles.remove(LISTENER, "Member removed via slash command");
+        await member.roles.add(NO_ALERTS, 'Removing "listener" automatically adds "no alerts"');
+      }
+
       return await interaction.editReply(
-        `Added ${role!.name} role (and removed the other role if you had it)`
+        `You will ${desired ? "now" : "no longer"} receive listener alerts`
       );
     }
     default:
@@ -129,48 +94,4 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         "Invalid subcommand. It shouldn't be possible to see this message. Please report it."
       );
   }
-}
-
-async function getRoleAndMember(
-  reaction: MessageReaction | PartialMessageReaction,
-  user: User | PartialUser
-) {
-  if (reaction.message.channelId !== ROLES_CHANNEL) return null;
-  if (!reaction.message.guild) return null;
-
-  if (reaction.partial || user.partial) {
-    try {
-      await reaction.fetch();
-      await user.fetch();
-      if (user.partial || reaction.partial) {
-        throw "Still partial";
-      }
-    } catch (error) {
-      console.error("Something went wrong when fetching the message: ", error);
-      return null;
-    }
-  }
-
-  const roleId = (reaction.emoji.name && EMOJI_TO_ROLE.get(reaction.emoji.name)) || null;
-  const role = roleId && reaction.message.guild.roles.cache.get(roleId);
-  const member = reaction.message.guild.members.cache.get(user.id);
-
-  if (!member || !role) return null;
-  return [role, member] as const;
-}
-
-export async function init() {
-  discordClient.on("messageReactionAdd", async (reaction, user) => {
-    const result = await getRoleAndMember(reaction, user);
-    if (!result) return;
-    const [role, member] = result;
-    await resolveRoleMutices(member, role, "emoji reaction");
-  });
-
-  discordClient.on("messageReactionRemove", async (reaction, user) => {
-    const result = await getRoleAndMember(reaction, user);
-    if (!result) return;
-    const [role, member] = result;
-    await member.roles.remove(role, "Member removed via emoji reaction");
-  });
 }
