@@ -1,17 +1,17 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { Pool } from "pg";
 
 import { databaseClient } from "../../clients/db";
-import { KoLClient, kolClient } from "../../clients/kol";
+import { kolClient } from "../../clients/kol";
 import { pluralize } from "../../utils";
 import { DREAD_CLANS, PlayerData, clanState } from "./_clans";
+import { getFinishedRaidLog, getMissingRaidLogs, getRaidLog } from "./_dread";
 
 const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
 const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
 
-async function parseCurrentLogs(kolClient: KoLClient, mapToUpdate: Map<string, PlayerData>) {
+async function parseCurrentLogs(mapToUpdate: Map<string, PlayerData>) {
   for (let clan of DREAD_CLANS) {
-    const raidLog = await kolClient.getRaidLog(clan.id);
+    const raidLog = await getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
     addParticipationFromRaidLog(raidLog, mapToUpdate);
   }
@@ -60,11 +60,11 @@ function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, P
 async function parseOldLogs() {
   const newlyParsedRaids = [];
   for (let clan of DREAD_CLANS) {
-    const raidsToParse = (
-      await kolClient.getMissingRaidLogs(clan.id, clanState.parsedRaids)
-    ).filter((id) => !clanState.parsedRaids.includes(id));
+    const raidsToParse = (await getMissingRaidLogs(clan.id, clanState.parsedRaids)).filter(
+      (id) => !clanState.parsedRaids.includes(id)
+    );
     for (let raid of raidsToParse) {
-      const raidLog = await kolClient.getFinishedRaidLog(raid);
+      const raidLog = await getFinishedRaidLog(raid);
       addParticipationFromRaidLog(raidLog, clanState.killMap);
       clanState.parsedRaids.push(raid);
       newlyParsedRaids.push(raid);
@@ -101,7 +101,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     for (let entry of clanState.killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
-    await parseCurrentLogs(kolClient, currentKills);
+    await parseCurrentLogs(currentKills);
     let skillArray = [];
     for (let entry of currentKills.entries()) {
       if (!doneWithSkillsList.includes(entry[0])) {
