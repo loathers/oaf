@@ -39,8 +39,8 @@ export class DiscordClient extends Client {
     this.clientId = clientId;
     this.token = token;
 
-    this.on("ready", () => {
-      console.log(`Logged in as ${this.user?.tag}!`);
+    this.on("ready", ({ user }) => {
+      console.log(`Logged in as ${user.tag}!`);
     });
 
     this.on("interactionCreate", async (interaction) => this.handleInteraction(interaction));
