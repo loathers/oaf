@@ -1,15 +1,14 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { Pool } from "pg";
 
-import { DREAD_CLANS, PlayerData, clanState } from "../../clans";
-import { pool } from "../../db";
-import { KoLClient, client } from "../../kol";
+import { databaseClient } from "../../clients/database";
+import { kolClient } from "../../clients/kol";
 import { pluralize } from "../../utils";
+import { DREAD_CLANS, PlayerData, clanState } from "./_clans";
 
 const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
 const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
 
-async function parseCurrentLogs(kolClient: KoLClient, mapToUpdate: Map<string, PlayerData>) {
+async function parseCurrentLogs(mapToUpdate: Map<string, PlayerData>) {
   for (let clan of DREAD_CLANS) {
     const raidLog = await kolClient.getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
@@ -60,11 +59,11 @@ function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, P
 async function parseOldLogs() {
   const newlyParsedRaids = [];
   for (let clan of DREAD_CLANS) {
-    const raidsToParse = (await client.getMissingRaidLogs(clan.id, clanState.parsedRaids)).filter(
-      (id) => !clanState.parsedRaids.includes(id)
-    );
+    const raidsToParse = (
+      await kolClient.getMissingRaidLogs(clan.id, clanState.parsedRaids)
+    ).filter((id) => !clanState.parsedRaids.includes(id));
     for (let raid of raidsToParse) {
-      const raidLog = await client.getFinishedRaidLog(raid);
+      const raidLog = await kolClient.getFinishedRaidLog(raid);
       addParticipationFromRaidLog(raidLog, clanState.killMap);
       clanState.parsedRaids.push(raid);
       newlyParsedRaids.push(raid);
@@ -72,28 +71,28 @@ async function parseOldLogs() {
   }
   for (let [player, participation] of clanState.killMap.entries()) {
     if (!participation.id) {
-      participation.id = (await client.getBasicDetailsForUser(player)).id;
+      participation.id = (await kolClient.getBasicDetailsForUser(player)).id;
     }
   }
-  const databaseClient = await pool.connect();
-  await databaseClient.query("BEGIN;");
+  const poolClient = await databaseClient.connect();
+  await poolClient.query("BEGIN;");
   for (let raid of newlyParsedRaids) {
-    await databaseClient.query("INSERT INTO tracked_instances(raid_id) VALUES ($1);", [raid]);
+    await poolClient.query("INSERT INTO tracked_instances(raid_id) VALUES ($1);", [raid]);
   }
   for (let [player, participation] of clanState.killMap.entries()) {
-    await databaseClient.query(
+    await poolClient.query(
       "INSERT INTO players (username, kills, skills, user_id) VALUES ($1, $2, $3, $4) ON CONFLICT (username) DO UPDATE SET kills = $2, skills = $3, user_id = $4;",
       [player, participation.kills, participation.skills, participation.id]
     );
   }
-  await databaseClient.query("COMMIT;");
-  databaseClient.release();
+  await poolClient.query("COMMIT;");
+  poolClient.release();
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   const doneWithSkillsList = (
-    await pool.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
+    await databaseClient.query("SELECT username FROM players WHERE done_with_skills = TRUE;")
   ).rows.map((result) => result.username.toLowerCase());
   try {
     await parseOldLogs();
@@ -101,7 +100,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     for (let entry of clanState.killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
-    await parseCurrentLogs(client, currentKills);
+    await parseCurrentLogs(currentKills);
     let skillArray = [];
     for (let entry of currentKills.entries()) {
       if (!doneWithSkillsList.includes(entry[0])) {

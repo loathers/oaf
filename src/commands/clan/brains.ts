@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } from "discord.js";
 
-import { clanState } from "../../clans";
-import { client } from "../../kol";
+import { kolClient } from "../../clients/kol";
+import { clanState } from "./_clans";
 
 const BASE_CLASSES = [
   "Seal Clubber",
@@ -26,7 +26,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     if (!playerEntry) continue;
     if (!playerEntry.skills && !playerEntry.brainiac) continue;
 
-    const details = await client.getBasicDetailsForUser(player);
+    const details = await kolClient.getBasicDetailsForUser(player);
     if (details.level < 15) continue;
 
     if (!classMap.has(details.class)) {

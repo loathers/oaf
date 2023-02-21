@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { client, wikiClient } from "../../kol";
+import { kolClient } from "../../clients/kol";
+import { wikiClient } from "../../clients/wiki";
 
 // This is the maximum number of items we can have in our embeds
 const HORIZON = 25;
@@ -140,7 +141,7 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await client.ensureFamiliar(SpadingFamiliars.GHOST);
+  await kolClient.ensureFamiliar(SpadingFamiliars.GHOST);
   const start = requestedStart ?? finalId + 1;
   const data = [];
   for (let id = start; id <= start + HORIZON; id++) {
@@ -148,13 +149,13 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
     data.push(spadeData);
     if (!spadeData.exists) break;
   }
-  await client.ensureFamiliar(SpadingFamiliars.DEFAULT);
+  await kolClient.ensureFamiliar(SpadingFamiliars.DEFAULT);
 
   // This is separated from the rest of our spading requests to stop us from constantly juggling familiars
   for (const spadeData of data) {
     if (spadeData.itemtype !== ItemType.GenericFamiliarEquipment) continue;
 
-    const familiar = await client.getEquipmentFamiliar(spadeData.id);
+    const familiar = await kolClient.getEquipmentFamiliar(spadeData.id);
     if (familiar !== null) {
       spadeData.itemtype = ItemType.SpecificFamiliarEquip;
       spadeData.additionalInfo = familiar.trim() || "Familiar not yet public";
@@ -188,7 +189,7 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
 
 async function spadeItem(itemId: number) {
   const exists = !/Nopers/.test(
-    await client.tryRequestWithLogin("inv_equip.php", {
+    await kolClient.tryRequestWithLogin("inv_equip.php", {
       action: "equip",
       which: 2,
       whichitem: itemId,
@@ -203,7 +204,7 @@ async function spadeItem(itemId: number) {
   }
 
   const tradeable = !/That item cannot be sold or transferred/.test(
-    await client.tryRequestWithLogin("town_sellflea.php", {
+    await kolClient.tryRequestWithLogin("town_sellflea.php", {
       whichitem: itemId,
       sellprice: "",
       selling: "Yep.",
@@ -212,7 +213,9 @@ async function spadeItem(itemId: number) {
 
   for (let property of ITEM_SPADING_CALLS) {
     const { url, visitMatch, type } = property;
-    const page = (await client.tryRequestWithLogin(...(url(itemId) as [string, object]))) as string;
+    const page = (await kolClient.tryRequestWithLogin(
+      ...(url(itemId) as [string, object])
+    )) as string;
 
     const match = visitMatch.test(page);
     if (match) {
@@ -252,7 +255,7 @@ async function spadeFamiliars(interaction: ChatInputCommandInteraction) {
 }
 
 async function spadeFamiliar(famId: number) {
-  const page = await client.tryRequestWithLogin("desc_familiar.php", { which: famId });
+  const page = await kolClient.tryRequestWithLogin("desc_familiar.php", { which: famId });
 
   if (page.includes("No familiar was found.")) return "none";
 
@@ -291,7 +294,7 @@ async function spadeSkills(interaction: ChatInputCommandInteraction) {
 }
 
 async function spadeSkill(skillId: number) {
-  const page = await client.tryRequestWithLogin("runskillz.php", {
+  const page = await kolClient.tryRequestWithLogin("runskillz.php", {
     action: "Skillz",
     whichskill: skillId,
     targetplayer: 1,

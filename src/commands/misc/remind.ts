@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, userMention } from "discord.js";
 
-import { pool } from "../../db";
-import { discordClient } from "../../discord";
+import { databaseClient } from "../../clients/database";
+import { discordClient } from "../../clients/discord";
 
 const timeMatcher =
   /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
@@ -86,7 +86,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
   }, timeToWait);
 
-  await pool.query(
+  await databaseClient.query(
     "INSERT INTO reminders(guild_id, channel_id, user_id, interaction_reply_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5, $6);",
     [
       interaction.guildId,
@@ -99,9 +99,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   );
 }
 
-export async function sync() {
+export async function init() {
   const now = Date.now();
-  const connection = await pool.connect();
+  const connection = await databaseClient.connect();
   await connection.query("BEGIN;");
   await connection.query("DELETE FROM reminders WHERE reminder_time < $1;", [now]);
   const reminders = await connection.query("SELECT * FROM reminders", []);
@@ -110,7 +110,7 @@ export async function sync() {
   for (let reminder of reminders.rows) {
     if (reminder.guild_id) {
       if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
-        const channel = await discordClient.client().channels.cache.get(reminder.channel_id);
+        const channel = await discordClient.channels.cache.get(reminder.channel_id);
 
         if (!channel) {
           console.log("Skipping reminder due to nknown channel", reminder.channel_id);
@@ -141,7 +141,7 @@ export async function sync() {
       }
     } else {
       if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
-        const user = await discordClient.client().users.fetch(reminder.user_id);
+        const user = await discordClient.users.fetch(reminder.user_id);
         const channel = await user.createDM();
         setTimeout(() => {
           try {
@@ -163,6 +163,6 @@ export async function sync() {
     }
   }
   setTimeout(async () => {
-    await sync();
+    await init();
   }, 7 * 24 * 60 * 60 * 1000);
 }

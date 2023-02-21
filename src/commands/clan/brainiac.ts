@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { clanState } from "../../clans";
-import { pool } from "../../db";
+import { databaseClient } from "../../clients/database";
+import { clanState } from "./_clans";
 
 export const data = new SlashCommandBuilder()
   .setName("brainiac")
@@ -25,7 +25,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  await pool.query(
+  await databaseClient.query(
     "INSERT INTO players (username, brainiac) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET brainiac = $2;",
     [username, available]
   );
@@ -41,6 +41,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   await interaction.editReply(
-    `${available ? "Added" : "Removed"} user "${username}" ${available ? "to" : "from"} the list of players always available to help with skills.`
+    `${available ? "Added" : "Removed"} user "${username}" ${
+      available ? "to" : "from"
+    } the list of players always available to help with skills.`
   );
 }

@@ -4,8 +4,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { ALL_CLANS } from "../../clans";
-import { client } from "../../kol";
+import { kolClient } from "../../clients/kol";
+import { ALL_CLANS } from "./_clans";
 
 const PERMITTED_ROLES = [
   // Extended Team
@@ -46,14 +46,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const player = interaction.options.getString("player", true);
-  interaction.deferReply();
-  const playerData = await client.getBasicDetailsForUser(player);
+  await interaction.deferReply();
+  const playerData = await kolClient.getBasicDetailsForUser(player);
   if (!playerData.id) {
     interaction.editReply({ content: "Player not found." });
     return;
   }
   for (let clan of ALL_CLANS) {
-    await client.addToWhitelist(playerData.id, clan.id);
+    await kolClient.addToWhitelist(playerData.id, clan.id);
   }
   interaction.editReply({
     content: `Added player ${player} (#${playerData.id}) to all managed clan whitelists.`,

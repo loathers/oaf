@@ -5,8 +5,7 @@ import { decode } from "html-entities";
 import { DOMParser } from "xmldom";
 import { select } from "xpath";
 
-import { cleanString, indent, toWikiLink } from "./utils";
-import { WikiSearcher } from "./wikisearch";
+import { cleanString, indent, toWikiLink } from "../utils";
 
 const clanActionMutex = new Mutex();
 const loginMutex = new Mutex();
@@ -114,11 +113,11 @@ export class KoLClient {
   private _loginParameters: URLSearchParams;
   private _credentials: KOLCredentials = { fetched: -1 };
 
-  constructor() {
+  constructor(username: string, password: string) {
     this._loginParameters = new URLSearchParams();
     this._loginParameters.append("loggingin", "Yup.");
-    this._loginParameters.append("loginname", process.env.KOL_USER || "");
-    this._loginParameters.append("password", process.env.KOL_PASS || "");
+    this._loginParameters.append("loginname", username);
+    this._loginParameters.append("password", password);
     this._loginParameters.append("secure", "0");
     this._loginParameters.append("submitbutton", "Log In");
   }
@@ -581,6 +580,4 @@ export class KoLClient {
   }
 }
 
-// Singletons
-export const client = new KoLClient();
-export const wikiClient = new WikiSearcher(client);
+export const kolClient = new KoLClient(process.env.KOL_USER || "", process.env.KOL_PASS || "");
