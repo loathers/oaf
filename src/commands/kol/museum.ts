@@ -30,7 +30,7 @@ interface Player {
 }
 
 export const data = new SlashCommandBuilder()
-  .setName("musuem")
+  .setName("museum")
   .setDescription("See the leaderboard for collectors of an item")
   .addNumberOption((option) =>
     option
