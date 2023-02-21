@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { databaseClient } from "../../clients/db";
+import { databaseClient } from "../../clients/database";
 import { kolClient } from "../../clients/kol";
 import { pluralize } from "../../utils";
 import { DREAD_CLANS, PlayerData, clanState } from "./_clans";
