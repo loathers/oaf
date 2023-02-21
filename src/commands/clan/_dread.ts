@@ -1,4 +1,5 @@
 import { kolClient } from "../../clients/kol";
+import { parseNumber } from "../../utils";
 
 type DreadStatus = {
   forest: number;
@@ -127,9 +128,9 @@ function extractDreadOverview(raidLog: string): DreadStatus {
   const skills = raidLog.match(/used The Machine, assisted by/g);
 
   return {
-    forest: 1000 - (forest ? parseInt(forest.groups?.forest.replace(",", "") || "0") : 0),
-    village: 1000 - (village ? parseInt(village.groups?.village.replace(",", "") || "0") : 0),
-    castle: 1000 - (castle ? parseInt(castle.groups?.castle.replace(",", "") || "0") : 0),
+    forest: 1000 - parseNumber(forest?.groups?.forest),
+    village: 1000 - parseNumber(village?.groups?.village),
+    castle: 1000 - parseNumber(castle?.groups?.castle),
     skills: skills ? 3 - skills.length : 3,
     bosses,
     capacitor,
