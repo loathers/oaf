@@ -4,7 +4,7 @@ import * as path from "node:path";
 import { migrate } from "postgres-migrations";
 
 import { databaseClient } from "./clients/db";
-import { Command, DiscordClient, discordClient } from "./clients/discord";
+import { Command, discordClient } from "./clients/discord";
 import { wikiClient } from "./clients/wiki";
 
 async function* walk(dir: string): AsyncGenerator<string> {
@@ -15,25 +15,25 @@ async function* walk(dir: string): AsyncGenerator<string> {
   }
 }
 
-async function loadSlashCommands(client: DiscordClient) {
+async function loadSlashCommands() {
   const commandsPath = path.join(__dirname, "commands");
   for await (const filePath of walk(commandsPath)) {
     if (!/\/[^_][^\/]*.(ts|js)$/.test(filePath)) continue;
     const command: Command = await import(filePath);
     if ("data" in command && "execute" in command) {
-      client.commands.set(command.data.name, command);
+      discordClient.commands.set(command.data.name, command);
       await command.init?.();
     } else {
       console.warn("Invalid command file found in command directory", filePath);
     }
   }
 
-  const commands = [...client.commands.values()].map((c: any) => c.data.toJSON());
-  await client.registerApplicationCommands(commands);
+  const commands = [...discordClient.commands.values()].map((c: any) => c.data.toJSON());
+  await discordClient.registerApplicationCommands(commands);
   console.log(`Loaded ${commands.length} commands`);
 }
 
-async function performSetup(): Promise<DiscordClient> {
+async function performSetup() {
   console.log("Migrating database.");
   await migrate({ client: databaseClient }, "./migrations");
 
@@ -42,7 +42,12 @@ async function performSetup(): Promise<DiscordClient> {
   console.log("All mafia data downloaded.");
 
   console.log("Loading commands and syncing relevant data");
-  await loadSlashCommands(discordClient);
+  await loadSlashCommands();
+
+  // Tell us when you're online!
+  discordClient.on("ready", ({ user }) => {
+    console.log(`Logged in as ${user.tag}!`);
+  });
 
   // Register message logger
   discordClient.on("messageCreate", async (message) => {

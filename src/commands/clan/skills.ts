@@ -1,15 +1,14 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { Pool } from "pg";
 
 import { databaseClient } from "../../clients/db";
-import { KoLClient, kolClient } from "../../clients/kol";
+import { kolClient } from "../../clients/kol";
 import { pluralize } from "../../utils";
 import { DREAD_CLANS, PlayerData, clanState } from "./_clans";
 
 const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
 const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
 
-async function parseCurrentLogs(kolClient: KoLClient, mapToUpdate: Map<string, PlayerData>) {
+async function parseCurrentLogs(mapToUpdate: Map<string, PlayerData>) {
   for (let clan of DREAD_CLANS) {
     const raidLog = await kolClient.getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
@@ -101,7 +100,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     for (let entry of clanState.killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
-    await parseCurrentLogs(kolClient, currentKills);
+    await parseCurrentLogs(currentKills);
     let skillArray = [];
     for (let entry of currentKills.entries()) {
       if (!doneWithSkillsList.includes(entry[0])) {
