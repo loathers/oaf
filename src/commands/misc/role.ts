@@ -18,7 +18,6 @@ const HE_HIM = "741479366319538226";
 const SHE_HER = "741479514902757416";
 const LISTENER = "466622497991688202";
 const NO_ALERTS = "512522219574919179";
-const LFG = "754473984661258391";
 
 const EMOJI_TO_ROLE = new Map([
   ["🇹", THEY_THEM],
@@ -26,7 +25,6 @@ const EMOJI_TO_ROLE = new Map([
   ["♂️", HE_HIM],
   ["👂", LISTENER],
   ["🚫", NO_ALERTS],
-  ["✅", LFG],
 ]);
 
 export const data = new SlashCommandBuilder()
@@ -60,19 +58,6 @@ export const data = new SlashCommandBuilder()
             { name: "Listener (occasional alerts)", value: LISTENER },
             { name: "No alerts (no alerrts)", value: NO_ALERTS }
           )
-          .setRequired(true)
-      )
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
-      .setName("gaming")
-      .setDescription(
-        "Let us know if you want to receive alerts when folks are looking for gaming parties"
-      )
-      .addBooleanOption((option) =>
-        option
-          .setName("choice")
-          .setDescription("Well are you looking for games or not?")
           .setRequired(true)
       )
   );
@@ -137,26 +122,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       return await interaction.editReply(
         `Added ${role!.name} role (and removed the other role if you had it)`
-      );
-    }
-    case "gaming": {
-      const desired = interaction.options.getBoolean("choice", true);
-      const role = member.guild.roles.cache.get(LFG);
-
-      if (!role) {
-        return await interaction.editReply(
-          `Relevant role not found. Is this being used on the right Guild?`
-        );
-      }
-
-      if (desired) {
-        await member.roles.add(role, "Member added via slash command");
-      } else {
-        await member.roles.remove(role, "Member removed via slash command");
-      }
-
-      return await interaction.editReply(
-        `${desired ? "Added" : "Removed"} "looking for games" role`
       );
     }
     default:
