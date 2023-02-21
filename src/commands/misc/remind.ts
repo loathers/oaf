@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, userMention } from "discord.js";
 
-import { databaseClient } from "../../clients/db";
+import { databaseClient } from "../../clients/database";
 import { discordClient } from "../../clients/discord";
 
 const timeMatcher =

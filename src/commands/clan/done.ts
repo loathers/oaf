@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { databaseClient } from "../../clients/db";
+import { databaseClient } from "../../clients/database";
 
 export const data = new SlashCommandBuilder()
   .setName("done")

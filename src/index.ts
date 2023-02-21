@@ -3,7 +3,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { migrate } from "postgres-migrations";
 
-import { databaseClient } from "./clients/db";
+import { databaseClient } from "./clients/database";
 import { Command, discordClient } from "./clients/discord";
 import { wikiClient } from "./clients/wiki";
 
