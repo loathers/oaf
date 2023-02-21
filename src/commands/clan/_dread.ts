@@ -38,6 +38,52 @@ export type DetailedDreadStatus = {
   castle: DreadCastleStatus;
 };
 
+type RaidLogMonsterData = {
+  kills: number;
+  banishes: number;
+  regex: RegExp;
+};
+
+const Monster = {
+  Bugbear: "bugbear",
+  Werewolf: "werewolf",
+  Ghost: "ghost",
+  Zombie: "zombie",
+  Vampire: "vampire",
+  Skeleton: "skeleton",
+} as const;
+
+type MonsterType = typeof Monster[keyof typeof Monster];
+
+const BOSS_REGEXES = {
+  [Monster.Bugbear]: /defeated\s+Falls\-From\-Sky/,
+  [Monster.Werewolf]: /defeated\s+The Great Wolf of the Air/,
+  [Monster.Ghost]: /defeated\s+Mayor Ghost/,
+  [Monster.Zombie]: /defeated\s+the Zombie Homeowners\' Association/,
+  [Monster.Vampire]: /defeated\s+Count Drunkula/,
+  [Monster.Skeleton]: /defeated\s+The Unkillable Skeleton/,
+} as const;
+
+const MONSTER_PAIRS = [
+  [Monster.Bugbear, Monster.Werewolf],
+  [Monster.Ghost, Monster.Zombie],
+  [Monster.Vampire, Monster.Skeleton],
+] as const;
+
+type KillsAndBanishes = { [key in MonsterType]: { kills: number; banishes: number } };
+
+function parseKillsAndBanishes(raidLog: string) {
+  return Object.values(Monster).reduce((acc, m) => {
+    const monsterKillRegex = new RegExp(`defeated (.*?) ${m} x ([0-9]+)`, "gi");
+    const monsterBanishRegex = /drove some (.*?) out of the (.*?) \(1 turn\)/gi;
+    const kills = [...raidLog.matchAll(monsterKillRegex)]
+      .map((m) => parseInt(m[2]))
+      .reduce((sum, k) => sum + k, 0);
+    const banishes = raidLog.match(monsterBanishRegex)?.length ?? 0;
+    return { ...acc, [m]: { kills, banishes } };
+  }, {} as KillsAndBanishes);
+}
+
 function extractDreadOverview(raidLog: string): DreadStatus {
   const forest = raidLog.match(
     /Your clan has defeated <b>(?<forest>[\d,]+)<\/b> monster\(s\) in the Forest/
@@ -49,97 +95,72 @@ function extractDreadOverview(raidLog: string): DreadStatus {
     /Your clan has defeated <b>(?<castle>[\d,]+)<\/b> monster\(s\) in the Castle/
   );
 
-  type MonsterData = {
-    kills: number;
-    banishes: number;
-    regex: RegExp;
-  };
+  const monsters = parseKillsAndBanishes(raidLog);
 
-  const monsters: Map<string, MonsterData> = new Map([
-    ["bugbear", { kills: 0, banishes: 0, regex: /defeated\s+Falls\-From\-Sky/ }],
-    ["werewolf", { kills: 0, banishes: 0, regex: /defeated\s+The Great Wolf of the Air/ }],
-    ["ghost", { kills: 0, banishes: 0, regex: /defeated\s+Mayor Ghost/ }],
-    ["zombie", { kills: 0, banishes: 0, regex: /defeated\s+the Zombie Homeowners\' Association/ }],
-    ["vampire", { kills: 0, banishes: 0, regex: /defeated\s+Count Drunkula/ }],
-    ["skeleton", { kills: 0, banishes: 0, regex: /defeated\s+The Unkillable Skeleton/ }],
-  ]);
-
-  const pairs = [
-    ["bugbear", "werewolf"],
-    ["ghost", "zombie"],
-    ["vampire", "skeleton"],
-  ];
-
-  for (const monster of monsters.keys()) {
-    const monsterKillRegex = new RegExp(`defeated (.*?) ${monster} x ([0-9]+)`, "gi");
-    const monsterBanishRegex = /drove some (.*?) out of the (.*?) \(1 turn\)/gi;
-    let match;
-    while ((match = monsterKillRegex.exec(raidLog)) !== null) {
-      (monsters.get(monster) as MonsterData).kills += parseInt(match[2]);
-    }
-    while ((match = monsterBanishRegex.exec(raidLog)) !== null) {
-      (monsters.get(monster) as MonsterData).banishes++;
-    }
-  }
   const bosses: string[] = [];
-  for (let [monster1, monster2] of pairs) {
-    const monster1data = monsters.get(monster1) as MonsterData;
-    const monster2data = monsters.get(monster2) as MonsterData;
-    if (monster1data.kills > monster2data.kills + 50) {
-      monster2data.banishes++;
-    } else if (monster2data.kills > monster1data.kills + 50) {
-      monster1data.banishes++;
+  for (const [monsterName1, monsterName2] of MONSTER_PAIRS) {
+    const monster1 = monsters[monsterName1];
+    const monster2 = monsters[monsterName2];
+
+    // Count banishes
+    if (monster1.kills > monster2.kills + 50) {
+      monster2.banishes++;
+    } else if (monster2.kills > monster1.kills + 50) {
+      monster1.banishes++;
     }
-    //ELSE IF CHAIN BREAKS HERE
-    if (monster1data.regex.test(raidLog)) {
-      bosses.push(`x${monster1}`);
-    } else if (monster2data.regex.test(raidLog)) {
-      bosses.push(`x${monster2}`);
-    } else if (monster1data.banishes > monster2data.banishes) {
-      bosses.push(monster2);
-    } else if (monster2data.banishes > monster1data.banishes) {
-      bosses.push(monster1);
+
+    // Predict bosses
+    if (BOSS_REGEXES[monsterName1].test(raidLog)) {
+      bosses.push(`x${monsterName1}`);
+    } else if (BOSS_REGEXES[monsterName2].test(raidLog)) {
+      bosses.push(`x${monsterName2}`);
+    } else if (monster1.banishes > monster2.banishes) {
+      bosses.push(monsterName2);
+    } else if (monster2.banishes > monster1.banishes) {
+      bosses.push(monsterName1);
     } else {
       bosses.push("unknown");
     }
   }
-  const capacitor = raidLog.match(/fixed The Machine \(1 turn\)/);
+
+  const capacitor = raidLog.includes("fixed The Machine (1 turn)");
   const skills = raidLog.match(/used The Machine, assisted by/g);
+
   return {
     forest: 1000 - (forest ? parseInt(forest.groups?.forest.replace(",", "") || "0") : 0),
     village: 1000 - (village ? parseInt(village.groups?.village.replace(",", "") || "0") : 0),
     castle: 1000 - (castle ? parseInt(castle.groups?.castle.replace(",", "") || "0") : 0),
     skills: skills ? 3 - skills.length : 3,
-    bosses: bosses,
-    capacitor: !!capacitor,
+    bosses,
+    capacitor,
   };
 }
 
 function extractDreadForest(raidLog: string): DreadForestStatus {
   return {
-    attic: !!raidLog.match(/unlocked the attic of the cabin/),
-    watchtower: !!raidLog.match(/unlocked the fire watchtower/),
-    auditor: !!raidLog.match(/got a Dreadsylvanian auditor's badge/),
-    musicbox: !!raidLog.match(/made the forest less spooky/),
-    kiwi: !!(raidLog.match(/knocked some fruit loose/) || raidLog.match(/wasted some fruit/)),
-    amber: !!raidLog.match(/acquired a chunk of moon-amber/),
+    attic: raidLog.includes("unlocked the attic of the cabin"),
+    watchtower: raidLog.includes("unlocked the fire watchtower"),
+    auditor: raidLog.includes("got a Dreadsylvanian auditor's badge"),
+    musicbox: raidLog.includes("made the forest less spooky"),
+    kiwi: raidLog.includes("knocked some fruit loose") || raidLog.includes("wasted some fruit"),
+    amber: raidLog.includes("acquired a chunk of moon-amber"),
   };
 }
 
 function extractDreadVillage(raidLog: string): DreadVillageStatus {
   return {
-    schoolhouse: !!raidLog.match(/unlocked the schoolhouse/),
-    suite: !!raidLog.match(/unlocked the master suite/),
-    hanging: !!(raidLog.match(/hanged/) || raidLog.match(/hung/)),
+    schoolhouse: raidLog.includes("unlocked the schoolhouse"),
+    suite: raidLog.includes("unlocked the master suite"),
+    hanging: raidLog.includes("hanged") || raidLog.includes("hung"),
   };
 }
 
 function extractDreadCastle(raidLog: string): DreadCastleStatus {
   return {
-    lab: !!raidLog.match(/unlocked the lab/),
-    roast: !!raidLog.match(/got some roast beast/),
-    banana: !!raidLog.match(/got a wax banana/),
-    agaricus: !!raidLog.match(/got some stinking agaric/),
+    lab: raidLog.includes("unlocked the lab"),
+    roast: raidLog.includes("got some roast beast"),
+    banana: raidLog.includes("got a wax banana"),
+    agaricus: raidLog.includes("got some stinking agaric"),
   };
 }
 
@@ -167,7 +188,7 @@ export async function getMissingRaidLogs(clanId: number, parsedRaids: string[]):
     let raidIds: string[] = [];
     let row = 0;
     let done = false;
-    while (!raidLogs.match(/No previous Clan Dungeon records found/) && !done) {
+    while (!raidLogs.includes("No previous Clan Dungeon records found") && !done) {
       const matches =
         raidLogs.match(
           /kisses<\/td><td class=tiny>\[<a href="clan_viewraidlog\.php\?viewlog=(?<id>\d+)/g
@@ -177,9 +198,8 @@ export async function getMissingRaidLogs(clanId: number, parsedRaids: string[]):
         if (parsedRaids.includes(cleanId)) {
           done = true;
           break;
-        } else {
-          raidIds.push(cleanId);
         }
+        raidIds.push(cleanId);
       }
       if (!done) {
         row += 10;
