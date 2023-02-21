@@ -5,6 +5,8 @@ import { cleanString, pluralize, toWikiLink } from "../utils";
 import { Familiar } from "./Familiar";
 import { Thing } from "./Thing";
 
+export const isItem = (item?: Thing): item is Item => !!item && item instanceof Item;
+
 export type ItemData = {
   id: number;
   name: string;
@@ -278,6 +280,10 @@ export class Item implements Thing {
 
   name(): string {
     return this._name;
+  }
+
+  id(): number {
+    return this._item.id;
   }
 
   async getMallPrice() {

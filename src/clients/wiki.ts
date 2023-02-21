@@ -2,11 +2,10 @@ import axios from "axios";
 import { EmbedBuilder } from "discord.js";
 
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things";
+import { isItem } from "../things/Item";
 import { cleanString } from "../utils";
 import { createEmbed } from "./discord";
 import { pizzaTree } from "./pizza";
-
-const itemFilter = (item?: Thing): item is Item => !!item && item instanceof Item;
 
 const PACKAGES = new Map([
   ["iceberglet", "ice pick"],
@@ -223,7 +222,7 @@ export class WikiClient {
             .split(",")
             .map((itemName) => itemName.replaceAll("🍕", ","))
             .map((itemName) => this._thingMap.get(cleanString(itemName.trim()).toLowerCase()))
-            .filter(itemFilter);
+            .filter(isItem);
           for (const item of group) {
             item.addZapGroup(group);
           }
@@ -241,7 +240,7 @@ export class WikiClient {
             .split("\t")
             .slice(1)
             .map((itemName: string) => this._thingMap.get(cleanString(itemName).toLowerCase()))
-            .filter(itemFilter);
+            .filter(isItem);
           for (const item of group) {
             item.addFoldGroup(group);
           }
@@ -330,6 +329,10 @@ export class WikiClient {
       return true;
     }
     return false;
+  }
+
+  get items(): Item[] {
+    return [...this._thingMap.values()].filter(isItem);
   }
 
   async getEmbed(item: string): Promise<EmbedBuilder | undefined> {
