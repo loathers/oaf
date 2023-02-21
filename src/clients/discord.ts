@@ -6,31 +6,18 @@ import {
   EmbedBuilder,
   GatewayIntentBits,
   Interaction,
-  MessageReaction,
-  PartialMessageReaction,
-  PartialUser,
   Partials,
   REST,
   RESTPostAPIApplicationCommandsJSONBody,
   Routes,
   SlashCommandBuilder,
-  User,
 } from "discord.js";
-
-const ROLEMAP: Map<string, string> = new Map([
-  ["🇹", "741479573337800706"],
-  ["♀️", "741479514902757416"],
-  ["♂️", "741479366319538226"],
-  ["👂", "466622497991688202"],
-  ["🚫", "512522219574919179"],
-  ["✅", "754473984661258391"],
-]);
 
 export type Command = {
   data: SlashCommandBuilder;
   execute: (interaction: ChatInputCommandInteraction) => void;
   autocomplete?: (interaction: AutocompleteInteraction) => void;
-  sync?: () => void;
+  init?: () => void;
 };
 
 export class DiscordClient extends Client {
@@ -56,19 +43,7 @@ export class DiscordClient extends Client {
       console.log(`Logged in as ${this.user?.tag}!`);
     });
 
-    this.on(
-      "messageReactionAdd",
-      async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
-        this.onReact(reaction, user)
-    );
-
-    this.on(
-      "messageReactionRemove",
-      async (reaction: MessageReaction | PartialMessageReaction, user: User | PartialUser) =>
-        this.onReactRemove(reaction, user)
-    );
-
-    this.on("interactionCreate", async (interaction) => this.onInteractionCreate(interaction));
+    this.on("interactionCreate", async (interaction) => this.handleInteraction(interaction));
   }
 
   async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
@@ -78,57 +53,7 @@ export class DiscordClient extends Client {
     });
   }
 
-  async onReact(
-    reaction: MessageReaction | PartialMessageReaction,
-    user: User | PartialUser
-  ): Promise<void> {
-    if (reaction.partial || user.partial) {
-      try {
-        await reaction.fetch();
-        await user.fetch();
-      } catch (error) {
-        console.error("Something went wrong when fetching the message: ", error);
-        return;
-      }
-    }
-    if (!user.partial && reaction.message.channel.id === "741479910886866944") {
-      console.log(`Adding role ${reaction.emoji.name} to user ${user.username}`);
-      const role = (await reaction.message.guild?.roles.cache)?.get(
-        ROLEMAP.get(reaction.emoji.name || "") || ""
-      );
-      const member = await reaction.message.guild?.members.cache.get(user.id);
-      if (role && member) {
-        await member?.roles.add(role);
-      }
-    }
-  }
-
-  async onReactRemove(
-    reaction: MessageReaction | PartialMessageReaction,
-    user: User | PartialUser
-  ): Promise<void> {
-    if (reaction.partial || user.partial) {
-      try {
-        await reaction.fetch();
-        await user.fetch();
-      } catch (error) {
-        console.error("Something went wrong when fetching the message: ", error);
-        return;
-      }
-    }
-    if (!user.partial && reaction.message.channel.id === "741479910886866944") {
-      console.log(`Removing role ${reaction.emoji.name} from user ${user.username}`);
-      const role = (await reaction.message.guild?.roles.cache)?.get(
-        ROLEMAP.get(reaction.emoji.name || "") || ""
-      );
-      const member = await reaction.message.guild?.members.cache.get(user.id);
-      if (role && member) {
-        await member?.roles.remove(role);
-      }
-    }
-  }
-
-  async onInteractionCreate(interaction: Interaction) {
+  async handleInteraction(interaction: Interaction) {
     if (interaction.isChatInputCommand()) {
       const command = this.commands.get(interaction.commandName);
 
@@ -142,9 +67,15 @@ export class DiscordClient extends Client {
         await command.execute(interaction);
       } catch (error) {
         console.error(error);
-        await (interaction.replied ? interaction.followUp : interaction.reply)(
-          "OAF recovered from a crash trying to process that command. Please tell Captain Scotch or report to #mafia-and-scripting"
-        );
+        const message =
+          "OAF recovered from a crash trying to process that command. Please tell Captain Scotch or report to #mafia-and-scripting";
+        if (interaction.deferred) {
+          await interaction.editReply(message);
+        } else if (interaction.replied) {
+          await interaction.followUp(message);
+        } else {
+          await interaction.reply(message);
+        }
       }
     } else if (interaction.isAutocomplete()) {
       const command = this.commands.get(interaction.commandName);

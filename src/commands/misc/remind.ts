@@ -99,7 +99,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   );
 }
 
-export async function sync() {
+export async function init() {
   const now = Date.now();
   const connection = await databaseClient.connect();
   await connection.query("BEGIN;");
@@ -163,6 +163,6 @@ export async function sync() {
     }
   }
   setTimeout(async () => {
-    await sync();
+    await init();
   }, 7 * 24 * 60 * 60 * 1000);
 }

@@ -22,7 +22,7 @@ async function loadSlashCommands(client: DiscordClient) {
     const command: Command = await import(filePath);
     if ("data" in command && "execute" in command) {
       client.commands.set(command.data.name, command);
-      await command.sync?.();
+      await command.init?.();
     } else {
       console.warn("Invalid command file found in command directory", filePath);
     }

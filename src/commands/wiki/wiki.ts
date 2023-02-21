@@ -78,6 +78,6 @@ async function onMessage(message: Message) {
   );
 }
 
-export async function sync() {
+export async function init() {
   discordClient.on("messageCreate", onMessage);
 }
