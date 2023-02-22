@@ -1,4 +1,5 @@
 import {
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   bold,
@@ -41,6 +42,7 @@ export const data = new SlashCommandBuilder()
       .setName("clan")
       .setDescription("The clan whose status you wish to check.")
       .setRequired(true)
+      .setAutocomplete(true)
   );
 
 const sidenote = (...steps: string[]) =>
@@ -229,12 +231,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 }
 
-export const data = new SlashCommandBuilder()
-  .setName("clan")
-  .setDescription("Get a detailed current status of the specified Dreadsylvania instance.")
-  .addStringOption((option) =>
-    option
-      .setName("clan")
-      .setDescription("The clan whose status you wish to check.")
-      .setRequired(true)
-  );
+export async function autocomplete(interaction: AutocompleteInteraction) {
+  const focusedValue = interaction.options.getFocused().toLowerCase();
+
+  const filtered = DREAD_CLANS.filter(
+    (clan) =>
+      clan.name.toLowerCase().includes(focusedValue) ||
+      clan.synonyms.some((s) => s.includes(focusedValue))
+  ).map((clan) => ({ name: clan.name, value: clan.name }));
+
+  await interaction.respond(filtered);
+}
