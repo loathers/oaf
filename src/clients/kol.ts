@@ -344,7 +344,7 @@ export class KoLClient {
   async getPartialPlayerFromId(id: number): Promise<PartialPlayer | null> {
     try {
       const profile = await this.tryRequestWithLogin("showplayer.php", { who: id });
-      const header = profile.match(/<b>(.*?)<\/b> \(#(\d+)\)<br>/);
+      const header = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/);
       if (!header) return null;
 
       const goldstars =
