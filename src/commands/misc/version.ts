@@ -53,10 +53,15 @@ export async function init() {
     });
   });
 
-  process.on("SIGTERM", async () => {
+  process.on("SIGTERM", () => {
     console.log("Shutting down...");
     const channel = discordClient.channels.cache.find((c) => c.id === TEST_CHANNEL_ID);
-    if (!channel || !("send" in channel)) return;
+
+    if (!channel || !("send" in channel)) {
+      console.warn("No channel available to say bye bye");
+      process.exit(0);
+    }
+
     channel.send("O.A.F. shutting down...").then(() => process.exit(0));
   });
 }
