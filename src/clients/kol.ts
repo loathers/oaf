@@ -254,23 +254,25 @@ export class KoLClient {
     return blueText ? sanitiseBlueText(blueText.groups?.description) : "";
   }
 
-  async joinClan(id: number): Promise<void> {
-    await this.tryRequestWithLogin("showclan.php", {
+  async joinClan(id: number): Promise<boolean> {
+    const result = await this.tryRequestWithLogin("showclan.php", {
       whichclan: id,
       action: "joinclan",
       confirm: "on",
     });
+    return result.includes("clanhalltop.gif") || result.includes("a clan you're already in");
   }
 
-  async addToWhitelist(playerId: string, clanId: number): Promise<void> {
+  async addToWhitelist(playerId: string, clanId: number): Promise<boolean> {
     return await this.clanActionMutex.runExclusive(async () => {
-      await this.joinClan(clanId);
+      if (!(await this.joinClan(clanId))) return false;
       await this.tryRequestWithLogin("clan_whitelist.php", {
         addwho: playerId,
         level: 2,
         title: "",
         action: "add",
       });
+      return true;
     });
   }
 

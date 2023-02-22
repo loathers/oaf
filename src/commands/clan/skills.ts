@@ -4,10 +4,20 @@ import { databaseClient } from "../../clients/database";
 import { kolClient } from "../../clients/kol";
 import { pluralize } from "../../utils";
 import { DREAD_CLANS, PlayerData, clanState } from "./_clans";
-import { getFinishedRaidLog, getMissingRaidLogs, getRaidLog } from "./_dread";
+import {
+  JoinClanError,
+  RaidLogMissingError,
+  getFinishedRaidLog,
+  getMissingRaidLogs,
+  getRaidLog,
+} from "./_dread";
 
 const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
 const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
+
+export const data = new SlashCommandBuilder()
+  .setName("skills")
+  .setDescription("Get a list of everyone currently elgible for Dreadsylvania skills.");
 
 async function parseCurrentLogs(mapToUpdate: Map<string, PlayerData>) {
   for (let clan of DREAD_CLANS) {
@@ -148,13 +158,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ],
     });
   } catch (error) {
-    console.log(error);
-    await interaction.editReply(
-      "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
-    );
+    let reason = "";
+    if (error instanceof JoinClanError) {
+      reason = "I was unable to join that clan";
+    } else if (error instanceof RaidLogMissingError) {
+      reason = "I couldn't see raid logs in that clan for some reason";
+    } else {
+      reason =
+        "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in.";
+    }
+    await interaction.editReply(reason);
   }
 }
-
-export const data = new SlashCommandBuilder()
-  .setName("skills")
-  .setDescription("Get a list of everyone currently elgible for Dreadsylvania skills.");
