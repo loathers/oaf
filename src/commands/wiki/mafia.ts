@@ -37,15 +37,16 @@ export const data = new SlashCommandBuilder()
       )
   );
 
-let JS_FUNCTION_CACHE = new Map<string, string>();
+let JS_FUNCTION_CACHE = new Map<string, string[]>();
 
 async function getJsRef() {
   const { data } = await axios.get<string>("https://unpkg.com/kolmafia@latest/index.d.ts");
   const matches = data.matchAll(/export (function (.*?)\(.*)?$/gm);
 
-  const functions = new Map<string, string>();
+  const functions = new Map<string, string[]>();
   for (const match of matches) {
-    functions.set(match[2], match[1]);
+    if (!functions.has(match[2])) functions.set(match[2], []);
+    functions.get(match[2])!.push(match[1]);
   }
   return functions;
 }
@@ -100,7 +101,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       }
 
       return interaction.editReply({
-        content: codeBlock("ts", JS_FUNCTION_CACHE.get(func)!),
+        content: codeBlock("ts", JS_FUNCTION_CACHE.get(func)!.join("\n")),
         allowedMentions: {
           parse: [],
         },
