@@ -1,15 +1,28 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { Client, CommandInteraction, DMChannel, TextChannel } from "discord.js";
-import { Pool } from "pg";
+import { ChatInputCommandInteraction, SlashCommandBuilder, userMention } from "discord.js";
 
-import { Command } from "../type";
+import { databaseClient } from "../../clients/database";
+import { discordClient } from "../../clients/discord";
 
 const timeMatcher =
   /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
 
-async function createReminder(interaction: CommandInteraction, databasePool: Pool) {
+export const data = new SlashCommandBuilder()
+  .setName("remind")
+  .setDescription("Sets a reminder")
+  .addStringOption((option) =>
+    option
+      .setName("when")
+      .setDescription('When to remind you (In either the form "1w2d3h4m5s" or "rollover")')
+      .setRequired(true)
+  )
+  .addStringOption((option) =>
+    option.setName("reminder").setDescription("What to remind you").setRequired(false)
+  );
+
+export async function execute(interaction: ChatInputCommandInteraction) {
   const time = interaction.options.getString("when", true);
   const reminderText = interaction.options.getString("reminder") || "Time's up!";
+
   if (!timeMatcher.test(time) && time.toLowerCase() !== "rollover") {
     interaction.reply({
       content: 'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".',
@@ -17,6 +30,7 @@ async function createReminder(interaction: CommandInteraction, databasePool: Poo
     });
     return;
   }
+
   if (reminderText.length > 127) {
     interaction.reply({
       content: "Maximum reminder length is 128 characters.",
@@ -24,6 +38,7 @@ async function createReminder(interaction: CommandInteraction, databasePool: Poo
     });
     return;
   }
+
   let timeToWait = 0;
   let reminderTime = 0;
   if (timeMatcher.test(time)) {
@@ -47,38 +62,46 @@ async function createReminder(interaction: CommandInteraction, databasePool: Poo
 
   const reply_id = (await interaction.fetchReply()).id;
 
-  if (timeToWait < 7 * 24 * 60 * 60 * 1000) {
-    setTimeout(async () => {
-      try {
-        ((interaction.channel as TextChannel) || (await interaction.user.createDM())).send({
-          content: `<@${interaction.user.id}>`,
-          embeds: [{ title: "⏰⏰⏰", description: reminderText }],
-          reply: { messageReference: reply_id },
-          allowedMentions: {
-            users: [interaction.user.id],
-          },
-        });
-      } catch (error) {
-        console.log(error);
-      }
-    }, timeToWait);
-    await databasePool.query(
-      "INSERT INTO reminders(guild_id, channel_id, user_id, interaction_reply_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5, $6);",
-      [
-        interaction.guildId,
-        interaction.channelId,
-        interaction.user.id,
-        reply_id,
-        reminderText,
-        reminderTime,
-      ]
-    );
+  if (timeToWait >= 7 * 24 * 60 * 60 * 1000) return;
+
+  const channel = interaction.channel || (await interaction.user.createDM());
+
+  if (!("send" in channel)) {
+    console.log("Skipping reminder because requested is not a text channel", channel.id);
+    return;
   }
+
+  setTimeout(async () => {
+    try {
+      channel.send({
+        content: userMention(interaction.user.id),
+        embeds: [{ title: "⏰⏰⏰", description: reminderText }],
+        reply: { messageReference: reply_id },
+        allowedMentions: {
+          users: [interaction.user.id],
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }, timeToWait);
+
+  await databaseClient.query(
+    "INSERT INTO reminders(guild_id, channel_id, user_id, interaction_reply_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5, $6);",
+    [
+      interaction.guildId,
+      interaction.channelId,
+      interaction.user.id,
+      reply_id,
+      reminderText,
+      reminderTime,
+    ]
+  );
 }
 
-const sync: NonNullable<Command["sync"]> = async ({ databasePool, discordClient, ...rest }) => {
+export async function init() {
   const now = Date.now();
-  const connection = await databasePool.connect();
+  const connection = await databaseClient.connect();
   await connection.query("BEGIN;");
   await connection.query("DELETE FROM reminders WHERE reminder_time < $1;", [now]);
   const reminders = await connection.query("SELECT * FROM reminders", []);
@@ -87,12 +110,22 @@ const sync: NonNullable<Command["sync"]> = async ({ databasePool, discordClient,
   for (let reminder of reminders.rows) {
     if (reminder.guild_id) {
       if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
-        const guild = await discordClient.client().guilds.fetch(reminder.guild_id);
-        const channel = await guild.channels.fetch(reminder.channel_id);
+        const channel = await discordClient.channels.cache.get(reminder.channel_id);
+
+        if (!channel) {
+          console.log("Skipping reminder due to nknown channel", reminder.channel_id);
+          continue;
+        }
+
+        if (!("send" in channel)) {
+          console.log("Skipping reminder because requested is not a text channel", channel.id);
+          return;
+        }
+
         setTimeout(() => {
           try {
-            (channel as TextChannel).send({
-              content: `<@${reminder.user_id}>`,
+            channel.send({
+              content: userMention(reminder.user_id),
               embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
               allowedMentions: {
                 users: [reminder.user_id],
@@ -108,12 +141,12 @@ const sync: NonNullable<Command["sync"]> = async ({ databasePool, discordClient,
       }
     } else {
       if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
-        const user = await discordClient.client().users.fetch(reminder.user_id);
+        const user = await discordClient.users.fetch(reminder.user_id);
         const channel = await user.createDM();
         setTimeout(() => {
           try {
-            (channel as DMChannel).send({
-              content: `<@${reminder.user_id}>`,
+            channel.send({
+              content: userMention(reminder.user_id),
               embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
               allowedMentions: {
                 users: [reminder.user_id],
@@ -130,32 +163,6 @@ const sync: NonNullable<Command["sync"]> = async ({ databasePool, discordClient,
     }
   }
   setTimeout(async () => {
-    await sync({ databasePool, discordClient, ...rest });
+    await init();
   }, 7 * 24 * 60 * 60 * 1000);
-};
-
-const command: Command = {
-  attach: ({ discordClient, databasePool }) =>
-    discordClient.attachCommand(
-      "remind",
-      [
-        {
-          name: "when",
-          description: 'When to remind you (In either the form "1w2d3h4m5s" or "rollover")',
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-        {
-          name: "reminder",
-          description: "What to remind you",
-          type: ApplicationCommandOptionType.String,
-          required: false,
-        },
-      ],
-      (interaction) => createReminder(interaction, databasePool),
-      "Sets a reminder"
-    ),
-  sync,
-};
-
-export default command;
+}

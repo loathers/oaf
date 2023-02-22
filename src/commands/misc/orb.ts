@@ -1,7 +1,4 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction } from "discord.js";
-
-import { Command } from "../type";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 const ORB_RESPONSES: string[] = [
   "It is certain.",
@@ -40,8 +37,16 @@ const ORB_RESPONSES: string[] = [
   "THERE IS AS YET INSUFFICIENT DATA FOR A MEANINGFUL ANSWER",
 ];
 
-function orbCommand(interaction: CommandInteraction): void {
+export const data = new SlashCommandBuilder()
+  .setName("orb")
+  .setDescription("Consult OAF's miniature crystal ball.")
+  .addStringOption((option) =>
+    option.setName("asktheorb").setDescription("THE ORB KNOWS ALL").setRequired(false)
+  );
+
+export function execute(interaction: ChatInputCommandInteraction) {
   const question = interaction.options.getString("asktheorb");
+
   interaction.reply({
     content: `${
       question ? `"${question}", you ask.\n` : ""
@@ -53,22 +58,3 @@ function orbCommand(interaction: CommandInteraction): void {
     },
   });
 }
-
-const command: Command = {
-  attach: ({ discordClient }) =>
-    discordClient.attachCommand(
-      "orb",
-      [
-        {
-          name: "asktheorb",
-          description: "THE ORB KNOWS ALL",
-          type: ApplicationCommandOptionType.String,
-          required: false,
-        },
-      ],
-      orbCommand,
-      "Consult OAF's miniature crystal ball."
-    ),
-};
-
-export default command;

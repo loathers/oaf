@@ -1,17 +1,25 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction } from "discord.js";
-
-import { Command } from "../type";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 const sombreroSubstats = (weight: number, ml: number) => (ml / 4) * (0.1 + 0.005 * weight);
 
-function sombreroCommand(interaction: CommandInteraction): void {
+export const data = new SlashCommandBuilder()
+  .setName("sombrero")
+  .setDescription("Find the +stat gain supplied by a sombrero of a given weight and ML.")
+  .addIntegerOption((option) =>
+    option
+      .setName("weight")
+      .setDescription("The weight of the sombrero.")
+      .setRequired(true)
+      .setMinValue(1)
+  )
+  .addIntegerOption((option) =>
+    option.setName("ml").setDescription("Monster Level modifier").setRequired(true)
+  );
+
+export function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
   const ml = interaction.options.getInteger("ml", true);
-  if (weight <= 0) {
-    interaction.reply({ content: `Please supply a positive sombrero weight.`, ephemeral: true });
-    return;
-  }
+
   interaction.reply(
     `A ${weight}lb sombrero with ${ml} ML provides +${sombreroSubstats(
       weight,
@@ -19,28 +27,3 @@ function sombreroCommand(interaction: CommandInteraction): void {
     )} substats per combat.`
   );
 }
-
-const command: Command = {
-  attach: ({ discordClient }) =>
-    discordClient.attachCommand(
-      "sombrero",
-      [
-        {
-          name: "weight",
-          description: "The weight of the sombrero.",
-          type: ApplicationCommandOptionType.Integer,
-          required: true,
-        },
-        {
-          name: "ml",
-          description: "Monster Level modifier",
-          type: ApplicationCommandOptionType.Integer,
-          required: true,
-        },
-      ],
-      sombreroCommand,
-      "Find the +stat gain supplied by a sombrero of a given weight and ML."
-    ),
-};
-
-export default command;

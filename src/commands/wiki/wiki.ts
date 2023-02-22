@@ -1,46 +1,83 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  Message,
+  MessageEditOptions,
+  SlashCommandBuilder,
+} from "discord.js";
 
-import { WikiSearcher } from "../../wikisearch";
-import { Command } from "../type";
+import { discordClient } from "../../clients/discord";
+import { wikiClient } from "../../clients/wiki";
 
-async function wikiCommand(interaction: CommandInteraction, wikiSearcher: WikiSearcher) {
-  const item = interaction.options.getString("term", true);
-  await interaction.deferReply();
-  const embed = await wikiSearcher.getEmbed(item);
+const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
+
+export const data = new SlashCommandBuilder()
+  .setName("wiki")
+  .setDescription("Search the KoL wiki for the given term.")
+  .addStringOption((option) =>
+    option.setName("term").setDescription("The term to search for in the wiki.").setRequired(true)
+  );
+
+async function getWikiReply(item: string): Promise<MessageEditOptions> {
+  const embed = await wikiClient.getEmbed(item);
   if (!embed) {
-    return interaction.editReply({
+    return {
       content: `"${item}" wasn't found. Please refine your search.`,
       allowedMentions: {
         parse: [],
       },
-    });
+    };
   }
 
-  return interaction.editReply({
+  return {
     content: null,
     embeds: [embed],
     allowedMentions: {
       parse: [],
     },
-  });
+  };
 }
 
-const command: Command = {
-  attach: ({ discordClient, wikiSearcher }) =>
-    discordClient.attachCommand(
-      "wiki",
-      [
-        {
-          name: "term",
-          description: "The term to search for in the wiki.",
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
-      (interaction: CommandInteraction) => wikiCommand(interaction, wikiSearcher),
-      "Search the KoL wiki for the given term."
-    ),
-};
+export async function execute(interaction: ChatInputCommandInteraction) {
+  const item = interaction.options.getString("term", true);
+  await interaction.deferReply();
+  const reply = await getWikiReply(item);
+  await interaction.editReply(reply);
+}
 
-export default command;
+async function onMessage(message: Message) {
+  if (!("send" in message.channel)) return;
+
+  const queries = [...message.content.matchAll(ITEMMATCHER)]
+    .map((m) => m[1])
+    .filter((m) => m.length > 0);
+
+  if (queries.length > 3) {
+    await message.reply({
+      content:
+        "Detected too many wiki invocations in one message. Returning first three invocations only.",
+      allowedMentions: { parse: [], repliedUser: false },
+    });
+  }
+
+  await Promise.all(
+    queries.slice(0, 3).map(async (query) => {
+      if (!("send" in message.channel)) return;
+
+      const searchingMessage = await message.reply({
+        content: `Searching for "${query}"...`,
+        allowedMentions: {
+          parse: [],
+          repliedUser: false,
+        },
+      });
+
+      const reply = await getWikiReply(query);
+
+      await searchingMessage.edit(reply);
+    })
+  );
+}
+
+export async function init() {
+  discordClient.on("messageCreate", onMessage);
+}

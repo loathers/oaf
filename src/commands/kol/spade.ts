@@ -1,9 +1,7 @@
-import { ApplicationCommandOptionType } from "discord-api-types/v9";
-import { CommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { KoLClient } from "../../kol";
-import { WikiSearcher } from "../../wikisearch";
-import { Command } from "../type";
+import { kolClient } from "../../clients/kol";
+import { wikiClient } from "../../clients/wiki";
 
 // This is the maximum number of items we can have in our embeds
 const HORIZON = 25;
@@ -83,92 +81,69 @@ const ITEM_SPADING_CALLS = [
   },
 ] as const;
 
-async function spadeItem(client: KoLClient, itemId: number) {
-  let itemtype = ItemType.Unknown as ItemType;
-  let additionalInfo = "";
-  const exists = !/Nopers/.test(
-    await client.tryRequestWithLogin("inv_equip.php", {
-      action: "equip",
-      which: 2,
-      whichitem: itemId,
-    })
+export const data = new SlashCommandBuilder()
+  .setName("spade")
+  .setDescription("Spade the existence and tradeability of as yet unreleased stuff.")
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("items")
+      .setDescription("Spade unreleased items")
+      .addIntegerOption((option) =>
+        option
+          .setName("start")
+          .setDescription("Latest item id from which to start spading.")
+          .setRequired(false)
+      )
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("familiars")
+      .setDescription("Spade unreleased familiars")
+      .addIntegerOption((option) =>
+        option
+          .setName("start")
+          .setDescription("Latest familiar id from which to start spading.")
+          .setRequired(false)
+      )
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("skills")
+      .setDescription("Spade unreleased skills")
+      .addIntegerOption((option) =>
+        option
+          .setName("classid")
+          .setDescription("class ID to spade skills for")
+          .setRequired(false)
+      )
   );
-  const tradeable = !/That item cannot be sold or transferred/.test(
-    await client.tryRequestWithLogin("town_sellflea.php", {
-      whichitem: itemId,
-      sellprice: "",
-      selling: "Yep.",
-    })
-  );
-  if (exists) {
-    for (let property of ITEM_SPADING_CALLS) {
-      const { url, visitMatch, type } = property;
-      const page = (await client.tryRequestWithLogin(
-        ...(url(itemId) as [string, object])
-      )) as string;
 
-      const match = visitMatch.test(page);
-      if (match) {
-        itemtype = type;
-        break;
-      }
-    }
-  }
-  return { id: itemId, exists, tradeable, itemtype, additionalInfo };
-}
+export async function execute(interaction: ChatInputCommandInteraction) {
+  const subcommand = interaction.options.getSubcommand();
 
-async function spadeFamiliar(client: KoLClient, famId: number) {
-  const page = await client.tryRequestWithLogin("desc_familiar.php", { which: famId });
-
-  if (page.includes("No familiar was found.")) return "none";
-
-  const name = /<font face=Arial,Helvetica><center><b>([^<]+)<\/b>/.exec(page)?.[1];
-  return name ?? "none";
-}
-
-async function spadeSkill(client: KoLClient, skillId: number) {
-  const page = await client.tryRequestWithLogin("runskillz.php", {
-    action: "Skillz",
-    whichskill: skillId,
-    targetplayer: 1,
-    quantity: 1,
-  });
-
-  // If the skill doesn't exist on the dev server, the response ends with an exclamation mark
-  return page.includes("You don't have that skill.");
-}
-
-async function spadeCommand(
-  interaction: CommandInteraction,
-  kolClient: KoLClient,
-  wiki: WikiSearcher
-): Promise<void> {
-  switch (interaction.options.getString("spadeable", true)) {
-    case "item":
-      await spadeItems(interaction, kolClient, wiki);
-      return;
-    case "familiar":
-      await spadeFamiliars(interaction, kolClient, wiki);
-      return;
-    case "skill":
-      await spadeSkills(interaction, kolClient, wiki);
-      return;
+  switch (subcommand) {
+    case "items":
+      return await spadeItems(interaction);
+    case "familiars":
+      return await spadeFamiliars(interaction);
+    case "skills":
+      return await spadeSkills(interaction);
     default:
-      await interaction.reply({
-        content: "It shouldn't be possible to see this message. Please report it.",
+      return await interaction.reply({
+        content:
+          "Invalid subcommand. It shouldn't be possible to see this message. Please report it.",
         ephemeral: true,
       });
   }
 }
 
-async function spadeItems(
-  interaction: CommandInteraction,
-  kolClient: KoLClient,
-  wiki: WikiSearcher
-): Promise<void> {
+// Items
+
+async function spadeItems(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
+
   const requestedStart = interaction.options.getInteger("start", false);
-  const finalId = wiki.lastItem;
+  const finalId = wikiClient.lastItem;
   if (finalId < 0 && !requestedStart) {
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
@@ -178,7 +153,7 @@ async function spadeItems(
   const start = requestedStart ?? finalId + 1;
   const data = [];
   for (let id = start; id <= start + HORIZON; id++) {
-    const spadeData = await spadeItem(kolClient, id);
+    const spadeData = await spadeItem(id);
     data.push(spadeData);
     if (!spadeData.exists) break;
   }
@@ -220,14 +195,53 @@ async function spadeItems(
   });
 }
 
-async function spadeFamiliars(
-  interaction: CommandInteraction,
-  kolClient: KoLClient,
-  wiki: WikiSearcher
-): Promise<void> {
+async function spadeItem(itemId: number) {
+  const exists = !/Nopers/.test(
+    await kolClient.tryRequestWithLogin("inv_equip.php", {
+      action: "equip",
+      which: 2,
+      whichitem: itemId,
+    })
+  );
+
+  let itemtype = ItemType.Unknown as ItemType;
+  let additionalInfo = "";
+
+  if (!exists) {
+    return { id: itemId, exists, tradeable: false, itemtype, additionalInfo };
+  }
+
+  const tradeable = !/That item cannot be sold or transferred/.test(
+    await kolClient.tryRequestWithLogin("town_sellflea.php", {
+      whichitem: itemId,
+      sellprice: "",
+      selling: "Yep.",
+    })
+  );
+
+  for (let property of ITEM_SPADING_CALLS) {
+    const { url, visitMatch, type } = property;
+    const page = (await kolClient.tryRequestWithLogin(
+      ...(url(itemId) as [string, object])
+    )) as string;
+
+    const match = visitMatch.test(page);
+    if (match) {
+      itemtype = type;
+      break;
+    }
+  }
+
+  return { id: itemId, exists, tradeable, itemtype, additionalInfo };
+}
+
+// Familiars
+
+async function spadeFamiliars(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
+
   const requestedStart = interaction.options.getInteger("start", false);
-  const finalId = wiki.lastFamiliar;
+  const finalId = wikiClient.lastFamiliar;
   if (finalId < 0 && !requestedStart) {
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
@@ -236,7 +250,7 @@ async function spadeFamiliars(
   const start = Math.max(requestedStart || 0, finalId + 1);
   const data = [`Spading familiars with ids starting with ${start}.`];
   for (let id = start; id <= start + HORIZON; id++) {
-    const name = await spadeFamiliar(kolClient, id);
+    const name = await spadeFamiliar(id);
     if (name === "none") {
       data.push(`No familiar ${id} found. Sorry!`);
       break;
@@ -248,11 +262,18 @@ async function spadeFamiliars(
   interaction.editReply(data.join("\n"));
 }
 
-async function spadeSkills(
-  interaction: CommandInteraction,
-  kolClient: KoLClient,
-  wiki: WikiSearcher
-): Promise<void> {
+async function spadeFamiliar(famId: number) {
+  const page = await kolClient.tryRequestWithLogin("desc_familiar.php", { which: famId });
+
+  if (page.includes("No familiar was found.")) return "none";
+
+  const name = /<font face=Arial,Helvetica><center><b>([^<]+)<\/b>/.exec(page)?.[1];
+  return name ?? "none";
+}
+
+// Skills
+
+async function spadeSkills(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   const finalSkills = wiki.lastSkills;
 
@@ -265,10 +286,11 @@ async function spadeSkills(
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
   }
+
   const data = [];
   for (const finalId of Object.values(finalSkills)) {
     for (let id = finalId + 1; id <= finalId + HORIZON; id++) {
-      const exists = await spadeSkill(kolClient, id);
+      const exists = await spadeSkill(id);
       if (exists) {
         data.push(`Skill ${id} exists`);
       } else {
@@ -280,42 +302,22 @@ async function spadeSkills(
   if (data.length === 0) {
     data.push("No new skills found");
   }
+  
+  if (classId) {
+    finalSkills[classId] = undefined;
+  }
 
-  interaction.editReply(data.join("\n"));
+  await interaction.editReply(data.join("\n"));
 }
 
-const command: Command = {
-  attach: ({ discordClient, kolClient, wikiSearcher }) =>
-    discordClient.attachCommand(
-      "spade",
-      [
-        {
-          name: "spadeable",
-          description: "What to spade.",
-          type: ApplicationCommandOptionType.String,
-          choices: [
-            { name: "Familiars", value: "familiar" },
-            { name: "Items", value: "item" },
-            { name: "Skills", value: "skill" },
-          ],
-          required: true,
-        },
-        {
-          name: "start",
-          description: "Familiar or Item ID to start spading with",
-          type: ApplicationCommandOptionType.Integer,
-          required: false,
-        },
-        {
-          name: "classid",
-          description: "Class ID to spade skills for",
-          type: ApplicationCommandOptionType.Integer,
-          required: false,
-        },
-      ],
-      (interaction: CommandInteraction) => spadeCommand(interaction, kolClient, wikiSearcher),
-      "Spade the existence and tradeability of as yet unreleased stuff."
-    ),
-};
+async function spadeSkill(skillId: number) {
+  const page = await kolClient.tryRequestWithLogin("runskillz.php", {
+    action: "Skillz",
+    whichskill: skillId,
+    targetplayer: 1,
+    quantity: 1,
+  });
 
-export default command;
+  // If the skill doesn't exist on the dev server, the response ends with an exclamation mark
+  return page.includes("You don't have that skill.");
+}
