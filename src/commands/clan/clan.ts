@@ -1,15 +1,22 @@
 import {
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   bold,
+  italic,
   strikethrough,
   underscore,
 } from "discord.js";
 
-import { DREAD_CLANS } from "../../clans";
-import { createEmbed } from "../../discord";
-import { DetailedDreadStatus, client } from "../../kol";
+import { createEmbed } from "../../clients/discord";
 import { pluralize } from "../../utils";
+import { DREAD_CLANS } from "./_clans";
+import {
+  DetailedDreadStatus,
+  JoinClanError,
+  RaidLogMissingError,
+  getDetailedDreadStatus,
+} from "./_dread";
 
 const DREAD_BOSS_MAPPINGS = new Map([
   ["werewolf", "Air Wolf"],
@@ -27,7 +34,19 @@ const DREAD_BOSS_MAPPINGS = new Map([
   ["unknown", "Boss unknown"],
 ]);
 
-const sidenote = (...steps: string[]) => `\u00a0\u00a0\u00a0\u00a0*${steps.join(" \u2192 ")}*`;
+export const data = new SlashCommandBuilder()
+  .setName("clan")
+  .setDescription("Get a detailed current status of the specified Dreadsylvania instance.")
+  .addStringOption((option) =>
+    option
+      .setName("clan")
+      .setDescription("The clan whose status you wish to check.")
+      .setRequired(true)
+      .setAutocomplete(true)
+  );
+
+const sidenote = (...steps: string[]) =>
+  `\u00a0\u00a0\u00a0\u00a0${italic(steps.join(" \u2192 "))}`;
 
 function getForestSummary(status: DetailedDreadStatus) {
   if (!status.overview.forest) return strikethrough("Forest fully cleared.");
@@ -155,17 +174,21 @@ function parseCastleStatus(status: DetailedDreadStatus) {
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const clanName = interaction.options.getString("clan", true);
+  const clanName = interaction.options.getString("clan", true).toLowerCase();
+
   const clan = DREAD_CLANS.find(
     (clan) => clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName)
   );
+
   if (!clan) {
     interaction.reply({ content: "Clan not recognised.", ephemeral: true });
     return;
   }
+
   await interaction.deferReply();
+
   try {
-    const status = await client.getDetailedDreadStatus(clan.id);
+    const status = await getDetailedDreadStatus(clan.id);
     const embed = createEmbed().setTitle(`Status update for ${clan.name}`);
 
     embed.setDescription(
@@ -194,19 +217,28 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     ]);
 
     await interaction.editReply({ content: null, embeds: [embed] });
-  } catch {
-    await interaction.editReply(
-      "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
-    );
+  } catch (error) {
+    let reason = "";
+    if (error instanceof JoinClanError) {
+      reason = "I was unable to join that clan";
+    } else if (error instanceof RaidLogMissingError) {
+      reason = "I couldn't see raid logs in that clan for some reason";
+    } else {
+      reason =
+        "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in.";
+    }
+    await interaction.editReply(reason);
   }
 }
 
-export const data = new SlashCommandBuilder()
-  .setName("clan")
-  .setDescription("Get a detailed current status of the specified Dreadsylvania instance.")
-  .addStringOption((option) =>
-    option
-      .setName("clan")
-      .setDescription("The clan whose status you wish to check.")
-      .setRequired(true)
-  );
+export async function autocomplete(interaction: AutocompleteInteraction) {
+  const focusedValue = interaction.options.getFocused().toLowerCase();
+
+  const filtered = DREAD_CLANS.filter(
+    (clan) =>
+      clan.name.toLowerCase().includes(focusedValue) ||
+      clan.synonyms.some((s) => s.includes(focusedValue))
+  ).map((clan) => ({ name: clan.name, value: clan.name }));
+
+  await interaction.respond(filtered);
+}

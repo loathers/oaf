@@ -5,8 +5,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { createEmbed } from "../../discord";
-import { SubboardInfo, client } from "../../kol";
+import { createEmbed } from "../../clients/discord";
+import { SubboardInfo, kolClient } from "../../clients/kol";
 
 const BOARD_MAPPINGS = {
   "Clan Dungeons": 8,
@@ -183,7 +183,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  const leaderboard = await client.getLeaderboard(board);
+  const leaderboard = await kolClient.getLeaderboard(board);
   if (!leaderboard || leaderboard.name === "Weird Leaderboards") {
     interaction.editReply("I don't think that's a real leaderboard, sorry.");
     return;

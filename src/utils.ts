@@ -18,6 +18,10 @@ export function toWikiLink(input: string): string {
     .replace(/\)/g, "%29")}`;
 }
 
+export function parseNumber(input?: string): number {
+  return parseInt(input?.replace(",", "") || "0");
+}
+
 export function clamp(num: number, min: number, max: number): number {
   return num <= min ? min : num >= max ? max : num;
 }
@@ -32,3 +36,16 @@ export const lf = new Intl.ListFormat("en");
 
 export const pluralize = (count: number, singular: string, plural?: string) =>
   count.toLocaleString() + " " + (count === 1 ? singular : plural || singular + "s");
+
+export function groupToMap<K, V>(
+  array: V[],
+  callbackFn: (element: V, index?: number, array?: V[]) => K
+) {
+  const map = new Map<K, V[]>();
+  for (let i = 0; i < array.length; i++) {
+    const key = callbackFn(array[i], i, array);
+    if (!map.has(key)) map.set(key, [] as V[]);
+    map.get(key)!.push(array[i]);
+  }
+  return map;
+}

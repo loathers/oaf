@@ -1,10 +1,11 @@
 import axios from "axios";
-import { EmbedBuilder, hyperlink } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
+import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things";
+import { isItem } from "../things/Item";
+import { cleanString } from "../utils";
 import { createEmbed } from "./discord";
-import { KoLClient } from "./kol";
-import { Effect, Familiar, Item, Monster, Skill, Thing } from "./things";
-import { cleanString } from "./utils";
+import { pizzaTree } from "./pizza";
 
 const PACKAGES = new Map([
   ["iceberglet", "ice pick"],
@@ -119,55 +120,15 @@ type FoundName = {
   image?: string;
 };
 
-class PizzaNode {
-  children: Map<string, PizzaNode> = new Map();
-  letters: string;
-  effects: Effect[] = [];
-
-  constructor(letters: string) {
-    this.letters = letters;
-  }
-
-  addEffectToTree(name: string, effect: Effect): void {
-    if (this.letters.length === 4 || name.length === 0 || name.match(/^[^a-z0-9\"\']/)) {
-      this.effects.push(effect);
-    } else {
-      let letter = name.charAt(0);
-      let child =
-        this.children.get(letter) ||
-        this.children.set(letter, new PizzaNode(this.letters + letter)).get(letter);
-      child?.addEffectToTree(name.slice(1), effect);
-    }
-  }
-
-  addPizzaToEffects(): void {
-    let options = this.options();
-    for (let option of options) {
-      option._pizza = {
-        letters: this.letters.toUpperCase(),
-        options: options.length,
-      };
-    }
-    if (options.length > 1) {
-      for (let child of this.children.values()) {
-        child.addPizzaToEffects();
-      }
-    }
-  }
-
-  options(): Effect[] {
-    return Array.from(this.children.values()).reduce(
-      (acc, curr) => acc.concat(curr.options()),
-      this.effects
-    );
-  }
+async function downloadMafiaData(fileName: string) {
+  return await axios.get<string>(
+    `https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/${fileName}.txt`
+  );
 }
 
-export class WikiSearcher {
+export class WikiClient {
   private _nameMap: Map<string, FoundName> = new Map();
   private _thingMap: Map<string, Thing> = new Map();
-  private _pizzaTreeRoot: PizzaNode = new PizzaNode("");
-  private _client: KoLClient;
   private _searchApiKey: string;
   private _customSearch: string;
   private _finalItemId = -1;
@@ -175,10 +136,9 @@ export class WikiSearcher {
   private _finalSkillIds: { [block: number]: number } = {};
   private _lastDownloadTime = -1;
 
-  constructor(client: KoLClient) {
-    this._searchApiKey = process.env.GOOGLE_API_KEY || "";
-    this._customSearch = process.env.CUSTOM_SEARCH || "";
-    this._client = client;
+  constructor(googleApiKey: string, customSearch: string) {
+    this._searchApiKey = googleApiKey;
+    this._customSearch = customSearch;
   }
 
   get lastItem(): number {
@@ -193,31 +153,25 @@ export class WikiSearcher {
     return this._finalSkillIds;
   }
 
-  async downloadMafiaData(): Promise<void> {
-    const itemMap = new Map<string, string[]>();
-    const avatarPotionSet = new Set<string>();
-    console.log("Reading item data.");
+  async loadItemTypes(itemTypes: Map<string, string[]>) {
     for (let fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
-      const file = await axios(
-        `https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/${fileName}.txt`
-      );
+      const file = await downloadMafiaData(fileName);
       for (let line of file.data.split(/\n/)) {
         try {
           const item = line.split("\t");
-          if (item.length > 1) itemMap.set(cleanString(item[0]).toLowerCase(), item);
+          if (item.length > 1) itemTypes.set(cleanString(item[0]).toLowerCase(), item);
         } catch {}
       }
     }
-    console.log("Reading skills.");
-    const skillFile = await axios(
-      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/classskills.txt"
-    );
-    for (let line of skillFile.data.split(/\n/)) {
+  }
+
+  async loadSkills() {
+    const file = await downloadMafiaData("classskills");
+    for (let line of file.data.split(/\n/)) {
       try {
         const skill = new Skill(line);
         const block = skill.block();
-        // We only care about the 0 and 7 blocks realistically
-        if ([0, 7].includes(block) && skill._skill.id > (this._finalSkillIds[block] || 0)) {
+        if (skill._skill.id > (this._finalSkillIds[block] || 0)) {
           this._finalSkillIds[block] = skill._skill.id;
         }
         if (skill.name()) {
@@ -225,80 +179,78 @@ export class WikiSearcher {
         }
       } catch {}
     }
-    console.log("Reading items.");
-    const itemFile = await axios(
-      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/items.txt"
-    );
-    for (let line of itemFile.data.split(/\n/)) {
+  }
+
+  async loadItems(itemData: Map<string, string[]>, avatarPotions: Set<string>) {
+    const file = await downloadMafiaData("items");
+    for (let line of file.data.split(/\n/)) {
       try {
-        const item = new Item(line, itemMap);
+        const item = new Item(line, itemData);
         if (item.get().id > this._finalItemId) this._finalItemId = item.get().id;
         if (item.name()) {
           this._thingMap.set(item.name(), item);
           if (item.get().types.includes("avatar")) {
-            avatarPotionSet.add(item.name());
+            avatarPotions.add(item.name());
           }
           if (PACKAGES.get(item.name())) {
-            const contents = this._thingMap.get(PACKAGES.get(item.name()) as string);
-            if (contents) {
-              (contents as Item).addContainer(item);
-              item.addContents(contents as Item);
+            const contents = this._thingMap.get(PACKAGES.get(item.name())!);
+            if (contents && contents instanceof Item) {
+              contents.addContainer(item);
+              item.addContents(contents);
             }
           }
           if (REVERSE_PACKAGES.get(item.name())) {
-            const container = this._thingMap.get(REVERSE_PACKAGES.get(item.name()) as string);
-            if (container) {
-              (container as Item).addContents(item);
-              item.addContainer(container as Item);
+            const container = this._thingMap.get(REVERSE_PACKAGES.get(item.name())!);
+            if (container && container instanceof Item) {
+              container.addContents(item);
+              item.addContainer(container);
             }
           }
         }
       } catch (error) {}
     }
-    const zapFile = await axios(
-      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/zapgroups.txt"
-    );
-    for (let line of zapFile.data.split(/\n/)) {
+  }
+
+  async loadZapGroups() {
+    const file = await downloadMafiaData("zapgroups");
+    for (const line of file.data.split(/\n/)) {
       if (line.length && !line.startsWith("#")) {
         try {
           const group = line
             .replaceAll("\\,", "🍕")
             .split(",")
-            .map((itemName: string) => itemName.replaceAll("🍕", ","))
-            .map((itemName: string) =>
-              this._thingMap.get(cleanString(itemName.trim()).toLowerCase())
-            )
-            .filter((item: Item | undefined) => !!item);
-          for (let item of group) {
-            (item as Item).addZapGroup(group);
+            .map((itemName) => itemName.replaceAll("🍕", ","))
+            .map((itemName) => this._thingMap.get(cleanString(itemName.trim()).toLowerCase()))
+            .filter(isItem);
+          for (const item of group) {
+            item.addZapGroup(group);
           }
         } catch (error) {}
       }
     }
+  }
 
-    const foldFile = await axios(
-      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/foldgroups.txt"
-    );
-    for (let line of foldFile.data.split(/\n/)) {
+  async loadFoldGroups() {
+    const file = await downloadMafiaData("foldgroups");
+    for (const line of file.data.split(/\n/)) {
       if (line.length && !line.startsWith("#")) {
         try {
           const group = line
             .split("\t")
             .slice(1)
             .map((itemName: string) => this._thingMap.get(cleanString(itemName).toLowerCase()))
-            .filter((item: Item | undefined) => !!item);
-          for (let item of group) {
-            (item as Item).addFoldGroup(group);
+            .filter(isItem);
+          for (const item of group) {
+            item.addFoldGroup(group);
           }
         } catch (error) {}
       }
     }
+  }
 
-    console.log("Reading monsters.");
-    const monsterFile = await axios(
-      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/monsters.txt"
-    );
-    for (let line of monsterFile.data.split(/\n/)) {
+  async loadMonsters() {
+    const file = await downloadMafiaData("monsters");
+    for (const line of file.data.split(/\n/)) {
       try {
         const monster = new Monster(line);
         if (monster.name()) {
@@ -306,60 +258,80 @@ export class WikiSearcher {
         }
       } catch {}
     }
+  }
 
-    console.log("Reading familiars.");
-    const familiarFile = await axios(
-      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/familiars.txt"
-    );
-    for (let line of familiarFile.data.split(/\n/)) {
+  async loadFamiliars() {
+    const file = await downloadMafiaData("familiars");
+    for (const line of file.data.split(/\n/)) {
       try {
         const familiar = new Familiar(line);
         if (this._finalFamiliarId < familiar.get().id) this._finalFamiliarId = familiar.get().id;
         if (familiar.name()) {
-          const hatchling = this._thingMap.get(familiar.get().larva.toLowerCase()) as Item;
-          familiar.addHatchling(hatchling);
-          hatchling.addGrowingFamiliar(familiar);
-          familiar.addEquipment(this._thingMap.get(familiar.get().item.toLowerCase()) as Item);
-          this._thingMap.set(familiar.name(), familiar);
-          (this._thingMap.get(familiar.get().item.toLowerCase()) as Item).addEquppingFamiliar(
-            familiar
-          );
-        }
-      } catch {}
-    }
+          const hatchling = this._thingMap.get(familiar.get().larva.toLowerCase());
 
-    console.log("Reading effects.");
-    const effectsFile = await axios(
-      "https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/statuseffects.txt"
-    );
-    for (let line of effectsFile.data.split(/\n/)) {
-      try {
-        const effect = new Effect(line, avatarPotionSet);
-        if (effect.name()) {
-          this._thingMap.set(effect.name(), effect);
-          if (effect.get().hookah) {
-            this._pizzaTreeRoot.addEffectToTree(effect.name(), effect);
+          if (hatchling instanceof Item) {
+            familiar.addHatchling(hatchling);
+            hatchling.addGrowingFamiliar(familiar);
+          }
+
+          const equipment = this._thingMap.get(familiar.get().item.toLowerCase());
+
+          if (equipment instanceof Item) {
+            familiar.addEquipment(equipment);
+            this._thingMap.set(familiar.name(), familiar);
+            equipment.addEquppingFamiliar(familiar);
           }
         }
       } catch {}
     }
+  }
 
-    this._pizzaTreeRoot.addPizzaToEffects();
+  async loadEffects(avatarPotions: Set<string>) {
+    const file = await downloadMafiaData("statuseffects");
+    for (let line of file.data.split(/\n/)) {
+      try {
+        const effect = new Effect(line, avatarPotions);
+        if (effect.name()) {
+          this._thingMap.set(effect.name(), effect);
+        }
+      } catch {}
+    }
+  }
+
+  async loadMafiaData(): Promise<void> {
+    const itemTypes = new Map<string, string[]>();
+    const avatarPotions = new Set<string>();
+
+    console.log("Loading item types...");
+    await this.loadItemTypes(itemTypes);
+    console.log("Loading skills...");
+    await this.loadSkills();
+    console.log("Loading items...");
+    await this.loadItems(itemTypes, avatarPotions);
+    console.log("Loading item groups...");
+    await this.loadZapGroups();
+    console.log("Loading monsters...");
+    await this.loadMonsters();
+    console.log("Loading familiars...");
+    await this.loadFamiliars();
+    console.log("Loading effects...");
+    await this.loadEffects(avatarPotions);
+
+    pizzaTree.build(this._thingMap);
     this._lastDownloadTime = Date.now();
   }
 
-  async reloadMafiaData(): Promise<void> {
-    this._thingMap.clear();
-    this._pizzaTreeRoot = new PizzaNode("");
-    await this.downloadMafiaData();
-  }
-
-  async conditionallyReloadMafiaData(): Promise<boolean> {
+  async reloadMafiaData(): Promise<boolean> {
     if (this._lastDownloadTime < Date.now() - 3600000) {
-      await this.reloadMafiaData();
+      this._thingMap.clear();
+      await this.loadMafiaData();
       return true;
     }
     return false;
+  }
+
+  get items(): Item[] {
+    return [...this._thingMap.values()].filter(isItem);
   }
 
   async getEmbed(item: string): Promise<EmbedBuilder | undefined> {
@@ -369,8 +341,8 @@ export class WikiSearcher {
     const embed = createEmbed().setTitle(foundName.name).setURL(foundName.url);
 
     if (this._thingMap.has(foundName.name.toLowerCase())) {
-      const thing = this._thingMap.get(foundName.name.toLowerCase());
-      await thing?.addToEmbed(embed, this._client);
+      const thing = this._thingMap.get(foundName.name.toLowerCase())!;
+      await thing.addToEmbed(embed);
     } else if (foundName.image) {
       embed.setImage(foundName.image.replace("https", "http"));
     } else {
@@ -467,54 +439,6 @@ export class WikiSearcher {
     console.log("Google search stumped, I give up");
     return undefined;
   }
-
-  async getPizzaEmbed(letters: string): Promise<EmbedBuilder> {
-    let node = this._pizzaTreeRoot;
-    let i = 0;
-    for (; i <= letters.length; i++) {
-      const child = node.children.get(letters.charAt(i));
-      if (child) node = child;
-      else break;
-    }
-
-    const options = node.options();
-    if (options.length > 11) {
-      return createEmbed()
-        .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
-        .setDescription(
-          `${letters.match(/^[aeiouAEIOU]/) ? "An" : "A"} ${letters.toUpperCase().padEnd(4, "✱")}${
-            i < letters.length
-              ? ` (functionally ${letters.slice(0, i).toUpperCase().padEnd(4, "✱")})`
-              : ""
-          } Diabolic Pizza has too many possible effects to list.`
-        );
-    }
-    if (options.length === 1) {
-      return (await this.getEmbed(options[0].name())) || createEmbed();
-    }
-    let description = "";
-    if (i < letters.length) {
-      description += `(Note: A ${letters
-        .toUpperCase()
-        .padEnd(4, "✱")} pizza functions as a ${letters
-        .slice(0, i)
-        .toUpperCase()
-        .padEnd(4, "✱")} pizza)\n`;
-    }
-    description += (
-      await Promise.all(
-        options.map(async (effect) => {
-          const foundName = await this.findName(effect.name());
-          if (!foundName) return "";
-          return hyperlink(foundName.name, encodeURI(foundName?.url || ""));
-        })
-      )
-    ).join("\n");
-
-    return createEmbed()
-      .setTitle(`Possible ${letters.toUpperCase().padEnd(4, "✱")} Pizza effects`)
-      .setDescription(description);
-  }
 }
 
 function nameFromWikiPage(url: string, data: any): string {
@@ -554,3 +478,8 @@ function emoteNamesFromEmotes(emoteString: string) {
     return emoteName ? emoteName[1].replace(/:/g, "") : "";
   });
 }
+
+export const wikiClient = new WikiClient(
+  process.env.GOOGLE_API_KEY || "",
+  process.env.CUSTOM_SEARCH || ""
+);

@@ -1,16 +1,27 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { DREAD_CLANS, PlayerData, clanState } from "../../clans";
-import { prisma } from "../../db";
-import { KoLClient, client } from "../../kol";
+import { prisma } from "../../clients/database";
+import { kolClient } from "../../clients/kol";
 import { pluralize } from "../../utils";
+import { DREAD_CLANS, PlayerData, clanState } from "./_clans";
+import {
+  JoinClanError,
+  RaidLogMissingError,
+  getFinishedRaidLog,
+  getMissingRaidLogs,
+  getRaidLog,
+} from "./_dread";
 
 const KILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+defeated\D+(\d+)/;
 const SKILLMATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+used the machine/;
 
-async function parseCurrentLogs(kolClient: KoLClient, mapToUpdate: Map<string, PlayerData>) {
+export const data = new SlashCommandBuilder()
+  .setName("skills")
+  .setDescription("Get a list of everyone currently elgible for Dreadsylvania skills.");
+
+async function parseCurrentLogs(mapToUpdate: Map<string, PlayerData>) {
   for (let clan of DREAD_CLANS) {
-    const raidLog = await kolClient.getRaidLog(clan.id);
+    const raidLog = await getRaidLog(clan.id);
     if (!raidLog) throw "Clan inaccessible";
     addParticipationFromRaidLog(raidLog, mapToUpdate);
   }
@@ -59,11 +70,11 @@ function addParticipationFromRaidLog(raidLog: string, mapToUpdate: Map<string, P
 async function parseOldLogs() {
   const newlyParsedRaids = [];
   for (let clan of DREAD_CLANS) {
-    const raidsToParse = (await client.getMissingRaidLogs(clan.id, clanState.parsedRaids)).filter(
+    const raidsToParse = (await getMissingRaidLogs(clan.id, clanState.parsedRaids)).filter(
       (id) => !clanState.parsedRaids.includes(id)
     );
     for (let raid of raidsToParse) {
-      const raidLog = await client.getFinishedRaidLog(raid);
+      const raidLog = await getFinishedRaidLog(raid);
       addParticipationFromRaidLog(raidLog, clanState.killMap);
       clanState.parsedRaids.push(raid);
       newlyParsedRaids.push(raid);
@@ -71,7 +82,7 @@ async function parseOldLogs() {
   }
   for (let [player, participation] of clanState.killMap.entries()) {
     if (!participation.id) {
-      participation.id = (await client.getBasicDetailsForUser(player)).id;
+      participation.id = (await kolClient.getPartialPlayerFromName(player))?.id ?? 0;
     }
   }
 
@@ -88,7 +99,7 @@ async function parseOldLogs() {
         username: player,
         kills: participation.kills,
         skills: participation.skills,
-        user_id: participation.id,
+        user_id: participation.id?.toString(),
       },
     })
   );
@@ -110,7 +121,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     for (let entry of clanState.killMap.entries()) {
       currentKills.set(entry[0], { ...entry[1] });
     }
-    await parseCurrentLogs(client, currentKills);
+    await parseCurrentLogs(currentKills);
     let skillArray = [];
     for (let entry of currentKills.entries()) {
       if (!doneWithSkillsList.includes(entry[0])) {
@@ -157,13 +168,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ],
     });
   } catch (error) {
-    console.log(error);
-    await interaction.editReply(
-      "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
-    );
+    let reason = "";
+    if (error instanceof JoinClanError) {
+      reason = "I was unable to join that clan";
+    } else if (error instanceof RaidLogMissingError) {
+      reason = "I couldn't see raid logs in that clan for some reason";
+    } else {
+      reason =
+        "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in.";
+    }
+    await interaction.editReply(reason);
   }
 }
-
-export const data = new SlashCommandBuilder()
-  .setName("skills")
-  .setDescription("Get a list of everyone currently elgible for Dreadsylvania skills.");

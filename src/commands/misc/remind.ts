@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, userMention } from "discord.js";
 
-import { prisma } from "../../db";
-import { discordClient } from "../../discord";
+import { prisma } from "../../clients/database";
+import { discordClient } from "../../clients/discord";
 
 const timeMatcher =
   /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
@@ -98,7 +98,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 }
 
-export async function sync() {
+export async function init() {
   const now = Date.now();
   await prisma.reminders.deleteMany({ where: { reminder_time: { lt: now } } });
   const reminders = await prisma.reminders.findMany({});
@@ -106,7 +106,7 @@ export async function sync() {
     const timeLeft = Number(reminder.reminder_time) - now;
     if (reminder.guild_id) {
       if (timeLeft < 7 * 24 * 60 * 60 * 1000) {
-        const channel = await discordClient.client().channels.cache.get(reminder.channel_id);
+        const channel = await discordClient.channels.cache.get(reminder.channel_id);
 
         if (!channel) {
           console.log("Skipping reminder due to nknown channel", reminder.channel_id);
@@ -137,7 +137,7 @@ export async function sync() {
       }
     } else {
       if (timeLeft < 7 * 24 * 60 * 60 * 1000) {
-        const user = await discordClient.client().users.fetch(reminder.user_id);
+        const user = await discordClient.users.fetch(reminder.user_id);
         const channel = await user.createDM();
         setTimeout(() => {
           try {
@@ -159,6 +159,6 @@ export async function sync() {
     }
   }
   setTimeout(async () => {
-    await sync();
+    await init();
   }, 7 * 24 * 60 * 60 * 1000);
 }

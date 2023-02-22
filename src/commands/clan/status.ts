@@ -1,9 +1,9 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold } from "discord.js";
 
-import { DREAD_CLANS, clanState } from "../../clans";
-import { prisma } from "../../db";
-import { client } from "../../kol";
+import { prisma } from "../../clients/database";
 import { pluralize } from "../../utils";
+import { DREAD_CLANS, clanState } from "./_clans";
+import { getDreadStatusOverview } from "./_dread";
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
@@ -11,7 +11,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     const dreadStatus = await Promise.all(
       DREAD_CLANS.map(async (clan) => {
-        const overview = await client.getDreadStatusOverview(clan.id);
+        const overview = await getDreadStatusOverview(clan.id);
 
         const skills = overview.castle ? overview.skills : 0;
 
@@ -54,7 +54,7 @@ export async function sync() {
     clanState.killMap.set(player.username, {
       kills: player.kills,
       skills: player.skills,
-      id: player.user_id ?? undefined,
+      id: Number(player.user_id),
       brainiac: player.brainiac,
     });
   }

@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } from "discord.js";
 
-import { clanState } from "../../clans";
-import { client } from "../../kol";
+import { kolClient } from "../../clients/kol";
+import { clanState } from "./_clans";
 
 const BASE_CLASSES = [
   "Seal Clubber",
@@ -21,18 +21,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const classMap = new Map<string, string[]>();
 
-  for (let player of clanState.killMap.keys()) {
-    const playerEntry = clanState.killMap.get(player);
+  for (let playerName of clanState.killMap.keys()) {
+    const playerEntry = clanState.killMap.get(playerName);
     if (!playerEntry) continue;
     if (!playerEntry.skills && !playerEntry.brainiac) continue;
 
-    const details = await client.getBasicDetailsForUser(player);
-    if (details.level < 15) continue;
+    const player = await kolClient.getPartialPlayerFromName(playerName);
+    if (!player || player.level < 15) continue;
 
-    if (!classMap.has(details.class)) {
-      classMap.set(details.class, []);
+    if (!classMap.has(player.class)) {
+      classMap.set(player.class, []);
     }
-    classMap.get(details.class)?.push(player);
+    classMap.get(player.class)!.push(playerName);
   }
 
   await interaction.editReply({
