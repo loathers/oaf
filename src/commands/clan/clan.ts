@@ -7,9 +7,9 @@ import {
 } from "discord.js";
 
 import { createEmbed } from "../../clients/discord";
-import { DetailedDreadStatus, kolClient } from "../../clients/kol";
 import { pluralize } from "../../utils";
 import { DREAD_CLANS } from "./_clans";
+import { DetailedDreadStatus, getDetailedDreadStatus } from "./_dread";
 
 const DREAD_BOSS_MAPPINGS = new Map([
   ["werewolf", "Air Wolf"],
@@ -165,7 +165,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
   await interaction.deferReply();
   try {
-    const status = await kolClient.getDetailedDreadStatus(clan.id);
+    const status = await getDetailedDreadStatus(clan.id);
     const embed = createEmbed().setTitle(`Status update for ${clan.name}`);
 
     embed.setDescription(

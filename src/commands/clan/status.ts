@@ -1,9 +1,9 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold } from "discord.js";
 
 import { databaseClient } from "../../clients/database";
-import { kolClient } from "../../clients/kol";
 import { pluralize } from "../../utils";
 import { DREAD_CLANS, clanState } from "./_clans";
+import { getDreadStatusOverview } from "./_dread";
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
@@ -11,7 +11,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     const dreadStatus = await Promise.all(
       DREAD_CLANS.map(async (clan) => {
-        const overview = await kolClient.getDreadStatusOverview(clan.id);
+        const overview = await getDreadStatusOverview(clan.id);
 
         const skills = overview.castle ? overview.skills : 0;
 
