@@ -45,17 +45,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const player = interaction.options.getString("player", true);
+  const playerNameOrId = interaction.options.getString("player", true);
+
   await interaction.deferReply();
-  const playerData = await kolClient.getBasicDetailsForUser(player);
-  if (!playerData.id) {
+
+  const player = await kolClient.getPartialPlayer(playerNameOrId);
+
+  if (!player) {
     interaction.editReply({ content: "Player not found." });
     return;
   }
+
   for (let clan of ALL_CLANS) {
-    await kolClient.addToWhitelist(playerData.id, clan.id);
+    await kolClient.addToWhitelist(player.id, clan.id);
   }
+
   interaction.editReply({
-    content: `Added player ${player} (#${playerData.id}) to all managed clan whitelists.`,
+    content: `Added player ${player.name} (#${player.id}) to all managed clan whitelists.`,
   });
 }
