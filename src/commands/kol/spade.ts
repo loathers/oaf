@@ -150,6 +150,7 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
   const start = requestedStart ?? finalId + 1;
   const data = [];
   for (let id = start; id <= start + HORIZON; id++) {
+    if (id <= finalId && wikiClient.isItemIdKnown(id)) continue;
     const spadeData = await spadeItem(id);
     data.push(spadeData);
     if (!spadeData.exists) break;

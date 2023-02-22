@@ -129,6 +129,7 @@ async function downloadMafiaData(fileName: string) {
 export class WikiClient {
   private _nameMap: Map<string, FoundName> = new Map();
   private _thingMap: Map<string, Thing> = new Map();
+  private knownItemIds = new Set<number>();
   private _searchApiKey: string;
   private _customSearch: string;
   private _finalItemId = -1;
@@ -187,6 +188,7 @@ export class WikiClient {
       try {
         const item = new Item(line, itemData);
         if (item.get().id > this._finalItemId) this._finalItemId = item.get().id;
+        this.knownItemIds.add(item.get().id);
         if (item.name()) {
           this._thingMap.set(item.name(), item);
           if (item.get().types.includes("avatar")) {
@@ -332,6 +334,10 @@ export class WikiClient {
 
   get items(): Item[] {
     return [...this._thingMap.values()].filter(isItem);
+  }
+
+  isItemIdKnown(id: number) {
+    return this.knownItemIds.has(id);
   }
 
   async getEmbed(item: string): Promise<EmbedBuilder | undefined> {
