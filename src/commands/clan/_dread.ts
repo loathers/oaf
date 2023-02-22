@@ -1,6 +1,20 @@
 import { kolClient } from "../../clients/kol";
 import { parseNumber } from "../../utils";
 
+export class JoinClanError extends Error {
+  constructor() {
+    super("Could not join clan");
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class RaidLogMissingError extends Error {
+  constructor() {
+    super("Raid log missing");
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
 type DreadStatus = {
   forest: number;
   village: number;
@@ -167,13 +181,13 @@ function extractDreadCastle(raidLog: string): DreadCastleStatus {
 
 export async function getDreadStatusOverview(clanId: number): Promise<DreadStatus> {
   const raidLog = await getRaidLog(clanId);
-  if (!raidLog) throw "No raidlog";
+  if (!raidLog) throw new RaidLogMissingError();
   return extractDreadOverview(raidLog);
 }
 
 export async function getDetailedDreadStatus(clanId: number): Promise<DetailedDreadStatus> {
   const raidLog = await getRaidLog(clanId);
-  if (!raidLog) throw "No raidlog";
+  if (!raidLog) throw new RaidLogMissingError();
   return {
     overview: extractDreadOverview(raidLog),
     forest: extractDreadForest(raidLog),
@@ -184,7 +198,7 @@ export async function getDetailedDreadStatus(clanId: number): Promise<DetailedDr
 
 export async function getMissingRaidLogs(clanId: number, parsedRaids: string[]): Promise<string[]> {
   return await kolClient.clanActionMutex.runExclusive(async () => {
-    await kolClient.joinClan(clanId);
+    if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
     let raidLogs = await kolClient.tryRequestWithLogin("clan_oldraidlogs.php", {});
     let raidIds: string[] = [];
     let row = 0;
@@ -222,7 +236,7 @@ export async function getFinishedRaidLog(raidId: string) {
 
 export async function getRaidLog(clanId: number): Promise<string> {
   return await kolClient.clanActionMutex.runExclusive(async () => {
-    await kolClient.joinClan(clanId);
+    if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
     return await kolClient.tryRequestWithLogin("clan_raidlogs.php", {});
   });
 }
