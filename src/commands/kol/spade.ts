@@ -111,10 +111,7 @@ export const data = new SlashCommandBuilder()
       .setName("skills")
       .setDescription("Spade unreleased skills")
       .addIntegerOption((option) =>
-        option
-          .setName("classid")
-          .setDescription("class ID to spade skills for")
-          .setRequired(false)
+        option.setName("classid").setDescription("class ID to spade skills for").setRequired(false)
       )
   );
 
@@ -274,37 +271,31 @@ async function spadeFamiliar(famId: number) {
 // Skills
 
 async function spadeSkills(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply();
-  const finalSkills = wiki.lastSkills;
-
   const classId = interaction.options.getInteger("classid", false);
-  if (classId) {
-    finalSkills[classId] = 0;
-  }
 
-  if (Object.keys(finalSkills).length === 0) {
+  const finalIds = Object.values(wikiClient.lastSkills);
+
+  if (finalIds.length === 0) {
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
   }
 
+  await interaction.deferReply();
+
+  if (classId) {
+    finalIds.push(classId * 1000);
+  }
+
   const data = [];
-  for (const finalId of Object.values(finalSkills)) {
+  for (const finalId of finalIds) {
     for (let id = finalId + 1; id <= finalId + HORIZON; id++) {
       const exists = await spadeSkill(id);
-      if (exists) {
-        data.push(`Skill ${id} exists`);
-      } else {
-        continue;
-      }
+      if (exists) data.push(`Skill ${id} exists`);
     }
   }
 
   if (data.length === 0) {
     data.push("No new skills found");
-  }
-  
-  if (classId) {
-    finalSkills[classId] = undefined;
   }
 
   await interaction.editReply(data.join("\n"));
