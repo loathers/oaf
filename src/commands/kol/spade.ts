@@ -273,17 +273,20 @@ async function spadeFamiliar(famId: number) {
 async function spadeSkills(interaction: ChatInputCommandInteraction) {
   const classId = interaction.options.getInteger("classid", false);
 
-  const finalIds = Object.values(wikiClient.lastSkills);
+  await interaction.deferReply();
+
+  // Skill blocks to consider
+  const blocks = classId ? [classId] : [0, 7];
+
+  const finalIds = Object.entries(wikiClient.lastSkills)
+    .filter(([block]) => blocks.includes(Number(block)))
+    .map(([, finalId]) => finalId);
+
+  console.log(finalIds);
 
   if (finalIds.length === 0) {
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
-  }
-
-  await interaction.deferReply();
-
-  if (classId) {
-    finalIds.push(classId * 1000);
   }
 
   const data = [];
