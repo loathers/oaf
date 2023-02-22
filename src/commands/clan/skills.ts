@@ -82,7 +82,7 @@ async function parseOldLogs() {
   }
   for (let [player, participation] of clanState.killMap.entries()) {
     if (!participation.id) {
-      participation.id = (await kolClient.getBasicDetailsForUser(player)).id;
+      participation.id = (await kolClient.getPartialPlayerFromName(player))?.id ?? 0;
     }
   }
   const poolClient = await databaseClient.connect();
