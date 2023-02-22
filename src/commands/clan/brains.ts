@@ -19,7 +19,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  const classMap: Map<string, string[]> = new Map();
+  const classMap = new Map<string, string[]>();
 
   for (let playerName of clanState.killMap.keys()) {
     const playerEntry = clanState.killMap.get(playerName);

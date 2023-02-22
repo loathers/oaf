@@ -1,9 +1,7 @@
 import "dotenv/config";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { migrate } from "postgres-migrations";
 
-import { databaseClient } from "./clients/database";
 import { Command, discordClient } from "./clients/discord";
 import { wikiClient } from "./clients/wiki";
 
@@ -34,10 +32,6 @@ async function loadSlashCommands() {
 }
 
 async function performSetup() {
-  console.log(`OAF process started (pid: ${process.pid})`);
-  console.log("Migrating database.");
-  await migrate({ client: databaseClient }, "./migrations");
-
   console.log("Downloading mafia data.");
   await wikiClient.loadMafiaData();
   console.log("All mafia data downloaded.");

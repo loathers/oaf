@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold } from "discord.js";
 
-import { databaseClient } from "../../clients/database";
+import { prisma } from "../../clients/database";
 import { pluralize } from "../../utils";
 import { DREAD_CLANS, clanState } from "./_clans";
 import { getDreadStatusOverview } from "./_dread";
@@ -45,16 +45,16 @@ export const data = new SlashCommandBuilder()
   .setName("status")
   .setDescription("Get the current status of all monitored Dreadsylvania instances.");
 
-export async function async() {
+export async function sync() {
   clanState.parsedRaids = (
-    await databaseClient.query("SELECT raid_id FROM tracked_instances;")
-  ).rows.map((row) => row.raid_id);
+    await await prisma.tracked_instances.findMany({ select: { raid_id: true } })
+  ).map((instance) => instance.raid_id);
 
-  for (let player of (await databaseClient.query("SELECT * FROM players;")).rows) {
+  for (let player of await prisma.players.findMany({})) {
     clanState.killMap.set(player.username, {
       kills: player.kills,
       skills: player.skills,
-      id: player.user_id,
+      id: Number(player.user_id),
       brainiac: player.brainiac,
     });
   }

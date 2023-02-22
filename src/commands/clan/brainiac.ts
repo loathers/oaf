@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { databaseClient } from "../../clients/database";
 import { clanState } from "./_clans";
+import { prisma } from "../../clients/database";
 
 export const data = new SlashCommandBuilder()
   .setName("brainiac")
@@ -25,10 +25,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  await databaseClient.query(
-    "INSERT INTO players (username, brainiac) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET brainiac = $2;",
-    [username, available]
-  );
+  await prisma.players.upsert({
+    where: { username },
+    update: { brainiac: available },
+    create: { username, brainiac: available },
+  });
 
   if (clanState.killMap.has(username)) {
     clanState.killMap.get(username)!.brainiac = available;

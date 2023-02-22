@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, userMention } from "discord.js";
 
-import { databaseClient } from "../../clients/database";
+import { prisma } from "../../clients/database";
 import { discordClient } from "../../clients/discord";
 
 const timeMatcher =
@@ -86,30 +86,26 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
   }, timeToWait);
 
-  await databaseClient.query(
-    "INSERT INTO reminders(guild_id, channel_id, user_id, interaction_reply_id, message_contents, reminder_time) VALUES ($1, $2, $3, $4, $5, $6);",
-    [
-      interaction.guildId,
-      interaction.channelId,
-      interaction.user.id,
-      reply_id,
-      reminderText,
-      reminderTime,
-    ]
-  );
+  await prisma.reminders.create({
+    data: {
+      guild_id: interaction.guildId,
+      channel_id: interaction.channelId,
+      user_id: interaction.user.id,
+      interaction_reply_id: reply_id,
+      message_contents: reminderText,
+      reminder_time: reminderTime,
+    },
+  });
 }
 
 export async function init() {
   const now = Date.now();
-  const connection = await databaseClient.connect();
-  await connection.query("BEGIN;");
-  await connection.query("DELETE FROM reminders WHERE reminder_time < $1;", [now]);
-  const reminders = await connection.query("SELECT * FROM reminders", []);
-  await connection.query("COMMIT;");
-  connection.release();
-  for (let reminder of reminders.rows) {
+  await prisma.reminders.deleteMany({ where: { reminder_time: { lt: now } } });
+  const reminders = await prisma.reminders.findMany({});
+  for (let reminder of reminders) {
+    const timeLeft = Number(reminder.reminder_time) - now;
     if (reminder.guild_id) {
-      if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
+      if (timeLeft < 7 * 24 * 60 * 60 * 1000) {
         const channel = await discordClient.channels.cache.get(reminder.channel_id);
 
         if (!channel) {
@@ -137,10 +133,10 @@ export async function init() {
           } catch (error) {
             console.log(error);
           }
-        }, reminder.reminder_time - now);
+        }, timeLeft);
       }
     } else {
-      if (reminder.reminder_time - now < 7 * 24 * 60 * 60 * 1000) {
+      if (timeLeft < 7 * 24 * 60 * 60 * 1000) {
         const user = await discordClient.users.fetch(reminder.user_id);
         const channel = await user.createDM();
         setTimeout(() => {
@@ -158,7 +154,7 @@ export async function init() {
           } catch (error) {
             console.log(error);
           }
-        }, reminder.reminder_time - now);
+        }, timeLeft);
       }
     }
   }
