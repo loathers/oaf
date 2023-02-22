@@ -273,8 +273,6 @@ async function spadeFamiliar(famId: number) {
 async function spadeSkills(interaction: ChatInputCommandInteraction) {
   const classId = interaction.options.getInteger("classid", false);
 
-  await interaction.deferReply();
-
   // Skill blocks to consider
   const blocks = classId ? [classId] : [0, 7];
 
@@ -282,12 +280,12 @@ async function spadeSkills(interaction: ChatInputCommandInteraction) {
     .filter(([block]) => blocks.includes(Number(block)))
     .map(([, finalId]) => finalId);
 
-  console.log(finalIds);
-
   if (finalIds.length === 0) {
     interaction.editReply("Our wiki search isn't configured properly!");
     return;
   }
+
+  await interaction.deferReply();
 
   const data = [];
   for (const finalId of finalIds) {
