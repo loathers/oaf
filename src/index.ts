@@ -34,6 +34,7 @@ async function loadSlashCommands() {
 }
 
 async function performSetup() {
+  console.log(`OAF process started (pid: ${process.pid})`);
   console.log("Migrating database.");
   await migrate({ client: databaseClient }, "./migrations");
 
