@@ -155,8 +155,13 @@ export class WikiClient {
   }
 
   retrieve(name: string): Thing | null {
-    const formatted = cleanString(name.toLowerCase().trim());
-    return this._thingMap.get(formatted) ?? null;
+    const formattedName = cleanString(name.toLowerCase().trim());
+    return this._thingMap.get(formattedName) ?? null;
+  }
+
+  register(thing: Thing): void {
+    const formattedName = cleanString(thing.name().toLowerCase().trim());
+    this._thingMap.set(formattedName, thing)
   }
 
   async loadItemTypes(itemTypes: Map<string, string[]>) {
@@ -181,7 +186,7 @@ export class WikiClient {
           this._finalSkillIds[block] = skill._skill.id;
         }
         if (skill.name()) {
-          this._thingMap.set(skill.name(), skill);
+          this.register(skill);
         }
       } catch {}
     }
@@ -195,7 +200,7 @@ export class WikiClient {
         if (item.get().id > this._finalItemId) this._finalItemId = item.get().id;
         this.knownItemIds.add(item.get().id);
         if (item.name()) {
-          this._thingMap.set(item.name(), item);
+          this.register(item);
           if (item.get().types.includes("avatar")) {
             avatarPotions.add(item.name());
           }
@@ -263,7 +268,7 @@ export class WikiClient {
       try {
         const monster = new Monster(line);
         if (monster.name()) {
-          this._thingMap.set(monster.name(), monster);
+          this.register(monster);
         }
       } catch {}
     }
@@ -287,7 +292,7 @@ export class WikiClient {
 
           if (equipment instanceof Item) {
             familiar.addEquipment(equipment);
-            this._thingMap.set(familiar.name(), familiar);
+            this.register(familiar);
             equipment.addEquppingFamiliar(familiar);
           }
         }
@@ -301,7 +306,7 @@ export class WikiClient {
       try {
         const effect = new Effect(line, avatarPotions);
         if (effect.name()) {
-          this._thingMap.set(effect.name(), effect);
+          this.register(effect);
         }
       } catch {}
     }
