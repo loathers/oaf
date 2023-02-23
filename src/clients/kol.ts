@@ -429,25 +429,24 @@ export class KoLClient {
       const profile = await this.tryRequestWithLogin("showplayer.php", { who: id });
       const header = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/);
       if (!header) return null;
-
-      const ascensionCount = Number(profile.match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
-      const trophyCount = Number(profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
-      const tattooCount = Number(profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
-      const favFood = profile.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "toast (probably)";
-      const favBooze = profile.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "cold butter (probably)";
+      const ascensions = Number(profile.match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
+      const trophies = Number(profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
+      const tattoos = Number(profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
+      const favoriteFood = profile.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "toast (probably)";
+      const favoriteBooze = profile.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "cold butter (probably)";
       const lastLogin = profile.match(/>Last Login:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "a date between now and February 10th, 2003";
-      const displayCaseFound = profile.match(/Display Case<\/b><\/a> in the Museum<\/td>/) !== null;
+      const hasDisplayCase = profile.match(/Display Case<\/b><\/a> in the Museum<\/td>/) !== null;
 
 
       return {
-        ascensions: ascensionCount,
-        trophies: trophyCount,
-        tattoos: tattooCount,
-        favoriteFood: favFood,
-        favoriteBooze: favBooze,
-        lastLogin:lastLogin,
-        hasDisplayCase:displayCaseFound,
-      };
+        ascensions,
+        trophies,
+        tattoos,
+        favoriteFood,
+        favoriteBooze,
+        lastLogin,
+        hasDisplayCase
+      };       
     } catch {
       return null;
     }

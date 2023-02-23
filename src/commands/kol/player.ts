@@ -15,7 +15,7 @@ export const data = new SlashCommandBuilder()
   .addStringOption((o) =>
     o
       .setName("player")
-      .setDescription("The KOL username of the player you're looking up.")
+      .setDescription("The KOL username or ID of the player you're looking up.")
       .setRequired(true)
     );
 
@@ -37,15 +37,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const player = await kolClient.getPartialPlayer(playerNameOrId);
 
     if (!player) {
-        interaction.editReply({content:"According to KOL, this player does not exist."});
+        interaction.editReply({content: `According to KOL, player ${playerNameOrId} does not exist.`});        
         return;
     }
 
     const playerInfo = await kolClient.getPlayerInformation(player.id);
 
     if (!playerInfo) {
-        interaction.editReply({content:"While this player exists, this command didn't work. Weird."});
-        return;
+        interaction.editReply({content: `While player ${playerNameOrId} exists, this command didn't work. Weird.`});
+        return;    
     }
 
     const displayCaseLine = playerInfo.hasDisplayCase ? `Check out this player's display case at ${bold(hyperlink("their museum page!", toMuseumLink(String(player.id))))}` : "";
