@@ -6,7 +6,7 @@ import {
   } from "discord.js";
   
 import { kolClient } from "../../clients/kol";
-import { pluralize, toKoldbLink, toSnapshotLink } from "../../utils";
+import { pluralize, toKoldbLink, toMuseumLink, toSnapshotLink } from "../../utils";
 
 
 export const data = new SlashCommandBuilder()
@@ -48,6 +48,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return;
     }
 
+    const displayCaseLine = playerInfo.hasDisplayCase ? `Check out this player's display case at ${bold(hyperlink("their museum page!", toMuseumLink(String(player.id))))}` : "";
+
     const playerInfoFormatted = [
         `This user is currently a ${bold(player.class)} at level ${player.level}`,
         `They have completed ${bold(
@@ -55,6 +57,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                     `${playerInfo.ascensions}`,
                     toKoldbLink(player.name)))} 
             ${pluralize(playerInfo.ascensions,"ascension","ascensions")}.`,
+        displayCaseLine,
         `Loves eating ${playerInfo.favoriteFood}.`,
         `Loves drinking ${playerInfo.favoriteBooze}.`,
         ``,

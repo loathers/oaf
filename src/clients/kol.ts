@@ -63,6 +63,7 @@ type FullPlayer = {
   favoriteFood: string;
   favoriteBooze: string;
   lastLogin: string;
+  hasDisplayCase: boolean;
 };
 
 function sanitiseBlueText(blueText: string | undefined): string {
@@ -435,6 +436,7 @@ export class KoLClient {
       const favFood = profile.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "toast (probably)";
       const favBooze = profile.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "cold butter (probably)";
       const lastLogin = profile.match(/>Last Login:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "a date between now and February 10th, 2003";
+      const displayCaseFound = profile.match(/Display Case<\/b><\/a> in the Museum<\/td>/) !== null;
 
 
       return {
@@ -443,7 +445,8 @@ export class KoLClient {
         tattoos: tattooCount,
         favoriteFood: favFood,
         favoriteBooze: favBooze,
-        lastLogin:lastLogin
+        lastLogin:lastLogin,
+        hasDisplayCase:displayCaseFound,
       };
     } catch {
       return null;

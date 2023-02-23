@@ -26,6 +26,10 @@ export function toSnapshotLink(input: string): string {
   return `https://api.aventuristo.net/av-snapshot?u=${encodeURI(input.replace(/\s/g, "%20"))}`;
 }
 
+export function toMuseumLink(input: string): string {
+  return `https://museum.loathers.net/player/${encodeURI(input.replace(/\s/g, ""))}`;
+}
+
 export function parseNumber(input?: string): number {
   return parseInt(input?.replace(",", "") || "0");
 }
