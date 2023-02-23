@@ -194,7 +194,7 @@ export class WikiClient {
           if (item.get().types.includes("avatar")) {
             avatarPotions.add(item.name());
           }
-          const unpackagedName = PACKAGES.get(item.name().toLowerCase());
+          const unpackagedName = cleanString(PACKAGES.get(item.name().toLowerCase()));
           if (unpackagedName) {
             const contents = this._thingMap.get(unpackagedName);
             if (contents && contents instanceof Item) {
@@ -202,7 +202,7 @@ export class WikiClient {
               item.addContents(contents);
             }
           }
-          const packageName = REVERSE_PACKAGES.get(item.name().toLowerCase());
+          const packageName = cleanString(REVERSE_PACKAGES.get(item.name().toLowerCase()));
           if (packageName) {
             const container = this._thingMap.get(packageName);
             if (container && container instanceof Item) {
