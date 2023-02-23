@@ -1,2 +1,2 @@
-release: npx prisma migrate deploy && npx prisma generate
-run: npm run start
+release: npx prisma migrate deploy
+run: node ./dist/index.js
