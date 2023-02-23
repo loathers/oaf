@@ -194,15 +194,17 @@ export class WikiClient {
           if (item.get().types.includes("avatar")) {
             avatarPotions.add(item.name());
           }
-          if (PACKAGES.get(item.name())) {
-            const contents = this._thingMap.get(PACKAGES.get(item.name())!);
+          const unpackagedName = PACKAGES.get(item.name().toLowerCase());
+          if (unpackagedName) {
+            const contents = this._thingMap.get(unpackagedName);
             if (contents && contents instanceof Item) {
               contents.addContainer(item);
               item.addContents(contents);
             }
           }
-          if (REVERSE_PACKAGES.get(item.name())) {
-            const container = this._thingMap.get(REVERSE_PACKAGES.get(item.name())!);
+          const packageName = REVERSE_PACKAGES.get(item.name().toLowerCase());
+          if (packageName) {
+            const container = this._thingMap.get(packageName);
             if (container && container instanceof Item) {
               container.addContents(item);
               item.addContainer(container);
