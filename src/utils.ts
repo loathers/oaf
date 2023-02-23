@@ -18,6 +18,14 @@ export function toWikiLink(input: string): string {
     .replace(/\)/g, "%29")}`;
 }
 
+export function toKoldbLink(input: string): string {
+  return `koldb.com/player.php?name=${encodeURI(input.replace(/\s/g, "%20"))}`;
+}
+
+export function toSnapshotLink(input: string): string {
+  return `https://api.aventuristo.net/av-snapshot?u=${encodeURI(input.replace(/\s/g, "%20"))}`;
+}
+
 export function parseNumber(input?: string): number {
   return parseInt(input?.replace(",", "") || "0");
 }

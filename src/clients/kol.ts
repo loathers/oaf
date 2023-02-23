@@ -56,6 +56,15 @@ type PartialPlayer = {
   class: string;
 };
 
+type FullPlayer = {
+  ascensions: number;
+  trophies: number;
+  tattoos: number;
+  favoriteFood: string;
+  favoriteBooze: string;
+  lastLogin: string;
+};
+
 function sanitiseBlueText(blueText: string | undefined): string {
   if (!blueText) return "";
   return decode(
@@ -413,6 +422,32 @@ export class KoLClient {
 
     return match?.[1] ?? null;
   }
-}
 
+  async getPlayerInformation(id: number): Promise<FullPlayer | null> {
+    try {
+      const profile = await this.tryRequestWithLogin("showplayer.php", { who: id });
+      const header = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/);
+      if (!header) return null;
+
+      const ascensionCount = Number(profile.match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
+      const trophyCount = Number(profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
+      const tattooCount = Number(profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
+      const favFood = profile.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "toast (probably)";
+      const favBooze = profile.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "cold butter (probably)";
+      const lastLogin = profile.match(/>Last Login:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "a date between now and February 10th, 2003";
+
+
+      return {
+        ascensions: ascensionCount,
+        trophies: trophyCount,
+        tattoos: tattooCount,
+        favoriteFood: favFood,
+        favoriteBooze: favBooze,
+        lastLogin:lastLogin
+      };
+    } catch {
+      return null;
+    }
+  }
+}
 export const kolClient = new KoLClient(process.env.KOL_USER || "", process.env.KOL_PASS || "");
