@@ -154,6 +154,11 @@ export class WikiClient {
     return this._finalSkillIds;
   }
 
+  retrieve(name: string): Thing | null {
+    const formatted = cleanString(name.toLowerCase().trim());
+    return this._thingMap.get(formatted) ?? null;
+  }
+
   async loadItemTypes(itemTypes: Map<string, string[]>) {
     for (let fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
       const file = await downloadMafiaData(fileName);
@@ -194,17 +199,17 @@ export class WikiClient {
           if (item.get().types.includes("avatar")) {
             avatarPotions.add(item.name());
           }
-          const unpackagedName = cleanString(PACKAGES.get(item.name().toLowerCase()));
+          const unpackagedName = PACKAGES.get(item.name().toLowerCase());
           if (unpackagedName) {
-            const contents = this._thingMap.get(unpackagedName);
+            const contents = this.retrieve(unpackagedName);
             if (contents && contents instanceof Item) {
               contents.addContainer(item);
               item.addContents(contents);
             }
           }
-          const packageName = cleanString(REVERSE_PACKAGES.get(item.name().toLowerCase()));
+          const packageName = REVERSE_PACKAGES.get(item.name().toLowerCase());
           if (packageName) {
-            const container = this._thingMap.get(packageName);
+            const container = this.retrieve(packageName);
             if (container && container instanceof Item) {
               container.addContents(item);
               item.addContainer(container);
@@ -224,7 +229,7 @@ export class WikiClient {
             .replaceAll("\\,", "🍕")
             .split(",")
             .map((itemName) => itemName.replaceAll("🍕", ","))
-            .map((itemName) => this._thingMap.get(cleanString(itemName.trim()).toLowerCase()))
+            .map((itemName) => this.retrieve(itemName))
             .filter(isItem);
           for (const item of group) {
             item.addZapGroup(group);
@@ -242,7 +247,7 @@ export class WikiClient {
           const group = line
             .split("\t")
             .slice(1)
-            .map((itemName: string) => this._thingMap.get(cleanString(itemName).toLowerCase()))
+            .map((itemName: string) => this.retrieve(itemName))
             .filter(isItem);
           for (const item of group) {
             item.addFoldGroup(group);
@@ -271,14 +276,14 @@ export class WikiClient {
         const familiar = new Familiar(line);
         if (this._finalFamiliarId < familiar.get().id) this._finalFamiliarId = familiar.get().id;
         if (familiar.name()) {
-          const hatchling = this._thingMap.get(familiar.get().larva.toLowerCase());
+          const hatchling = this.retrieve(familiar.get().larva);
 
           if (hatchling instanceof Item) {
             familiar.addHatchling(hatchling);
             hatchling.addGrowingFamiliar(familiar);
           }
 
-          const equipment = this._thingMap.get(familiar.get().item.toLowerCase());
+          const equipment = this.retrieve(familiar.get().item);
 
           if (equipment instanceof Item) {
             familiar.addEquipment(equipment);
@@ -348,8 +353,8 @@ export class WikiClient {
 
     const embed = createEmbed().setTitle(foundName.name).setURL(foundName.url);
 
-    if (this._thingMap.has(foundName.name.toLowerCase())) {
-      const thing = this._thingMap.get(foundName.name.toLowerCase())!;
+    const thing = this.retrieve(foundName.name);
+    if (thing) {
       await thing.addToEmbed(embed);
     } else if (foundName.image) {
       embed.setImage(foundName.image.replace("https", "http"));

@@ -5,7 +5,7 @@ import { cleanString, pluralize, toWikiLink } from "../utils";
 import { Familiar } from "./Familiar";
 import { Thing } from "./Thing";
 
-export const isItem = (item?: Thing): item is Item => !!item && item instanceof Item;
+export const isItem = (item?: Thing | null): item is Item => !!item && item instanceof Item;
 
 export type ItemData = {
   id: number;
