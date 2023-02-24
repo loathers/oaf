@@ -38,7 +38,7 @@ const PACKAGES = new Map([
   ["mint condition lil' doctor™ bag", "lil' doctor™ bag"],
   ["vampyric cloake pattern", "vampyric cloake"],
   ["fourth of may cosplay saber kit", "fourth of may cosplay saber"],
-  ["rune-strewn spoon coccoon", "hewn moon-rune spoon"],
+  ["rune-strewn spoon cocoon", "hewn moon-rune spoon"],
   ["beach comb box", "beach comb"],
   ["unopened eight days a week pill keeper", "eight days a week pill keeper"],
   ["unopened diabolic pizza cube box", "diabolic pizza cube"],
@@ -161,7 +161,7 @@ export class WikiClient {
 
   register(thing: Thing): void {
     const formattedName = cleanString(thing.name().toLowerCase().trim());
-    this._thingMap.set(formattedName, thing)
+    this._thingMap.set(formattedName, thing);
   }
 
   async loadItemTypes(itemTypes: Map<string, string[]>) {
