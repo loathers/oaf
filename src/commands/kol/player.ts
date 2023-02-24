@@ -2,7 +2,8 @@ import {
     ChatInputCommandInteraction,
     SlashCommandBuilder,
     bold, 
-    hyperlink
+    hyperlink,
+    EmbedBuilder
   } from "discord.js";
   
 import { kolClient } from "../../clients/kol";
@@ -41,42 +42,36 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return;
     }
 
-    const playerInfo = await kolClient.getPlayerInformation(player.id);
+    const playerInfo = await kolClient.getPlayerInformation(player);
 
     if (!playerInfo) {
         interaction.editReply({content: `While player ${playerNameOrId} exists, this command didn't work. Weird.`});
         return;    
     }
 
-    const displayCaseLine = playerInfo.hasDisplayCase ? `Check out this player's display case at ${bold(hyperlink("their museum page!", toMuseumLink(String(player.id))))}` : "";
+    const embedDescription = [];
 
-    const playerInfoFormatted = [
-        `This user is currently a ${bold(player.class)} at level ${player.level}`,
-        `They have completed ${bold(
-            hyperlink(
-                    `${playerInfo.ascensions}`,
-                    toKoldbLink(player.name)))} 
-            ${pluralize(playerInfo.ascensions,"ascension","ascensions")}.`,
-        displayCaseLine,
-        `Loves eating ${playerInfo.favoriteFood}.`,
-        `Loves drinking ${playerInfo.favoriteBooze}.`,
-        ``,
-        `If it exists, their av-snapshot is located ${hyperlink(
-            "here", toSnapshotLink(player.name))}`,
-        ``,
-        `${player.name} last logged in on ${playerInfo.lastLogin}`
+    embedDescription.push(`This user is currently a ${bold(player.class)} at level ${player.level}.`);
+    if (playerInfo.hasDisplayCase) embedDescription.push(`Check out this player's display case at ${bold(hyperlink("their museum page!", toMuseumLink(String(player.id))))}`);
+    embedDescription.push(`If it exists, their snapshot is located ${hyperlink("here", toSnapshotLink(player.name))}`,);
 
-    ]
+    const playerEmbed = new EmbedBuilder()
+        .setColor(0x80CCFF)
+        .setTitle(`${bold(player.name)} (#${player.id})`)
+        .setAuthor({ name: 'OAF Player Summary', iconURL: 'http://images.kingdomofloathing.com/itemimages/oaf.gif'})
+        .setDescription(embedDescription.join("\n"))
+        .addFields(
+            {name: 'Ascensions', value: `${hyperlink(`${playerInfo.ascensions}`, toKoldbLink(player.name))}`},
+            {name: 'Favorite Food', value: `${playerInfo.favoriteFood}`},
+            {name: 'Favorite Booze', value: `${playerInfo.favoriteBooze}`},
+        );
+    
+    playerEmbed.setFooter({text:`${player.name} last logged in on ${playerInfo.lastLogin}`});
 
     try {
         await interaction.editReply({
             content: null,
-            embeds: [
-                {
-                    title: `${bold(player.name)} (#${player.id})`,
-                    description: playerInfoFormatted.join("\n"),
-                },
-            ],
+            embeds: [playerEmbed],
         });
     } catch {
         await interaction.editReply(
