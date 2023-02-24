@@ -19,11 +19,7 @@ export function toWikiLink(input: string): string {
 }
 
 export function toKoldbLink(input: string): string {
-  return `koldb.com/player.php?name=${encodeURI(input.replace(/\s/g, "%20"))}`;
-}
-
-export function toSnapshotLink(input: string): string {
-  return `https://api.aventuristo.net/av-snapshot?u=${encodeURI(input.replace(/\s/g, "%20"))}`;
+  return `https://koldb.com/player.php?name=${encodeURI(input.replace(/\s/g, "%20"))}`;
 }
 
 export function toMuseumLink(input: string): string {

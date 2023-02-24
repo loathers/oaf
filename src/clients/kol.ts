@@ -1,5 +1,6 @@
 import { Mutex } from "async-mutex";
 import axios from "axios";
+import { parse } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
 import { DOMParser } from "xmldom";
@@ -17,6 +18,11 @@ const parser = new DOMParser({
     },
   },
 });
+
+function parsePlayerDate(input?: string) {
+  if (!input) return undefined;
+  return parse(input, "MMMM dd, yyyy", new Date());
+}
 
 type MallPrice = {
   formattedMallPrice: string;
@@ -57,14 +63,16 @@ type PartialPlayer = {
 };
 
 interface FullPlayer extends PartialPlayer {
+  avatar: string;
   ascensions: number;
   trophies: number;
   tattoos: number;
-  favoriteFood: string;
-  favoriteBooze: string;
-  lastLogin: string;
+  favoriteFood?: string;
+  favoriteBooze?: string;
+  createdDate?: Date;
+  lastLogin?: Date;
   hasDisplayCase: boolean;
-};
+}
 
 function sanitiseBlueText(blueText: string | undefined): string {
   if (!blueText) return "";
@@ -427,28 +435,43 @@ export class KoLClient {
   async getPlayerInformation(playerToLookup: PartialPlayer): Promise<FullPlayer | null> {
     try {
       const profile = await this.tryRequestWithLogin("showplayer.php", { who: playerToLookup.id });
-      const header = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/);
+      const header = profile.match(
+        /<center><table><tr><td>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/
+      );
       if (!header) return null;
 
-      const ascensions = Number(profile.match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
-      const trophies = Number(profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
-      const tattoos = Number(profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
-      const favoriteFood = profile.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "toast (probably)";
-      const favoriteBooze = profile.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "cold butter (probably)";
-      const lastLogin = profile.match(/>Last Login:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "a date between now and February 10th, 2003";
+      let ascensionsString = profile.match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
+      if (ascensionsString) {
+        ascensionsString = ascensionsString.replace(/,/g, "");
+      }
+      const ascensions = Number(ascensionsString) || 0;
+
+      const trophies = Number(
+        profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0
+      );
+      const tattoos = Number(
+        profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0
+      );
+      const favoriteFood = profile.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
+      const favoriteBooze = profile.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
+      const createdDate = profile.match(/>Account Created:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
+      const lastLogin = profile.match(/>Last Login:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
       const hasDisplayCase = profile.match(/Display Case<\/b><\/a> in the Museum<\/td>/) !== null;
 
       return {
         ...playerToLookup,
+        avatar: header[1],
         ascensions,
         trophies,
         tattoos,
         favoriteFood,
         favoriteBooze,
-        lastLogin,
-        hasDisplayCase
-      };       
-    } catch {
+        createdDate: parsePlayerDate(createdDate),
+        lastLogin: parsePlayerDate(lastLogin),
+        hasDisplayCase,
+      };
+    } catch (error) {
+      console.error(error);
       return null;
     }
   }

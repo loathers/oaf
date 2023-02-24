@@ -1,82 +1,97 @@
 import {
-    ChatInputCommandInteraction,
-    SlashCommandBuilder,
-    bold, 
-    hyperlink,
-    EmbedBuilder
-  } from "discord.js";
-  
-import { kolClient } from "../../clients/kol";
-import { pluralize, toKoldbLink, toMuseumLink, toSnapshotLink } from "../../utils";
+  APIEmbedField,
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  bold,
+  hyperlink,
+  italic,
+  time,
+} from "discord.js";
 
+import { createEmbed } from "../../clients/discord";
+import { kolClient } from "../../clients/kol";
+import { snapshotClient } from "../../clients/snapshot";
+import { toKoldbLink, toMuseumLink } from "../../utils";
 
 export const data = new SlashCommandBuilder()
   .setName("player")
   .setDescription("Look up information on a given player.")
-  .addStringOption((o) =>
-    o
+  .addStringOption((option) =>
+    option
       .setName("player")
       .setDescription("The KOL username or ID of the player you're looking up.")
       .setRequired(true)
-    );
+  );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-    const member = interaction.member;
-  
-    if (!member) {
-      interaction.reply({
-        content: "You have to perform this action from within a Guild.",
-        ephemeral: true,
-      });
-      return;
-    }
+  const playerNameOrId = interaction.options.getString("player", true);
 
-    const playerNameOrId = interaction.options.getString("player", true);
+  await interaction.deferReply();
 
-    await interaction.deferReply();
+  const partialPlayer = await kolClient.getPartialPlayer(playerNameOrId);
 
-    const player = await kolClient.getPartialPlayer(playerNameOrId);
+  if (!partialPlayer) {
+    await interaction.editReply(`According to KoL, player ${playerNameOrId} does not exist.`);
+    return;
+  }
 
-    if (!player) {
-        interaction.editReply({content: `According to KOL, player ${playerNameOrId} does not exist.`});        
-        return;
-    }
+  const player = await kolClient.getPlayerInformation(partialPlayer);
 
-    const playerInfo = await kolClient.getPlayerInformation(player);
+  if (!player) {
+    await interaction.editReply(
+      `While player ${bold(playerNameOrId)} exists, this command didn't work. Weird.`
+    );
+    return;
+  }
 
-    if (!playerInfo) {
-        interaction.editReply({content: `While player ${playerNameOrId} exists, this command didn't work. Weird.`});
-        return;    
-    }
+  const fields: APIEmbedField[] = [
+    { name: "Class", value: player.class },
+    { name: "Level", value: player.level.toString() },
+    {
+      name: "Ascensions",
+      value: hyperlink(player.ascensions.toLocaleString(), toKoldbLink(player.name)),
+    },
+  ];
 
-    const embedDescription = [];
+  if (player.favoriteFood) fields.push({ name: "Favorite Food", value: player.favoriteFood });
+  if (player.favoriteBooze) fields.push({ name: "Favorite Booze", value: player.favoriteBooze });
+  if (player.lastLogin) fields.push({ name: "Last Login", value: time(player.lastLogin, "R") });
+  if (player.createdDate)
+    fields.push({ name: "Account Created", value: time(player.createdDate, "R") });
 
-    embedDescription.push(`This user is currently a ${bold(player.class)} at level ${player.level}.`);
-    if (playerInfo.hasDisplayCase) embedDescription.push(`Check out this player's display case at ${bold(hyperlink("their museum page!", toMuseumLink(String(player.id))))}`);
-    embedDescription.push(`If it exists, their snapshot is located ${hyperlink("here", toSnapshotLink(player.name))}`,);
+  fields.push({
+    name: "Display Case",
+    value: player.hasDisplayCase
+      ? hyperlink("Browse", toMuseumLink(String(partialPlayer.id)))
+      : italic("none"),
+  });
 
-    const playerEmbed = new EmbedBuilder()
-        .setColor(0x80CCFF)
-        .setTitle(`${bold(player.name)} (#${player.id})`)
-        .setAuthor({ name: 'OAF Player Summary', iconURL: 'http://images.kingdomofloathing.com/itemimages/oaf.gif'})
-        .setDescription(embedDescription.join("\n"))
-        .addFields(
-            {name: 'Ascensions', value: `${hyperlink(`${playerInfo.ascensions}`, toKoldbLink(player.name))}`},
-            {name: 'Favorite Food', value: `${playerInfo.favoriteFood}`},
-            {name: 'Favorite Booze', value: `${playerInfo.favoriteBooze}`},
-        );
-    
-    playerEmbed.setFooter({text:`${player.name} last logged in on ${playerInfo.lastLogin}`});
+  const snapshot = await snapshotClient.getInfo(player.name);
 
-    try {
-        await interaction.editReply({
-            content: null,
-            embeds: [playerEmbed],
-        });
-    } catch {
-        await interaction.editReply(
-            "I was unable to fetch this user, sorry. I might be unable to log in!"
-        );
-    }
+  fields.push({
+    name: "Snapshot",
+    value: snapshot
+      ? hyperlink(`Browse (updated ${time(snapshot.date, "R")})`, snapshot.link)
+      : italic("none"),
+  });
 
+  const playerEmbed = createEmbed()
+    .setTitle(`${bold(partialPlayer.name)} (#${partialPlayer.id})`)
+    .setThumbnail(player.avatar)
+    .setAuthor({
+      name: "OAF Player Summary",
+      iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+    })
+    .addFields(fields);
+
+  try {
+    await interaction.editReply({
+      content: null,
+      embeds: [playerEmbed],
+    });
+  } catch {
+    await interaction.editReply(
+      "I was unable to fetch this user, sorry. I might be unable to log in!"
+    );
+  }
 }
