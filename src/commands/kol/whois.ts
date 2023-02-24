@@ -40,6 +40,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.editReply(
       "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔"
     );
+    return;
   }
 
   const partialPlayer = await kolClient.getPartialPlayer(playerNameOrId);
