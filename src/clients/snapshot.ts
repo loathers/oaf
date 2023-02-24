@@ -5,7 +5,7 @@ export class SnapshotClient {
   constructor() {}
 
   static toLink(input: string) {
-    return `https://api.aventuristo.net/av-snapshot?u=${encodeURI(input.replace(/\s/g, "%20"))}`;
+    return `https://api.aventuristo.net/av-snapshot?u=${encodeURI(input)}`;
   }
 
   async getInfo(playerName: string) {

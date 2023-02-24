@@ -19,11 +19,11 @@ export function toWikiLink(input: string): string {
 }
 
 export function toKoldbLink(input: string): string {
-  return `https://koldb.com/player.php?name=${encodeURI(input.replace(/\s/g, "%20"))}`;
+  return `https://www.koldb.com/player.php?name=${encodeURI(input)}`;
 }
 
-export function toMuseumLink(input: string): string {
-  return `https://museum.loathers.net/player/${encodeURI(input.replace(/\s/g, ""))}`;
+export function toMuseumLink(id: number): string {
+  return `https://museum.loathers.net/player/${id}`;
 }
 
 export function parseNumber(input?: string): number {
