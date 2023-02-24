@@ -38,7 +38,7 @@ const PACKAGES = new Map([
   ["mint condition lil' doctor™ bag", "lil' doctor™ bag"],
   ["vampyric cloake pattern", "vampyric cloake"],
   ["fourth of may cosplay saber kit", "fourth of may cosplay saber"],
-  ["rune-strewn spoon coccoon", "hewn moon-rune spoon"],
+  ["rune-strewn spoon cocoon", "hewn moon-rune spoon"],
   ["beach comb box", "beach comb"],
   ["unopened eight days a week pill keeper", "eight days a week pill keeper"],
   ["unopened diabolic pizza cube box", "diabolic pizza cube"],
@@ -154,6 +154,16 @@ export class WikiClient {
     return this._finalSkillIds;
   }
 
+  retrieve(name: string): Thing | null {
+    const formattedName = cleanString(name.toLowerCase().trim());
+    return this._thingMap.get(formattedName) ?? null;
+  }
+
+  register(thing: Thing): void {
+    const formattedName = cleanString(thing.name().toLowerCase().trim());
+    this._thingMap.set(formattedName, thing);
+  }
+
   async loadItemTypes(itemTypes: Map<string, string[]>) {
     for (let fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
       const file = await downloadMafiaData(fileName);
@@ -176,7 +186,7 @@ export class WikiClient {
           this._finalSkillIds[block] = skill._skill.id;
         }
         if (skill.name()) {
-          this._thingMap.set(skill.name(), skill);
+          this.register(skill);
         }
       } catch {}
     }
@@ -190,13 +200,13 @@ export class WikiClient {
         if (item.get().id > this._finalItemId) this._finalItemId = item.get().id;
         this.knownItemIds.add(item.get().id);
         if (item.name()) {
-          this._thingMap.set(item.name(), item);
+          this.register(item);
           if (item.get().types.includes("avatar")) {
             avatarPotions.add(item.name());
           }
           const unpackagedName = PACKAGES.get(item.name().toLowerCase());
           if (unpackagedName) {
-            const contents = this._thingMap.get(unpackagedName);
+            const contents = this.retrieve(unpackagedName);
             if (contents && contents instanceof Item) {
               contents.addContainer(item);
               item.addContents(contents);
@@ -204,7 +214,7 @@ export class WikiClient {
           }
           const packageName = REVERSE_PACKAGES.get(item.name().toLowerCase());
           if (packageName) {
-            const container = this._thingMap.get(packageName);
+            const container = this.retrieve(packageName);
             if (container && container instanceof Item) {
               container.addContents(item);
               item.addContainer(container);
@@ -224,7 +234,7 @@ export class WikiClient {
             .replaceAll("\\,", "🍕")
             .split(",")
             .map((itemName) => itemName.replaceAll("🍕", ","))
-            .map((itemName) => this._thingMap.get(cleanString(itemName.trim()).toLowerCase()))
+            .map((itemName) => this.retrieve(itemName))
             .filter(isItem);
           for (const item of group) {
             item.addZapGroup(group);
@@ -242,7 +252,7 @@ export class WikiClient {
           const group = line
             .split("\t")
             .slice(1)
-            .map((itemName: string) => this._thingMap.get(cleanString(itemName).toLowerCase()))
+            .map((itemName: string) => this.retrieve(itemName))
             .filter(isItem);
           for (const item of group) {
             item.addFoldGroup(group);
@@ -258,7 +268,7 @@ export class WikiClient {
       try {
         const monster = new Monster(line);
         if (monster.name()) {
-          this._thingMap.set(monster.name(), monster);
+          this.register(monster);
         }
       } catch {}
     }
@@ -271,18 +281,18 @@ export class WikiClient {
         const familiar = new Familiar(line);
         if (this._finalFamiliarId < familiar.get().id) this._finalFamiliarId = familiar.get().id;
         if (familiar.name()) {
-          const hatchling = this._thingMap.get(familiar.get().larva.toLowerCase());
+          const hatchling = this.retrieve(familiar.get().larva);
 
           if (hatchling instanceof Item) {
             familiar.addHatchling(hatchling);
             hatchling.addGrowingFamiliar(familiar);
           }
 
-          const equipment = this._thingMap.get(familiar.get().item.toLowerCase());
+          const equipment = this.retrieve(familiar.get().item);
 
           if (equipment instanceof Item) {
             familiar.addEquipment(equipment);
-            this._thingMap.set(familiar.name(), familiar);
+            this.register(familiar);
             equipment.addEquppingFamiliar(familiar);
           }
         }
@@ -296,7 +306,7 @@ export class WikiClient {
       try {
         const effect = new Effect(line, avatarPotions);
         if (effect.name()) {
-          this._thingMap.set(effect.name(), effect);
+          this.register(effect);
         }
       } catch {}
     }
@@ -348,8 +358,8 @@ export class WikiClient {
 
     const embed = createEmbed().setTitle(foundName.name).setURL(foundName.url);
 
-    if (this._thingMap.has(foundName.name.toLowerCase())) {
-      const thing = this._thingMap.get(foundName.name.toLowerCase())!;
+    const thing = this.retrieve(foundName.name);
+    if (thing) {
       await thing.addToEmbed(embed);
     } else if (foundName.image) {
       embed.setImage(foundName.image.replace("https", "http"));
