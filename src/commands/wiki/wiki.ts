@@ -52,6 +52,7 @@ async function onMessage(message: Message) {
 
   let slashNote = "";
   if (matches.length > 0 && matches[0][0] === message.content.trim()) {
+    await message.react("<:deadgarf:915694091541573712>");
     const slashCommand = inlineCode(`/wiki ${matches[0][1]}`);
     slashNote = `Remember, for this query could have just run ${slashCommand}\n\n`;
   }
