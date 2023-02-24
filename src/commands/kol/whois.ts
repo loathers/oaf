@@ -21,6 +21,7 @@ export const data = new SlashCommandBuilder()
       .setName("player")
       .setDescription("The name or id of the KoL player you're looking up.")
       .setRequired(true)
+      .setMaxLength(30)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -31,7 +32,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (
     // Player names must be betwixt 3 and 30 characters; player IDs can be short, but not long
     (3 > playerNameOrId.length && playerNameOrId.match(/[^\d]/)) ||
-    playerNameOrId.length > 30 ||
     // Player names cannot start with numbers
     playerNameOrId.match(/^\d[^\d]*/) ||
     // Player names must only contain alphanumeric characters, spaces, and underscores
