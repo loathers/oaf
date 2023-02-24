@@ -61,9 +61,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   fields.push({
     name: "Display Case",
-    value: player.hasDisplayCase
-      ? hyperlink("Browse", toMuseumLink(String(partialPlayer.id)))
-      : italic("none"),
+    value: player.hasDisplayCase ? hyperlink("Browse", toMuseumLink(player.id)) : italic("none"),
   });
 
   const snapshot = await snapshotClient.getInfo(player.name);
@@ -76,7 +74,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 
   const playerEmbed = createEmbed()
-    .setTitle(`${bold(partialPlayer.name)} (#${partialPlayer.id})`)
+    .setTitle(`${bold(player.name)} (#${player.id})`)
     .setThumbnail(player.avatar)
     .addFields(fields);
 
