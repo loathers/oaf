@@ -363,7 +363,7 @@ export class KoLClient {
     try {
       const profile = await this.tryRequestWithLogin("showplayer.php", { who: id });
       const name = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/)?.[1];
-      return name ? this.getPartialPlayerFromName(name) : null;
+      return name ? await this.getPartialPlayerFromName(name) : null;
     } catch {
       return null;
     }
