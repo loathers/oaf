@@ -45,7 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const fields: APIEmbedField[] = [
-    { name: "Class", value: player.class },
+    { name: "Class", value: player.class || "Unlisted" },
     { name: "Level", value: player.level.toString() },
     {
       name: "Ascensions",

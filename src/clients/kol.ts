@@ -372,7 +372,7 @@ export class KoLClient {
   async getPartialPlayerFromName(name: string): Promise<PartialPlayer | null> {
     try {
       const matcher =
-        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]+)\<\/td\>/i;
+        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]*)\<\/td\>/i;
       const search = await this.tryRequestWithLogin("searchplayer.php", {
         searchstring: name.replace(/\_/g, "\\_"),
         searching: "Yep.",
