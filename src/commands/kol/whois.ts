@@ -21,12 +21,26 @@ export const data = new SlashCommandBuilder()
       .setName("player")
       .setDescription("The name or id of the KoL player you're looking up.")
       .setRequired(true)
+      .setMaxLength(30)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const playerNameOrId = interaction.options.getString("player", true);
 
   await interaction.deferReply();
+
+  if (
+    // Player names must be betwixt 3 and 30 characters; player IDs can be short, but not long
+    (3 > playerNameOrId.length && playerNameOrId.match(/[^\d]/)) ||
+    // Player names cannot start with numbers
+    playerNameOrId.match(/^\d[^\d]*/) ||
+    // Player names must only contain alphanumeric characters, spaces, and underscores
+    playerNameOrId.match(/[^a-zA-Z0-9_ ]/)
+  ) {
+    await interaction.editReply(
+      "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔"
+    );
+  }
 
   const partialPlayer = await kolClient.getPartialPlayer(playerNameOrId);
 
@@ -45,7 +59,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const fields: APIEmbedField[] = [
-    { name: "Class", value: player.class },
+    { name: "Class", value: player.class || "Unlisted" },
     { name: "Level", value: player.level.toString() },
     {
       name: "Ascensions",

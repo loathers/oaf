@@ -362,22 +362,8 @@ export class KoLClient {
   async getPartialPlayerFromId(id: number): Promise<PartialPlayer | null> {
     try {
       const profile = await this.tryRequestWithLogin("showplayer.php", { who: id });
-      const header = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/);
-      if (!header) return null;
-
-      const goldstars =
-        profile.match(/<img src="\/images\/otherimages\/goldstart.png" height="30" width="30" \/>/g)
-          ?.length ?? 0;
-      const optimalityMultiplier = 10 ** (goldstars / 2);
-      const level = Number(header[2] || "0") / optimalityMultiplier;
-      const clss = profile.match(/<b>Class:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "Unknown";
-
-      return {
-        id: id,
-        name: header[1],
-        level,
-        class: clss,
-      };
+      const name = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/)?.[1];
+      return name ? await this.getPartialPlayerFromName(name) : null;
     } catch {
       return null;
     }
@@ -386,7 +372,7 @@ export class KoLClient {
   async getPartialPlayerFromName(name: string): Promise<PartialPlayer | null> {
     try {
       const matcher =
-        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]+)\<\/td\>/i;
+        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]*)\<\/td\>/i;
       const search = await this.tryRequestWithLogin("searchplayer.php", {
         searchstring: name.replace(/\_/g, "\\_"),
         searching: "Yep.",

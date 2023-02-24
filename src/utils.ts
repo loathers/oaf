@@ -19,7 +19,8 @@ export function toWikiLink(input: string): string {
 }
 
 export function toKoldbLink(input: string): string {
-  return `https://www.koldb.com/player.php?name=${encodeURI(input)}`;
+  // NOTE: KOLDB does not support https. If this ever changes, this should change too.
+  return `http://www.koldb.com/player.php?name=${encodeURI(input)}`;
 }
 
 export function toMuseumLink(id: number): string {
