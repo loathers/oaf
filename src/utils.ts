@@ -18,6 +18,14 @@ export function toWikiLink(input: string): string {
     .replace(/\)/g, "%29")}`;
 }
 
+export function toKoldbLink(input: string): string {
+  return `https://koldb.com/player.php?name=${encodeURI(input.replace(/\s/g, "%20"))}`;
+}
+
+export function toMuseumLink(input: string): string {
+  return `https://museum.loathers.net/player/${encodeURI(input.replace(/\s/g, ""))}`;
+}
+
 export function parseNumber(input?: string): number {
   return parseInt(input?.replace(",", "") || "0");
 }

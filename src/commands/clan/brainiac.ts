@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { clanState } from "./_clans";
 import { prisma } from "../../clients/database";
+import { clanState } from "./_clans";
 
 export const data = new SlashCommandBuilder()
   .setName("brainiac")
