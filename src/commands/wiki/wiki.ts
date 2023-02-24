@@ -2,8 +2,8 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   Message,
-  MessageEditOptions,
   SlashCommandBuilder,
+  inlineCode,
   userMention,
 } from "discord.js";
 
@@ -46,9 +46,15 @@ async function onMessage(message: Message) {
   const member = message.member;
   if (!member) return;
 
-  const queries = [...message.content.matchAll(ITEMMATCHER)]
-    .map((m) => m[1])
-    .filter((m) => m.length > 0);
+  const matches = [...message.content.matchAll(ITEMMATCHER)];
+
+  const queries = matches.map((m) => m[1]).filter((m) => m.length > 0);
+
+  let slashNote = "";
+  if (matches.length > 0 && matches[0][0] === message.content.trim()) {
+    const slashCommand = inlineCode(`/wiki ${matches[0][1]}`);
+    slashNote = `Remember, for this query could have just run ${slashCommand}\n\n`;
+  }
 
   if (queries.length === 0) return;
 
@@ -63,7 +69,7 @@ async function onMessage(message: Message) {
   }
 
   const searchingMessage = await message.reply({
-    content: `${userMention(member.id)} is searching for ${lf.format(
+    content: `${slashNote}${userMention(member.id)} is searching for ${lf.format(
       considered.map((q) => `"${q}"`)
     )}...`,
     allowedMentions: { parse: [], repliedUser: false },
@@ -72,7 +78,7 @@ async function onMessage(message: Message) {
   const embeds = await Promise.all(considered.map((query) => getWikiReply(query)));
 
   await searchingMessage.edit({
-    content: `${userMention(member.id)} searched for...`,
+    content: `${slashNote}${userMention(member.id)} searched for...`,
     embeds,
     allowedMentions: {
       parse: [],
