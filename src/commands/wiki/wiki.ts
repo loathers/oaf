@@ -52,9 +52,13 @@ async function onMessage(message: Message) {
 
   let slashNote = "";
   if (matches.length > 0 && matches[0][0] === message.content.trim()) {
-    await message.react("<:deadgarf:915694091541573712>");
+    try {
+      await message.react("<:deadgarf:915694091541573712>");
+    } catch {
+      console.warn("Please give me permissions to react to messages!");
+    }
     const slashCommand = inlineCode(`/wiki ${matches[0][1]}`);
-    slashNote = `Remember, for this query could have just run ${slashCommand}\n\n`;
+    slashNote = `Remember, for this query you could have just run ${slashCommand}\n\n`;
   }
 
   if (queries.length === 0) return;
