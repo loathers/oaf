@@ -72,7 +72,7 @@ async function onMessage(message: Message) {
   const embeds = await Promise.all(considered.map((query) => getWikiReply(query)));
 
   await searchingMessage.edit({
-    content: `@silent ${userMention(member.id)} searched for...`,
+    content: `${userMention(member.id)} searched for...`,
     embeds,
     allowedMentions: {
       parse: [],
