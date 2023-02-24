@@ -56,7 +56,7 @@ type PartialPlayer = {
   class: string;
 };
 
-interface FullPlayer {
+interface FullPlayer extends PartialPlayer {
   ascensions: number;
   trophies: number;
   tattoos: number;
@@ -65,8 +65,6 @@ interface FullPlayer {
   lastLogin: string;
   hasDisplayCase: boolean;
 };
-
-interface FullPlayer extends PartialPlayer {};
 
 function sanitiseBlueText(blueText: string | undefined): string {
   if (!blueText) return "";
@@ -431,6 +429,7 @@ export class KoLClient {
       const profile = await this.tryRequestWithLogin("showplayer.php", { who: playerToLookup.id });
       const header = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/);
       if (!header) return null;
+
       const ascensions = Number(profile.match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
       const trophies = Number(profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
       const tattoos = Number(profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
@@ -439,12 +438,8 @@ export class KoLClient {
       const lastLogin = profile.match(/>Last Login:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? "a date between now and February 10th, 2003";
       const hasDisplayCase = profile.match(/Display Case<\/b><\/a> in the Museum<\/td>/) !== null;
 
-
       return {
-        id: playerToLookup.id,
-        name: playerToLookup.name,
-        level: playerToLookup.level,
-        class: playerToLookup.class,
+        ...playerToLookup,
         ascensions,
         trophies,
         tattoos,
