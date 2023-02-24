@@ -14,12 +14,12 @@ import { snapshotClient } from "../../clients/snapshot";
 import { toKoldbLink, toMuseumLink } from "../../utils";
 
 export const data = new SlashCommandBuilder()
-  .setName("player")
+  .setName("whois")
   .setDescription("Look up information on a given player.")
   .addStringOption((option) =>
     option
       .setName("player")
-      .setDescription("The KOL username or ID of the player you're looking up.")
+      .setDescription("The name or id of the KoL player you're looking up.")
       .setRequired(true)
   );
 
@@ -78,10 +78,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const playerEmbed = createEmbed()
     .setTitle(`${bold(partialPlayer.name)} (#${partialPlayer.id})`)
     .setThumbnail(player.avatar)
-    .setAuthor({
-      name: "OAF Player Summary",
-      iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
-    })
     .addFields(fields);
 
   try {
