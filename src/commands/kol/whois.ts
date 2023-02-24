@@ -28,6 +28,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
+  if (
+    // Player names must be betwixt 3 and 30 characters; player IDs can be short, but not long
+    (3 > playerNameOrId.length && playerNameOrId.match(/[^\d]/)) ||
+    playerNameOrId.length > 30 ||
+    // Player names cannot start with numbers
+    playerNameOrId.match(/^\d[^\d]*/) ||
+    // Player names must only contain alphanumeric characters, spaces, and underscores
+    playerNameOrId.match(/[^a-zA-Z0-9_ ]/)
+  ) {
+    await interaction.editReply(
+      "That isn't a player. I can't believe you would try to trick me, your friendly neighborhood OAF, that this string represents a player. I'm very disappointed in you."
+    );
+  }
+
   const partialPlayer = await kolClient.getPartialPlayer(playerNameOrId);
 
   if (!partialPlayer) {
