@@ -38,7 +38,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     playerNameOrId.match(/[^a-zA-Z0-9_ ]/)
   ) {
     await interaction.editReply(
-      "That isn't a player. I can't believe you would try to trick me, your friendly neighborhood OAF, that this string represents a player. I'm very disappointed in you."
+      "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔"
     );
   }
 
