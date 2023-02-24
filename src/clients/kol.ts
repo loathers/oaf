@@ -56,7 +56,7 @@ type PartialPlayer = {
   class: string;
 };
 
-type FullPlayer = {
+interface FullPlayer {
   ascensions: number;
   trophies: number;
   tattoos: number;
@@ -65,6 +65,8 @@ type FullPlayer = {
   lastLogin: string;
   hasDisplayCase: boolean;
 };
+
+interface FullPlayer extends PartialPlayer {};
 
 function sanitiseBlueText(blueText: string | undefined): string {
   if (!blueText) return "";
@@ -424,9 +426,9 @@ export class KoLClient {
     return match?.[1] ?? null;
   }
 
-  async getPlayerInformation(id: number): Promise<FullPlayer | null> {
+  async getPlayerInformation(playerToLookup: PartialPlayer): Promise<FullPlayer | null> {
     try {
-      const profile = await this.tryRequestWithLogin("showplayer.php", { who: id });
+      const profile = await this.tryRequestWithLogin("showplayer.php", { who: playerToLookup.id });
       const header = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/);
       if (!header) return null;
       const ascensions = Number(profile.match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0);
@@ -439,6 +441,10 @@ export class KoLClient {
 
 
       return {
+        id: playerToLookup.id,
+        name: playerToLookup.name,
+        level: playerToLookup.level,
+        class: playerToLookup.class,
         ascensions,
         trophies,
         tattoos,
