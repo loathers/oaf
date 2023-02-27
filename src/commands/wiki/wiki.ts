@@ -20,21 +20,21 @@ export const data = new SlashCommandBuilder()
     option.setName("term").setDescription("The term to search for in the wiki.").setRequired(true)
   );
 
+const blankEmbed = (description: string) => new EmbedBuilder().setDescription(description);
+
 async function getWikiReply(item: string) {
   try {
     const embed = await wikiClient.getEmbed(item);
     if (!embed) {
-      return new EmbedBuilder().setDescription(
-        `"${item}" wasn't found. Please refine your search.`
-      );
+      return blankEmbed(`"${item}" wasn't found. Please refine your search.`);
     }
 
     return embed;
   } catch (error) {
     if (error instanceof WikiDownError) {
-      return new EmbedBuilder().setDescription(`The wiki seems to be down. Hopefully temporarily`);
+      return blankEmbed(`The wiki seems to be down. Hopefully temporarily`);
     }
-    return new EmbedBuilder().setDescription("Something went wrong");
+    return blankEmbed("Something went wrong");
   }
 }
 
