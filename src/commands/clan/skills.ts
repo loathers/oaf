@@ -40,7 +40,6 @@ function addParticipantSkills(raidLog: string, mapToUpdate: Map<string, PlayerDa
       kills: participation?.kills ?? 0,
       skills: (participation?.skills ?? 0) + 1,
       id: participation?.id,
-      brainiac: participation?.brainiac ?? false,
     });
   }
 }
@@ -57,7 +56,6 @@ function addParticipantKills(raidLog: string, mapToUpdate: Map<string, PlayerDat
       kills: (participation?.kills ?? 0) + parseInt(matchedKill[2]),
       skills: participation?.skills ?? 0,
       id: participation?.id,
-      brainiac: participation?.brainiac ?? false,
     });
   }
 }

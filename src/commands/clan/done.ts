@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, italic } from "discord.js";
 
 import { prisma } from "../../clients/database";
 
@@ -31,7 +31,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 
   await interaction.editReply(
-    `${done ? "Added" : "Removed"} user "${username}" ${
+    `${done ? "Added" : "Removed"} user ${italic(username)} ${
       done ? "to" : "from"
     } the list of players done with skills.`
   );

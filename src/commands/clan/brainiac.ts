@@ -1,7 +1,6 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, italic } from "discord.js";
 
 import { prisma } from "../../clients/database";
-import { clanState } from "./_clans";
 
 export const data = new SlashCommandBuilder()
   .setName("brainiac")
@@ -31,18 +30,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     create: { username, brainiac: available },
   });
 
-  if (clanState.killMap.has(username)) {
-    clanState.killMap.get(username)!.brainiac = available;
-  } else {
-    clanState.killMap.set(username, {
-      kills: 0,
-      skills: 0,
-      brainiac: available,
-    });
-  }
-
   await interaction.editReply(
-    `${available ? "Added" : "Removed"} user "${username}" ${
+    `${available ? "Added" : "Removed"} user ${italic(username)} ${
       available ? "to" : "from"
     } the list of players always available to help with skills.`
   );
