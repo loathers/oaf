@@ -8,7 +8,7 @@ import {
 } from "discord.js";
 
 import { discordClient } from "../../clients/discord";
-import { wikiClient } from "../../clients/wiki";
+import { WikiDownError, wikiClient } from "../../clients/wiki";
 import { lf } from "../../utils";
 
 const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
@@ -21,12 +21,21 @@ export const data = new SlashCommandBuilder()
   );
 
 async function getWikiReply(item: string) {
-  const embed = await wikiClient.getEmbed(item);
-  if (!embed) {
-    return new EmbedBuilder().setDescription(`"${item}" wasn't found. Please refine your search.`);
-  }
+  try {
+    const embed = await wikiClient.getEmbed(item);
+    if (!embed) {
+      return new EmbedBuilder().setDescription(
+        `"${item}" wasn't found. Please refine your search.`
+      );
+    }
 
-  return embed;
+    return embed;
+  } catch (error) {
+    if (error instanceof WikiDownError) {
+      return new EmbedBuilder().setDescription(`The wiki seems to be down. Hopefully temporarily`);
+    }
+    return new EmbedBuilder().setDescription("Something went wrong");
+  }
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {

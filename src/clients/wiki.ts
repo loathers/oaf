@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { EmbedBuilder } from "discord.js";
 
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things";
@@ -6,6 +6,13 @@ import { isItem } from "../things/Item";
 import { cleanString } from "../utils";
 import { createEmbed } from "./discord";
 import { pizzaTree } from "./pizza";
+
+export class WikiDownError extends Error {
+  constructor() {
+    super("Wiki is down");
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
 
 const PACKAGES = new Map([
   ["iceberglet", "ice pick"],
@@ -393,8 +400,13 @@ export class WikiClient {
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: directResponseUrl, image });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
-    } catch (error: any) {
-      console.log(error.toString());
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.code === "ENOTFOUND") throw new WikiDownError();
+        console.error(error);
+      } else {
+        throw error;
+      }
     }
     console.log("Not found as wiki page");
     console.log("Trying wiki search");
