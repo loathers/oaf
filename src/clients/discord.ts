@@ -15,9 +15,9 @@ import {
 
 export type Command = {
   data: SlashCommandBuilder;
-  execute: (interaction: ChatInputCommandInteraction) => void;
-  autocomplete?: (interaction: AutocompleteInteraction) => void;
-  init?: () => void;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
+  init?: () => Promise<void>;
 };
 
 export class DiscordClient extends Client {
