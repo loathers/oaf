@@ -55,7 +55,6 @@ export async function sync() {
       kills: player.kills,
       skills: player.skills,
       id: Number(player.user_id),
-      brainiac: player.brainiac,
     });
   }
 }

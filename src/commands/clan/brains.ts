@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } from "discord.js";
 
+import { prisma } from "../../clients/database";
 import { kolClient } from "../../clients/kol";
-import { clanState } from "./_clans";
 
 const BASE_CLASSES = [
   "Seal Clubber",
@@ -21,18 +21,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const classMap = new Map<string, string[]>();
 
-  for (let playerName of clanState.killMap.keys()) {
-    const playerEntry = clanState.killMap.get(playerName);
-    if (!playerEntry) continue;
-    if (!playerEntry.skills && !playerEntry.brainiac) continue;
+  const players = await prisma.players.findMany({ where: { brainiac: true } });
 
-    const player = await kolClient.getPartialPlayerFromName(playerName);
-    if (!player || player.level < 15) continue;
+  for (const player of players) {
+    const current = await kolClient.getPartialPlayerFromName(player.username);
+    if (!current || current.level < 15) continue;
 
-    if (!classMap.has(player.class)) {
-      classMap.set(player.class, []);
+    if (!classMap.has(current.class)) {
+      classMap.set(current.class, []);
     }
-    classMap.get(player.class)!.push(playerName);
+    classMap.get(current.class)!.push(player.username);
   }
 
   await interaction.editReply({

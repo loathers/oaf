@@ -31,7 +31,6 @@ export type PlayerData = {
   id?: number;
   kills: number;
   skills: number;
-  brainiac: boolean;
 };
 
 export const clanState = {
