@@ -52,12 +52,12 @@ async function performSetup() {
   await loadSlashCommands();
 
   // Tell us when you're online!
-  discordClient.on("ready", ({ user }) => {
+  discordClient.on(Events.ClientReady, ({ user }) => {
     console.log(`Logged in as ${user.tag}!`);
   });
 
   // Register message logger
-  discordClient.on("messageCreate", async (message) => {
+  discordClient.on(Events.MessageCreate, async (message) => {
     if (message.content.length === 0) return;
     console.log(
       new Date(message.createdTimestamp).toLocaleTimeString(),

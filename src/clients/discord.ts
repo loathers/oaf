@@ -1,11 +1,13 @@
 import {
   AutocompleteInteraction,
-  ChatInputCommandInteraction,
   Client,
   Collection,
+  CommandInteraction,
   EmbedBuilder,
+  Events,
   GatewayIntentBits,
   Interaction,
+  ModalSubmitInteraction,
   Partials,
   REST,
   RESTPostAPIApplicationCommandsJSONBody,
@@ -45,7 +47,7 @@ export class DiscordClient extends Client {
     this.clientId = clientId;
     this.token = token;
 
-    this.on("interactionCreate", async (interaction) => this.handleInteraction(interaction));
+    this.on(Events.InteractionCreate, async (interaction) => this.handleInteraction(interaction));
   }
 
   async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
