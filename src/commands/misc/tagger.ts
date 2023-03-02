@@ -92,7 +92,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
   await handleModal(interaction.targetMessage, submit);
 }
 
-async function handleModal(message: Message<true>, interaction: ModalSubmitInteraction) {
+async function handleModal(targetMessage: Message<true>, interaction: ModalSubmitInteraction) {
   const tag = interaction.fields.getTextInputValue("messageTaggerTag").toLowerCase();
   const reason = interaction.fields.getTextInputValue("messageTaggerReason");
 
@@ -100,7 +100,23 @@ async function handleModal(message: Message<true>, interaction: ModalSubmitInter
   // to validate the modal input, we want to reply ephemerally on failure and publicly on success. Thus we need
   // to hope that this create command completes within the limit for undeferred replies.
 
-  const existing = await getExistingTag(message);
+  const existing = await getExistingTag(targetMessage);
+
+  if (tag === "!delete") {
+    if (!existing) {
+      await interaction.reply({
+        ephemeral: true,
+        content: "This message hasn't got an existing tag",
+      });
+      return;
+    }
+
+    await prisma.tag.delete({ where: { tag: existing.tag } });
+    await interaction.reply({
+      content: `Tag removed from the message that was previously tagged with ${bold(existing.tag)}`,
+    });
+    return;
+  }
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -110,9 +126,9 @@ async function handleModal(message: Message<true>, interaction: ModalSubmitInter
         data: {
           tag,
           reason,
-          messageId: message.id,
-          channelId: message.channelId,
-          guildId: message.guildId,
+          messageId: targetMessage.id,
+          channelId: targetMessage.channelId,
+          guildId: targetMessage.guildId,
           createdBy: interaction.user.id,
         },
       });
@@ -124,7 +140,7 @@ async function handleModal(message: Message<true>, interaction: ModalSubmitInter
     const verb = existing ? `retagged from ${bold(existing.tag)} to` : `tagged`;
 
     await interaction.reply(
-      `A ${hyperlink("message", message.url)} has been ${verb} ${bold(
+      `A ${hyperlink("message", targetMessage.url)} has been ${verb} ${bold(
         tag
       )}. From now on, running ${inlineCode(`/tag ${tag}`)} will drop a link to this message!`
     );
