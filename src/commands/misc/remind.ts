@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, userMention } from "discord.js";
+import { ChatInputCommandInteraction, Events, SlashCommandBuilder, userMention } from "discord.js";
 
 import { prisma } from "../../clients/database";
 import { discordClient } from "../../clients/discord";
@@ -154,5 +154,5 @@ async function loadRemindersFromDatabase() {
 }
 
 export async function init() {
-  discordClient.on("ready", loadRemindersFromDatabase);
+  discordClient.on(Events.ClientReady, loadRemindersFromDatabase);
 }

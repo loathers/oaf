@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, hyperlink } from "discord.js";
+import { ChatInputCommandInteraction, Events, SlashCommandBuilder, hyperlink } from "discord.js";
 
 import { createEmbed, discordClient } from "../../clients/discord";
 
@@ -43,7 +43,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export async function init() {
-  discordClient.on("ready", async (client) => {
+  discordClient.on(Events.ClientReady, async (client) => {
     START_TIME = Date.now();
     const channel = client.channels.cache.find((c) => c.id === TEST_CHANNEL_ID);
     if (!channel || !("send" in channel)) return;

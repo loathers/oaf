@@ -1,6 +1,7 @@
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
+  Events,
   Message,
   SlashCommandBuilder,
   inlineCode,
@@ -101,5 +102,5 @@ async function onMessage(message: Message) {
 }
 
 export async function init() {
-  discordClient.on("messageCreate", onMessage);
+  discordClient.on(Events.MessageCreate, onMessage);
 }

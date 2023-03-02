@@ -1,11 +1,13 @@
 import {
   AutocompleteInteraction,
-  ChatInputCommandInteraction,
   Client,
   Collection,
+  CommandInteraction,
   EmbedBuilder,
+  Events,
   GatewayIntentBits,
   Interaction,
+  ModalSubmitInteraction,
   Partials,
   REST,
   RESTPostAPIApplicationCommandsJSONBody,
@@ -13,16 +15,22 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-export type Command = {
+export type ModalHandler = {
+  customId: string;
+  handle: (interaction: ModalSubmitInteraction) => Promise<void>;
+};
+
+export type CommandHandler = {
   data: SlashCommandBuilder;
-  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  execute: (interaction: CommandInteraction) => Promise<void>;
   autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
   init?: () => Promise<void>;
 };
 
 export class DiscordClient extends Client {
   private clientId: string;
-  commands = new Collection<string, Command>();
+  commands = new Collection<string, CommandHandler>();
+  modals = new Collection<string, ModalHandler>();
 
   constructor(clientId: string, token: string) {
     super({
@@ -39,7 +47,7 @@ export class DiscordClient extends Client {
     this.clientId = clientId;
     this.token = token;
 
-    this.on("interactionCreate", async (interaction) => this.handleInteraction(interaction));
+    this.on(Events.InteractionCreate, async (interaction) => this.handleInteraction(interaction));
   }
 
   async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
@@ -50,42 +58,45 @@ export class DiscordClient extends Client {
   }
 
   async handleInteraction(interaction: Interaction) {
-    if (interaction.isChatInputCommand()) {
+    if ("commandName" in interaction) {
       const command = this.commands.get(interaction.commandName);
 
       if (!command) {
         console.error(`No command matching ${interaction.commandName} found`);
-        await interaction.reply(`Command not recognised. Something has gone wrong here.`);
-        return;
-      }
-
-      try {
-        await command.execute(interaction);
-      } catch (error) {
-        console.error(error);
-        const message =
-          "OAF recovered from a crash trying to process that command. Please tell Captain Scotch or report to #mafia-and-scripting";
-        if (interaction.deferred) {
-          await interaction.editReply(message);
-        } else if (interaction.replied) {
-          await interaction.followUp(message);
-        } else {
-          await interaction.reply(message);
+        if (interaction.isRepliable()) {
+          await interaction.reply(`Command not recognised. Something has gone wrong here.`);
         }
-      }
-    } else if (interaction.isAutocomplete()) {
-      const command = this.commands.get(interaction.commandName);
-
-      if (!command) {
-        console.error(`No command matching ${interaction.commandName} found`);
         return;
       }
 
-      try {
-        await command.autocomplete?.(interaction);
-      } catch (error) {
-        console.error(error);
+      if (interaction.isChatInputCommand() || interaction.isContextMenuCommand()) {
+        try {
+          await command.execute(interaction);
+        } catch (error) {
+          console.error(error);
+          const message =
+            "OAF recovered from a crash trying to process that command. Please tell Captain Scotch or report to #mafia-and-scripting";
+          if (interaction.deferred) {
+            await interaction.editReply(message);
+          } else if (interaction.replied) {
+            await interaction.followUp(message);
+          } else {
+            await interaction.reply(message);
+          }
+        }
+        return;
       }
+
+      if (interaction.isAutocomplete()) {
+        try {
+          await command.autocomplete?.(interaction);
+        } catch (error) {
+          console.error(error);
+        }
+        return;
+      }
+
+      return;
     }
   }
 
