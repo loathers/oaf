@@ -93,7 +93,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
 }
 
 async function handleModal(message: Message<true>, interaction: ModalSubmitInteraction) {
-  const tag = interaction.fields.getTextInputValue("messageTaggerTag");
+  const tag = interaction.fields.getTextInputValue("messageTaggerTag").toLowerCase();
   const reason = interaction.fields.getTextInputValue("messageTaggerReason");
 
   // We shouldn't do async things without first marking the reply as deferred. However, because we are using this
