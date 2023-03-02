@@ -86,7 +86,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
 
   const submit = await interaction.awaitModalSubmit({
     filter: (i) => i.customId === customId,
-    time: 15_000,
+    time: 120_000, // 2 minutes should be fine?
   });
 
   await handleModal(interaction.targetMessage, submit);
