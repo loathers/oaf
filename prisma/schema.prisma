@@ -29,3 +29,16 @@ model reminders {
 model tracked_instances {
   raid_id String @id @db.VarChar(8)
 }
+
+model Tag {
+  tag       String   @id
+  reason    String?
+  channelId String
+  guildId   String
+  messageId String
+  createdAt DateTime @default(now())
+  createdBy String
+
+  // A message can only have one tag
+  @@unique([guildId, channelId, messageId])
+}
