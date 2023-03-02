@@ -47,7 +47,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
   }
 
   const highestRole = interaction.member.roles.highest;
-  const canPost = interaction.guild.roles.comparePositions(EXTENDED_TEAM_ROLE, highestRole);
+  const canPost = interaction.guild.roles.comparePositions(highestRole, EXTENDED_TEAM_ROLE);
 
   if (canPost < 0) {
     await interaction.reply({
