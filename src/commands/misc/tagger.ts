@@ -36,17 +36,28 @@ async function getExistingTag(message: Message<true>) {
   });
 }
 
+const EXTENDED_TEAM_ROLE = "473316929768128512";
+
 export async function execute(interaction: ContextMenuCommandInteraction) {
   if (!interaction.isMessageContextMenuCommand())
     throw "Somehow you're trying to tag something that isn't a message";
 
-  const message = interaction.targetMessage;
-
-  if (!message.inGuild()) {
-    throw "This can only be done in a guild";
+  if (!interaction.inCachedGuild()) {
+    throw "This can only be done in guild";
   }
 
-  const existing = await getExistingTag(message);
+  const highestRole = interaction.member.roles.highest;
+  const canPost = interaction.guild.roles.comparePositions(EXTENDED_TEAM_ROLE, highestRole);
+
+  if (canPost < 0) {
+    await interaction.reply({
+      ephemeral: true,
+      content: 'This is only available for members with the role "Extended Team" or higher',
+    });
+    return;
+  }
+
+  const existing = await getExistingTag(interaction.targetMessage);
 
   const modal = new ModalBuilder().setCustomId(customId).setTitle("Tag message");
 
@@ -78,7 +89,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
     time: 15_000,
   });
 
-  await handleModal(message, submit);
+  await handleModal(interaction.targetMessage, submit);
 }
 
 async function handleModal(message: Message<true>, interaction: ModalSubmitInteraction) {
