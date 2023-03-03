@@ -153,7 +153,7 @@ async function handleModal(targetMessage: Message<true>, interaction: ModalSubmi
   await prisma.$transaction(async (tx) => {
     if (existing) await tx.tag.delete({ where: { tag: existing.tag } });
 
-    await prisma.tag.create({
+    await tx.tag.create({
       data: {
         tag,
         reason,
