@@ -1,9 +1,10 @@
-import { Prisma } from "@prisma/client";
 import {
   ActionRowBuilder,
   ApplicationCommandType,
   ContextMenuCommandBuilder,
   ContextMenuCommandInteraction,
+  DiscordjsError,
+  DiscordjsErrorCodes,
   Message,
   ModalBuilder,
   ModalSubmitInteraction,
@@ -22,7 +23,7 @@ export const data = new ContextMenuCommandBuilder()
   .setName("Tag message")
   .setType(ApplicationCommandType.Message);
 
-async function getExistingTag(message: Message<true>) {
+async function getExistingTagForMessage(message: Message<true>) {
   return await prisma.tag.findUnique({
     where: {
       guildId_channelId_messageId: {
@@ -57,7 +58,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
 
   const customId = `messageTagger-${interaction.targetId}`;
 
-  const existing = await getExistingTag(interaction.targetMessage);
+  const existing = await getExistingTagForMessage(interaction.targetMessage);
 
   const modal = new ModalBuilder().setCustomId(customId).setTitle("Tag message");
 
@@ -84,24 +85,38 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
 
   await interaction.showModal(modal);
 
-  const submit = await interaction.awaitModalSubmit({
-    filter: (i) => i.customId === customId,
-    time: 120_000, // 2 minutes should be fine?
-  });
+  try {
+    const submit = await interaction.awaitModalSubmit({
+      filter: (i) => i.customId === customId,
+      time: 120_000, // 2 minutes should be fine?
+    });
 
-  await handleModal(interaction.targetMessage, submit);
+    await handleModal(interaction.targetMessage, submit);
+  } catch (error) {
+    if (
+      error instanceof DiscordjsError &&
+      error.code === DiscordjsErrorCodes.InteractionCollectorError
+    ) {
+      // User never botherd filling in modal which is not a problem
+      return;
+    }
+
+    throw error;
+  }
 }
 
 async function handleModal(targetMessage: Message<true>, interaction: ModalSubmitInteraction) {
   const tag = interaction.fields.getTextInputValue("messageTaggerTag").toLowerCase();
   const reason = interaction.fields.getTextInputValue("messageTaggerReason");
 
-  // We shouldn't do async things without first marking the reply as deferred. However, because we are using this
-  // to validate the modal input, we want to reply ephemerally on failure and publicly on success. Thus we need
-  // to hope that this create command completes within the limit for undeferred replies.
+  const tagNameInUse = await prisma.tag.findUnique({ where: { tag } });
 
-  const existing = await getExistingTag(targetMessage);
+  // We shouldn't do async things without first marking the reply as deferred. However, we want to reply ephemerally
+  // on failure and publicly on success. So here we are deferring reply to a little later than normal.
 
+  const existing = await getExistingTagForMessage(targetMessage);
+
+  // A special tag name can be used to delete existing tags
   if (tag === "!delete") {
     if (!existing) {
       await interaction.reply({
@@ -111,51 +126,55 @@ async function handleModal(targetMessage: Message<true>, interaction: ModalSubmi
       return;
     }
 
+    await interaction.deferReply();
+
     await prisma.tag.delete({ where: { tag: existing.tag } });
+    await interaction.editReply(
+      `Tag removed from the message that was previously tagged with ${bold(existing.tag)}`
+    );
+    return;
+  }
+
+  // Tag names are unique, error out if in use
+  if (tagNameInUse) {
+    const reasonQuote = reason
+      ? ` To save you having to retype, your reason was\n${blockQuote(reason)}`
+      : "";
     await interaction.reply({
-      content: `Tag removed from the message that was previously tagged with ${bold(existing.tag)}`,
+      content: `Tag ${bold(tag)} is already in use, so you'll have to try again.${reasonQuote}`,
+      ephemeral: true,
     });
     return;
   }
 
-  try {
-    await prisma.$transaction(async (tx) => {
-      if (existing) await tx.tag.delete({ where: { tag: existing.tag } });
+  // We are now out of error cases so can defer reply early
+  await interaction.deferReply();
 
-      await prisma.tag.create({
-        data: {
-          tag,
-          reason,
-          messageId: targetMessage.id,
-          channelId: targetMessage.channelId,
-          guildId: targetMessage.guildId,
-          createdBy: interaction.user.id,
-        },
-      });
+  await prisma.$transaction(async (tx) => {
+    if (existing) await tx.tag.delete({ where: { tag: existing.tag } });
+
+    await prisma.tag.create({
+      data: {
+        tag,
+        reason,
+        messageId: targetMessage.id,
+        channelId: targetMessage.channelId,
+        guildId: targetMessage.guildId,
+        createdBy: interaction.user.id,
+      },
     });
+  });
 
-    // Update cache
-    await init();
+  // Update cache
+  await init();
 
-    const verb = existing ? `retagged from ${bold(existing.tag)} to` : `tagged`;
+  const verb = existing ? `retagged from ${bold(existing.tag)} to` : `tagged`;
 
-    await interaction.reply(
-      `A ${hyperlink("message", targetMessage.url)} has been ${verb} ${bold(
-        tag
-      )}. From now on, running ${inlineCode(`/tag ${tag}`)} will drop a link to this message!`
-    );
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      const reasonQuote = reason
-        ? ` To save you having to retype, your reason was\n${blockQuote(reason)}`
-        : "";
-      await interaction.reply({
-        content: `Tag ${bold(tag)} is already in use, so you'll have to try again.${reasonQuote}`,
-        ephemeral: true,
-      });
-      return;
-    }
+  await interaction.editReply(
+    `A ${hyperlink("message", targetMessage.url)} has been ${verb} ${bold(
+      tag
+    )}. From now on, running ${inlineCode(`/tag ${tag}`)} will drop a link to this message!`
+  );
 
-    throw error;
-  }
+  return;
 }
