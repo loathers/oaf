@@ -30,12 +30,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   if (
-    // Player names must be betwixt 3 and 30 characters; player IDs can be short, but not long
-    (3 > playerNameOrId.length && playerNameOrId.match(/[^\d]/)) ||
-    // Player names cannot start with numbers
-    playerNameOrId.match(/^\d+[^\d]/) ||
-    // Player names must only contain alphanumeric characters, spaces, and underscores
-    playerNameOrId.match(/[^a-zA-Z0-9_ ]/)
+    // Player names must not be...
+    playerNameOrId.match(
+      new RegExp(
+        [
+          /^[^\d]{0,2}$/, // ...an empty string, or 1-2 non-digits
+          /^[^\d]\d$/, // ...a non-digit followed by a digit
+          /.{31,}/, // ...31 characters or longer
+          /^\d+[^\d]/, // ...digits followed by a non-digit
+          /[^a-zA-Z0-9_ ]/, // ...non-alphanumerics/underscores/whitespaces
+        ]
+          .map((r) => r.source)
+          .join("|")
+      )
+    )
   ) {
     await interaction.editReply(
       "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔"
