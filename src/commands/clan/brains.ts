@@ -21,7 +21,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const classMap = new Map<string, string[]>();
 
-  const players = await prisma.players.findMany({ where: { brainiac: true } });
+  const players = await prisma.players.findMany({
+    where: { OR: [{ brainiac: true }, { skills: { gt: 0 } }] },
+  });
 
   for (const player of players) {
     const current = await kolClient.getPartialPlayerFromName(player.username);
