@@ -33,7 +33,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Player names must be betwixt 3 and 30 characters; player IDs can be short, but not long
     (3 > playerNameOrId.length && playerNameOrId.match(/[^\d]/)) ||
     // Player names cannot start with numbers
-    playerNameOrId.match(/^\d[^\d]*/) ||
+    playerNameOrId.match(/^\d[^\d]+/) ||
     // Player names must only contain alphanumeric characters, spaces, and underscores
     playerNameOrId.match(/[^a-zA-Z0-9_ ]/)
   ) {
