@@ -22,8 +22,6 @@ export const data = new ContextMenuCommandBuilder()
   .setName("Tag message")
   .setType(ApplicationCommandType.Message);
 
-export const customId = "messageTagger";
-
 async function getExistingTag(message: Message<true>) {
   return await prisma.tag.findUnique({
     where: {
@@ -56,6 +54,8 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
     });
     return;
   }
+
+  const customId = `messageTagger-${interaction.targetId}`;
 
   const existing = await getExistingTag(interaction.targetMessage);
 
