@@ -126,7 +126,7 @@ async function handleModal(targetMessage: Message<true>, interaction: ModalSubmi
       return;
     }
 
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral: true});
 
     await prisma.tag.delete({ where: { tag: existing.tag } });
     await interaction.editReply(
