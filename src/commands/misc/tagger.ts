@@ -106,6 +106,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
 }
 
 async function handleModal(targetMessage: Message<true>, interaction: ModalSubmitInteraction) {
+  await interaction.deferReply({ ephemeral: true });
   const tag = interaction.fields.getTextInputValue("messageTaggerTag").toLowerCase();
   const reason = interaction.fields.getTextInputValue("messageTaggerReason");
 
@@ -119,14 +120,9 @@ async function handleModal(targetMessage: Message<true>, interaction: ModalSubmi
   // A special tag name can be used to delete existing tags
   if (tag === "!delete") {
     if (!existing) {
-      await interaction.reply({
-        ephemeral: true,
-        content: "This message hasn't got an existing tag",
-      });
+      await interaction.editReply("This message hasn't got an existing tag");
       return;
     }
-
-    await interaction.deferReply({ ephemeral: true});
 
     await prisma.tag.delete({ where: { tag: existing.tag } });
     await interaction.editReply(
@@ -140,15 +136,11 @@ async function handleModal(targetMessage: Message<true>, interaction: ModalSubmi
     const reasonQuote = reason
       ? ` To save you having to retype, your reason was\n${blockQuote(reason)}`
       : "";
-    await interaction.reply({
-      content: `Tag ${bold(tag)} is already in use, so you'll have to try again.${reasonQuote}`,
-      ephemeral: true,
-    });
+    await interaction.editReply(
+      `Tag ${bold(tag)} is already in use, so you'll have to try again.${reasonQuote}`
+    );
     return;
   }
-
-  // We are now out of error cases so can defer reply early
-  await interaction.deferReply();
 
   await prisma.$transaction(async (tx) => {
     if (existing) await tx.tag.delete({ where: { tag: existing.tag } });
