@@ -112,9 +112,6 @@ async function handleModal(targetMessage: Message<true>, interaction: ModalSubmi
 
   const tagNameInUse = await prisma.tag.findUnique({ where: { tag } });
 
-  // We shouldn't do async things without first marking the reply as deferred. However, we want to reply ephemerally
-  // on failure and publicly on success. So here we are deferring reply to a little later than normal.
-
   const existing = await getExistingTagForMessage(targetMessage);
 
   // A special tag name can be used to delete existing tags
