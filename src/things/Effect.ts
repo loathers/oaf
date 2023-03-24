@@ -1,7 +1,7 @@
 import { EmbedBuilder, bold } from "discord.js";
 
 import { kolClient } from "../clients/kol";
-import { cleanString } from "../utils";
+import { cleanString, linkGameDescription } from "../utils";
 import { Thing } from "./Thing";
 
 export type EffectData = {
@@ -53,6 +53,8 @@ export class Effect implements Thing {
     } else {
       description += "Inelgible for pizza, wishes, or hookahs.";
     }
+
+    description += `\n\n${linkGameDescription("desc_effect.php?whicheffect=", this._effect.descId)}`
     embed.setDescription(description);
   }
 

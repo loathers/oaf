@@ -1,3 +1,4 @@
+import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
 
 export function indent(textToIndent: string): string {
@@ -57,4 +58,12 @@ export function groupToMap<K, V>(
     map.get(key)!.push(array[i]);
   }
   return map;
+}
+
+const BASE_KOL_URL = "https://www.kingdomofloathing.com";
+const BASE_MAFIA_URL = "http://127.0.0.1:60080";
+export function linkGameDescription(url: string, input?: { toString(): string }): string {
+  return `Description: ${bold(hyperlink("mafia", `${BASE_MAFIA_URL}/${url}${input}`))} ${bold(
+    hyperlink("kol", `${BASE_KOL_URL}/${url}${input}`)
+  )}`;
 }

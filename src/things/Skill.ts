@@ -1,7 +1,7 @@
 import { EmbedBuilder, bold } from "discord.js";
 
 import { kolClient } from "../clients/kol";
-import { cleanString } from "../utils";
+import { cleanString, linkGameDescription } from "../utils";
 import { Thing } from "./Thing";
 
 export type SkillData = {
@@ -72,6 +72,7 @@ export class Skill implements Thing {
     }
     description += "\n\n";
     description += await kolClient.getSkillDescription(this._skill.id);
+    description += `\n\n${linkGameDescription("desc_skill.php?whichskill=", this._skill.id)}`
     return description;
   }
 

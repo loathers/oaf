@@ -1,7 +1,7 @@
 import { EmbedBuilder, bold, hyperlink } from "discord.js";
 
 import { kolClient } from "../clients/kol";
-import { cleanString, pluralize, toWikiLink } from "../utils";
+import { cleanString, linkGameDescription, pluralize, toWikiLink } from "../utils";
 import { Familiar } from "./Familiar";
 import { Thing } from "./Thing";
 
@@ -417,8 +417,9 @@ export class Item implements Thing {
     if (blueText && (autosell || price_section)) blueText += "\n";
     if (autosell) autosell += "\n";
     if (price_section) price_section += "\n";
+    const description_links_section = `\n\n${linkGameDescription("desc_item.php?whichitem=", this._item.descId)}`
 
-    return `${description_string}${blueText}${autosell}${price_section}${zapGroup}${foldGroup}${container}${contents}`;
+    return `${description_string}${blueText}${autosell}${price_section}${zapGroup}${foldGroup}${container}${contents}${description_links_section}`;
   }
 
   async addToEmbed(embed: EmbedBuilder): Promise<void> {

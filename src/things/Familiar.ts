@@ -1,7 +1,7 @@
 import { EmbedBuilder, bold, hyperlink } from "discord.js";
 
 import { kolClient } from "../clients/kol";
-import { cleanString, indent, toWikiLink } from "../utils";
+import { cleanString, indent, linkGameDescription, toWikiLink } from "../utils";
 import { Item } from "./Item";
 import { Thing } from "./Thing";
 
@@ -323,7 +323,7 @@ export class Familiar implements Thing {
         toWikiLink(this._familiar.item)
       )}\n${indent(
         (await kolClient.getItemDescription(this._equipment?.get().descId || 0)) || ""
-      )}`;
+      )}\n\n${linkGameDescription("desc_familiar.php?which=", this._familiar.id)}`;
     return description_string;
   }
 
