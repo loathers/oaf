@@ -87,6 +87,9 @@ function sanitiseBlueText(blueText: string | undefined): string {
   );
 }
 
+const BASE_MAFIA_URL = "http://127.0.0.1:60080";
+const BASE_KOL_URL = "https://www.kingdomofloathing.com";
+
 export class KoLClient {
   clanActionMutex = new Mutex();
   static loginMutex = new Mutex();
@@ -236,6 +239,12 @@ export class KoLClient {
           )
         )}\n${indent(await this.getEffectDescription(effect.groups?.descid))}`
       );
+
+    output.push(
+      `Description: ${bold(
+        hyperlink("mafia", `${BASE_MAFIA_URL}/desc_item.php?whichitem=${descId}`)
+      )} ${bold(hyperlink("kol", `${BASE_KOL_URL}/desc_item.php?whichitem=${descId}`))}`
+    );
 
     return output.join("\n");
   }
