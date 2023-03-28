@@ -236,6 +236,7 @@ export class KoLClient {
           )
         )}\n${indent(await this.getEffectDescription(effect.groups?.descid))}`
       );
+
     return output.join("\n");
   }
 
