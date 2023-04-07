@@ -51,7 +51,7 @@ export class Effect implements Thing {
           "Pizza: If you are reading this, Captain 'Jalen' Scotch has hecked something up. Please ping him.";
       }
     } else {
-      description += "Inelgible for pizza, wishes, or hookahs.";
+      description += "ineligible for pizza, wishes, or hookahs.";
     }
     embed.setDescription(description);
   }
