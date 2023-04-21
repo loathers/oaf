@@ -8,12 +8,13 @@ datasource db {
 }
 
 model players {
-  username         String  @id @db.VarChar(31)
+  username         String  @id
   kills            Int     @default(0)
-  skills           Int     @default(0) @db.SmallInt
+  skills           Int     @default(0)
   done_with_skills Boolean @default(false)
-  user_id          String? @db.VarChar(8)
+  user_id          String?
   brainiac         Boolean @default(false)
+  discord_id       String?
 }
 
 model reminders {

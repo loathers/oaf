@@ -3,10 +3,14 @@ import axios from "axios";
 import { parse } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
+import { stringify } from "querystring";
+import TypedEmitter from "typed-emitter";
 import { DOMParser } from "xmldom";
 import { select } from "xpath";
 
 import { cleanString, indent, toWikiLink } from "../utils";
+
+import EventEmitter = require("node:events");
 
 const parser = new DOMParser({
   locator: {},
@@ -33,10 +37,34 @@ type MallPrice = {
   minPrice: number | null;
 };
 
-type KOLCredentials = {
+type KoLCredentials = {
   fetched: number;
   sessionCookies?: string;
   pwdhash?: string;
+};
+
+type KoLUser = {
+  name: string;
+  id: string;
+};
+
+type KoLChatMessage = {
+  who?: KoLUser;
+  type?: string;
+  msg?: string;
+  link?: string;
+  channel?: string;
+  time: string;
+};
+
+type KoLKmail = {
+  id: string;
+  type: string;
+  fromid: string;
+  fromname: string;
+  azunixtime: string;
+  message: string;
+  localtime: string;
 };
 
 export type LeaderboardInfo = {
@@ -87,13 +115,28 @@ function sanitiseBlueText(blueText: string | undefined): string {
   );
 }
 
-export class KoLClient {
+type Message = {
+  who: KoLUser;
+  msg: string;
+};
+
+type Events = {
+  kmail: (message: Message) => void;
+  whisper: (message: Message) => void;
+};
+
+function wait(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) {
   clanActionMutex = new Mutex();
   static loginMutex = new Mutex();
   private _loginParameters: URLSearchParams;
-  private _credentials: KOLCredentials = { fetched: -1 };
+  private _credentials: KoLCredentials = { fetched: -1 };
 
   constructor(username: string, password: string) {
+    super();
     this._loginParameters = new URLSearchParams();
     this._loginParameters.append("loggingin", "Yup.");
     this._loginParameters.append("loginname", username);
@@ -142,9 +185,87 @@ export class KoLClient {
     });
   }
 
+  private chatBotStarted = false;
+
+  async startChatBot() {
+    if (this.chatBotStarted) return;
+    this.chatBotStarted = true;
+    this.loopChatBot();
+  }
+
+  private async loopChatBot() {
+    await Promise.all([this.checkWhispers(), this.checkKmails()]);
+    await wait(3000);
+    await this.loopChatBot();
+  }
+
+  private lastFetchedWhispers = "0";
+
+  async checkWhispers() {
+    const newChatMessagesResponse = (await this.tryRequestWithLogin("newchatmessages.php", {
+      j: 1,
+      lasttime: this.lastFetchedWhispers,
+    })) as { last: string; msgs: KoLChatMessage[] };
+    if (!newChatMessagesResponse) return;
+    this.lastFetchedWhispers = newChatMessagesResponse["last"];
+
+    newChatMessagesResponse["msgs"]
+      .filter((msg) => msg["type"] === "private" && msg.who && msg.msg)
+      .map((msg) => ({
+        who: msg.who as KoLUser,
+        msg: msg.msg as string,
+      }))
+      .forEach((whisper) => this.emit("whisper", whisper));
+  }
+
+  async checkKmails() {
+    const newKmailsResponse = (await this.tryRequestWithLogin("api.php", {
+      what: "kmail",
+      for: `${this._loginParameters.get("loginname")} Chatbot`,
+    })) as KoLKmail[];
+
+    if (!newKmailsResponse.length) return;
+
+    const newKmails = newKmailsResponse.map((msg: KoLKmail) => ({
+      who: {
+        id: msg.fromid,
+        name: msg.fromname,
+      },
+      msg: msg.message,
+    }));
+
+    const data = {
+      the_action: "delete",
+      pwd: this._credentials?.pwdhash,
+      box: "Inbox",
+      ...newKmailsResponse.reduce(
+        (acc: { [x: string]: string }, msg: KoLKmail) => ({
+          ...acc,
+          [`sel${msg.id}`]: "on",
+        }),
+        {}
+      ),
+    };
+
+    await this.tryRequestWithLogin("messages.php", data);
+
+    newKmails.forEach((m) => this.emit("kmail", m));
+  }
+
+  async useChatMacro(macro: string) {
+    await this.tryRequestWithLogin("submitnewchat.php", {
+      graf: `/clan ${macro}`,
+      j: 1,
+    });
+  }
+
+  async whisper(recipientId: number, message: string) {
+    await this.useChatMacro(`/w ${recipientId} ${message}`);
+  }
+
   private async makeCredentialedRequest(url: string, parameters: object) {
     try {
-      const request = await axios.get<string>(`https://www.kingdomofloathing.com/${url}`, {
+      const request = await axios.get(`https://www.kingdomofloathing.com/${url}`, {
         method: "GET",
         headers: {
           cookie: this._credentials.sessionCookies || "",
