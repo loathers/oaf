@@ -58,10 +58,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       1000 * parseInt(timeMatch?.groups?.seconds || "0");
     reminderTime = Date.now() + timeToWait;
     await interaction.reply(
-      `Okay, I'll remind you in ${when}, at ${time(
-        reminderTime / 1000,
-        TimestampStyles.LongDateTime
-      )}.`
+      `Okay, I'll remind you in ${time(reminderTime / 1000, TimestampStyles.RelativeTime)}.`
     );
   } else {
     reminderTime = new Date(Date.now()).setHours(3, 40);
