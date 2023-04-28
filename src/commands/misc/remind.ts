@@ -1,4 +1,11 @@
-import { ChatInputCommandInteraction, Events, SlashCommandBuilder, userMention } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  Events,
+  SlashCommandBuilder,
+  TimestampStyles,
+  time,
+  userMention,
+} from "discord.js";
 
 import { prisma } from "../../clients/database";
 import { discordClient } from "../../clients/discord";
@@ -20,10 +27,10 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const time = interaction.options.getString("when", true);
+  const when = interaction.options.getString("when", true);
   const reminderText = interaction.options.getString("reminder") || "Time's up!";
 
-  if (!timeMatcher.test(time) && time.toLowerCase() !== "rollover") {
+  if (!timeMatcher.test(when) && when.toLowerCase() !== "rollover") {
     interaction.reply({
       content: 'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".',
       ephemeral: true,
@@ -41,8 +48,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   let timeToWait = 0;
   let reminderTime = 0;
-  if (timeMatcher.test(time)) {
-    const timeMatch = timeMatcher.exec(time);
+  if (timeMatcher.test(when)) {
+    const timeMatch = timeMatcher.exec(when);
     timeToWait =
       7 * 24 * 60 * 60 * 1000 * parseInt(timeMatch?.groups?.weeks || "0") +
       24 * 60 * 60 * 1000 * parseInt(timeMatch?.groups?.days || "0") +
@@ -50,7 +57,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       60 * 1000 * parseInt(timeMatch?.groups?.minutes || "0") +
       1000 * parseInt(timeMatch?.groups?.seconds || "0");
     reminderTime = Date.now() + timeToWait;
-    await interaction.reply(`Okay, I'll remind you in ${time}.`);
+    await interaction.reply(
+      `Okay, I'll remind you in ${time(reminderTime / 1000, TimestampStyles.RelativeTime)}.`
+    );
   } else {
     reminderTime = new Date(Date.now()).setHours(3, 40);
     if (reminderTime < Date.now()) {
