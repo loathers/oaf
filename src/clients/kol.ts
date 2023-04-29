@@ -278,12 +278,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       the_action: "delete",
       pwd: this._credentials?.pwdhash,
       box: "Inbox",
-      ...newKmailsResponse.reduce(
-        (acc: { [x: string]: string }, msg: KoLKmail) => ({
-          ...acc,
-          [`sel${msg.id}`]: "on",
-        }),
-        {}
+      ...Object.fromEntries(newKmailsResponse.map(({ id }) => [`sel${id}`, "on"])),
       ),
     };
 
