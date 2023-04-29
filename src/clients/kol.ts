@@ -3,10 +3,14 @@ import axios from "axios";
 import { parse } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
+import { stringify } from "querystring";
+import TypedEmitter from "typed-emitter";
 import { DOMParser } from "xmldom";
 import { select } from "xpath";
 
 import { cleanString, indent, toWikiLink } from "../utils";
+
+import EventEmitter = require("node:events");
 
 const parser = new DOMParser({
   locator: {},
@@ -33,10 +37,38 @@ type MallPrice = {
   minPrice: number | null;
 };
 
-type KOLCredentials = {
-  fetched: number;
+type KoLCredentials = {
   sessionCookies?: string;
   pwdhash?: string;
+};
+
+type KoLUser = {
+  name: string;
+  id: number;
+};
+
+type KoLChatMessage = {
+  who?: KoLUser;
+  type?: string;
+  msg?: string;
+  link?: string;
+  channel?: string;
+  time: string;
+};
+
+const isPrivateWhisper = (
+  msg: KoLChatMessage
+): msg is { type: "private"; who: KoLUser; msg: string; time: string } =>
+  msg.type === "private" && !!msg.who && !!msg.msg;
+
+type KoLKmail = {
+  id: string;
+  type: string;
+  fromid: string;
+  fromname: string;
+  azunixtime: string;
+  message: string;
+  localtime: string;
 };
 
 export type LeaderboardInfo = {
@@ -87,95 +119,243 @@ function sanitiseBlueText(blueText: string | undefined): string {
   );
 }
 
-export class KoLClient {
+type Message = {
+  who: KoLUser;
+  msg: string;
+  time: Date;
+};
+
+type Events = {
+  kmail: (message: Message) => void;
+  whisper: (message: Message) => void;
+};
+
+function wait(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) {
   clanActionMutex = new Mutex();
   static loginMutex = new Mutex();
+  private _isRollover: boolean = false;
   private _loginParameters: URLSearchParams;
-  private _credentials: KOLCredentials = { fetched: -1 };
+  private _credentials: KoLCredentials = {};
 
   constructor(username: string, password: string) {
+    super();
     this._loginParameters = new URLSearchParams();
     this._loginParameters.append("loggingin", "Yup.");
     this._loginParameters.append("loginname", username);
     this._loginParameters.append("password", password);
     this._loginParameters.append("secure", "0");
     this._loginParameters.append("submitbutton", "Log In");
+
+    this.startChatBot();
+
+    this.on("whisper", (whisper) => {
+      console.log(
+        whisper.time.toLocaleTimeString(),
+        whisper.who.name,
+        "said",
+        `"${whisper.msg}"`,
+        "in KoL chat"
+      );
+    });
+
+    this.on("kmail", (kmail) => {
+      console.log(
+        kmail.time.toLocaleTimeString(),
+        kmail.who.name,
+        "said",
+        `"${kmail.msg}"`,
+        "in a kmail"
+      );
+    });
   }
 
-  async logIn(): Promise<void> {
-    await KoLClient.loginMutex.runExclusive(async () => {
+  async loggedIn(): Promise<boolean> {
+    if (!this._credentials) return false;
+    try {
+      const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
+        maxRedirects: 0,
+        withCredentials: true,
+        headers: {
+          cookie: this._credentials?.sessionCookies || "",
+        },
+        params: {
+          what: "status",
+          for: `${this._loginParameters.get("loginname")} Chatbot`,
+        },
+        validateStatus: (status) => status === 302 || status === 200,
+      });
+      return apiResponse.status === 200;
+    } catch {
+      console.log("Login check failed, returning false to be safe.");
+      return false;
+    }
+  }
+
+  async logIn(): Promise<boolean> {
+    return KoLClient.loginMutex.runExclusive(async () => {
+      if (await this.loggedIn()) return true;
+      if (this._isRollover) return false;
+      console.log(`Not logged in. Logging in as ${this._loginParameters.get("loginname")}`);
       try {
-        if (this._credentials.fetched < new Date().getTime() - 60000) {
-          const loginResponse = await axios("https://www.kingdomofloathing.com/login.php", {
-            method: "POST",
-            data: this._loginParameters,
-            maxRedirects: 0,
-            validateStatus: (status) => status === 302,
-          });
-          const sessionCookies = (loginResponse.headers["set-cookie"] || [])
-            .map((cookie: string) => cookie.split(";")[0])
-            .join("; ");
-          const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
-            withCredentials: true,
-            headers: {
-              cookie: sessionCookies,
-            },
-            params: {
-              what: "status",
-              for: "OAF Discord bot for Kingdom of Loathing",
-            },
-          });
-          this._credentials = {
-            fetched: new Date().getTime(),
-            sessionCookies: sessionCookies,
-            pwdhash: apiResponse.data.pwd,
-          };
-        } else {
-          console.log("Blocked fetching new credentials");
-          console.log(
-            `${60000 + this._credentials.fetched - new Date().getTime()} milliseconds to new login`
-          );
-        }
-      } catch (error) {
-        console.log(error);
+        const loginResponse = await axios("https://www.kingdomofloathing.com/login.php", {
+          method: "POST",
+          data: this._loginParameters,
+          maxRedirects: 0,
+          validateStatus: (status) => status === 302,
+        });
+        const sessionCookies = (loginResponse.headers["set-cookie"] || [])
+          .map((cookie: string) => cookie.split(";")[0])
+          .join("; ");
+        const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
+          withCredentials: true,
+          headers: {
+            cookie: sessionCookies,
+          },
+          params: {
+            what: "status",
+            for: `${this._loginParameters.get("loginname")} Chatbot`,
+          },
+        });
+        this._credentials = {
+          sessionCookies: sessionCookies,
+          pwdhash: apiResponse.data.pwd,
+        };
+        return true;
+      } catch {
+        console.log("Login failed. Checking if it's because of rollover.");
+        await this.rolloverCheck();
+        return false;
       }
     });
   }
 
-  private async makeCredentialedRequest(url: string, parameters: object) {
-    try {
-      const request = await axios.get<string>(`https://www.kingdomofloathing.com/${url}`, {
-        method: "GET",
-        headers: {
-          cookie: this._credentials.sessionCookies || "",
+  private chatBotStarted = false;
+
+  async startChatBot() {
+    if (this.chatBotStarted) return;
+    this.loopChatBot();
+    this.chatBotStarted = true;
+  }
+
+  private async loopChatBot() {
+    await Promise.all([this.checkWhispers(), this.checkKmails()]);
+    await wait(3000);
+    await this.loopChatBot();
+  }
+
+  private lastFetchedWhispers = "0";
+
+  async checkWhispers() {
+    const newChatMessagesResponse = (await this.visitUrl("newchatmessages.php", {
+      j: 1,
+      lasttime: this.lastFetchedWhispers,
+    })) as { last: string; msgs: KoLChatMessage[] };
+
+    if (!newChatMessagesResponse || typeof newChatMessagesResponse !== "object") return;
+
+    this.lastFetchedWhispers = newChatMessagesResponse["last"];
+
+    newChatMessagesResponse["msgs"]
+      .filter(isPrivateWhisper)
+      .map((msg) => ({
+        who: {
+          id: Number(msg.who.id),
+          name: msg.who.name,
         },
-        params: {
-          pwd: this._credentials.pwdhash,
-          ...parameters,
-        },
-      });
-      if (
-        !request.data ||
-        request.data.match(/<title>The Kingdom of Loathing<\/title>/) ||
-        request.data.match(/This script is not available unless you're logged in\./)
-      ) {
-        return undefined;
-      }
-      return request.data;
-    } catch {
-      return undefined;
+        msg: msg.msg,
+        time: new Date(Number(msg.time) * 1000),
+      }))
+      .forEach((whisper) => this.emit("whisper", whisper));
+  }
+
+  async checkKmails() {
+    const newKmailsResponse = (await this.visitUrl("api.php", {
+      what: "kmail",
+      for: `${this._loginParameters.get("loginname")} Chatbot`,
+    })) as KoLKmail[];
+
+    if (!Array.isArray(newKmailsResponse) || newKmailsResponse.length === 0) return;
+
+    const newKmails = newKmailsResponse.map((msg: KoLKmail) => ({
+      who: {
+        id: Number(msg.fromid),
+        name: msg.fromname,
+      },
+      msg: msg.message,
+      time: new Date(Number(msg.azunixtime) * 1000),
+    }));
+
+    const data = {
+      the_action: "delete",
+      pwd: this._credentials?.pwdhash,
+      box: "Inbox",
+      ...Object.fromEntries(newKmailsResponse.map(({ id }) => [`sel${id}`, "on"])),
+    };
+
+    await this.visitUrl("messages.php", {}, data);
+
+    newKmails.forEach((m) => this.emit("kmail", m));
+  }
+
+  async useChatMacro(macro: string) {
+    await this.visitUrl("submitnewchat.php", {
+      graf: `/clan ${macro}`,
+      j: 1,
+    });
+  }
+
+  async whisper(recipientId: number, message: string) {
+    await this.useChatMacro(`/w ${recipientId} ${message}`);
+  }
+
+  async rolloverCheck() {
+    this._isRollover = /The system is currently down for nightly maintenance/.test(
+      (await axios("https://www.kingdomofloathing.com/")).data
+    );
+    if (this._isRollover) {
+      console.log("Rollover appears to be in progress. Checking again in one minute.");
+      setTimeout(() => this.rolloverCheck(), 60000);
     }
   }
 
-  async tryRequestWithLogin(url: string, parameters: object) {
-    const result = await this.makeCredentialedRequest(url, parameters);
-    if (result) return result;
-    await this.logIn();
-    return (await this.makeCredentialedRequest(url, parameters)) || "";
+  async visitUrl(
+    url: string,
+    parameters: Record<string, any> = {},
+    data: Record<string, any> | undefined = undefined,
+    pwd: Boolean = true,
+    doLog: Boolean = false
+  ): Promise<any> {
+    if (this._isRollover || !(await this.logIn())) return null;
+    try {
+      const page = await axios(`https://www.kingdomofloathing.com/${url}`, {
+        method: "POST",
+        withCredentials: true,
+        headers: {
+          cookie: this._credentials?.sessionCookies || "",
+        },
+        params: {
+          ...parameters,
+          ...(pwd ? { pwd: this._credentials?.pwdhash } : {}),
+        },
+        ...(data
+          ? {
+              data: stringify(data),
+            }
+          : {}),
+      });
+      if (doLog) console.log(page.request);
+      return page.data;
+    } catch {
+      return null;
+    }
   }
 
   async getMallPrice(itemId: number): Promise<MallPrice> {
-    const prices = await this.tryRequestWithLogin("backoffice.php", {
+    const prices = await this.visitUrl("backoffice.php", {
       action: "prices",
       ajax: 1,
       iid: itemId,
@@ -210,7 +390,7 @@ export class KoLClient {
         return "+1, 11, and 111 to a wide array of stats\n";
       default: //fall through
     }
-    const description = await this.tryRequestWithLogin("desc_item.php", {
+    const description = await this.visitUrl("desc_item.php", {
       whichitem: descId,
     });
     const blueText = description.match(
@@ -252,7 +432,7 @@ export class KoLClient {
         return "Muscle +10%\nMysticality +10%\nMoxie +10%\n+5 Prismatic Damage\n+10 Prismatic Spell Damage\nSo-So Resistance to All Elements (+2)";
     }
 
-    const description = await this.tryRequestWithLogin("desc_effect.php", {
+    const description = await this.visitUrl("desc_effect.php", {
       whicheffect: descId,
     });
 
@@ -264,7 +444,7 @@ export class KoLClient {
   }
 
   async getSkillDescription(id: number): Promise<string> {
-    const description = await this.tryRequestWithLogin("desc_skill.php", {
+    const description = await this.visitUrl("desc_skill.php", {
       whichskill: String(id),
     });
     const blueText = description.match(
@@ -274,7 +454,7 @@ export class KoLClient {
   }
 
   async joinClan(id: number): Promise<boolean> {
-    const result = await this.tryRequestWithLogin("showclan.php", {
+    const result = await this.visitUrl("showclan.php", {
       whichclan: id,
       action: "joinclan",
       confirm: "on",
@@ -285,7 +465,7 @@ export class KoLClient {
   async addToWhitelist(playerId: number, clanId: number): Promise<boolean> {
     return await this.clanActionMutex.runExclusive(async () => {
       if (!(await this.joinClan(clanId))) return false;
-      await this.tryRequestWithLogin("clan_whitelist.php", {
+      await this.visitUrl("clan_whitelist.php", {
         addwho: playerId,
         level: 2,
         title: "",
@@ -297,7 +477,7 @@ export class KoLClient {
 
   async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo | undefined> {
     try {
-      const leaderboard = await this.tryRequestWithLogin("museum.php", {
+      const leaderboard = await this.visitUrl("museum.php", {
         floor: 1,
         place: "leaderboards",
         whichboard: leaderboardId,
@@ -361,7 +541,7 @@ export class KoLClient {
 
   async getPartialPlayerFromId(id: number): Promise<PartialPlayer | null> {
     try {
-      const profile = await this.tryRequestWithLogin("showplayer.php", { who: id });
+      const profile = await this.visitUrl("showplayer.php", { who: id });
       const name = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/)?.[1];
       return name ? await this.getPartialPlayerFromName(name) : null;
     } catch {
@@ -373,7 +553,7 @@ export class KoLClient {
     try {
       const matcher =
         /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]*)\<\/td\>/i;
-      const search = await this.tryRequestWithLogin("searchplayer.php", {
+      const search = await this.visitUrl("searchplayer.php", {
         searchstring: name.replace(/\_/g, "\\_"),
         searching: "Yep.",
         for: "",
@@ -398,14 +578,14 @@ export class KoLClient {
   }
 
   async ensureFamiliar(familiarId: number): Promise<void> {
-    await this.tryRequestWithLogin("familiar.php", {
+    await this.visitUrl("familiar.php", {
       action: "newfam",
       newfam: familiarId.toFixed(0),
     });
   }
 
   async getEquipmentFamiliar(itemId: number): Promise<string | null> {
-    const responseText: string = await this.tryRequestWithLogin("inv_equip.php", {
+    const responseText: string = await this.visitUrl("inv_equip.php", {
       action: "equip",
       which: 2,
       whichitem: itemId,
@@ -420,7 +600,7 @@ export class KoLClient {
 
   async getPlayerInformation(playerToLookup: PartialPlayer): Promise<FullPlayer | null> {
     try {
-      const profile = await this.tryRequestWithLogin("showplayer.php", { who: playerToLookup.id });
+      const profile = await this.visitUrl("showplayer.php", { who: playerToLookup.id });
       const header = profile.match(
         /<center><table><tr><td>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/
       );
@@ -462,4 +642,5 @@ export class KoLClient {
     }
   }
 }
+
 export const kolClient = new KoLClient(process.env.KOL_USER || "", process.env.KOL_PASS || "");

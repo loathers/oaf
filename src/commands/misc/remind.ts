@@ -78,10 +78,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const channel = interaction.channel || (await interaction.user.createDM());
 
-  if (!("send" in channel)) {
-    console.log("Skipping reminder because requested is not a text channel", channel.id);
-    return;
-  }
+  if (!("send" in channel)) return;
 
   setTimeout(async () => {
     try {
