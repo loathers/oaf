@@ -293,11 +293,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async useChatMacro(macro: string) {
-    const result = await this.visitUrl("submitnewchat.php", {
+    await this.visitUrl("submitnewchat.php", {
       graf: `/clan ${macro}`,
       j: 1,
     });
-    console.log(result);
   }
 
   async whisper(recipientId: number, message: string) {
