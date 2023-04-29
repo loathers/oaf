@@ -56,7 +56,10 @@ type KoLChatMessage = {
   time: string;
 };
 
-const isPrivateWhisper = (msg: KoLChatMessage): msg is { type: "private", who: KoLUser, msg: string, time: string } => msg.type === "private" && !!msg.who && !!msg.msg;
+const isPrivateWhisper = (
+  msg: KoLChatMessage
+): msg is { type: "private"; who: KoLUser; msg: string; time: string } =>
+  msg.type === "private" && !!msg.who && !!msg.msg;
 
 type KoLKmail = {
   id: string;
