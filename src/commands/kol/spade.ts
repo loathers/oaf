@@ -195,7 +195,7 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
 
 async function spadeItem(itemId: number) {
   const exists = !/Nopers/.test(
-    await kolClient.tryRequestWithLogin("inv_equip.php", {
+    await kolClient.visitUrl("inv_equip.php", {
       action: "equip",
       which: 2,
       whichitem: itemId,
@@ -210,7 +210,7 @@ async function spadeItem(itemId: number) {
   }
 
   const tradeable = !/That item cannot be sold or transferred/.test(
-    await kolClient.tryRequestWithLogin("town_sellflea.php", {
+    await kolClient.visitUrl("town_sellflea.php", {
       whichitem: itemId,
       sellprice: "",
       selling: "Yep.",
@@ -219,7 +219,7 @@ async function spadeItem(itemId: number) {
 
   for (let property of ITEM_SPADING_CALLS) {
     const { url, visitMatch, type } = property;
-    const page = (await kolClient.tryRequestWithLogin(
+    const page = (await kolClient.visitUrl(
       ...(url(itemId) as [string, object])
     )) as string;
 
@@ -261,7 +261,7 @@ async function spadeFamiliars(interaction: ChatInputCommandInteraction) {
 }
 
 async function spadeFamiliar(famId: number) {
-  const page = await kolClient.tryRequestWithLogin("desc_familiar.php", { which: famId });
+  const page = await kolClient.visitUrl("desc_familiar.php", { which: famId });
 
   if (page.includes("No familiar was found.")) return "none";
 
@@ -304,7 +304,7 @@ async function spadeSkills(interaction: ChatInputCommandInteraction) {
 }
 
 async function spadeSkill(skillId: number) {
-  const page = await kolClient.tryRequestWithLogin("runskillz.php", {
+  const page = await kolClient.visitUrl("runskillz.php", {
     action: "Skillz",
     whichskill: skillId,
     targetplayer: 1,
