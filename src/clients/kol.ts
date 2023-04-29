@@ -158,6 +158,16 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         "in KoL chat"
       );
     });
+
+    this.on("kmail", (kmail) => {
+      console.log(
+        kmail.time.toLocaleTimeString(),
+        kmail.who.name,
+        "said",
+        `"${kmail.msg}"`,
+        "in a kmail"
+      );
+    });
   }
 
   async loggedIn(): Promise<boolean> {
