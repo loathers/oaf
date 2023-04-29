@@ -296,7 +296,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       ...Object.fromEntries(newKmailsResponse.map(({ id }) => [`sel${id}`, "on"])),
     };
 
-    await this.visitUrl("messages.php", data);
+    await this.visitUrl("messages.php", {}, data);
 
     newKmails.forEach((m) => this.emit("kmail", m));
   }
