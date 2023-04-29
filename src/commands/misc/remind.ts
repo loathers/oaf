@@ -66,6 +66,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const channel = interaction.channel || (await interaction.user.createDM());
 
+  if (!("send" in channel)) return;
+
   setTimeout(async () => {
     try {
       channel.send({
