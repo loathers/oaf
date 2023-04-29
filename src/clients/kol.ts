@@ -245,13 +245,13 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     this.lastFetchedWhispers = newChatMessagesResponse["last"];
 
     newChatMessagesResponse["msgs"]
-      .filter((msg) => msg["type"] === "private" && msg.who && msg.msg)
+      .filter((msg): msg is { type: "private", who: string, msg: string. time?: unknown} => msg["type"] === "private" && msg.who && msg.msg)
       .map((msg) => ({
         who: {
-          id: Number(msg.who!.id),
-          name: msg.who!.name,
+          id: Number(msg.who.id),
+          name: msg.who.name,
         },
-        msg: msg.msg!,
+        msg: msg.msg,
         time: new Date(Number(msg.time) * 1000),
       }))
       .forEach((whisper) => this.emit("whisper", whisper));
