@@ -3,7 +3,7 @@ import axios from "axios";
 import { parse } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
-import { DOMParser } from "xmldom";
+import { DOMParser } from "@xmldom/xmldom";
 import { select } from "xpath";
 
 import { cleanString, indent, toWikiLink } from "../utils";
