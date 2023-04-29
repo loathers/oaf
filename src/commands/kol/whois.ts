@@ -123,14 +123,34 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Save a database hit if we got here by tracking a claimed Discord account in the first place
   if (knownPlayer === null) {
-    knownPlayer = await prisma.players.findFirst({ where: { user_id: player.id.toString() }});
+    knownPlayer = await prisma.players.findFirst({
+      where: {
+        OR: [
+          { user_id: player.id.toString() },
+          { username: { equals: player.name, mode: "insensitive" } },
+        ],
+      }
+    });
   }
 
-  if (knownPlayer !== null && knownPlayer.discord_id) {
-    fields.push({
-      name: "Discord",
-      value: userMention(knownPlayer.discord_id),
-    });
+  if (knownPlayer !== null) {
+    // Use this opportunity to correct our records
+    if (knownPlayer.username !== player.name || knownPlayer.user_id !== player.id.toString()) {
+      await prisma.players.update({
+        where: { username: knownPlayer.username },
+        data: {
+          username: player.name,
+          user_id: player.id.toString(),
+        },
+      });
+    }
+
+    if (knownPlayer.discord_id) {
+      fields.push({
+        name: "Discord",
+        value: userMention(knownPlayer.discord_id),
+      });
+    }
   }
 
   const playerEmbed = createEmbed()
