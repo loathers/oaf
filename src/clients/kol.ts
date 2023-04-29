@@ -56,6 +56,8 @@ type KoLChatMessage = {
   time: string;
 };
 
+const isPrivateWhisper = (msg: KoLChatMessage): msg is { type: "private", who: KoLUser, msg: string, time: string } => msg.type === "private" && !!msg.who && !!msg.msg;
+
 type KoLKmail = {
   id: string;
   type: string;
@@ -245,7 +247,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     this.lastFetchedWhispers = newChatMessagesResponse["last"];
 
     newChatMessagesResponse["msgs"]
-      .filter((msg): msg is { type: "private", who: string, msg: string. time?: unknown} => msg["type"] === "private" && msg.who && msg.msg)
+      .filter(isPrivateWhisper)
       .map((msg) => ({
         who: {
           id: Number(msg.who.id),
@@ -279,7 +281,6 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       pwd: this._credentials?.pwdhash,
       box: "Inbox",
       ...Object.fromEntries(newKmailsResponse.map(({ id }) => [`sel${id}`, "on"])),
-      ),
     };
 
     await this.visitUrl("messages.php", data);
