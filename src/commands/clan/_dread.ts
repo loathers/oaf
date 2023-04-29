@@ -199,7 +199,7 @@ export async function getDetailedDreadStatus(clanId: number): Promise<DetailedDr
 export async function getMissingRaidLogs(clanId: number, parsedRaids: string[]): Promise<string[]> {
   return await kolClient.clanActionMutex.runExclusive(async () => {
     if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
-    let raidLogs = await kolClient.tryRequestWithLogin("clan_oldraidlogs.php", {});
+    let raidLogs = await kolClient.visitUrl("clan_oldraidlogs.php", {});
     let raidIds: string[] = [];
     let row = 0;
     let done = false;
@@ -218,7 +218,7 @@ export async function getMissingRaidLogs(clanId: number, parsedRaids: string[]):
       }
       if (!done) {
         row += 10;
-        raidLogs = await kolClient.tryRequestWithLogin("clan_oldraidlogs.php", {
+        raidLogs = await kolClient.visitUrl("clan_oldraidlogs.php", {
           startrow: row,
         });
       }
@@ -228,7 +228,7 @@ export async function getMissingRaidLogs(clanId: number, parsedRaids: string[]):
 }
 
 export async function getFinishedRaidLog(raidId: string) {
-  return await kolClient.tryRequestWithLogin("clan_viewraidlog.php", {
+  return await kolClient.visitUrl("clan_viewraidlog.php", {
     viewlog: raidId,
     backstart: 0,
   });
@@ -237,6 +237,6 @@ export async function getFinishedRaidLog(raidId: string) {
 export async function getRaidLog(clanId: number): Promise<string> {
   return await kolClient.clanActionMutex.runExclusive(async () => {
     if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
-    return await kolClient.tryRequestWithLogin("clan_raidlogs.php", {});
+    return await kolClient.visitUrl("clan_raidlogs.php", {});
   });
 }
