@@ -7,6 +7,10 @@ export function indent(textToIndent: string): string {
   )}`;
 }
 
+export function notNull<T>(value: T | null): value is T {
+  return value !== null;
+}
+
 export function cleanString(input: string | undefined): string {
   if (!input) return "";
   return decode(input).replace(/<[^>]+>/g, "");
@@ -57,4 +61,12 @@ export function groupToMap<K, V>(
     map.get(key)!.push(array[i]);
   }
   return map;
+}
+
+export function columns<T>(data: T[], columns: number) {
+  return Array(columns).fill(0).map((_, i) => ({
+    name: "\u200b",
+    value: "\u200b" + data.slice(Math.ceil(i * (data.length / 3)), Math.ceil((i + 1) * (data.length / 3))).join("\n"),
+    inline: true,
+  }));
 }

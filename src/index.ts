@@ -4,6 +4,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 
 import { CommandHandler, ModalHandler, discordClient } from "./clients/discord";
+import { kolClient } from "./clients/kol";
 import { wikiClient } from "./clients/wiki";
 
 async function* walk(dir: string): AsyncGenerator<string> {
@@ -50,6 +51,9 @@ async function performSetup() {
 
   console.log("Loading commands and syncing relevant data");
   await loadSlashCommands();
+
+  // Start chatbot
+  kolClient.startChatBot();
 
   // Tell us when you're online!
   discordClient.on(Events.ClientReady, ({ user }) => {

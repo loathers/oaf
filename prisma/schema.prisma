@@ -8,11 +8,11 @@ datasource db {
 }
 
 model players {
-  username         String  @id
+  playerId         Int     @id
+  username         String
   kills            Int     @default(0)
   skills           Int     @default(0)
   done_with_skills Boolean @default(false)
-  user_id          String?
   brainiac         Boolean @default(false)
   discord_id       String?
 }

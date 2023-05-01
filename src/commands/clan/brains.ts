@@ -26,7 +26,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 
   for (const player of players) {
-    const current = await kolClient.getPartialPlayerFromName(player.username);
+    const current = await kolClient.getPartialPlayerFromId(player.playerId);
     if (!current || current.level < 15) continue;
 
     if (!classMap.has(current.class)) {

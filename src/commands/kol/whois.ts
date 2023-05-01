@@ -49,21 +49,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    playerIdentifier = knownPlayer.user_id || knownPlayer.username;
+    playerIdentifier = knownPlayer.playerId || knownPlayer.username;
   } else {
     playerIdentifier = input;
   }
 
   if (
+    typeof playerIdentifier === "string" &&
     // Player names must not be...
     playerIdentifier.match(
       new RegExp(
         [
-          /^[^\d]{0,2}$/, // ...an empty string, or 1-2 non-digits
-          /^[^\d]\d$/, // ...a non-digit followed by a digit
+          /^.{0,2}$/, // ...an empty string, or 1-2 non-digits
           /.{31,}/, // ...31 characters or longer
-          /^\d+[^\d]/, // ...digits followed by a non-digit
-          /[^a-zA-Z0-9_ ]/, // ...non-alphanumerics/underscores/whitespaces
+          /[^a-zA-Z_ ]/, // ...non-alphanumerics/underscores/whitespaces
         ]
           .map((r) => r.source)
           .join("|")
@@ -79,7 +78,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const partialPlayer = await kolClient.getPartialPlayer(playerIdentifier);
 
   if (!partialPlayer) {
-    await interaction.editReply(`According to KoL, player ${playerIdentifier} does not exist.`);
+    await interaction.editReply(`According to KoL, player ${typeof playerIdentifier === "number" ? "#" : ""}${playerIdentifier} does not exist.`);
     return;
   }
 
@@ -87,7 +86,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!player) {
     await interaction.editReply(
-      `While player ${bold(playerIdentifier)} exists, this command didn't work. Weird.`
+      `While player ${bold(partialPlayer.name)} exists, this command didn't work. Weird.`
     );
     return;
   }
@@ -124,24 +123,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   // Save a database hit if we got here by tracking a claimed Discord account in the first place
   if (knownPlayer === null) {
     knownPlayer = await prisma.players.findFirst({
-      where: {
-        OR: [
-          { user_id: player.id.toString() },
-          { username: { equals: player.name, mode: "insensitive" } },
-        ],
-      }
+      where: { playerId: player.id }
     });
   }
 
   if (knownPlayer !== null) {
     // Use this opportunity to correct our records
-    if (knownPlayer.username !== player.name || knownPlayer.user_id !== player.id.toString()) {
+    if (knownPlayer.username !== player.name) {
       await prisma.players.update({
-        where: { username: knownPlayer.username },
-        data: {
-          username: player.name,
-          user_id: player.id.toString(),
-        },
+        where: { playerId: knownPlayer.playerId },
+        data: { username: player.name },
       });
     }
 
