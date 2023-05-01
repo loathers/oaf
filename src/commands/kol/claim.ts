@@ -12,10 +12,8 @@ const intDiv = (num: number, div: number) =>
 const playerSecret = (playerId: number) => `${SALT}-${playerId}`;
 
 const oauf = Object.assign(
-  totp.create({
-    ...totp.options,
-    step: 2 * 60,
-  }),
+  totp,
+  { options: { ...totp.options, step: 2 * 60 } },
   {
     generatePlayer: (playerId: number) =>
       Number(`${playerId}${oauf.generate(playerSecret(playerId))}`).toString(16),
