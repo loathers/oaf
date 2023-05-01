@@ -11,9 +11,10 @@ ALTER TABLE "players" ADD COLUMN "playerId" INTEGER;
 UPDATE "players" SET "playerId" = CAST("user_id" as INTEGER);
 
 -- Deduplicate
-DELETE FROM "players" o WHERE (SELECT COUNT(*) FROM "players" i WHERE i."playerId" = o."playerId") > 1 AND kills = 0
+DELETE FROM "players" o WHERE (SELECT COUNT(*) FROM "players" i WHERE i."playerId" = o."playerId") > 1 AND kills = 0;
 
 -- AlterTable
 ALTER TABLE "players" DROP CONSTRAINT "players_pkey",
 DROP COLUMN "user_id",
+ADD CONSTRAINT "username_unique" UNIQUE ("username"),
 ADD CONSTRAINT "players_pkey" PRIMARY KEY ("playerId");

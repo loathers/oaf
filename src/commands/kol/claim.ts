@@ -69,7 +69,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await prisma.players.upsert({
     where: { username: player.name },
     update: { discord_id: interaction.user.id },
-    create: { username: player.name, discord_id: interaction.user.id, user_id: String(player.id) },
+    create: { username: player.name, discord_id: interaction.user.id, playerId: player.id },
   });
 
   await interaction.editReply(`Your Discord account has been successfully linked with ${inlineCode(`${player.name} (#${player.id})`)}`);
