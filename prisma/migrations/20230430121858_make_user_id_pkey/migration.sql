@@ -16,5 +16,5 @@ DELETE FROM "players" o WHERE (SELECT COUNT(*) FROM "players" i WHERE i."playerI
 -- AlterTable
 ALTER TABLE "players" DROP CONSTRAINT "players_pkey",
 DROP COLUMN "user_id",
-ADD CONSTRAINT "username_unique" UNIQUE ("players_username_key"),
+ADD CONSTRAINT "players_username_key" UNIQUE ("username"),
 ADD CONSTRAINT "players_pkey" PRIMARY KEY ("playerId");
