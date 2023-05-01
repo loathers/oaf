@@ -9,6 +9,7 @@ datasource db {
 
 model players {
   playerId         Int     @id
+  /// Lowercased KoL username
   username         String
   kills            Int     @default(0)
   skills           Int     @default(0)

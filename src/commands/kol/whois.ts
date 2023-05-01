@@ -133,21 +133,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
   }
 
-  if (knownPlayer !== null) {
-    // Use this opportunity to correct our records
-    if (knownPlayer.username !== player.name) {
-      await prisma.players.update({
-        where: { playerId: knownPlayer.playerId },
-        data: { username: player.name },
-      });
-    }
-
-    if (knownPlayer.discord_id) {
-      fields.push({
-        name: "Discord",
-        value: userMention(knownPlayer.discord_id),
-      });
-    }
+  if (knownPlayer?.discord_id) {
+    fields.push({
+      name: "Discord",
+      value: userMention(knownPlayer.discord_id),
+    });
   }
 
   const playerEmbed = createEmbed()

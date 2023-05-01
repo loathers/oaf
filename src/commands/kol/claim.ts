@@ -73,9 +73,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   await prisma.players.upsert({
-    where: { username: player.name },
+    where: { playerId: player.id },
     update: { discord_id: interaction.user.id },
-    create: { username: player.name, discord_id: interaction.user.id, playerId: player.id },
+    create: { username: player.name.toLowerCase(), discord_id: interaction.user.id, playerId: player.id },
   });
 
   await interaction.editReply(
