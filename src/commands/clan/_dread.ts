@@ -68,7 +68,7 @@ const Monster = {
   Skeleton: "skeleton",
 } as const;
 
-type MonsterType = typeof Monster[keyof typeof Monster];
+type MonsterType = (typeof Monster)[keyof typeof Monster];
 
 const BOSS_REGEXES = {
   [Monster.Bugbear]: /defeated\s+Falls\-From\-Sky/,
