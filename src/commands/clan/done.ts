@@ -35,7 +35,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    await prisma.players.create({ data: { playerId: player.id, username, done_with_skills: done } });
+    await prisma.players.create({
+      data: { playerId: player.id, username, done_with_skills: done },
+    });
   } else {
     await prisma.players.update({
       where: { playerId: existing.playerId },

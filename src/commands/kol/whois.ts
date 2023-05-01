@@ -9,8 +9,8 @@ import {
   time,
   userMention,
 } from "discord.js";
-import { prisma } from "../../clients/database";
 
+import { prisma } from "../../clients/database";
 import { createEmbed } from "../../clients/discord";
 import { kolClient } from "../../clients/kol";
 import { snapshotClient } from "../../clients/snapshot";
@@ -22,7 +22,9 @@ export const data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option
       .setName("player")
-      .setDescription("The name or id of the KoL player you're looking up, or a mention of a Discord user.")
+      .setDescription(
+        "The name or id of the KoL player you're looking up, or a mention of a Discord user."
+      )
       .setRequired(true)
       .setMaxLength(30)
   );
@@ -42,7 +44,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Check if this is a mention first of all
   if (input.match(/^<@\d+>$/)) {
-    knownPlayer = await prisma.players.findFirst({ where: { discord_id: input.slice(2, -1) }});
+    knownPlayer = await prisma.players.findFirst({ where: { discord_id: input.slice(2, -1) } });
 
     if (knownPlayer === null) {
       await interaction.editReply(`That user hasn't claimed a KoL account.`);
@@ -78,7 +80,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const partialPlayer = await kolClient.getPartialPlayer(playerIdentifier);
 
   if (!partialPlayer) {
-    await interaction.editReply(`According to KoL, player ${typeof playerIdentifier === "number" ? "#" : ""}${playerIdentifier} does not exist.`);
+    await interaction.editReply(
+      `According to KoL, player ${
+        typeof playerIdentifier === "number" ? "#" : ""
+      }${playerIdentifier} does not exist.`
+    );
     return;
   }
 
@@ -123,7 +129,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   // Save a database hit if we got here by tracking a claimed Discord account in the first place
   if (knownPlayer === null) {
     knownPlayer = await prisma.players.findFirst({
-      where: { playerId: player.id }
+      where: { playerId: player.id },
     });
   }
 

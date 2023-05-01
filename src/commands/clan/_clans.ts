@@ -1,5 +1,3 @@
-import { players } from "@prisma/client";
-
 type Clan = {
   name: string;
   synonyms: string[];
@@ -28,4 +26,3 @@ export const NON_DREAD_CLANS: Clan[] = [
 ];
 
 export const ALL_CLANS = DREAD_CLANS.concat(NON_DREAD_CLANS);
-

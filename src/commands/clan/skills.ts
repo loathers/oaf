@@ -18,44 +18,54 @@ export const data = new SlashCommandBuilder()
   .setName("skills")
   .setDescription("Get a list of everyone currently elgible for Dreadsylvania skills.");
 
-export type Participation = { [username: string]: { skills: number, kills: number } };
+export type Participation = { [username: string]: { skills: number; kills: number } };
 
 function mergeParticipation(a: Participation, b: Participation) {
-  return Object.entries(a).reduce((acc, [u, { skills, kills }]) => ({
-    ...acc,
-    [u]: {
-      skills: (acc[u]?.skills ?? 0) + skills,
-      kills: (acc[u]?.kills ?? 0) + kills,
-    }
-  }), b);
+  return Object.entries(a).reduce(
+    (acc, [u, { skills, kills }]) => ({
+      ...acc,
+      [u]: {
+        skills: (acc[u]?.skills ?? 0) + skills,
+        kills: (acc[u]?.kills ?? 0) + kills,
+      },
+    }),
+    b
+  );
 }
 
 async function getParticipationFromCurrentRaid() {
-  const raidLogs = await Promise.all(DREAD_CLANS.map(clan => getRaidLog(clan.id)));
+  const raidLogs = await Promise.all(DREAD_CLANS.map((clan) => getRaidLog(clan.id)));
 
-  return raidLogs.reduce((p, log) => mergeParticipation(p, getParticipationFromRaidLog(log)), {} as Participation);
+  return raidLogs.reduce(
+    (p, log) => mergeParticipation(p, getParticipationFromRaidLog(log)),
+    {} as Participation
+  );
 }
 
 export function getParticipationFromRaidLog(raidLog: string) {
   const lines = raidLog.toLowerCase().match(new RegExp(SKILL_KILL_MATCHER, "g")) || [];
 
   return lines
-    .map(l => l.match(SKILL_KILL_MATCHER))
+    .map((l) => l.match(SKILL_KILL_MATCHER))
     .filter(notNull)
     .map((m) => [m[1].toLowerCase(), m[3] ? "kills" : "skills", parseInt(m[3] || "1")] as const)
-    .reduce((acc, [username, type, num]) => ({
-      ...acc,
-      [username]: {
-        ...(acc[username] || { skills: 0, kills: 0 }),
-        [type]: (acc[username]?.[type] ?? 0) + num,
-      },
-    }), {} as { [username: string]: { skills: number, kills: number } });
+    .reduce(
+      (acc, [username, type, num]) => ({
+        ...acc,
+        [username]: {
+          ...(acc[username] || { skills: 0, kills: 0 }),
+          [type]: (acc[username]?.[type] ?? 0) + num,
+        },
+      }),
+      {} as { [username: string]: { skills: number; kills: number } }
+    );
 }
 
 async function getUsernameToId() {
   return Object.fromEntries(
-    (await prisma.players.findMany({ where: {}, select: { playerId: true, username: true } }))
-      .map(({ playerId, username }) => [username.toLowerCase(), playerId] as const)
+    (await prisma.players.findMany({ where: {}, select: { playerId: true, username: true } })).map(
+      ({ playerId, username }) => [username.toLowerCase(), playerId] as const
+    )
   );
 }
 
@@ -63,16 +73,20 @@ async function parseOldLogs() {
   // Create a map of known username-to-id pairs
   const usernameToId = await getUsernameToId();
 
-  const parsedRaids = (await prisma.tracked_instances.findMany({ select: { raid_id: true } })).map((instance) => instance.raid_id);
+  const parsedRaids = (await prisma.tracked_instances.findMany({ select: { raid_id: true } })).map(
+    (instance) => instance.raid_id
+  );
 
   // Determine all the raid ids that are yet to be passed
   const raidsToParse = (
-    await Promise.all(DREAD_CLANS.map(clan => getMissingRaidLogs(clan.id, parsedRaids)))
-  ).flat().filter((id) => !parsedRaids.includes(id))
+    await Promise.all(DREAD_CLANS.map((clan) => getMissingRaidLogs(clan.id, parsedRaids)))
+  )
+    .flat()
+    .filter((id) => !parsedRaids.includes(id));
 
   let participation: Participation = {};
 
-    // Parse each raid and extract the player participation
+  // Parse each raid and extract the player participation
   for (const raid of raidsToParse) {
     const raidLog = await getFinishedRaidLog(raid);
     participation = mergeParticipation(participation, getParticipationFromRaidLog(raidLog));
@@ -95,8 +109,8 @@ async function parseOldLogs() {
   // Prepare player participation to update
   const playersToUpdate = Object.entries(participation)
     // Filter out non-existent users I guess
-    .filter(([username, ]) => username in usernameToId)
-    .map(([username, { kills, skills}]) => {
+    .filter(([username]) => username in usernameToId)
+    .map(([username, { kills, skills }]) => {
       const playerId = usernameToId[username];
       return prisma.players.upsert({
         where: { playerId },
@@ -106,7 +120,7 @@ async function parseOldLogs() {
           },
           skills: {
             increment: skills,
-          }
+          },
         },
         create: {
           playerId,
@@ -114,7 +128,7 @@ async function parseOldLogs() {
           kills,
           skills,
         },
-      })
+      });
     });
 
   // Perform updates in a transaction
@@ -136,7 +150,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const participation = mergeParticipation(
       Object.fromEntries(
-        (await prisma.players.findMany({ select: { username: true, skills: true, kills: true } })).map(({ username, skills, kills}) => [username, { skills, kills }])
+        (
+          await prisma.players.findMany({ select: { username: true, skills: true, kills: true } })
+        ).map(({ username, skills, kills }) => [username, { skills, kills }])
       ),
       await getParticipationFromCurrentRaid()
     );
@@ -144,14 +160,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const usernameToId = await getUsernameToId();
 
     const skillsOwed = Object.entries(participation)
-        .filter(([username,]) => !doneWithSkillsList.includes(usernameToId[username]))
-        .map(([username, { skills, kills }]) => [username, Math.floor((kills + 450) / 900) - skills] as const)
-        .filter(([, owed]) => owed > 0)
-        .map(([username, owed]) => `${username}: ${pluralize(
-              owed,
-              "skill"
-            )}.`)
-        .sort();
+      .filter(([username]) => !doneWithSkillsList.includes(usernameToId[username]))
+      .map(
+        ([username, { skills, kills }]) =>
+          [username, Math.floor((kills + 450) / 900) - skills] as const
+      )
+      .filter(([, owed]) => owed > 0)
+      .map(([username, owed]) => `${username}: ${pluralize(owed, "skill")}.`)
+      .sort();
 
     await interaction.editReply({
       content: null,
@@ -167,12 +183,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await interaction.editReply("I was unable to join that clan");
       return;
     }
-    
+
     if (error instanceof RaidLogMissingError) {
       await interaction.editReply("I couldn't see raid logs in that clan for some reason");
       return;
     }
-    
-    await interaction.editReply("I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in.");
+
+    await interaction.editReply(
+      "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
+    );
   }
 }
