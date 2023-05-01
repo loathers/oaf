@@ -64,9 +64,15 @@ export function groupToMap<K, V>(
 }
 
 export function columns<T>(data: T[], columns: number) {
-  return Array(columns).fill(0).map((_, i) => ({
-    name: "\u200b",
-    value: "\u200b" + data.slice(Math.ceil(i * (data.length / 3)), Math.ceil((i + 1) * (data.length / 3))).join("\n"),
-    inline: true,
-  }));
+  return Array(columns)
+    .fill(0)
+    .map((_, i) => ({
+      name: "\u200b",
+      value:
+        "\u200b" +
+        data
+          .slice(Math.ceil(i * (data.length / 3)), Math.ceil((i + 1) * (data.length / 3)))
+          .join("\n"),
+      inline: true,
+    }));
 }

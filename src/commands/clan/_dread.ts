@@ -181,13 +181,12 @@ function extractDreadCastle(raidLog: string): DreadCastleStatus {
 
 export async function getDreadStatusOverview(clanId: number): Promise<DreadStatus> {
   const raidLog = await getRaidLog(clanId);
-  if (!raidLog) throw new RaidLogMissingError();
   return extractDreadOverview(raidLog);
 }
 
 export async function getDetailedDreadStatus(clanId: number): Promise<DetailedDreadStatus> {
   const raidLog = await getRaidLog(clanId);
-  if (!raidLog) throw new RaidLogMissingError();
+
   return {
     overview: extractDreadOverview(raidLog),
     forest: extractDreadForest(raidLog),
@@ -237,6 +236,8 @@ export async function getFinishedRaidLog(raidId: string) {
 export async function getRaidLog(clanId: number): Promise<string> {
   return await kolClient.clanActionMutex.runExclusive(async () => {
     if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
-    return await kolClient.visitUrl("clan_raidlogs.php", {});
+    const log = await kolClient.visitUrl("clan_raidlogs.php", {});
+    if (!log) throw new RaidLogMissingError();
+    return log;
   });
 }
