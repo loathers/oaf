@@ -219,9 +219,7 @@ async function spadeItem(itemId: number) {
 
   for (let property of ITEM_SPADING_CALLS) {
     const { url, visitMatch, type } = property;
-    const page = (await kolClient.visitUrl(
-      ...(url(itemId) as [string, object])
-    )) as string;
+    const page = (await kolClient.visitUrl(...(url(itemId) as [string, object]))) as string;
 
     const match = visitMatch.test(page);
     if (match) {

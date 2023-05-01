@@ -8,13 +8,14 @@ datasource db {
 }
 
 model players {
-  username         String  @id
+  /// Lowercased KoL username
+  username         String  @unique
   kills            Int     @default(0)
   skills           Int     @default(0)
   done_with_skills Boolean @default(false)
-  user_id          String?
   brainiac         Boolean @default(false)
   discord_id       String?
+  playerId         Int     @id
 }
 
 model reminders {

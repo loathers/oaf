@@ -9,8 +9,8 @@ import {
   time,
   userMention,
 } from "discord.js";
-import { prisma } from "../../clients/database";
 
+import { prisma } from "../../clients/database";
 import { createEmbed } from "../../clients/discord";
 import { kolClient } from "../../clients/kol";
 import { snapshotClient } from "../../clients/snapshot";
@@ -22,7 +22,9 @@ export const data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option
       .setName("player")
-      .setDescription("The name or id of the KoL player you're looking up, or a mention of a Discord user.")
+      .setDescription(
+        "The name or id of the KoL player you're looking up, or a mention of a Discord user."
+      )
       .setRequired(true)
       .setMaxLength(30)
   );
@@ -42,28 +44,27 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Check if this is a mention first of all
   if (input.match(/^<@\d+>$/)) {
-    knownPlayer = await prisma.players.findFirst({ where: { discord_id: input.slice(2, -1) }});
+    knownPlayer = await prisma.players.findFirst({ where: { discord_id: input.slice(2, -1) } });
 
     if (knownPlayer === null) {
       await interaction.editReply(`That user hasn't claimed a KoL account.`);
       return;
     }
 
-    playerIdentifier = knownPlayer.user_id || knownPlayer.username;
+    playerIdentifier = knownPlayer.playerId || knownPlayer.username;
   } else {
     playerIdentifier = input;
   }
 
   if (
+    typeof playerIdentifier === "string" &&
     // Player names must not be...
     playerIdentifier.match(
       new RegExp(
         [
-          /^[^\d]{0,2}$/, // ...an empty string, or 1-2 non-digits
-          /^[^\d]\d$/, // ...a non-digit followed by a digit
+          /^.{0,2}$/, // ...an empty string, or 1-2 non-digits
           /.{31,}/, // ...31 characters or longer
-          /^\d+[^\d]/, // ...digits followed by a non-digit
-          /[^a-zA-Z0-9_ ]/, // ...non-alphanumerics/underscores/whitespaces
+          /[^a-zA-Z_ ]/, // ...non-alphanumerics/underscores/whitespaces
         ]
           .map((r) => r.source)
           .join("|")
@@ -79,7 +80,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const partialPlayer = await kolClient.getPartialPlayer(playerIdentifier);
 
   if (!partialPlayer) {
-    await interaction.editReply(`According to KoL, player ${playerIdentifier} does not exist.`);
+    await interaction.editReply(
+      `According to KoL, player ${
+        typeof playerIdentifier === "number" ? "#" : ""
+      }${playerIdentifier} does not exist.`
+    );
     return;
   }
 
@@ -87,7 +92,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!player) {
     await interaction.editReply(
-      `While player ${bold(playerIdentifier)} exists, this command didn't work. Weird.`
+      `While player ${bold(partialPlayer.name)} exists, this command didn't work. Weird.`
     );
     return;
   }
@@ -124,33 +129,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   // Save a database hit if we got here by tracking a claimed Discord account in the first place
   if (knownPlayer === null) {
     knownPlayer = await prisma.players.findFirst({
-      where: {
-        OR: [
-          { user_id: player.id.toString() },
-          { username: { equals: player.name, mode: "insensitive" } },
-        ],
-      }
+      where: { playerId: player.id },
     });
   }
 
-  if (knownPlayer !== null) {
-    // Use this opportunity to correct our records
-    if (knownPlayer.username !== player.name || knownPlayer.user_id !== player.id.toString()) {
-      await prisma.players.update({
-        where: { username: knownPlayer.username },
-        data: {
-          username: player.name,
-          user_id: player.id.toString(),
-        },
-      });
-    }
-
-    if (knownPlayer.discord_id) {
-      fields.push({
-        name: "Discord",
-        value: userMention(knownPlayer.discord_id),
-      });
-    }
+  if (knownPlayer?.discord_id) {
+    fields.push({
+      name: "Discord",
+      value: userMention(knownPlayer.discord_id),
+    });
   }
 
   const playerEmbed = createEmbed()

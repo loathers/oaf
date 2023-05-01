@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, italic } from "discord.js";
 
 import { prisma } from "../../clients/database";
+import { kolClient } from "../../clients/kol";
 
 export const data = new SlashCommandBuilder()
   .setName("brainiac")
@@ -24,11 +25,23 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  await prisma.players.upsert({
-    where: { username },
-    update: { brainiac: available },
-    create: { username, brainiac: available },
-  });
+  const existing = await prisma.players.findFirst({ where: { username } });
+
+  if (!existing) {
+    const player = await kolClient.getPartialPlayerFromName(username);
+
+    if (!player) {
+      await interaction.editReply(`User ${italic(username)} could not be found`);
+      return;
+    }
+
+    await prisma.players.create({ data: { playerId: player.id, username, brainiac: available } });
+  } else {
+    await prisma.players.update({
+      where: { playerId: existing.playerId },
+      data: { brainiac: available },
+    });
+  }
 
   await interaction.editReply(
     `${available ? "Added" : "Removed"} user ${italic(username)} ${

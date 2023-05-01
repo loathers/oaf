@@ -150,8 +150,6 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     this._loginParameters.append("secure", "0");
     this._loginParameters.append("submitbutton", "Log In");
 
-    this.startChatBot();
-
     this.on("whisper", (whisper) => {
       console.log(
         whisper.time.toLocaleTimeString(),

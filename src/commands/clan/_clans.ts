@@ -26,14 +26,3 @@ export const NON_DREAD_CLANS: Clan[] = [
 ];
 
 export const ALL_CLANS = DREAD_CLANS.concat(NON_DREAD_CLANS);
-
-export type PlayerData = {
-  id?: number;
-  kills: number;
-  skills: number;
-};
-
-export const clanState = {
-  parsedRaids: [] as string[],
-  killMap: new Map<string, PlayerData>(),
-};
