@@ -18,7 +18,7 @@ async function* walk(dir: string): AsyncGenerator<string> {
 async function loadSlashCommands() {
   const commandsPath = path.join(__dirname, "commands");
   for await (const filePath of walk(commandsPath)) {
-    if (!/\/[^_][^\/]*.(ts|js)$/.test(filePath)) continue;
+    if (!/\/[^_][^\/]*(?<!\.test)\.(ts|js)$/.test(filePath)) continue;
     let handled = false;
     const command: CommandHandler | ModalHandler = await import(filePath);
     if ("data" in command) {
