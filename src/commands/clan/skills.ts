@@ -12,7 +12,7 @@ import {
   getRaidLog,
 } from "./_dread";
 
-const SKILL_KILL_MATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+(defeated\D+(\d+)|used the machine)/;
+const SKILL_KILL_MATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+(defeated\D+(\d+)|used the machine)/i;
 
 export const data = new SlashCommandBuilder()
   .setName("skills")
@@ -43,12 +43,19 @@ async function getParticipationFromCurrentRaid() {
 }
 
 export function getParticipationFromRaidLog(raidLog: string) {
-  const lines = raidLog.toLowerCase().match(new RegExp(SKILL_KILL_MATCHER, "g")) || [];
+  const lines = raidLog.match(new RegExp(SKILL_KILL_MATCHER, "gi")) || [];
 
   return lines
     .map((l) => l.match(SKILL_KILL_MATCHER))
     .filter(notNull)
-    .map((m) => [m[1].toLowerCase(), m[3] ? "kills" : "skills", parseInt(m[3] || "1")] as const)
+    .map(
+      (m) =>
+        [
+          m[1].toLowerCase(),
+          m[2].startsWith("defeated") ? "kills" : "skills",
+          parseInt(m[3] || "1"),
+        ] as const
+    )
     .reduce(
       (acc, [username, type, num]) => ({
         ...acc,
