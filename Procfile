@@ -1,2 +1,2 @@
 release: npx prisma migrate deploy
-run: node ./dist/index.js
+run: yarn start

@@ -32,7 +32,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  return await interaction.editReply(
+  await interaction.editReply(
     hyperlink(
       `Click to jump to message tagged with ${bold(tagName)}`,
       messageLink(tag.channelId, tag.messageId, tag.guildId)
