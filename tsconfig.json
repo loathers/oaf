@@ -6,7 +6,7 @@
     "allowUnusedLabels": false,
     "declaration": false,
     "forceConsistentCasingInFileNames": true,
-    "module": "NodeNext",
+    "module": "CommonJS",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,

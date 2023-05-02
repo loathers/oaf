@@ -21,6 +21,7 @@ async function loadSlashCommands() {
     if (!/\/[^_][^\/]*(?<!\.test)\.(ts|js)$/.test(filePath)) continue;
     let handled = false;
     const command: CommandHandler | ModalHandler = await import(filePath);
+
     if ("data" in command) {
       if ("execute" in command) {
         discordClient.commands.set(command.data.name, command);
