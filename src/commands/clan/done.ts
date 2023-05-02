@@ -25,7 +25,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  const existing = await prisma.players.findFirst({ where: { username } });
+  const existing = await prisma.player.findFirst({ where: { username } });
 
   if (!existing) {
     const player = await kolClient.getPartialPlayerFromName(username);
@@ -35,11 +35,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    await prisma.players.create({
+    await prisma.player.create({
       data: { playerId: player.id, username, done_with_skills: done },
     });
   } else {
-    await prisma.players.update({
+    await prisma.player.update({
       where: { playerId: existing.playerId },
       data: { done_with_skills: done },
     });

@@ -195,11 +195,11 @@ export async function getDetailedDreadStatus(clanId: number): Promise<DetailedDr
   };
 }
 
-export async function getMissingRaidLogs(clanId: number, parsedRaids: string[]): Promise<string[]> {
+export async function getMissingRaidLogs(clanId: number, parsedRaids: number[]): Promise<number[]> {
   return await kolClient.clanActionMutex.runExclusive(async () => {
     if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
     let raidLogs = await kolClient.visitUrl("clan_oldraidlogs.php", {});
-    let raidIds: string[] = [];
+    const raidIds: number[] = [];
     let row = 0;
     let done = false;
     while (!raidLogs.includes("No previous Clan Dungeon records found") && !done) {
@@ -208,7 +208,7 @@ export async function getMissingRaidLogs(clanId: number, parsedRaids: string[]):
           /kisses<\/td><td class=tiny>\[<a href="clan_viewraidlog\.php\?viewlog=(?<id>\d+)/g
         ) || [];
       for (let id of matches) {
-        const cleanId = id.replace(/\D/g, "");
+        const cleanId = Number(id.replace(/\D/g, ""));
         if (parsedRaids.includes(cleanId)) {
           done = true;
           break;
@@ -217,16 +217,14 @@ export async function getMissingRaidLogs(clanId: number, parsedRaids: string[]):
       }
       if (!done) {
         row += 10;
-        raidLogs = await kolClient.visitUrl("clan_oldraidlogs.php", {
-          startrow: row,
-        });
+        raidLogs = await kolClient.visitUrl("clan_oldraidlogs.php", { startrow: row });
       }
     }
     return raidIds;
   });
 }
 
-export async function getFinishedRaidLog(raidId: string) {
+export async function getFinishedRaidLog(raidId: number) {
   return await kolClient.visitUrl("clan_viewraidlog.php", {
     viewlog: raidId,
     backstart: 0,

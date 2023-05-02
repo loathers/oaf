@@ -21,7 +21,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const classMap = new Map<string, string[]>();
 
-  const players = await prisma.players.findMany({
+  const players = await prisma.player.findMany({
     where: { OR: [{ brainiac: true }, { skills: { gt: 0 } }] },
   });
 

@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model players {
+model Player {
   /// Lowercased KoL username
   username         String  @unique
   kills            Int     @default(0)
@@ -18,18 +18,18 @@ model players {
   playerId         Int     @id
 }
 
-model reminders {
+model Reminder {
   id                   Int     @id @default(autoincrement())
-  guild_id             String? @db.VarChar(30)
-  channel_id           String  @db.VarChar(30)
-  user_id              String  @db.VarChar(30)
-  message_contents     String  @db.VarChar(128)
+  guild_id             String?
+  channel_id           String
+  user_id              String
+  message_contents     String
   reminder_time        BigInt
-  interaction_reply_id String? @db.VarChar(30)
+  interaction_reply_id String?
 }
 
-model tracked_instances {
-  raid_id String @id @db.VarChar(8)
+model Raid {
+  id Int @id
 }
 
 model Tag {

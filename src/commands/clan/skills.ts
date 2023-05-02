@@ -70,7 +70,7 @@ export function getParticipationFromRaidLog(raidLog: string) {
 
 async function getUsernameToId() {
   return Object.fromEntries(
-    (await prisma.players.findMany({ where: {}, select: { playerId: true, username: true } })).map(
+    (await prisma.player.findMany({ where: {}, select: { playerId: true, username: true } })).map(
       ({ playerId, username }) => [username.toLowerCase(), playerId] as const
     )
   );
@@ -80,9 +80,7 @@ async function parseOldLogs() {
   // Create a map of known username-to-id pairs
   const usernameToId = await getUsernameToId();
 
-  const parsedRaids = (await prisma.tracked_instances.findMany({ select: { raid_id: true } })).map(
-    (instance) => instance.raid_id
-  );
+  const parsedRaids = (await prisma.raid.findMany({ select: { id: true } })).map(({ id }) => id);
 
   // Determine all the raid ids that are yet to be passed
   const raidsToParse = (
@@ -94,8 +92,8 @@ async function parseOldLogs() {
   let participation: Participation = {};
 
   // Parse each raid and extract the player participation
-  for (const raid of raidsToParse) {
-    const raidLog = await getFinishedRaidLog(raid);
+  for (const raidId of raidsToParse) {
+    const raidLog = await getFinishedRaidLog(raidId);
     participation = mergeParticipation(participation, getParticipationFromRaidLog(raidLog));
   }
 
@@ -108,8 +106,8 @@ async function parseOldLogs() {
   }
 
   // Prepare operation to update tracked instances
-  const instancesToMarkAsTracked = prisma.tracked_instances.createMany({
-    data: raidsToParse.map((r) => ({ raid_id: r })),
+  const instancesToMarkAsTracked = prisma.raid.createMany({
+    data: raidsToParse.map((r) => ({ id: r })),
     skipDuplicates: true,
   });
 
@@ -119,7 +117,7 @@ async function parseOldLogs() {
     .filter(([username]) => username in usernameToId)
     .map(([username, { kills, skills }]) => {
       const playerId = usernameToId[username];
-      return prisma.players.upsert({
+      return prisma.player.upsert({
         where: { playerId },
         update: {
           kills: {
@@ -146,7 +144,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   const doneWithSkillsList = (
-    await prisma.players.findMany({
+    await prisma.player.findMany({
       where: { done_with_skills: true },
       select: { playerId: true },
     })
@@ -158,7 +156,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const participation = mergeParticipation(
       Object.fromEntries(
         (
-          await prisma.players.findMany({ select: { username: true, skills: true, kills: true } })
+          await prisma.player.findMany({ select: { username: true, skills: true, kills: true } })
         ).map(({ username, skills, kills }) => [username, { skills, kills }])
       ),
       await getParticipationFromCurrentRaid()

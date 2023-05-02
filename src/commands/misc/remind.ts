@@ -95,7 +95,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
   }, timeToWait);
 
-  await prisma.reminders.create({
+  await prisma.reminder.create({
     data: {
       guild_id: interaction.guildId,
       channel_id: interaction.channelId,
@@ -112,12 +112,12 @@ const RECHECK_TIME = 7 * 24 * 60 * 60 * 1000;
 async function loadRemindersFromDatabase() {
   const now = BigInt(Date.now());
 
-  const deleted = await prisma.reminders.deleteMany({ where: { reminder_time: { lt: now } } });
+  const deleted = await prisma.reminder.deleteMany({ where: { reminder_time: { lt: now } } });
   if (deleted.count > 0) {
     console.log(`Deleted ${deleted.count} old reminder(s)`);
   }
 
-  const reminders = await prisma.reminders.findMany({});
+  const reminders = await prisma.reminder.findMany({});
 
   for (let reminder of reminders) {
     // We can safely cast the difference between reminder and now to an int
