@@ -2,6 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } fr
 
 import { prisma } from "../../clients/database";
 import { kolClient } from "../../clients/kol";
+import { titleCase } from "../../utils";
 
 const BASE_CLASSES = [
   "Seal Clubber",
@@ -45,11 +46,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         fields: BASE_CLASSES.map((playerClass) => ({
           name: bold(underscore(playerClass)),
           value: classMap.has(playerClass)
-            ? classMap
-                .get(playerClass)!
-                .sort()
-                .map((name) => name.charAt(0).toUpperCase() + name.slice(1))
-                .join("\n")
+            ? classMap.get(playerClass)!.sort().map(titleCase).join("\n")
             : "None available.",
           inline: true,
         })),

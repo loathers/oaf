@@ -76,3 +76,10 @@ export function columns<T>(data: T[], columns: number) {
       inline: true,
     }));
 }
+
+export function titleCase(title: string) {
+  return title
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}

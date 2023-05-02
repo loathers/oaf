@@ -1,8 +1,13 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  hyperlink,
+  userMention,
+} from "discord.js";
 
 import { prisma } from "../../clients/database";
 import { kolClient } from "../../clients/kol";
-import { columns, notNull, pluralize } from "../../utils";
+import { columns, notNull, pluralize, titleCase } from "../../utils";
 import { DREAD_CLANS } from "./_clans";
 import {
   JoinClanError,
@@ -21,7 +26,7 @@ export const data = new SlashCommandBuilder()
 export type Participation = { [username: string]: { skills: number; kills: number } };
 
 function mergeParticipation(a: Participation, b: Participation) {
-  return Object.entries(a).reduce(
+  return Object.entries(b).reduce(
     (acc, [u, { skills, kills }]) => ({
       ...acc,
       [u]: {
@@ -29,7 +34,7 @@ function mergeParticipation(a: Participation, b: Participation) {
         kills: (acc[u]?.kills ?? 0) + kills,
       },
     }),
-    b
+    a
   );
 }
 
@@ -143,35 +148,34 @@ async function parseOldLogs() {
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  const doneWithSkillsList = (
-    await prisma.player.findMany({
-      where: { doneWithSkills: true },
-      select: { playerId: true },
-    })
-  ).map((player) => player.playerId);
-
   try {
     await parseOldLogs();
 
-    const participation = mergeParticipation(
-      Object.fromEntries(
-        (
-          await prisma.player.findMany({ select: { username: true, skills: true, kills: true } })
-        ).map(({ username, skills, kills }) => [username, { skills, kills }])
-      ),
-      await getParticipationFromCurrentRaid()
+    const players = Object.fromEntries(
+      (await prisma.player.findMany({})).map((p) => [p.username, p] as const)
     );
 
-    const usernameToId = await getUsernameToId();
+    const participation = mergeParticipation(players, await getParticipationFromCurrentRaid());
 
     const skillsOwed = Object.entries(participation)
-      .filter(([username]) => !doneWithSkillsList.includes(usernameToId[username]))
+      .filter(([username]) => players[username]?.doneWithSkills !== true)
       .map(
         ([username, { skills, kills }]) =>
           [username, Math.floor((kills + 450) / 900) - skills] as const
       )
       .filter(([, owed]) => owed > 0)
-      .map(([username, owed]) => `${username}: ${pluralize(owed, "skill")}.`)
+      .map(([username, owed]) => {
+        const discordId = players[username]?.discordId;
+        return `${
+          discordId
+            ? `${userMention(discordId)}${hyperlink(
+                "👤",
+                `https://www.kingdomofloathing.com/showplayer.php?who=${players[username].playerId}`,
+                username
+              )}`
+            : titleCase(username)
+        }: ${pluralize(owed, "skill")}.`;
+      })
       .sort();
 
     await interaction.editReply({
@@ -182,6 +186,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           fields: columns(skillsOwed, 3),
         },
       ],
+      allowedMentions: { users: [] },
     });
   } catch (error) {
     if (error instanceof JoinClanError) {
