@@ -1,3 +1,5 @@
+import { Player } from "@prisma/client";
+import { hyperlink, userMention } from "discord.js";
 import { decode } from "html-entities";
 
 export function indent(textToIndent: string): string {
@@ -82,4 +84,15 @@ export function titleCase(title: string) {
     .split(" ")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+export function formatPlayer(player: Player | null, backupUsername?: string) {
+  const discordId = player?.discordId;
+  return discordId
+    ? `${userMention(discordId)}${hyperlink(
+        "👤",
+        `https://www.kingdomofloathing.com/showplayer.php?who=${player.playerId}`,
+        player.username
+      )}`
+    : titleCase(player?.username || backupUsername || "Unknown player");
 }

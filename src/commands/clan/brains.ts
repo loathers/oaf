@@ -1,8 +1,14 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } from "discord.js";
+import { Player } from "@prisma/client";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  bold,
+  underscore,
+} from "discord.js";
 
 import { prisma } from "../../clients/database";
 import { kolClient } from "../../clients/kol";
-import { titleCase } from "../../utils";
+import { formatPlayer } from "../../utils";
 
 const BASE_CLASSES = [
   "Seal Clubber",
@@ -11,16 +17,24 @@ const BASE_CLASSES = [
   "Sauceror",
   "Disco Bandit",
   "Accordion Thief",
-];
+] as const;
 
 export const data = new SlashCommandBuilder()
   .setName("brains")
   .setDescription("Find players whose brains can be drained for Dreadsylvania skills.");
 
+function formatPlayerList(players: Player[]) {
+  if (players.length === 0) return "None available.";
+  return players
+    .sort()
+    .map((p) => formatPlayer(p))
+    .join("\n");
+}
+
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  const classMap = new Map<string, string[]>();
+  const classToPlayers = Object.fromEntries(BASE_CLASSES.map((c) => [c, [] as Player[]]));
 
   const players = await prisma.player.findMany({
     where: { OR: [{ brainiac: true }, { skills: { gt: 0 } }] },
@@ -28,12 +42,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   for (const player of players) {
     const current = await kolClient.getPartialPlayerFromId(player.playerId);
+    // Lower than level 15
     if (!current || current.level < 15) continue;
+    // Not in a standard class
+    if (!(current.class in classToPlayers)) continue;
 
-    if (!classMap.has(current.class)) {
-      classMap.set(current.class, []);
-    }
-    classMap.get(current.class)!.push(player.username);
+    classToPlayers[current.class].push(player);
   }
 
   await interaction.editReply({
@@ -45,9 +59,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           "Captain Scotch, kenny kamAKAzi, and 3BH can pilot dread multis for any class of brain, subject to multi restrictions.",
         fields: BASE_CLASSES.map((playerClass) => ({
           name: bold(underscore(playerClass)),
-          value: classMap.has(playerClass)
-            ? classMap.get(playerClass)!.sort().map(titleCase).join("\n")
-            : "None available.",
+          value: formatPlayerList(classToPlayers[playerClass]),
           inline: true,
         })),
       },
