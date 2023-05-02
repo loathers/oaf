@@ -10,3 +10,5 @@ jobs:
         run: yarn
       - name: Run tests
         run: yarn run test
+      - name: Run type check
+        run: yarn tsc
