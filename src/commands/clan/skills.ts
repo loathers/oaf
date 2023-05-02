@@ -7,7 +7,7 @@ import {
 
 import { prisma } from "../../clients/database";
 import { kolClient } from "../../clients/kol";
-import { columns, notNull, pluralize } from "../../utils";
+import { columns, notNull, pluralize, titleCase } from "../../utils";
 import { DREAD_CLANS } from "./_clans";
 import {
   JoinClanError,
@@ -173,7 +173,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 `https://www.kingdomofloathing.com/showplayer.php?who=${players[username].playerId}`,
                 username
               )}`
-            : username
+            : titleCase(username)
         }: ${pluralize(owed, "skill")}.`;
       })
       .sort();

@@ -1,7 +1,7 @@
 import { EmbedBuilder, bold, hyperlink } from "discord.js";
 
 import { kolClient } from "../clients/kol";
-import { cleanString, pluralize, toWikiLink } from "../utils";
+import { cleanString, pluralize, titleCase, toWikiLink } from "../utils";
 import { Familiar } from "./Familiar";
 import { Thing } from "./Thing";
 
@@ -210,7 +210,7 @@ export class Item implements Thing {
     }
     if (equipmentType) {
       const requirement = (data[2] || ": 0").split(": ");
-      let equipString = bold(equipmentType.charAt(0).toUpperCase() + equipmentType.slice(1));
+      let equipString = bold(titleCase(equipmentType));
       equipString += ` (${data[1]} power${
         data[2] !== "none" && requirement[1] !== "0"
           ? `, requires ${requirement[1]} ${this.mapStat(requirement[0])}`
