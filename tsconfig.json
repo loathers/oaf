@@ -1,14 +1,13 @@
 {
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
     "experimentalDecorators": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "declaration": false,
     "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
-    "noEmitOnError": true,
+    "module": "NodeNext",
+    "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "pretty": true,

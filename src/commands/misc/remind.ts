@@ -72,7 +72,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.reply(`Okay, I'll remind you after rollover.`);
   }
 
-  const reply_id = (await interaction.fetchReply()).id;
+  const replyId = (await interaction.fetchReply()).id;
 
   if (timeToWait >= 7 * 24 * 60 * 60 * 1000) return;
 
@@ -85,7 +85,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       channel.send({
         content: userMention(interaction.user.id),
         embeds: [{ title: "⏰⏰⏰", description: reminderText }],
-        reply: { messageReference: reply_id },
+        reply: { messageReference: replyId },
         allowedMentions: {
           users: [interaction.user.id],
         },
@@ -97,12 +97,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await prisma.reminder.create({
     data: {
-      guild_id: interaction.guildId,
-      channel_id: interaction.channelId,
-      user_id: interaction.user.id,
-      interaction_reply_id: reply_id,
-      message_contents: reminderText,
-      reminder_time: reminderTime,
+      guildId: interaction.guildId,
+      channelId: interaction.channelId,
+      userId: interaction.user.id,
+      interactionReplyId: replyId,
+      messageContents: reminderText,
+      reminderTime,
     },
   });
 }
@@ -112,7 +112,7 @@ const RECHECK_TIME = 7 * 24 * 60 * 60 * 1000;
 async function loadRemindersFromDatabase() {
   const now = BigInt(Date.now());
 
-  const deleted = await prisma.reminder.deleteMany({ where: { reminder_time: { lt: now } } });
+  const deleted = await prisma.reminder.deleteMany({ where: { reminderTime: { lt: now } } });
   if (deleted.count > 0) {
     console.log(`Deleted ${deleted.count} old reminder(s)`);
   }
@@ -121,33 +121,33 @@ async function loadRemindersFromDatabase() {
 
   for (let reminder of reminders) {
     // We can safely cast the difference between reminder and now to an int
-    const timeLeft = Number(reminder.reminder_time - now);
+    const timeLeft = Number(reminder.reminderTime - now);
     if (timeLeft >= RECHECK_TIME) continue;
 
-    const user = await discordClient.users.fetch(reminder.user_id);
-    const channel = reminder.guild_id
-      ? await discordClient.channels.cache.get(reminder.channel_id)
+    const user = await discordClient.users.fetch(reminder.userId);
+    const channel = reminder.guildId
+      ? await discordClient.channels.cache.get(reminder.channelId)
       : await user.createDM();
 
     if (!channel || !("send" in channel)) {
       console.log(
         "Skipping reminder due to unknown channel or cannot be posted in",
-        reminder.channel_id
+        reminder.channelId
       );
       continue;
     }
 
-    const reply = reminder.interaction_reply_id
-      ? { messageReference: reminder.interaction_reply_id }
+    const reply = reminder.interactionReplyId
+      ? { messageReference: reminder.interactionReplyId }
       : undefined;
 
     setTimeout(() => {
       try {
         channel.send({
-          content: userMention(reminder.user_id),
-          embeds: [{ title: "⏰⏰⏰", description: reminder.message_contents }],
+          content: userMention(reminder.userId),
+          embeds: [{ title: "⏰⏰⏰", description: reminder.messageContents }],
           allowedMentions: {
-            users: [reminder.user_id],
+            users: [reminder.userId],
           },
           reply,
         });

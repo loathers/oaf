@@ -44,7 +44,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Check if this is a mention first of all
   if (input.match(/^<@\d+>$/)) {
-    knownPlayer = await prisma.player.findFirst({ where: { discord_id: input.slice(2, -1) } });
+    knownPlayer = await prisma.player.findFirst({ where: { discordId: input.slice(2, -1) } });
 
     if (knownPlayer === null) {
       await interaction.editReply(`That user hasn't claimed a KoL account.`);
@@ -133,10 +133,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
   }
 
-  if (knownPlayer?.discord_id) {
+  if (knownPlayer?.discordId) {
     fields.push({
       name: "Discord",
-      value: userMention(knownPlayer.discord_id),
+      value: userMention(knownPlayer.discordId),
     });
   }
 

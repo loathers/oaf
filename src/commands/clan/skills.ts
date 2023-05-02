@@ -145,7 +145,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const doneWithSkillsList = (
     await prisma.player.findMany({
-      where: { done_with_skills: true },
+      where: { doneWithSkills: true },
       select: { playerId: true },
     })
   ).map((player) => player.playerId);
