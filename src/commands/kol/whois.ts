@@ -1,4 +1,4 @@
-import { players } from "@prisma/client";
+import type { Player } from "@prisma/client";
 import {
   APIEmbedField,
   ChatInputCommandInteraction,
@@ -40,11 +40,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Whatever happens we'll try to ascertain whether this is a known player. Because we either do so at the start or
   // at the end, declare a null variable here.
-  let knownPlayer: players | null = null;
+  let knownPlayer: Player | null = null;
 
   // Check if this is a mention first of all
   if (input.match(/^<@\d+>$/)) {
-    knownPlayer = await prisma.players.findFirst({ where: { discord_id: input.slice(2, -1) } });
+    knownPlayer = await prisma.player.findFirst({ where: { discordId: input.slice(2, -1) } });
 
     if (knownPlayer === null) {
       await interaction.editReply(`That user hasn't claimed a KoL account.`);
@@ -128,15 +128,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Save a database hit if we got here by tracking a claimed Discord account in the first place
   if (knownPlayer === null) {
-    knownPlayer = await prisma.players.findFirst({
+    knownPlayer = await prisma.player.findFirst({
       where: { playerId: player.id },
     });
   }
 
-  if (knownPlayer?.discord_id) {
+  if (knownPlayer?.discordId) {
     fields.push({
       name: "Discord",
-      value: userMention(knownPlayer.discord_id),
+      value: userMention(knownPlayer.discordId),
     });
   }
 

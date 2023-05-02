@@ -21,11 +21,11 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const username = interaction.options.getString("player", true).toLowerCase();
-  const done = interaction.options.getBoolean("done", false) ?? true;
+  const doneWithSkills = interaction.options.getBoolean("done", false) ?? true;
 
   await interaction.deferReply();
 
-  const existing = await prisma.players.findFirst({ where: { username } });
+  const existing = await prisma.player.findFirst({ where: { username } });
 
   if (!existing) {
     const player = await kolClient.getPartialPlayerFromName(username);
@@ -35,19 +35,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    await prisma.players.create({
-      data: { playerId: player.id, username, done_with_skills: done },
+    await prisma.player.create({
+      data: { playerId: player.id, username, doneWithSkills },
     });
   } else {
-    await prisma.players.update({
+    await prisma.player.update({
       where: { playerId: existing.playerId },
-      data: { done_with_skills: done },
+      data: { doneWithSkills },
     });
   }
 
   await interaction.editReply(
-    `${done ? "Added" : "Removed"} user ${italic(username)} ${
-      done ? "to" : "from"
+    `${doneWithSkills ? "Added" : "Removed"} user ${italic(username)} ${
+      doneWithSkills ? "to" : "from"
     } the list of players done with skills.`
   );
 }

@@ -70,12 +70,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await prisma.players.upsert({
+  await prisma.player.upsert({
     where: { playerId: player.id },
-    update: { discord_id: interaction.user.id },
+    update: { discordId: interaction.user.id },
     create: {
       username: player.name.toLowerCase(),
-      discord_id: interaction.user.id,
+      discordId: interaction.user.id,
       playerId: player.id,
     },
   });
