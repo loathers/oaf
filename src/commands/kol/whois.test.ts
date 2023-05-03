@@ -21,11 +21,7 @@ test("real usernames pass validation", () => {
 });
 
 test("fake usernames fail validation", () => {
-  const invalidUsernames = [
-    "12",
-    "1gausie",
-    "f@rt",
-  ];
+  const invalidUsernames = ["12", "1gausie", "f@rt"];
 
   for (const username of invalidUsernames) {
     expect(validUsername(username), username).toBe(false);

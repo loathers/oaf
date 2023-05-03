@@ -1,8 +1,7 @@
 import { ChatInputCommandInteraction, Events, SlashCommandBuilder, hyperlink } from "discord.js";
+import ms from "ms";
 
 import { createEmbed, discordClient } from "../../clients/discord";
-
-import ms = require("ms");
 
 const TEST_CHANNEL_ID = "592805155448029194";
 let START_TIME = 0;

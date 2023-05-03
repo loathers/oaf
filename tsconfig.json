@@ -1,18 +1,18 @@
 {
   "compilerOptions": {
-    "rootDir": "src",
-    "experimentalDecorators": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "declaration": false,
+    "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
+    "lib": ["ES2022"],
     "module": "CommonJS",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "pretty": true,
+    "rootDir": "src",
     "strict": true,
-    "lib": ["ES2022"],
     "target": "esNext"
   },
   "files": ["node_modules/jest-expect-message/types/index.d.ts"],

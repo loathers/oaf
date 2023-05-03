@@ -1,8 +1,7 @@
 import * as fs from "node:fs/promises";
+import * as path from "node:path";
 
 import { Participation, getParticipationFromRaidLog } from "./skills";
-
-import path = require("node:path");
 
 let participation: Participation = {};
 

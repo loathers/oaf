@@ -4,13 +4,12 @@ import axios from "axios";
 import { parse } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
+import { EventEmitter } from "node:events";
 import { stringify } from "querystring";
 import TypedEmitter from "typed-emitter";
 import { select } from "xpath";
 
 import { cleanString, indent, toWikiLink } from "../utils";
-
-import EventEmitter = require("node:events");
 
 const parser = new DOMParser({
   locator: {},
@@ -128,6 +127,7 @@ type Message = {
 type Events = {
   kmail: (message: Message) => void;
   whisper: (message: Message) => void;
+  rollover: () => void;
 };
 
 function wait(ms: number) {
@@ -137,18 +137,19 @@ function wait(ms: number) {
 export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) {
   clanActionMutex = new Mutex();
   static loginMutex = new Mutex();
-  private _isRollover: boolean = false;
-  private _loginParameters: URLSearchParams;
-  private _credentials: KoLCredentials = {};
+  private isRollover = false;
+  private loginParameters: URLSearchParams;
+  private credentials: KoLCredentials = {};
+  private postRolloverLatch = false;
 
   constructor(username: string, password: string) {
     super();
-    this._loginParameters = new URLSearchParams();
-    this._loginParameters.append("loggingin", "Yup.");
-    this._loginParameters.append("loginname", username);
-    this._loginParameters.append("password", password);
-    this._loginParameters.append("secure", "0");
-    this._loginParameters.append("submitbutton", "Log In");
+    this.loginParameters = new URLSearchParams();
+    this.loginParameters.append("loggingin", "Yup.");
+    this.loginParameters.append("loginname", username);
+    this.loginParameters.append("password", password);
+    this.loginParameters.append("secure", "0");
+    this.loginParameters.append("submitbutton", "Log In");
 
     this.on("whisper", (whisper) => {
       console.log(
@@ -172,17 +173,17 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async loggedIn(): Promise<boolean> {
-    if (!this._credentials) return false;
+    if (!this.credentials) return false;
     try {
       const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
         maxRedirects: 0,
         withCredentials: true,
         headers: {
-          cookie: this._credentials?.sessionCookies || "",
+          cookie: this.credentials?.sessionCookies || "",
         },
         params: {
           what: "status",
-          for: `${this._loginParameters.get("loginname")} Chatbot`,
+          for: `${this.loginParameters.get("loginname")} Chatbot`,
         },
         validateStatus: (status) => status === 302 || status === 200,
       });
@@ -196,12 +197,12 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   async logIn(): Promise<boolean> {
     return KoLClient.loginMutex.runExclusive(async () => {
       if (await this.loggedIn()) return true;
-      if (this._isRollover) return false;
-      console.log(`Not logged in. Logging in as ${this._loginParameters.get("loginname")}`);
+      if (this.isRollover) return false;
+      console.log(`Not logged in. Logging in as ${this.loginParameters.get("loginname")}`);
       try {
         const loginResponse = await axios("https://www.kingdomofloathing.com/login.php", {
           method: "POST",
-          data: this._loginParameters,
+          data: this.loginParameters,
           maxRedirects: 0,
           validateStatus: (status) => status === 302,
         });
@@ -215,13 +216,17 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
           },
           params: {
             what: "status",
-            for: `${this._loginParameters.get("loginname")} Chatbot`,
+            for: `${this.loginParameters.get("loginname")} Chatbot`,
           },
         });
-        this._credentials = {
+        this.credentials = {
           sessionCookies: sessionCookies,
           pwdhash: apiResponse.data.pwd,
         };
+        if (this.postRolloverLatch) {
+          this.postRolloverLatch = false;
+          this.emit("rollover");
+        }
         return true;
       } catch {
         console.log("Login failed. Checking if it's because of rollover.");
@@ -273,7 +278,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   async checkKmails() {
     const newKmailsResponse = (await this.visitUrl("api.php", {
       what: "kmail",
-      for: `${this._loginParameters.get("loginname")} Chatbot`,
+      for: `${this.loginParameters.get("loginname")} Chatbot`,
     })) as KoLKmail[];
 
     if (!Array.isArray(newKmailsResponse) || newKmailsResponse.length === 0) return;
@@ -289,7 +294,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
     const data = {
       the_action: "delete",
-      pwd: this._credentials?.pwdhash,
+      pwd: this.credentials?.pwdhash,
       box: "Inbox",
       ...Object.fromEntries(newKmailsResponse.map(({ id }) => [`sel${id}`, "on"])),
     };
@@ -311,10 +316,14 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async rolloverCheck() {
-    this._isRollover = /The system is currently down for nightly maintenance/.test(
+    const isRollover = /The system is currently down for nightly maintenance/.test(
       (await axios("https://www.kingdomofloathing.com/")).data
     );
-    if (this._isRollover) {
+    if (this.isRollover && !isRollover) {
+      this.postRolloverLatch = true;
+    }
+    this.isRollover = isRollover;
+    if (this.isRollover) {
       console.log("Rollover appears to be in progress. Checking again in one minute.");
       setTimeout(() => this.rolloverCheck(), 60000);
     }
@@ -327,17 +336,17 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     pwd: Boolean = true,
     doLog: Boolean = false
   ): Promise<any> {
-    if (this._isRollover || !(await this.logIn())) return null;
+    if (this.isRollover || !(await this.logIn())) return null;
     try {
       const page = await axios(`https://www.kingdomofloathing.com/${url}`, {
         method: "POST",
         withCredentials: true,
         headers: {
-          cookie: this._credentials?.sessionCookies || "",
+          cookie: this.credentials?.sessionCookies || "",
         },
         params: {
           ...parameters,
-          ...(pwd ? { pwd: this._credentials?.pwdhash } : {}),
+          ...(pwd ? { pwd: this.credentials?.pwdhash } : {}),
         },
         ...(data
           ? {
@@ -400,7 +409,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     const melting = description.match(/This item will disappear at the end of the day\./);
     const singleEquip = description.match(/ You may not equip more than one of these at a time\./);
 
-    const output = [];
+    const output: string[] = [];
 
     if (melting) output.push("Disappears at rollover");
     if (singleEquip) output.push("Single equip only.");

@@ -1,10 +1,5 @@
 import { Player } from "@prisma/client";
-import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-  bold,
-  underscore,
-} from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } from "discord.js";
 
 import { prisma } from "../../clients/database";
 import { kolClient } from "../../clients/kol";
