@@ -127,6 +127,7 @@ type Message = {
 type Events = {
   kmail: (message: Message) => void;
   whisper: (message: Message) => void;
+  rollover: () => void;
 };
 
 function wait(ms: number) {
@@ -222,6 +223,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
           sessionCookies: sessionCookies,
           pwdhash: apiResponse.data.pwd,
         };
+        if (this.postRolloverLatch) {
+          this.postRolloverLatch = false;
+          this.emit("rollover");
+        }
         return true;
       } catch {
         console.log("Login failed. Checking if it's because of rollover.");
@@ -314,6 +319,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     const isRollover = /The system is currently down for nightly maintenance/.test(
       (await axios("https://www.kingdomofloathing.com/")).data
     );
+    if (this.isRollover && !isRollover) {
+      this.postRolloverLatch = true;
+    }
     this.isRollover = isRollover;
     if (this.isRollover) {
       console.log("Rollover appears to be in progress. Checking again in one minute.");
