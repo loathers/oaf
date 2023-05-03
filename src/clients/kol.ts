@@ -4,7 +4,7 @@ import axios from "axios";
 import { parse } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
-import EventEmitter from "node:events";
+import { EventEmitter } from "node:events";
 import { stringify } from "querystring";
 import TypedEmitter from "typed-emitter";
 import { select } from "xpath";
