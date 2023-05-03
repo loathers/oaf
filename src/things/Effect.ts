@@ -1,4 +1,5 @@
-import { EmbedBuilder, bold } from "discord.js";
+import { bold } from "discord.js";
+import { memoizeAsync } from "utils-decorators";
 
 import { kolClient } from "../clients/kol";
 import { cleanString } from "../utils";
@@ -18,57 +19,57 @@ export type PizzaData = {
   options: number;
 };
 
-export class Effect implements Thing {
-  _effect: EffectData;
-  _name: string;
-  _pizza?: PizzaData;
+export class Effect extends Thing {
+  static from(line: string, avatarPotions = new Set<string>()): Effect {
+    const parts = line.split(/\t/);
+    if (parts.length < 6) throw "Invalid data";
 
-  constructor(data: string, avatarSet: Set<string>) {
-    this._effect = this.parseEffectData(data, avatarSet);
-    this._name = this._effect.name.toLowerCase();
+    const potion = parts[6]?.startsWith("use 1") ? parts[6].slice(6) : null;
+    const isAvatar = potion && avatarPotions.delete(potion.toLowerCase());
+
+    return new Effect(
+      parseInt(parts[0]),
+      cleanString(parts[1]),
+      parts[2],
+      parts[3],
+      parts[4],
+      !isAvatar && parts[5].indexOf("nohookah") === -1 && parts[4] !== "bad",
+    );
   }
 
-  get(): EffectData {
-    return this._effect;
+  readonly descId: string;
+  readonly quality: string;
+  readonly hookah: boolean;
+  private pizza?: PizzaData;
+
+  constructor(id: number, name: string, imageUrl: string, descId: string, quality: string, hookah: boolean) {
+    super(id, name, imageUrl);
+    this.descId = descId;
+    this.quality = quality;
+    this.hookah = hookah;
   }
 
-  name(): string {
-    return this._name;
+  describePizzaCompatibility() {
+    if (!this.hookah) return "Ineligible for pizza, wishes, or hookahs.";
+    if (!this.pizza) return "Pizza: If you are reading this, Captain 'Jalen' Scotch has hecked something up. Please ping him.";
+
+    const options = this.pizza.options === 1 ? "Uncontested" : `1 in ${this.pizza.options}`;
+    return `Pizza: ${this.pizza.letters.padEnd(4, "✱")} (${options})`;
   }
 
-  async addToEmbed(embed: EmbedBuilder): Promise<void> {
-    embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._effect.imageUrl}`);
-    let description = `${bold("Effect")}\n(Effect ${
-      this.get().id
-    })\n${await kolClient.getEffectDescription(this._effect.descId)}\n\n`;
-    if (this._effect.hookah) {
-      if (this._pizza) {
-        description += `Pizza: ${this._pizza.letters.padEnd(4, "✱")} (${
-          this._pizza.options === 1 ? "Uncontested" : `1 in ${this._pizza.options}`
-        })`;
-      } else {
-        description +=
-          "Pizza: If you are reading this, Captain 'Jalen' Scotch has hecked something up. Please ping him.";
-      }
-    } else {
-      description += "Ineligible for pizza, wishes, or hookahs.";
-    }
-    embed.setDescription(description);
+  setPizza(pizzaData: PizzaData) {
+    this.pizza = pizzaData;
   }
 
-  parseEffectData(effectData: string, avatarPotionSet: Set<string>): EffectData {
-    const data = effectData.split(/\t/);
-    if (data.length < 6) throw "Invalid data";
-    const potion = data.length >= 7 ? (data[6].startsWith("use 1") ? data[6].slice(6) : "") : "";
-    const isAvatar = avatarPotionSet.has(potion.toLowerCase());
-    if (isAvatar) avatarPotionSet.delete(potion.toLowerCase());
-    return {
-      id: parseInt(data[0]),
-      name: cleanString(data[1]),
-      imageUrl: data[2],
-      descId: data[3],
-      quality: data[4],
-      hookah: !isAvatar && data[5].indexOf("nohookah") === -1 && data[4] !== "bad",
-    };
+  @memoizeAsync()
+  async getDescription() {
+    return [
+      bold("Effect"),
+      `(Effect ${this.id})`,
+      "",
+      await kolClient.getEffectDescription(this.descId),
+      "",
+      this.describePizzaCompatibility(),
+    ].join("\n")
   }
 }

@@ -169,7 +169,7 @@ export class WikiClient {
   }
 
   register(thing: Thing): void {
-    const formattedName = cleanString(thing.name().toLowerCase().trim());
+    const formattedName = cleanString(thing.name.toLowerCase().trim());
     this._thingMap.set(formattedName, thing);
   }
 
@@ -189,44 +189,44 @@ export class WikiClient {
     const file = await downloadMafiaData("classskills");
     for (let line of file.data.split(/\n/)) {
       try {
-        const skill = new Skill(line);
+        const skill = Skill.from(line);
         const block = skill.block();
-        if (skill._skill.id > (this._finalSkillIds[block] || 0)) {
-          this._finalSkillIds[block] = skill._skill.id;
+        if (skill.id > (this._finalSkillIds[block] || 0)) {
+          this._finalSkillIds[block] = skill.id;
         }
-        if (skill.name()) {
+        if (skill.name) {
           this.register(skill);
         }
       } catch {}
     }
   }
 
-  async loadItems(itemData: Map<string, string[]>, avatarPotions: Set<string>) {
+  async loadItems(itemInfoForUse: Map<string, string[]>, avatarPotions: Set<string>) {
     const file = await downloadMafiaData("items");
     for (let line of file.data.split(/\n/)) {
       try {
-        const item = new Item(line, itemData);
-        if (item.get().id > this._finalItemId) this._finalItemId = item.get().id;
-        this.knownItemIds.add(item.get().id);
-        if (item.name()) {
+        const item = Item.from(line, itemInfoForUse);
+        if (item.id > this._finalItemId) this._finalItemId = item.id;
+        this.knownItemIds.add(item.id);
+        if (item.name) {
           this.register(item);
-          if (item.get().types.includes("avatar")) {
-            avatarPotions.add(item.name());
+          if (item.types.includes("avatar")) {
+            avatarPotions.add(item.name.toLowerCase());
           }
-          const unpackagedName = PACKAGES.get(item.name().toLowerCase());
+          const unpackagedName = PACKAGES.get(item.name.toLowerCase());
           if (unpackagedName) {
             const contents = this.retrieve(unpackagedName);
             if (contents && contents instanceof Item) {
-              contents.addContainer(item);
-              item.addContents(contents);
+              contents.container = item;
+              item.contents = contents;
             }
           }
-          const packageName = REVERSE_PACKAGES.get(item.name().toLowerCase());
+          const packageName = REVERSE_PACKAGES.get(item.name.toLowerCase());
           if (packageName) {
             const container = this.retrieve(packageName);
             if (container && container instanceof Item) {
-              container.addContents(item);
-              item.addContainer(container);
+              container.contents = item;
+              item.container = container;
             }
           }
         }
@@ -246,7 +246,7 @@ export class WikiClient {
             .map((itemName) => this.retrieve(itemName))
             .filter(isItem);
           for (const item of group) {
-            item.addZapGroup(group);
+            item.zapGroup = group;
           }
         } catch (error) {}
       }
@@ -264,7 +264,7 @@ export class WikiClient {
             .map((itemName: string) => this.retrieve(itemName))
             .filter(isItem);
           for (const item of group) {
-            item.addFoldGroup(group);
+            item.foldGroup = group;
           }
         } catch (error) {}
       }
@@ -275,8 +275,8 @@ export class WikiClient {
     const file = await downloadMafiaData("monsters");
     for (const line of file.data.split(/\n/)) {
       try {
-        const monster = new Monster(line);
-        if (monster.name()) {
+        const monster = Monster.from(line);
+        if (monster.name) {
           this.register(monster);
         }
       } catch {}
@@ -287,20 +287,22 @@ export class WikiClient {
     const file = await downloadMafiaData("familiars");
     for (const line of file.data.split(/\n/)) {
       try {
-        const familiar = new Familiar(line);
-        if (this._finalFamiliarId < familiar.get().id) this._finalFamiliarId = familiar.get().id;
-        if (familiar.name()) {
-          const hatchling = this.retrieve(familiar.get().larva);
+        const familiar = Familiar.from(line);
+
+        if (this._finalFamiliarId < familiar.id) this._finalFamiliarId = familiar.id;
+
+        if (familiar) {
+          const hatchling = this.retrieve(familiar.larva);
 
           if (hatchling instanceof Item) {
-            familiar.addHatchling(hatchling);
+            familiar.hatchling = hatchling;
             hatchling.addGrowingFamiliar(familiar);
           }
 
-          const equipment = this.retrieve(familiar.get().item);
+          const equipment = this.retrieve(familiar.item);
 
           if (equipment instanceof Item) {
-            familiar.addEquipment(equipment);
+            familiar.equipment = equipment;
             this.register(familiar);
             equipment.addEquppingFamiliar(familiar);
           }
@@ -313,10 +315,8 @@ export class WikiClient {
     const file = await downloadMafiaData("statuseffects");
     for (let line of file.data.split(/\n/)) {
       try {
-        const effect = new Effect(line, avatarPotions);
-        if (effect.name()) {
-          this.register(effect);
-        }
+        const effect = Effect.from(line, avatarPotions);
+        if (effect) this.register(effect);
       } catch {}
     }
   }

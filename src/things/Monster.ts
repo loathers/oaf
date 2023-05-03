@@ -1,16 +1,8 @@
-import { EmbedBuilder, bold, hyperlink } from "discord.js";
+import { bold, hyperlink } from "discord.js";
+import { memoizeAsync } from "utils-decorators";
 
-import { kolClient } from "../clients/kol";
-import { cleanString, toWikiLink } from "../utils";
+import { cleanString, notNull, toWikiLink } from "../utils";
 import { Thing } from "./Thing";
-
-export type MonsterData = {
-  name: string;
-  id: number;
-  imageUrl: string;
-  parameters: string;
-  drops: Drop[];
-};
 
 export type Drop = {
   item: string;
@@ -24,51 +16,64 @@ export type Drop = {
   };
 };
 
-export function convertToDrop(drop: string): Drop | undefined {
-  const dropMatch = drop.match(/^(?<itemName>.+) \((?<attributes>[a-z]*)(?<droprate>[\d]+)\)$/);
-  if (dropMatch) {
-    const attributes = dropMatch.groups?.attributes || "";
-    return {
-      item: dropMatch.groups?.itemName || "",
-      droprate: parseInt(dropMatch.groups?.droprate || "0"),
-      attributes: {
-        pickpocketOnly: attributes.indexOf("p") > -1,
-        noPickpocket: attributes.indexOf("n") > -1,
-        conditional: attributes.indexOf("c") > -1,
-        fixedRate: attributes.indexOf("f") > -1,
-        accordion: attributes.indexOf("a") > -1,
-      },
-    };
-  }
-  return undefined;
+export function convertToDrop(drop: string): Drop | null {
+  const dropMatch = drop.match(/^(?<item>.+) \((?<attributes>[a-z]*)(?<droprate>[\d]+)\)$/);
+  if (!dropMatch?.groups) return null;
+
+  const { item, attributes, droprate } = dropMatch.groups;
+
+  return {
+    item,
+    droprate: parseInt(droprate || "0"),
+    attributes: {
+      pickpocketOnly: attributes.includes("p"),
+      noPickpocket: attributes.includes("n"),
+      conditional: attributes.includes("c"),
+      fixedRate: attributes.includes("f"),
+      accordion: attributes.includes("a"),
+    },
+  };
 }
 
-export class Monster implements Thing {
-  _monster: MonsterData;
-  _name: string;
-  _description: string = "";
+export class Monster extends Thing {
+  static from(line: string): Monster {
+    const parts = line.split(/\t/);
+    if (parts.length < 4) throw "Invalid data";
 
-  constructor(data: string) {
-    this._monster = this.parseMonsterData(data);
-    this._name = this._monster.name.toLowerCase();
+    return new Monster(
+      cleanString(parts[0]),
+      parseInt(parts[1]),
+      parts[2].split(",")[0],
+      parts[3],
+      parts[4]
+        ? (
+            parts
+              .slice(4)
+              .map((drop) => convertToDrop(cleanString(drop)))
+              .filter(notNull)
+          ).sort((a, b) => b.droprate - a.droprate)
+        : [],
+    );
   }
 
-  get(): MonsterData {
-    return this._monster;
+  readonly parameters: string;
+  readonly drops: Drop[];
+
+  constructor(name: string, id: number, imageUrl: string, parameters: string, drops: Drop[]) {
+    super(id, name, imageUrl);
+    this.parameters = parameters;
+    this.drops = drops;
   }
 
-  name(): string {
-    return this._name;
-  }
-
-  async buildDescription(): Promise<string> {
-    let description = `${bold("Monster")}\n(Monster ${this._monster.id})\n`;
-    const atk = this._monster.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
-    const def = this._monster.parameters.match(/Def: (?<def>\-?[\d]+)/);
-    const hp = this._monster.parameters.match(/HP: (?<hp>\-?[\d]+)/);
-    const scale = this._monster.parameters.match(/Scale: (?<scale>-?[\d]+)/);
-    const floor = this._monster.parameters.match(/Floor: (?<floor>[\d]+)/);
-    const cap = this._monster.parameters.match(/Cap: (?<cap>[\d]+)/);
+  @memoizeAsync()
+  async getDescription(): Promise<string> {
+    let description = `${bold("Monster")}\n(Monster ${this.id})\n`;
+    const atk = this.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
+    const def = this.parameters.match(/Def: (?<def>\-?[\d]+)/);
+    const hp = this.parameters.match(/HP: (?<hp>\-?[\d]+)/);
+    const scale = this.parameters.match(/Scale: (?<scale>-?[\d]+)/);
+    const floor = this.parameters.match(/Floor: (?<floor>[\d]+)/);
+    const cap = this.parameters.match(/Cap: (?<cap>[\d]+)/);
 
     if (atk && def && hp) {
       description += `Attack: ${atk[1]} | Defense: ${def[1]} | HP: ${hp[1]}\n`;
@@ -87,7 +92,7 @@ export class Monster implements Thing {
       } else {
         description += `Scales to your stats ${scaleString} | HP: 75% of defense.\n`;
       }
-    } else if (this._monster.parameters.indexOf("Scales: ")) {
+    } else if (this.parameters.indexOf("Scales: ")) {
       let capString = "";
       if (cap || floor) {
         capString += " (";
@@ -100,27 +105,27 @@ export class Monster implements Thing {
       else description += `Scales to your stats${capString} | HP: 75% of defense.\n`;
     } else description += "Scales unusually.\n";
 
-    const phylum = this._monster.parameters.match(/P: (?<phylum>[\a-z]+)/);
+    const phylum = this.parameters.match(/P: (?<phylum>[\a-z]+)/);
     if (phylum) {
       description += `Phylum: ${phylum[1]}\n`;
     }
-    const element = this._monster.parameters.match(/E: (?<element>[\a-z]+)/);
+    const element = this.parameters.match(/E: (?<element>[\a-z]+)/);
     if (element) {
       description += `Element: ${element[1]}\n`;
     }
-    if (this._monster.parameters.indexOf("Init: 10000") > -1)
+    if (this.parameters.indexOf("Init: 10000") > -1)
       description += "Always wins initiative.\n";
-    if (this._monster.parameters.indexOf("Init: -10000") > -1)
+    if (this.parameters.indexOf("Init: -10000") > -1)
       description += "Always loses initiative.\n";
-    if (this._monster.parameters.indexOf("FREE") > -1)
+    if (this.parameters.indexOf("FREE") > -1)
       description += "Doesn't cost a turn to fight.\n";
-    if (this._monster.parameters.indexOf("NOCOPY") > -1) description += "Can't be copied.\n";
-    if (this._monster.parameters.indexOf("BOSS") > -1) description += "Instakill immune.\n";
-    if (this._monster.parameters.indexOf("ULTRARARE") > -1)
+    if (this.parameters.indexOf("NOCOPY") > -1) description += "Can't be copied.\n";
+    if (this.parameters.indexOf("BOSS") > -1) description += "Instakill immune.\n";
+    if (this.parameters.indexOf("ULTRARARE") > -1)
       description += "Ultra-rare encounter.\n";
 
-    const meat = this._monster.parameters.match(/Meat: (?<meat>[\d]+)/);
-    if (this._monster.drops.length || meat) {
+    const meat = this.parameters.match(/Meat: (?<meat>[\d]+)/);
+    if (this.drops.length || meat) {
       description += "\nDrops:\n";
       if (meat) {
         const meatInt = parseInt(meat[1]);
@@ -128,7 +133,7 @@ export class Monster implements Thing {
       }
       const dedupedDrops = new Map<string, number>();
       let dropArray = [];
-      for (let drop of this._monster.drops) {
+      for (let drop of this.drops) {
         let dropDesc = "";
         if (drop.attributes.accordion) {
           dropDesc += `${hyperlink(drop.item, toWikiLink(drop.item))} (Stealable accordion)\n`;
@@ -160,32 +165,5 @@ export class Monster implements Thing {
       if (dedupedDrops.size > 0) description += "...and more.";
     }
     return description;
-  }
-
-  async addToEmbed(embed: EmbedBuilder): Promise<void> {
-    embed.setThumbnail(
-      `http://images.kingdomofloathing.com/adventureimages/${this._monster.imageUrl}`
-    );
-    if (!this._description) this._description = await this.buildDescription();
-    embed.setDescription(this._description);
-  }
-
-  parseMonsterData(monsterData: string): MonsterData {
-    const data = monsterData.split(/\t/);
-    if (data.length < 4) throw "Invalid data";
-    return {
-      name: cleanString(data[0]),
-      id: parseInt(data[1]),
-      imageUrl: data[2].split(",")[0],
-      parameters: data[3],
-      drops: data[4]
-        ? (
-            data
-              .slice(4)
-              .map((drop) => convertToDrop(cleanString(drop)))
-              .filter((drop) => drop !== undefined) as Drop[]
-          ).sort((a, b) => b.droprate - a.droprate)
-        : [],
-    };
   }
 }

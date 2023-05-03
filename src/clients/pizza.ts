@@ -52,10 +52,10 @@ export class PizzaTree {
     function _calc(node: PizzaNode) {
       let options = node.options;
       for (let option of options) {
-        option._pizza = {
+        option.setPizza({
           letters: node.letters.toUpperCase(),
           options: options.length,
-        };
+        });
       }
       if (options.length > 1) {
         for (let child of node.children.values()) {
@@ -72,8 +72,8 @@ export class PizzaTree {
 
     for (const thing of things.values()) {
       if (!(thing instanceof Effect)) continue;
-      if (thing.get().hookah) {
-        this.addEffect(thing.name(), thing);
+      if (thing.hookah) {
+        this.addEffect(thing.name.toLowerCase(), thing);
       }
     }
     this.precalculate();
