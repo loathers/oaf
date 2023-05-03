@@ -15,6 +15,7 @@
     "lib": ["ES2022"],
     "target": "esNext"
   },
+  "files": ["node_modules/jest-expect-message/types/index.d.ts"],
   "include": ["src/**/*.ts"],
   "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 }
