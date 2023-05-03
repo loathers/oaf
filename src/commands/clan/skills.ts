@@ -1,13 +1,11 @@
 import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
-  hyperlink,
-  userMention,
 } from "discord.js";
 
 import { prisma } from "../../clients/database";
 import { kolClient } from "../../clients/kol";
-import { columns, notNull, pluralize, titleCase } from "../../utils";
+import { columns, formatPlayer, notNull, pluralize } from "../../utils";
 import { DREAD_CLANS } from "./_clans";
 import {
   JoinClanError,
@@ -164,18 +162,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           [username, Math.floor((kills + 450) / 900) - skills] as const
       )
       .filter(([, owed]) => owed > 0)
-      .map(([username, owed]) => {
-        const discordId = players[username]?.discordId;
-        return `${
-          discordId
-            ? `${userMention(discordId)}${hyperlink(
-                "👤",
-                `https://www.kingdomofloathing.com/showplayer.php?who=${players[username].playerId}`,
-                username
-              )}`
-            : titleCase(username)
-        }: ${pluralize(owed, "skill")}.`;
-      })
+      .map(
+        ([username, owed]) =>
+          `${formatPlayer(players[username], username)}: ${pluralize(owed, "skill")}.`
+      )
       .sort();
 
     await interaction.editReply({
