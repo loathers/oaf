@@ -1,5 +1,5 @@
 import { AttachmentBuilder, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import sharp from "sharp";
+import * as sharp from "sharp";
 
 export const data = new SlashCommandBuilder()
   .setName("messiah")
