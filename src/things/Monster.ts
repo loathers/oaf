@@ -46,13 +46,12 @@ export class Monster extends Thing {
       parts[2].split(",")[0],
       parts[3],
       parts[4]
-        ? (
-            parts
-              .slice(4)
-              .map((drop) => convertToDrop(cleanString(drop)))
-              .filter(notNull)
-          ).sort((a, b) => b.droprate - a.droprate)
-        : [],
+        ? parts
+            .slice(4)
+            .map((drop) => convertToDrop(cleanString(drop)))
+            .filter(notNull)
+            .sort((a, b) => b.droprate - a.droprate)
+        : []
     );
   }
 
@@ -113,16 +112,12 @@ export class Monster extends Thing {
     if (element) {
       description += `Element: ${element[1]}\n`;
     }
-    if (this.parameters.indexOf("Init: 10000") > -1)
-      description += "Always wins initiative.\n";
-    if (this.parameters.indexOf("Init: -10000") > -1)
-      description += "Always loses initiative.\n";
-    if (this.parameters.indexOf("FREE") > -1)
-      description += "Doesn't cost a turn to fight.\n";
+    if (this.parameters.indexOf("Init: 10000") > -1) description += "Always wins initiative.\n";
+    if (this.parameters.indexOf("Init: -10000") > -1) description += "Always loses initiative.\n";
+    if (this.parameters.indexOf("FREE") > -1) description += "Doesn't cost a turn to fight.\n";
     if (this.parameters.indexOf("NOCOPY") > -1) description += "Can't be copied.\n";
     if (this.parameters.indexOf("BOSS") > -1) description += "Instakill immune.\n";
-    if (this.parameters.indexOf("ULTRARARE") > -1)
-      description += "Ultra-rare encounter.\n";
+    if (this.parameters.indexOf("ULTRARARE") > -1) description += "Ultra-rare encounter.\n";
 
     const meat = this.parameters.match(/Meat: (?<meat>[\d]+)/);
     if (this.drops.length || meat) {

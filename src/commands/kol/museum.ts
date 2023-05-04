@@ -98,7 +98,7 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
   const focusedValue = interaction.options.getFocused();
 
   const filtered = wikiClient.items
-    .map((item) => ({ name: item.name(), value: item.id() }))
+    .map(({ name, id }) => ({ name, value: id }))
     .filter(({ name }) => name.toLowerCase().includes(focusedValue.toLowerCase()))
     .slice(0, 25);
   await interaction.respond(filtered);

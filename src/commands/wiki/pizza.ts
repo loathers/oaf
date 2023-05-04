@@ -28,7 +28,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const article = letters.match(/^[aeiouAEIOU]/) ? "An" : "A";
 
   if (options.length === 1) {
-    const name = options[0].name();
+    const name = options[0].name;
 
     return interaction.editReply({
       content: null,
@@ -50,7 +50,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   } else {
     const description: string[] = await Promise.all(
       options.map(async (effect) => {
-        const foundName = await wikiClient.findName(effect.name());
+        const foundName = await wikiClient.findName(effect.name);
         return hyperlink(foundName?.name ?? "", encodeURI(foundName?.url || ""));
       })
     );

@@ -17,10 +17,10 @@ export class Skill extends Thing {
       parseInt(parts[3]),
       parseInt(parts[4]),
       parseInt(parts[5]),
-      parts[6] ? parseInt(parts[6]) : undefined,
+      parts[6] ? parseInt(parts[6]) : undefined
     );
   }
- 
+
   readonly type: number;
   readonly manaCost: number;
   readonly duration: number;
@@ -33,7 +33,7 @@ export class Skill extends Thing {
     type: number,
     manaCost: number,
     duration: number,
-    level?: number,
+    level?: number
   ) {
     super(id, name, imageUrl);
     this.type = type;
@@ -83,7 +83,7 @@ export class Skill extends Thing {
     }
     description.push("");
     description.push(await kolClient.getSkillDescription(this.id));
-    
+
     return description.join("\n");
   }
 }

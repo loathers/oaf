@@ -6,7 +6,7 @@ import { cleanString, indent, toWikiLink } from "../utils";
 import { Item } from "./Item";
 import { Thing } from "./Thing";
 
-export type FamiliarActionTypes = 
+export type FamiliarActionTypes =
   | "none"
   | "stat0"
   | "stat1"
@@ -266,11 +266,19 @@ export class Familiar extends Thing {
       parts[3].split(","),
       cleanString(parts[4]),
       cleanString(parts[5]),
-      parts[10] ? parts[10].replace(/,/g, ", ") : "",
+      parts[10] ? parts[10].replace(/,/g, ", ") : ""
     );
   }
 
-  constructor(id: number, name: string, imageUrl: string, types: string[], larva: string, item: string, attributes: string) {
+  constructor(
+    id: number,
+    name: string,
+    imageUrl: string,
+    types: string[],
+    larva: string,
+    item: string,
+    attributes: string
+  ) {
     super(id, name, imageUrl);
     this.types = this.parseTypes(types);
     this.larva = larva;
@@ -290,7 +298,9 @@ export class Familiar extends Thing {
       // ... if the set of types to consider wholly reflects this familiar classification...
       if (classification.combination.every((type) => typesToConsider.includes(type))) {
         // ... remove the types that are reflected by this classification from future consideration...
-        typesToConsider = typesToConsider.filter((type) => !classification.combination.includes(type));
+        typesToConsider = typesToConsider.filter(
+          (type) => !classification.combination.includes(type)
+        );
         // ... and add this classification to the list we use to describe this familair.
         types.push(classification.description);
       }
@@ -305,7 +315,7 @@ export class Familiar extends Thing {
       bold("Familiar"),
       this.types,
       `Attributes: ${this.attributes || "None"}`,
-      ""
+      "",
     ];
 
     if (this.larva) {
@@ -318,7 +328,7 @@ export class Familiar extends Thing {
     }
 
     if (this.item) {
-      description.push(`Equipment: ${hyperlink(this.item,toWikiLink(this.item))}`);
+      description.push(`Equipment: ${hyperlink(this.item, toWikiLink(this.item))}`);
     }
 
     if (this.equipment) {

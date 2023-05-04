@@ -56,11 +56,24 @@ export class Item extends Thing {
       parts[5].indexOf("d") >= 0,
       parseInt(parts[6]),
       cleanString(parts[7]) || `${cleanString(parts[1])}s`,
-      itemInfoForUse,
+      itemInfoForUse
     );
   }
 
-  constructor(id: number, name: string, descId: number, imageUrl: string, types: string[], quest: boolean, gift: boolean, tradeable: boolean, discardable: boolean, autosell: number, pluralName: string, itemInfoForUse: Map<string, string[]>) {
+  constructor(
+    id: number,
+    name: string,
+    descId: number,
+    imageUrl: string,
+    types: string[],
+    quest: boolean,
+    gift: boolean,
+    tradeable: boolean,
+    discardable: boolean,
+    autosell: number,
+    pluralName: string,
+    itemInfoForUse: Map<string, string[]>
+  ) {
     super(id, name, imageUrl);
     this.descId = descId;
     this.shortDescription = this.getShortDescription(itemInfoForUse);
@@ -128,8 +141,8 @@ export class Item extends Thing {
   getAverageFromRange(adventures: string) {
     const advRange = adventures.split("-");
     return advRange.length > 1
-        ? (parseInt(advRange[0]) + parseInt(advRange[1])) / 2
-        : parseInt(adventures);
+      ? (parseInt(advRange[0]) + parseInt(advRange[1])) / 2
+      : parseInt(adventures);
   }
 
   getShortDescription(itemInfoForUse: Map<string, string[]>): string {
@@ -145,28 +158,30 @@ export class Item extends Thing {
 
     const data = itemInfoForUse.get(this.name.toLowerCase()) || [];
 
-    const consumableType = this.types.find(t => ["food", "booze", "spleen"].includes(t));
+    const consumableType = this.types.find((t) => ["food", "booze", "spleen"].includes(t));
     if (consumableType) {
-
       const [consumableName, consumableUnit] = (() => {
         switch (consumableType) {
-          case "food": return ["food", "fullness"];
-          case "booze": return ["booze", "inebriety"];
-          case "spleen": return ["spleen item", "spleen"];
+          case "food":
+            return ["food", "fullness"];
+          case "booze":
+            return ["booze", "inebriety"];
+          case "spleen":
+            return ["spleen item", "spleen"];
         }
         return ["", ""];
       })();
 
-      const [, sizeString, level, quality, adventures, ] = data;
+      const [, sizeString, level, quality, adventures] = data;
       const size = parseInt(sizeString);
 
-      const description = [
-        `(Item ${this.id})`,
-      ];
+      const description = [`(Item ${this.id})`];
 
-      description.push(`${bold(`${this.mapQuality(quality)} ${consumableName}`)} (Size ${size}${
-        level !== "1" ? `, requires level ${level}` : ""
-      })`);
+      description.push(
+        `${bold(`${this.mapQuality(quality)} ${consumableName}`)} (Size ${size}${
+          level !== "1" ? `, requires level ${level}` : ""
+        })`
+      );
 
       if (adventures !== "0") {
         description.push(this.describeAdventures(adventures, size, consumableUnit));
@@ -175,7 +190,9 @@ export class Item extends Thing {
       return description.concat(tradeability).join("\n");
     }
 
-    const equipmentType = this.types.find(t => ["weapon", "offhand", "container", "hat", "shirt", "pants", "accessory"].includes(t));
+    const equipmentType = this.types.find((t) =>
+      ["weapon", "offhand", "container", "hat", "shirt", "pants", "accessory"].includes(t)
+    );
     if (equipmentType) {
       const [, powerString, requirementString, subtype] = data;
 
@@ -189,7 +206,7 @@ export class Item extends Thing {
 
       const description: string[] = [];
       const equipInfo: string[] = [];
-      
+
       if (requirement) equipInfo.push(requirement);
 
       switch (equipmentType) {
@@ -213,9 +230,10 @@ export class Item extends Thing {
           break;
         }
         default: {
-          const equipmentName = equipmentType === "container" ? "Back Item" : titleCase(equipmentType);
+          const equipmentName =
+            equipmentType === "container" ? "Back Item" : titleCase(equipmentType);
           description.push(bold(equipmentName));
-          
+
           equipInfo.unshift(`${power} power`);
           break;
         }
@@ -226,24 +244,34 @@ export class Item extends Thing {
       return description.concat(tradeability).join("\n");
     }
 
-    const otherType = this.types.find(t => ["potion", "reusable", "usable", "multiple", "combat", "combat reusable", "grow"].includes(t));
+    const otherType = this.types.find((t) =>
+      ["potion", "reusable", "usable", "multiple", "combat", "combat reusable", "grow"].includes(t)
+    );
     if (otherType) {
       const alsoCombat = this.types.includes("combat");
-      
+
       const title = (() => {
         switch (otherType) {
-          case "potion": return "Potion";
-          case "reusable": return "Reusable item";
-          case "usable": return "Usable item";
-          case "combat": return "Combat item";
-          case "combat reusable": return "Reusable combat item";
-          case "grow": return "Familiar hatchling";
-          default: return "Miscellaneous Item";
+          case "potion":
+            return "Potion";
+          case "reusable":
+            return "Reusable item";
+          case "usable":
+            return "Usable item";
+          case "combat":
+            return "Combat item";
+          case "combat reusable":
+            return "Reusable combat item";
+          case "grow":
+            return "Familiar hatchling";
+          default:
+            return "Miscellaneous Item";
         }
       })();
 
       const typeDescription = [title];
-      if (!otherType?.startsWith("combat") && alsoCombat) typeDescription.push("(also usable in combat");
+      if (!otherType?.startsWith("combat") && alsoCombat)
+        typeDescription.push("(also usable in combat");
 
       return [typeDescription.join(" ")].concat(tradeability).join("\n");
     }
@@ -258,10 +286,7 @@ export class Item extends Thing {
   }
 
   addEquppingFamiliar(familiar: Familiar): void {
-    this._addlDescription = `Familiar: ${hyperlink(
-      familiar.name,
-      toWikiLink(familiar.name)
-    )}\n`;
+    this._addlDescription = `Familiar: ${hyperlink(familiar.name, toWikiLink(familiar.name))}\n`;
   }
 
   async getMallPrice() {
@@ -298,7 +323,9 @@ export class Item extends Thing {
       .map((name) => hyperlink(name, toWikiLink(name)))
       .join(", ");
 
-    output.push(`${titleCase(groupType)}s into: ${turnsInto}${group.length > 8 ? " ...and more." : ""}`);
+    output.push(
+      `${titleCase(groupType)}s into: ${turnsInto}${group.length > 8 ? " ...and more." : ""}`
+    );
 
     const tradeables = (
       await Promise.all(
@@ -318,15 +345,10 @@ export class Item extends Thing {
         output.push(`(This item is the cheapest in its ${groupType} group)`);
       } else {
         const cheapest = tradeables[0].item;
-        const wikiLink = hyperlink(
-          cheapest.name,
-          toWikiLink(cheapest.name)
-        );
+        const wikiLink = hyperlink(cheapest.name, toWikiLink(cheapest.name));
         const mallHistoryLink = hyperlink(
           `${tradeables[0].price.formattedMinPrice} meat`,
-          `https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${
-            cheapest.id
-          }&timespan=1&noanim=0`
+          `https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${cheapest.id}&timespan=1&noanim=0`
         );
 
         output.push(`(Cheapest: ${wikiLink} @ ${mallHistoryLink})`);
@@ -352,7 +374,7 @@ export class Item extends Thing {
 
     const price = await this.getMallPrice();
     if (price) {
-      description.push(price)
+      description.push(price);
     }
 
     if (this.zapGroup) {
@@ -371,7 +393,9 @@ export class Item extends Thing {
     }
 
     if (withAddl && this.contents) {
-      description.push(`Encloses: ${bold(hyperlink(this.contents.name, toWikiLink(this.contents.name)))}`);
+      description.push(
+        `Encloses: ${bold(hyperlink(this.contents.name, toWikiLink(this.contents.name)))}`
+      );
       description.push(await this.contents?.getDescription(false));
     }
 

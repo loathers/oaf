@@ -33,7 +33,7 @@ export class Effect extends Thing {
       parts[2],
       parts[3],
       parts[4],
-      !isAvatar && parts[5].indexOf("nohookah") === -1 && parts[4] !== "bad",
+      !isAvatar && parts[5].indexOf("nohookah") === -1 && parts[4] !== "bad"
     );
   }
 
@@ -42,7 +42,14 @@ export class Effect extends Thing {
   readonly hookah: boolean;
   private pizza?: PizzaData;
 
-  constructor(id: number, name: string, imageUrl: string, descId: string, quality: string, hookah: boolean) {
+  constructor(
+    id: number,
+    name: string,
+    imageUrl: string,
+    descId: string,
+    quality: string,
+    hookah: boolean
+  ) {
     super(id, name, imageUrl);
     this.descId = descId;
     this.quality = quality;
@@ -51,7 +58,8 @@ export class Effect extends Thing {
 
   describePizzaCompatibility() {
     if (!this.hookah) return "Ineligible for pizza, wishes, or hookahs.";
-    if (!this.pizza) return "Pizza: If you are reading this, Captain 'Jalen' Scotch has hecked something up. Please ping him.";
+    if (!this.pizza)
+      return "Pizza: If you are reading this, Captain 'Jalen' Scotch has hecked something up. Please ping him.";
 
     const options = this.pizza.options === 1 ? "Uncontested" : `1 in ${this.pizza.options}`;
     return `Pizza: ${this.pizza.letters.padEnd(4, "✱")} (${options})`;
@@ -70,6 +78,6 @@ export class Effect extends Thing {
       await kolClient.getEffectDescription(this.descId),
       "",
       this.describePizzaCompatibility(),
-    ].join("\n")
+    ].join("\n");
   }
 }
