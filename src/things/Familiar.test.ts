@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 test("Can describe a Familiar", async () => {
-  vi.mocked(axios.post)
+  vi.mocked(axios)
     .mockResolvedValueOnce({ data: await loadFixture(__dirname, "desc_item_mosquito_larva.html") })
     .mockResolvedValueOnce({
       data: await loadFixture(__dirname, "desc_item_hypodermic_needle.html"),

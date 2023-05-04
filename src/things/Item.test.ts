@@ -22,7 +22,7 @@ afterEach(() => {
 
 describe("Food", () => {
   test("Can describe a food with a range of adventures", async () => {
-    vi.mocked(axios.post)
+    vi.mocked(axios)
       .mockResolvedValueOnce({
         data: await loadFixture(__dirname, "desc_item_tofurkey_leg.html"),
       })
@@ -50,7 +50,7 @@ describe("Food", () => {
   });
 
   test("Can describe a food with a set number of adventures", async () => {
-    vi.mocked(axios.post)
+    vi.mocked(axios)
       .mockResolvedValueOnce({
         data: await loadFixture(__dirname, "desc_item_alien_meat.html"),
       })

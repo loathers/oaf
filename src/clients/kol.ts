@@ -341,7 +341,8 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   ): Promise<any> {
     if (this.isRollover || !(await this.logIn())) return null;
     try {
-      const page = await axios.post(`https://www.kingdomofloathing.com/${url}`, {
+      const page = await axios(`https://www.kingdomofloathing.com/${url}`, {
+        method: "POST",
         withCredentials: true,
         headers: {
           cookie: this.credentials?.sessionCookies || "",
