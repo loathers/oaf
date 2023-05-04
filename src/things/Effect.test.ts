@@ -39,3 +39,26 @@ test("Can describe an Effect", async () => {
     `
   );
 });
+
+test("Can describe an avatar effect", async () => {
+  mockAxios.post.mockResolvedValue({
+    data: await loadFixture(__dirname, "desc_effect_the_visible_adventurer.html"),
+  });
+
+  const effect = Effect.from(
+    "1888	The Visible Adventurer	handmirror.gif	a38d91d52ace7992b899402e9704d86d	neutral	none	use 1 x-ray mirror",
+    new Set(["x-ray mirror"])
+  );
+
+  const description = await effect.getDescription();
+
+  expect(description).toBe(
+    dedent`
+      **Effect**
+      (Effect 1888)
+      Makes you look like a skeleton
+
+      Ineligible for pizza, wishes, or hookahs.
+    `
+  );
+});

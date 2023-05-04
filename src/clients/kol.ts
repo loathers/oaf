@@ -431,6 +431,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async getEffectDescription(descId: string | undefined): Promise<string> {
+    console.log(descId);
     if (!descId) return "";
 
     switch (descId) {
@@ -447,7 +448,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     });
 
     const blueText = description.match(
-      /<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/
+      /<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/m
     );
 
     return sanitiseBlueText(blueText?.groups?.description);

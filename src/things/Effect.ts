@@ -33,7 +33,7 @@ export class Effect extends Thing {
       parts[2],
       parts[3],
       parts[4],
-      !isAvatar && parts[5].indexOf("nohookah") === -1 && parts[4] !== "bad"
+      !isAvatar && !parts[5].includes("nohookah") && parts[4] !== "bad"
     );
   }
 
