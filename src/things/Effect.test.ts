@@ -1,9 +1,8 @@
 import mockAxios from "jest-mock-axios";
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
 import dedent from "ts-dedent";
 
 import { kolClient } from "../clients/kol";
+import { loadFixture } from "../testUtils";
 import { Effect } from "./Effect";
 
 beforeAll(() => {
@@ -19,17 +18,16 @@ afterEach(() => {
 });
 
 test("Can describe an Effect", async () => {
-  const file = path.join(__dirname, "__fixtures__/desc_effect_pasta_oneness.html");
-  const html = await fs.readFile(file, { encoding: "utf-8" });
-  mockAxios.post.mockResolvedValue({ data: html });
+  mockAxios.post.mockResolvedValue({
+    data: await loadFixture(__dirname, "desc_effect_pasta_oneness.html"),
+  });
 
   const effect = Effect.from(
     "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation"
   );
   effect.pizza = { letters: "PAST", options: 2 };
 
-  const descriptionPromise = effect.getDescription();
-  const description = await descriptionPromise;
+  const description = await effect.getDescription();
 
   expect(description).toBe(
     dedent`

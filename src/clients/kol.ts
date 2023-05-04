@@ -115,7 +115,7 @@ function sanitiseBlueText(blueText: string | undefined): string {
       .replace(/<[^<>]+>/g, "")
       .replace(/(\n+)/g, "\n")
       .replace(/(\n)+$/, "")
-  );
+  ).trim();
 }
 
 type Message = {
@@ -403,7 +403,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       whichitem: descId,
     });
     const blueText = description.match(
-      /<[Cc]enter>\s?<b>\s?<font color="?[\w]+"?>(?<description>[\s\S]+)<\/[Cc]enter>/
+      /<center>\s*<b>\s*<font color="?[\w]+"?>(?<description>[\s\S]+)<\/center>/i
     );
     const effect = description.match(
       /Effect: \s?<b>\s?<a[^\>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^\>]+>(?<effect>[\s\S]+)<\/a>[^\(]+\((?<duration>[\d]+)/
@@ -423,7 +423,8 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
             cleanString(effect.groups?.effect),
             toWikiLink(cleanString(effect.groups?.effect))
           )
-        )}\n${indent(await this.getEffectDescription(effect.groups?.descid))}`
+        )}`,
+        indent(await this.getEffectDescription(effect.groups?.descid))
       );
 
     return output.join("\n");

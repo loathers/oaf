@@ -314,6 +314,7 @@ export class Familiar extends Thing {
     const description = [
       bold("Familiar"),
       this.types,
+      "",
       `Attributes: ${this.attributes || "None"}`,
       "",
     ];
@@ -324,8 +325,12 @@ export class Familiar extends Thing {
 
     if (this.hatchling) {
       const hatchlingDescription = await this.hatchling.getDescription(false);
-      description.push(hatchlingDescription.substring(23).replace(/\n+/g, "\n"));
+      description.push(
+        hatchlingDescription.replace(bold("Familiar hatchling"), "").replace(/\n+/g, "\n").trim()
+      );
     }
+
+    description.push("");
 
     if (this.item) {
       description.push(`Equipment: ${hyperlink(this.item, toWikiLink(this.item))}`);

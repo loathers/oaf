@@ -40,7 +40,7 @@ export class Item extends Thing {
 
   _addlDescription: string = "";
 
-  static from(line: string, itemInfoForUse: Map<string, string[]>): Item {
+  static from(line: string, itemInfoForUse = new Map<string, string[]>): Item {
     const parts = line.split(/\t/);
     if (parts.length < 7) throw "Invalid data";
 
@@ -76,7 +76,6 @@ export class Item extends Thing {
   ) {
     super(id, name, imageUrl);
     this.descId = descId;
-    this.shortDescription = this.getShortDescription(itemInfoForUse);
     this.types = types;
     this.quest = quest;
     this.gift = gift;
@@ -84,6 +83,7 @@ export class Item extends Thing {
     this.discardable = discardable;
     this.autosell = autosell;
     this.pluralName = pluralName;
+    this.shortDescription = this.getShortDescription(itemInfoForUse);
   }
 
   mapQuality(rawQuality: string): string {
@@ -154,7 +154,7 @@ export class Item extends Thing {
     if (!this.tradeable) tradeability.push("traded");
     if (!this.discardable) tradeability.push("discarded");
 
-    if (tradeability.length > 0) itemRules.push(`Cannot be ${tradeability.join(" or ")}`);
+    if (tradeability.length > 0) itemRules.push(`Cannot be ${tradeability.join(" or ")}.`);
 
     const data = itemInfoForUse.get(this.name.toLowerCase()) || [];
 
@@ -187,7 +187,7 @@ export class Item extends Thing {
         description.push(this.describeAdventures(adventures, size, consumableUnit));
       }
 
-      return description.concat(tradeability).join("\n");
+      return description.concat(itemRules).join("\n");
     }
 
     const equipmentType = this.types.find((t) =>
@@ -241,7 +241,7 @@ export class Item extends Thing {
 
       description.push(equipInfo.join(", "));
 
-      return description.concat(tradeability).join("\n");
+      return description.concat(itemRules).join("\n");
     }
 
     const otherType = this.types.find((t) =>
@@ -269,14 +269,14 @@ export class Item extends Thing {
         }
       })();
 
-      const typeDescription = [title];
+      const typeDescription: string[] = [bold(title)];
       if (!otherType?.startsWith("combat") && alsoCombat)
         typeDescription.push("(also usable in combat");
 
-      return [typeDescription.join(" ")].concat(tradeability).join("\n");
+      return [typeDescription.join(" ")].concat(itemRules).join("\n");
     }
 
-    return ["Miscellaneous Item"].concat(tradeability).join("\n");
+    return ["Miscellaneous Item"].concat(itemRules).join("\n");
   }
 
   addGrowingFamiliar(familiar: Familiar): void {
