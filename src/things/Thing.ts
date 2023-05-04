@@ -1,6 +1,22 @@
 import { EmbedBuilder } from "discord.js";
 
-export abstract class Thing {
-  abstract name(): string;
-  abstract addToEmbed(embed: EmbedBuilder): Promise<void>;
+export class Thing {
+  readonly id: number;
+  readonly name: string;
+  readonly imageUrl: string;
+
+  constructor(id: number, name: string, imageUrl: string) {
+    this.id = id;
+    this.name = name;
+    this.imageUrl = imageUrl;
+  }
+
+  async getDescription(): Promise<string> {
+    throw "Implement me";
+  }
+
+  async addToEmbed(embed: EmbedBuilder): Promise<void> {
+    embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this.imageUrl}`);
+    embed.setDescription(await this.getDescription());
+  }
 }

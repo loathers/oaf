@@ -1,97 +1,102 @@
-import { EmbedBuilder, bold } from "discord.js";
+import { bold } from "discord.js";
+import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol";
 import { cleanString } from "../utils";
 import { Thing } from "./Thing";
 
-export type SkillData = {
-  id: number;
-  name: string;
-  imageUrl: string;
-  type: number;
-  manaCost: number;
-  duration: number;
-  level?: number;
-};
+export class Skill extends Thing {
+  static from(line: string): Skill {
+    const parts = line.split(/\t/);
+    if (parts.length < 6) throw "Invalid data";
 
-export class Skill implements Thing {
-  _skill: SkillData;
-  _name: string;
-  _description: string = "";
-
-  constructor(data: string) {
-    this._skill = this.parseSkillData(data);
-    this._name = this._skill.name.toLowerCase();
+    return new Skill(
+      parseInt(parts[0]),
+      cleanString(parts[1]),
+      parts[2],
+      parseInt(parts[3]),
+      parseInt(parts[4]),
+      parseInt(parts[5]),
+      parts[6] ? parseInt(parts[6]) : undefined
+    );
   }
 
-  get(): SkillData {
-    return this._skill;
-  }
+  readonly type: number;
+  readonly manaCost: number;
+  readonly duration: number;
+  readonly level?: number;
 
-  name(): string {
-    return this._name;
+  constructor(
+    id: number,
+    name: string,
+    imageUrl: string,
+    type: number,
+    manaCost: number,
+    duration: number,
+    level?: number
+  ) {
+    super(id, name, imageUrl);
+    this.type = type;
+    this.manaCost = manaCost;
+    this.duration = duration;
+    this.level = level;
   }
 
   block(): number {
-    return Math.floor(this._skill.id / 1000);
+    return Math.floor(this.id / 1000);
   }
 
-  async buildDescription(): Promise<string> {
-    let description = `(Skill ${this._skill.id})\n`;
-    switch (this._skill.type) {
+  @Memoize()
+  async getDescription(): Promise<string> {
+    const description: string[] = [];
+
+    let showCost = false;
+
+    switch (this.type) {
       case 0:
-        description += bold("Passive Skill");
+        description.push(bold("Passive Skill"));
         break;
       case 1:
       case 2:
       case 3:
       case 4:
-        description += `${bold("Skill")}\nCost: ${this._skill.manaCost}mp`;
+        description.push(bold("Skill"));
+        showCost = true;
         break;
       case 5:
-        description += `${bold("Combat Skill")}\nCost: ${this._skill.manaCost}mp`;
+        description.push(bold("Combat Skill"));
+        showCost = true;
         break;
       case 6:
-        description += `${bold("Skill (Boris Song)")}\nCost: ${this._skill.manaCost}mp`;
+        description.push(bold("Skill (Boris Song)"));
+        showCost = true;
         break;
       case 7:
-        description += `${bold("Combat/Noncombat Skill")}\nCost: ${this._skill.manaCost}mp`;
+        description.push(bold("Combat/Noncombat Skill"));
+        showCost = true;
         break;
       case 8:
-        description += bold("Combat Passive Skill");
+        description.push(bold("Combat Passive Skill"));
         break;
       case 9:
-        description += `${bold("Skill (Expression)")}\nCost: ${this._skill.manaCost}mp`;
+        description.push(bold("Skill (Expression)"));
+        showCost = true;
         break;
       case 10:
-        description += `${bold("Skill (Walk)")}\nCost: ${this._skill.manaCost}mp`;
+        description.push(bold("Skill (Walk)"));
+        showCost = true;
         break;
       default:
-        description += bold("Skill");
+        description.push(bold("Skill"));
         break;
     }
-    description += "\n\n";
-    description += await kolClient.getSkillDescription(this._skill.id);
-    return description;
-  }
+    description.push(`(Skill ${this.id})`);
+    if (showCost) description.push(`Cost: ${this.manaCost}mp`);
 
-  async addToEmbed(embed: EmbedBuilder): Promise<void> {
-    embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._skill.imageUrl}`);
-    if (!this._description) this._description = await this.buildDescription();
-    embed.setDescription(this._description);
-  }
+    const skillDescription = await kolClient.getSkillDescription(this.id);
 
-  parseSkillData(skillData: string): SkillData {
-    const data = skillData.split(/\t/);
-    if (data.length < 6) throw "Invalid data";
-    return {
-      id: parseInt(data[0]),
-      name: cleanString(data[1]),
-      imageUrl: data[2],
-      type: parseInt(data[3]),
-      manaCost: parseInt(data[4]),
-      duration: parseInt(data[5]),
-      level: data[6] ? parseInt(data[6]) : undefined,
-    };
+    if (skillDescription) description.push("", skillDescription);
+
+    return description.join("\n");
   }
 }

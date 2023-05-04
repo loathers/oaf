@@ -1,3 +1,5 @@
+import { expect, test } from "vitest";
+
 import { validUsername } from "./whois";
 
 test("real usernames pass validation", () => {

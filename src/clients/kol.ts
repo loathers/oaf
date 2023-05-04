@@ -115,7 +115,7 @@ function sanitiseBlueText(blueText: string | undefined): string {
       .replace(/<[^<>]+>/g, "")
       .replace(/(\n+)/g, "\n")
       .replace(/(\n)+$/, "")
-  );
+  ).trim();
 }
 
 type Message = {
@@ -137,6 +137,8 @@ function wait(ms: number) {
 export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) {
   clanActionMutex = new Mutex();
   static loginMutex = new Mutex();
+  mockLoggedIn = false;
+
   private isRollover = false;
   private loginParameters: URLSearchParams;
   private credentials: KoLCredentials = {};
@@ -173,6 +175,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async loggedIn(): Promise<boolean> {
+    if (this.mockLoggedIn) return true;
     if (!this.credentials) return false;
     try {
       const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
@@ -401,7 +404,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       whichitem: descId,
     });
     const blueText = description.match(
-      /<[Cc]enter>\s?<b>\s?<font color="?[\w]+"?>(?<description>[\s\S]+)<\/[Cc]enter>/
+      /<center>\s*<b>\s*<font color="?[\w]+"?>(?<description>[\s\S]+)<\/center>/i
     );
     const effect = description.match(
       /Effect: \s?<b>\s?<a[^\>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^\>]+>(?<effect>[\s\S]+)<\/a>[^\(]+\((?<duration>[\d]+)/
@@ -421,7 +424,8 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
             cleanString(effect.groups?.effect),
             toWikiLink(cleanString(effect.groups?.effect))
           )
-        )}\n${indent(await this.getEffectDescription(effect.groups?.descid))}`
+        )}`,
+        indent(await this.getEffectDescription(effect.groups?.descid))
       );
 
     return output.join("\n");
@@ -444,20 +448,20 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     });
 
     const blueText = description.match(
-      /<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/
+      /<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/m
     );
 
     return sanitiseBlueText(blueText?.groups?.description);
   }
 
-  async getSkillDescription(id: number): Promise<string> {
+  async getSkillDescription(id: number) {
     const description = await this.visitUrl("desc_skill.php", {
       whichskill: String(id),
     });
     const blueText = description.match(
       /<blockquote[\s\S]+<[Cc]enter>(?<description>[\s\S]+)<\/[Cc]enter>/
     );
-    return blueText ? sanitiseBlueText(blueText.groups?.description) : "";
+    return blueText ? sanitiseBlueText(blueText.groups?.description) : null;
   }
 
   async joinClan(id: number): Promise<boolean> {

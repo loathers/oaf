@@ -1,4 +1,5 @@
-import { EmbedBuilder, bold, hyperlink } from "discord.js";
+import { bold, hyperlink } from "discord.js";
+import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol";
 import { cleanString, indent, toWikiLink } from "../utils";
@@ -246,104 +247,100 @@ export const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
   ["o.a.f.", "Is optimal.\nGenerally messes with you.\n"],
 ]);
 
-export type FamiliarData = {
-  id: number;
-  name: string;
-  imageUrl: string;
-  types: string[];
-  larva: string;
-  item: string;
-  attributes: string;
-};
+export class Familiar extends Thing {
+  readonly types: string;
+  readonly larva: string;
+  readonly item: string;
+  readonly attributes: string;
+  hatchling: Item | undefined;
+  equipment: Item | undefined;
 
-export class Familiar implements Thing {
-  _familiar: FamiliarData;
-  _name: string;
-  _description: string = "";
-  _hatchling: Item | undefined;
-  _equipment: Item | undefined;
-  _typeString: string = "";
+  static from(line: string): Familiar {
+    const parts = line.split(/\t/);
+    if (parts.length < 10) throw "Invalid data";
 
-  constructor(data: string) {
-    this._familiar = this.parseFamiliarData(data);
-    this._name = this._familiar.name.toLowerCase();
+    return new Familiar(
+      parseInt(parts[0]),
+      cleanString(parts[1]),
+      parts[2],
+      parts[3].split(","),
+      cleanString(parts[4]),
+      cleanString(parts[5]),
+      parts[10] ? parts[10].replace(/,/g, ", ") : ""
+    );
   }
 
-  get(): FamiliarData {
-    return this._familiar;
+  constructor(
+    id: number,
+    name: string,
+    imageUrl: string,
+    types: string[],
+    larva: string,
+    item: string,
+    attributes: string
+  ) {
+    super(id, name, imageUrl);
+    this.types = this.parseTypes(types);
+    this.larva = larva;
+    this.item = item;
+    this.attributes = attributes;
   }
 
-  name(): string {
-    return this._name;
-  }
+  private parseTypes(actionTypes: string[]): string {
+    const hardcoded = HARD_CODED_FAMILIARS.get(this.name.toLowerCase());
+    if (hardcoded) return hardcoded;
 
-  addHatchling(hatchling: Item) {
-    this._hatchling = hatchling;
-  }
+    const types: string[] = [];
+    let typesToConsider = [...actionTypes] as FamiliarActionTypes[];
 
-  addEquipment(equipment: Item) {
-    this._equipment = equipment;
-  }
-
-  parseTypes(): string {
-    if (!this._typeString) {
-      if (HARD_CODED_FAMILIARS.has(this.name()))
-        this._typeString = HARD_CODED_FAMILIARS.get(this.name()) || "";
-      else {
-        let types = "";
-        let typeArray = [...this._familiar.types] as FamiliarActionTypes[];
-
-        for (let classification of FAMILIAR_CLASSIFCATIONS) {
-          if (classification.combination.every((type) => typeArray.includes(type))) {
-            typeArray = typeArray.filter((type) => !classification.combination.includes(type));
-            types += `${classification.description}\n`;
-          }
-        }
-
-        this._typeString = types;
+    // For each classification...
+    for (const classification of FAMILIAR_CLASSIFCATIONS) {
+      // ... if the set of types to consider wholly reflects this familiar classification...
+      if (classification.combination.every((type) => typesToConsider.includes(type))) {
+        // ... remove the types that are reflected by this classification from future consideration...
+        typesToConsider = typesToConsider.filter(
+          (type) => !classification.combination.includes(type)
+        );
+        // ... and add this classification to the list we use to describe this familair.
+        types.push(classification.description);
       }
     }
-    return this._typeString;
+
+    return types.join("\n");
   }
 
-  async buildDescription(): Promise<string> {
-    let description_string = bold("Familiar") + "\n";
-    description_string += `${this.parseTypes()}\n`;
-    description_string += `Attributes: ${this._familiar.attributes || "None"}\n\n`;
-    if (this._familiar.larva)
-      description_string += `Hatchling: ${hyperlink(
-        this._familiar.larva,
-        toWikiLink(this._familiar.larva)
-      )}\n${(await this._hatchling?.buildFullDescription(false))
-        ?.substring(23)
-        .replace(/\n+/g, "\n")}\n`;
-    if (this._familiar.item)
-      description_string += `Equipment: ${hyperlink(
-        this._familiar.item,
-        toWikiLink(this._familiar.item)
-      )}\n${indent(
-        (await kolClient.getItemDescription(this._equipment?.get().descId || 0)) || ""
-      )}`;
-    return description_string;
-  }
+  @Memoize()
+  async getDescription(): Promise<string> {
+    const description = [
+      bold("Familiar"),
+      this.types,
+      "",
+      `Attributes: ${this.attributes || "None"}`,
+      "",
+    ];
 
-  async addToEmbed(embed: EmbedBuilder): Promise<void> {
-    embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this._familiar.imageUrl}`);
-    if (!this._description) this._description = await this.buildDescription();
-    embed.setDescription(this._description);
-  }
+    if (this.larva) {
+      description.push(`Hatchling: ${hyperlink(this.larva, toWikiLink(this.larva))}`);
+    }
 
-  parseFamiliarData(familiarData: string): FamiliarData {
-    const data = familiarData.split(/\t/);
-    if (data.length < 10) throw "Invalid data";
-    return {
-      id: parseInt(data[0]),
-      name: cleanString(data[1]),
-      imageUrl: data[2],
-      types: data[3].split(","),
-      larva: cleanString(data[4]),
-      item: cleanString(data[5]),
-      attributes: data[10] ? data[10].replace(/,/g, ", ") : "",
-    };
+    if (this.hatchling) {
+      const hatchlingDescription = await this.hatchling.getDescription(false);
+      description.push(
+        hatchlingDescription.replace(bold("Familiar hatchling"), "").replace(/\n+/g, "\n").trim()
+      );
+    }
+
+    description.push("");
+
+    if (this.item) {
+      description.push(`Equipment: ${hyperlink(this.item, toWikiLink(this.item))}`);
+    }
+
+    if (this.equipment) {
+      const equipmentDescription = await kolClient.getItemDescription(this.equipment.descId);
+      description.push(indent(equipmentDescription));
+    }
+
+    return description.join("\n");
   }
 }

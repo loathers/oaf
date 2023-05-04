@@ -1,16 +1,8 @@
-import { EmbedBuilder, bold, hyperlink } from "discord.js";
+import { bold, hyperlink } from "discord.js";
+import { Memoize } from "typescript-memoize";
 
-import { kolClient } from "../clients/kol";
-import { cleanString, toWikiLink } from "../utils";
+import { cleanString, notNull, toWikiLink } from "../utils";
 import { Thing } from "./Thing";
-
-export type MonsterData = {
-  name: string;
-  id: number;
-  imageUrl: string;
-  parameters: string;
-  drops: Drop[];
-};
 
 export type Drop = {
   item: string;
@@ -24,168 +16,155 @@ export type Drop = {
   };
 };
 
-export function convertToDrop(drop: string): Drop | undefined {
-  const dropMatch = drop.match(/^(?<itemName>.+) \((?<attributes>[a-z]*)(?<droprate>[\d]+)\)$/);
-  if (dropMatch) {
-    const attributes = dropMatch.groups?.attributes || "";
-    return {
-      item: dropMatch.groups?.itemName || "",
-      droprate: parseInt(dropMatch.groups?.droprate || "0"),
-      attributes: {
-        pickpocketOnly: attributes.indexOf("p") > -1,
-        noPickpocket: attributes.indexOf("n") > -1,
-        conditional: attributes.indexOf("c") > -1,
-        fixedRate: attributes.indexOf("f") > -1,
-        accordion: attributes.indexOf("a") > -1,
-      },
-    };
-  }
-  return undefined;
+export function convertToDrop(drop: string): Drop | null {
+  const dropMatch = drop.match(/^(?<item>.+) \((?<attributes>[a-z]*)(?<droprate>[\d]+)\)$/);
+  if (!dropMatch?.groups) return null;
+
+  const { item, attributes, droprate } = dropMatch.groups;
+
+  return {
+    item,
+    droprate: parseInt(droprate || "0"),
+    attributes: {
+      pickpocketOnly: attributes.includes("p"),
+      noPickpocket: attributes.includes("n"),
+      conditional: attributes.includes("c"),
+      fixedRate: attributes.includes("f"),
+      accordion: attributes.includes("a"),
+    },
+  };
 }
 
-export class Monster implements Thing {
-  _monster: MonsterData;
-  _name: string;
-  _description: string = "";
+export class Monster extends Thing {
+  static from(line: string): Monster {
+    const parts = line.split(/\t/);
+    if (parts.length < 4) throw "Invalid data";
 
-  constructor(data: string) {
-    this._monster = this.parseMonsterData(data);
-    this._name = this._monster.name.toLowerCase();
+    return new Monster(
+      cleanString(parts[0]),
+      parseInt(parts[1]),
+      parts[2].split(",")[0],
+      parts[3],
+      parts[4]
+        ? parts
+            .slice(4)
+            .map((drop) => convertToDrop(cleanString(drop)))
+            .filter(notNull)
+            .sort((a, b) => b.droprate - a.droprate)
+        : []
+    );
   }
 
-  get(): MonsterData {
-    return this._monster;
+  readonly parameters: string;
+  readonly drops: Drop[];
+
+  constructor(name: string, id: number, imageUrl: string, parameters: string, drops: Drop[]) {
+    super(id, name, imageUrl);
+    this.parameters = parameters;
+    this.drops = drops;
   }
 
-  name(): string {
-    return this._name;
+  private getDropsDescription() {
+    const meatMatcher = this.parameters.match(/Meat: (?<meat>[\d]+)/);
+
+    if (!this.drops.length && !meatMatcher) return null;
+
+    const description = ["Drops:"];
+
+    if (meatMatcher) {
+      const meat = parseInt(meatMatcher[1]);
+      description.push(`${meat} (±${Math.floor(meat * 0.2)}) meat`);
+    }
+
+    const drops = new Map<string, number>();
+
+    for (let drop of this.drops) {
+      const dropDetails: string[] = [];
+      if (drop.attributes.accordion) {
+        dropDetails.push("Stealable accordion");
+      } else {
+        dropDetails.push(drop.droprate > 0 ? `${drop.droprate}%` : "Sometimes");
+        if (drop.attributes.pickpocketOnly) dropDetails.push("pickpocket only");
+        if (drop.attributes.noPickpocket) dropDetails.push("can't be stolen");
+        if (drop.attributes.conditional) dropDetails.push("conditional");
+        if (drop.attributes.fixedRate) dropDetails.push("unaffected by item drop modifiers");
+      }
+
+      const dropDescription = `${hyperlink(drop.item, toWikiLink(drop.item))} (${dropDetails.join(
+        ", "
+      )})`;
+
+      drops.set(dropDescription, (drops.get(dropDescription) || 0) + 1);
+    }
+
+    description.push(
+      ...[...drops.entries()]
+        .slice(0, 10)
+        .map(([drop, quantity]) => `${quantity > 1 ? `${quantity}x ` : ""}${drop}`)
+    );
+
+    if (drops.size > 10) description.push("...and more.");
+
+    return description.join("\n");
   }
 
-  async buildDescription(): Promise<string> {
-    let description = `${bold("Monster")}\n(Monster ${this._monster.id})\n`;
-    const atk = this._monster.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
-    const def = this._monster.parameters.match(/Def: (?<def>\-?[\d]+)/);
-    const hp = this._monster.parameters.match(/HP: (?<hp>\-?[\d]+)/);
-    const scale = this._monster.parameters.match(/Scale: (?<scale>-?[\d]+)/);
-    const floor = this._monster.parameters.match(/Floor: (?<floor>[\d]+)/);
-    const cap = this._monster.parameters.match(/Cap: (?<cap>[\d]+)/);
+  @Memoize()
+  async getDescription(): Promise<string> {
+    const description = [bold("Monster"), `(Monster ${this.id})`];
+
+    const atk = this.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
+    const def = this.parameters.match(/Def: (?<def>\-?[\d]+)/);
+    const hp = this.parameters.match(/HP: (?<hp>\-?[\d]+)/);
+    const scaleMatcher = this.parameters.match(/Scale: (?<scale>(-?[\d]|\[.*?\])+)/);
 
     if (atk && def && hp) {
-      description += `Attack: ${atk[1]} | Defense: ${def[1]} | HP: ${hp[1]}\n`;
-    } else if (scale) {
-      let scaleString =
-        parseInt(scale[1]) >= 0 ? `plus ${scale[1]}` : `minus ${scale[1].substring(1)}`;
-      if (cap || floor) {
-        scaleString += " (";
-        if (floor) scaleString += `min ${floor[1]}`;
-        if (floor && cap) scaleString += ", ";
-        if (cap) scaleString += `max ${cap[1]}`;
-        scaleString += ")";
-      }
-      if (hp) {
-        description += `Scales to your stats ${scaleString} | HP: ${hp[1]}\n`;
+      description.push(`Attack: ${atk[1]} | Defense: ${def[1]} | HP: ${hp[1]}`);
+    } else if (scaleMatcher) {
+      const scaleDetails: string[] = [];
+
+      const scale = Number(scaleMatcher[1]);
+
+      if (Number.isNaN(scale)) {
+        scaleDetails.push("something weird");
       } else {
-        description += `Scales to your stats ${scaleString} | HP: 75% of defense.\n`;
+        scaleDetails.push("your stats", scale >= 0 ? "plus" : "minus", Math.abs(scale).toString());
       }
-    } else if (this._monster.parameters.indexOf("Scales: ")) {
-      let capString = "";
-      if (cap || floor) {
-        capString += " (";
-        if (floor) capString += `min ${floor[1]}`;
-        if (floor && cap) capString += ", ";
-        if (cap) capString += `max ${cap[1]}`;
-        capString += ")";
-      }
-      if (hp) description += `Scales to your stats${capString} | HP: ${hp[1]}\n`;
-      else description += `Scales to your stats${capString} | HP: 75% of defense.\n`;
-    } else description += "Scales unusually.\n";
 
-    const phylum = this._monster.parameters.match(/P: (?<phylum>[\a-z]+)/);
-    if (phylum) {
-      description += `Phylum: ${phylum[1]}\n`;
+      const scaleBounds: string[] = [];
+
+      const floor = this.parameters.match(/Floor: (?<floor>[\d]+)/);
+      if (floor) scaleBounds.push(`min ${floor[1]}`);
+
+      const cap = this.parameters.match(/Cap: (?<cap>[\d]+)/);
+      if (cap) scaleBounds.push(`max ${cap[1]}`);
+
+      if (scaleBounds.length > 0) scaleDetails.push(`(${scaleBounds.join(", ")})`);
+
+      description.push(
+        `Scales to ${scaleDetails.join(" ")} | HP: ${hp ? hp[1] : "75% of defense"}.`
+      );
+    } else {
+      description.push("Scales unusually.");
     }
-    const element = this._monster.parameters.match(/E: (?<element>[\a-z]+)/);
-    if (element) {
-      description += `Element: ${element[1]}\n`;
+
+    const phylum = this.parameters.match(/P: (?<phylum>[\a-z]+)/);
+    if (phylum) description.push(`Phylum: ${phylum[1]}`);
+
+    const element = this.parameters.match(/E: (?<element>[\a-z]+)/);
+    if (element) description.push(`Element: ${element[1]}`);
+
+    if (this.parameters.includes("Init: 10000")) description.push("Always wins initiative.");
+    if (this.parameters.includes("Init: -10000")) description.push("Always loses initiative.");
+    if (this.parameters.includes("FREE")) description.push("Doesn't cost a turn to fight.");
+    if (this.parameters.includes("NOCOPY")) description.push("Can't be copied.");
+    if (this.parameters.includes("BOSS")) description.push("Instakill immune.");
+    if (this.parameters.includes("ULTRARARE")) description.push("Ultra-rare encounter.");
+
+    const drops = this.getDropsDescription();
+    if (drops) {
+      description.push("", drops);
     }
-    if (this._monster.parameters.indexOf("Init: 10000") > -1)
-      description += "Always wins initiative.\n";
-    if (this._monster.parameters.indexOf("Init: -10000") > -1)
-      description += "Always loses initiative.\n";
-    if (this._monster.parameters.indexOf("FREE") > -1)
-      description += "Doesn't cost a turn to fight.\n";
-    if (this._monster.parameters.indexOf("NOCOPY") > -1) description += "Can't be copied.\n";
-    if (this._monster.parameters.indexOf("BOSS") > -1) description += "Instakill immune.\n";
-    if (this._monster.parameters.indexOf("ULTRARARE") > -1)
-      description += "Ultra-rare encounter.\n";
 
-    const meat = this._monster.parameters.match(/Meat: (?<meat>[\d]+)/);
-    if (this._monster.drops.length || meat) {
-      description += "\nDrops:\n";
-      if (meat) {
-        const meatInt = parseInt(meat[1]);
-        description += `${meat[1]} (±${Math.floor(meatInt * 0.2)}) meat\n`;
-      }
-      const dedupedDrops = new Map<string, number>();
-      let dropArray = [];
-      for (let drop of this._monster.drops) {
-        let dropDesc = "";
-        if (drop.attributes.accordion) {
-          dropDesc += `${hyperlink(drop.item, toWikiLink(drop.item))} (Stealable accordion)\n`;
-        } else {
-          dropDesc += `${hyperlink(drop.item, toWikiLink(drop.item))} (${
-            drop.droprate > 0 ? `${drop.droprate}%` : "Sometimes"
-          }`;
-          if (drop.attributes.pickpocketOnly) dropDesc += ", pickpocket only";
-          if (drop.attributes.noPickpocket) dropDesc += ", can't be stolen";
-          if (drop.attributes.conditional) dropDesc += ", conditional";
-          if (drop.attributes.fixedRate) dropDesc += ", unaffected by item drop modifiers";
-          dropDesc += ")";
-        }
-        if (dedupedDrops.has(dropDesc))
-          dedupedDrops.set(dropDesc, (dedupedDrops.get(dropDesc) || 0) + 1);
-        else dedupedDrops.set(dropDesc, 1);
-        dropArray.push(dropDesc);
-      }
-      let dropsWritten = 0;
-      for (let drop of dropArray) {
-        if (dedupedDrops.has(drop)) {
-          const quantity = dedupedDrops.get(drop) || 1;
-          description += `${quantity > 1 ? `${quantity}x ` : ""}${drop}\n`;
-          dedupedDrops.delete(drop);
-          dropsWritten += 1;
-          if (dropsWritten >= 10) break;
-        }
-      }
-      if (dedupedDrops.size > 0) description += "...and more.";
-    }
-    return description;
-  }
-
-  async addToEmbed(embed: EmbedBuilder): Promise<void> {
-    embed.setThumbnail(
-      `http://images.kingdomofloathing.com/adventureimages/${this._monster.imageUrl}`
-    );
-    if (!this._description) this._description = await this.buildDescription();
-    embed.setDescription(this._description);
-  }
-
-  parseMonsterData(monsterData: string): MonsterData {
-    const data = monsterData.split(/\t/);
-    if (data.length < 4) throw "Invalid data";
-    return {
-      name: cleanString(data[0]),
-      id: parseInt(data[1]),
-      imageUrl: data[2].split(",")[0],
-      parameters: data[3],
-      drops: data[4]
-        ? (
-            data
-              .slice(4)
-              .map((drop) => convertToDrop(cleanString(drop)))
-              .filter((drop) => drop !== undefined) as Drop[]
-          ).sort((a, b) => b.droprate - a.droprate)
-        : [],
-    };
+    return description.join("\n");
   }
 }
