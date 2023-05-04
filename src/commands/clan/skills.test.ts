@@ -1,14 +1,12 @@
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
+import { beforeAll, expect, test } from "vitest";
 
+import { loadFixture } from "../../testUtils";
 import { Participation, getParticipationFromRaidLog } from "./skills";
 
 let participation: Participation = {};
 
 beforeAll(async () => {
-  const file = path.join(__dirname, "__fixtures__/raidlog.html");
-  const html = await fs.readFile(file, { encoding: "utf-8" });
-  participation = getParticipationFromRaidLog(html);
+  participation = getParticipationFromRaidLog(await loadFixture(__dirname, "raidlog.html"));
 });
 
 test("Can parse raid log skills", () => {

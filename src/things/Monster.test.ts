@@ -1,4 +1,5 @@
 import dedent from "ts-dedent";
+import { expect, test } from "vitest";
 
 import { Monster } from "./Monster";
 

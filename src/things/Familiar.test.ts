@@ -1,10 +1,13 @@
-import mockAxios from "jest-mock-axios";
+import axios from "axios";
 import dedent from "ts-dedent";
+import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
 
 import { kolClient } from "../clients/kol";
 import { loadFixture } from "../testUtils";
 import { Familiar } from "./Familiar";
 import { Item } from "./Item";
+
+vi.mock("axios");
 
 beforeAll(() => {
   kolClient.mockLoggedIn = true;
@@ -15,11 +18,11 @@ afterAll(() => {
 });
 
 afterEach(() => {
-  mockAxios.reset();
+  vi.mocked(axios).mockReset();
 });
 
 test("Can describe a Familiar", async () => {
-  mockAxios.post
+  vi.mocked(axios.post)
     .mockResolvedValueOnce({ data: await loadFixture(__dirname, "desc_item_mosquito_larva.html") })
     .mockResolvedValueOnce({
       data: await loadFixture(__dirname, "desc_item_hypodermic_needle.html"),

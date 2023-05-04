@@ -1,9 +1,12 @@
-import mockAxios from "jest-mock-axios";
+import axios from "axios";
 import dedent from "ts-dedent";
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { kolClient } from "../clients/kol";
 import { loadFixture } from "../testUtils";
 import { Item } from "./Item";
+
+vi.mock("axios");
 
 beforeAll(() => {
   kolClient.mockLoggedIn = true;
@@ -14,12 +17,12 @@ afterAll(() => {
 });
 
 afterEach(() => {
-  mockAxios.reset();
+  vi.mocked(axios).mockReset();
 });
 
 describe("Food", () => {
   test("Can describe a food with a range of adventures", async () => {
-    mockAxios.post
+    vi.mocked(axios.post)
       .mockResolvedValueOnce({
         data: await loadFixture(__dirname, "desc_item_tofurkey_leg.html"),
       })
@@ -47,7 +50,7 @@ describe("Food", () => {
   });
 
   test("Can describe a food with a set number of adventures", async () => {
-    mockAxios.post
+    vi.mocked(axios.post)
       .mockResolvedValueOnce({
         data: await loadFixture(__dirname, "desc_item_alien_meat.html"),
       })

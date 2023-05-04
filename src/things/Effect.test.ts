@@ -1,9 +1,12 @@
-import mockAxios from "jest-mock-axios";
+import axios from "axios";
 import dedent from "ts-dedent";
+import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
 
 import { kolClient } from "../clients/kol";
 import { loadFixture } from "../testUtils";
 import { Effect } from "./Effect";
+
+vi.mock("axios");
 
 beforeAll(() => {
   kolClient.mockLoggedIn = true;
@@ -14,11 +17,11 @@ afterAll(() => {
 });
 
 afterEach(() => {
-  mockAxios.reset();
+  vi.mocked(axios).mockReset();
 });
 
 test("Can describe an Effect", async () => {
-  mockAxios.post.mockResolvedValueOnce({
+  vi.mocked(axios.post).mockResolvedValueOnce({
     data: await loadFixture(__dirname, "desc_effect_pasta_oneness.html"),
   });
 
@@ -41,7 +44,7 @@ test("Can describe an Effect", async () => {
 });
 
 test("Can describe an avatar effect", async () => {
-  mockAxios.post.mockResolvedValueOnce({
+  vi.mocked(axios.post).mockResolvedValueOnce({
     data: await loadFixture(__dirname, "desc_effect_the_visible_adventurer.html"),
   });
 

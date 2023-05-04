@@ -1,9 +1,12 @@
-import mockAxios from "jest-mock-axios";
+import axios from "axios";
 import dedent from "ts-dedent";
+import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
 
 import { kolClient } from "../clients/kol";
 import { loadFixture } from "../testUtils";
 import { Skill } from "./Skill";
+
+vi.mock("axios");
 
 beforeAll(() => {
   kolClient.mockLoggedIn = true;
@@ -14,11 +17,11 @@ afterAll(() => {
 });
 
 afterEach(() => {
-  mockAxios.reset();
+  vi.mocked(axios).mockReset();
 });
 
 test("Can describe a Skill with no bluetext", async () => {
-  mockAxios.post.mockResolvedValueOnce({
+  vi.mocked(axios.post).mockResolvedValueOnce({
     data: await loadFixture(__dirname, "desc_skill_overload_discarded_refridgerator.html"),
   });
 
@@ -36,7 +39,7 @@ test("Can describe a Skill with no bluetext", async () => {
 });
 
 test("Can describe a Skill with bluetext", async () => {
-  mockAxios.post.mockResolvedValueOnce({
+  vi.mocked(axios.post).mockResolvedValueOnce({
     data: await loadFixture(__dirname, "desc_skill_impetuous_sauciness.html"),
   });
 
