@@ -28,11 +28,8 @@ test("Can describe a Familiar", async () => {
   const familiar = Familiar.from(
     "1	Mosquito	familiar1.gif	combat0,hp0	mosquito larva	hypodermic needle	2	1	3	0	animal,bug,eyes,wings,quick,biting,flying"
   );
-  familiar.hatchling = Item.from(
-    "275	mosquito larva	187601582	larva.gif	grow	q	0	mosquito larvae",
-    new Map()
-  );
-  familiar.equipment = Item.from("848	hypodermic needle	10000001	syringe.gif	familiar	t,d	75", new Map());
+  familiar.hatchling = Item.from("275	mosquito larva	187601582	larva.gif	grow	q	0	mosquito larvae");
+  familiar.equipment = Item.from("848	hypodermic needle	10000001	syringe.gif	familiar	t,d	75");
 
   const description = await familiar.getDescription();
 

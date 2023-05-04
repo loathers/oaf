@@ -40,7 +40,7 @@ export class Item extends Thing {
 
   _addlDescription: string = "";
 
-  static from(line: string, itemInfoForUse = new Map<string, string[]>): Item {
+  static from(line: string, itemInfoForUse = new Map<string, string[]>()): Item {
     const parts = line.split(/\t/);
     if (parts.length < 7) throw "Invalid data";
 
