@@ -12,6 +12,6 @@ export async function respondWithFixture(dirname: string, name: string) {
     statusText: "SUCCESS",
     config: {},
     headers: {},
-    data: await loadFixture(__dirname, "desc_item_mosquito_larva.html"),
+    data: await loadFixture(dirname, name),
   };
 }
