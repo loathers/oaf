@@ -48,7 +48,7 @@ test("Monsters with capped scaling are described successfully", async () => {
   );
 });
 
-test("Monsters with normal scaling are describes successfully", async () => {
+test("Monsters with normal scaling are described successfully", async () => {
   const monster = Monster.from(
     "clan of cave bars	1162	cavebars.gif	NOCOPY Scale: 20 Cap: 200 Floor: 30 MLMult: 5 Init: -10000 Meat: 400 Group: 10 P: beast Article: a"
   );
@@ -65,6 +65,53 @@ test("Monsters with normal scaling are describes successfully", async () => {
 
       Drops:
       400 (±80) meat
+    `
+  );
+});
+
+test("Monsters who scale unusally are described successfully", async () => {
+  const monster = Monster.from(
+    "Count Drunkula (Hard Mode)	-89	drunkula_hm.gif	NOCOPY NOMANUEL P: undead	Thunkula's drinking cap (c0)	Drunkula's cape (c0)	Drunkula's silky pants (c0)	Drunkula's ring of haze (c0)	Drunkula's wineglass (c0)"
+  );
+  const description = await monster.getDescription();
+
+  expect(description).toBe(
+    dedent`
+      **Monster**
+      (Monster -89)
+      Scales unusually.
+      Phylum: undead
+      Can't be copied.
+
+      Drops:
+      [Thunkula's drinking cap](https://kol.coldfront.net/thekolwiki/index.php/Thunkula's_drinking_cap) (Sometimes, conditional)
+      [Drunkula's cape](https://kol.coldfront.net/thekolwiki/index.php/Drunkula's_cape) (Sometimes, conditional)
+      [Drunkula's silky pants](https://kol.coldfront.net/thekolwiki/index.php/Drunkula's_silky_pants) (Sometimes, conditional)
+      [Drunkula's ring of haze](https://kol.coldfront.net/thekolwiki/index.php/Drunkula's_ring_of_haze) (Sometimes, conditional)
+      [Drunkula's wineglass](https://kol.coldfront.net/thekolwiki/index.php/Drunkula's_wineglass) (Sometimes, conditional)
+    `
+  );
+});
+
+test("Monsters with a stealable accordion are described successfully", async () => {
+  const monster = Monster.from(
+    "bar	202	bar.gif	Atk: 3 Def: 2 HP: 5 Init: 50 Meat: 15 P: beast Article: a	bar skin (35)	baritone accordion (a0)"
+  );
+  const description = await monster.getDescription();
+
+  console.log(description);
+
+  expect(description).toBe(
+    dedent`
+      **Monster**
+      (Monster 202)
+      Attack: 3 | Defense: 2 | HP: 5
+      Phylum: beast
+
+      Drops:
+      15 (±3) meat
+      [bar skin](https://kol.coldfront.net/thekolwiki/index.php/bar_skin) (35%)
+      [baritone accordion](https://kol.coldfront.net/thekolwiki/index.php/baritone_accordion) (Stealable accordion)
     `
   );
 });
