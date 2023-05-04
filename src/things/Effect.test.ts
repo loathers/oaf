@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 test("Can describe an Effect", async () => {
-  mockAxios.post.mockResolvedValue({
+  mockAxios.post.mockResolvedValueOnce({
     data: await loadFixture(__dirname, "desc_effect_pasta_oneness.html"),
   });
 
@@ -41,7 +41,7 @@ test("Can describe an Effect", async () => {
 });
 
 test("Can describe an avatar effect", async () => {
-  mockAxios.post.mockResolvedValue({
+  mockAxios.post.mockResolvedValueOnce({
     data: await loadFixture(__dirname, "desc_effect_the_visible_adventurer.html"),
   });
 

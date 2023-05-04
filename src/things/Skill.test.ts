@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 test("Can describe a Skill with no bluetext", async () => {
-  mockAxios.post.mockResolvedValue({
+  mockAxios.post.mockResolvedValueOnce({
     data: await loadFixture(__dirname, "desc_skill_overload_discarded_refridgerator.html"),
   });
 
@@ -36,7 +36,7 @@ test("Can describe a Skill with no bluetext", async () => {
 });
 
 test("Can describe a Skill with bluetext", async () => {
-  mockAxios.post.mockResolvedValue({
+  mockAxios.post.mockResolvedValueOnce({
     data: await loadFixture(__dirname, "desc_skill_impetuous_sauciness.html"),
   });
 

@@ -128,7 +128,7 @@ export class Item extends Thing {
     }
 
     if (size > 1) {
-      extra.push(`${(average / size).toFixed(2)} per ${consumableUnit}`);
+      extra.push(`${Number((average / size).toFixed(2))} per ${consumableUnit}`);
     }
 
     if (extra.length > 0) {
