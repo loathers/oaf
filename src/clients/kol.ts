@@ -137,6 +137,8 @@ function wait(ms: number) {
 export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) {
   clanActionMutex = new Mutex();
   static loginMutex = new Mutex();
+  mockLoggedIn = false;
+
   private isRollover = false;
   private loginParameters: URLSearchParams;
   private credentials: KoLCredentials = {};
@@ -173,6 +175,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async loggedIn(): Promise<boolean> {
+    if (this.mockLoggedIn) return true;
     if (!this.credentials) return false;
     try {
       const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
@@ -338,8 +341,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   ): Promise<any> {
     if (this.isRollover || !(await this.logIn())) return null;
     try {
-      const page = await axios(`https://www.kingdomofloathing.com/${url}`, {
-        method: "POST",
+      const page = await axios.post(`https://www.kingdomofloathing.com/${url}`, {
         withCredentials: true,
         headers: {
           cookie: this.credentials?.sessionCookies || "",

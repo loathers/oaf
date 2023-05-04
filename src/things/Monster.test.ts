@@ -10,18 +10,18 @@ test("Monsters with copied drops are described successfully", async () => {
 
   expect(description).toBe(
     dedent`
-            **Monster**
-            (Monster 996)
-            Attack: 40 | Defense: 36 | HP: 32
-            Phylum: beast
-            Can't be copied.
+      **Monster**
+      (Monster 996)
+      Attack: 40 | Defense: 36 | HP: 32
+      Phylum: beast
+      Can't be copied.
 
-            Drops:
-            40 (±8) meat
-            4x [rat whisker](https://kol.coldfront.net/thekolwiki/index.php/rat_whisker) (100%)
-            [tangle of rat tails](https://kol.coldfront.net/thekolwiki/index.php/tangle_of_rat_tails) (100%)
-            3x [rat appendix](https://kol.coldfront.net/thekolwiki/index.php/rat_appendix) (20%)
-        `
+      Drops:
+      40 (±8) meat
+      4x [rat whisker](https://kol.coldfront.net/thekolwiki/index.php/rat_whisker) (100%)
+      [tangle of rat tails](https://kol.coldfront.net/thekolwiki/index.php/tangle_of_rat_tails) (100%)
+      3x [rat appendix](https://kol.coldfront.net/thekolwiki/index.php/rat_appendix) (20%)
+    `
   );
 });
 
@@ -33,17 +33,17 @@ test("Monsters with capped scaling are described successfully", async () => {
 
   expect(description).toBe(
     dedent`
-            **Monster**
-            (Monster 1768)
-            Scales to something weird (min 100, max 11111) | HP: 75% of defense.
-            Phylum: construct
-            Element: stench
-            Always loses initiative.
+      **Monster**
+      (Monster 1768)
+      Scales to something weird (min 100, max 11111) | HP: 75% of defense.
+      Phylum: construct
+      Element: stench
+      Always loses initiative.
 
-            Drops:
-            [turtle voicebox](https://kol.coldfront.net/thekolwiki/index.php/turtle_voicebox) (Sometimes)
-            [fake washboard](https://kol.coldfront.net/thekolwiki/index.php/fake_washboard) (Sometimes, conditional)
-        `
+      Drops:
+      [turtle voicebox](https://kol.coldfront.net/thekolwiki/index.php/turtle_voicebox) (Sometimes)
+      [fake washboard](https://kol.coldfront.net/thekolwiki/index.php/fake_washboard) (Sometimes, conditional)
+    `
   );
 });
 
@@ -55,15 +55,15 @@ test("Monsters with normal scaling are describes successfully", async () => {
 
   expect(description).toBe(
     dedent`
-            **Monster**
-            (Monster 1162)
-            Scales to your stats plus 20 (min 30, max 200) | HP: 75% of defense.
-            Phylum: beast
-            Always loses initiative.
-            Can't be copied.
+      **Monster**
+      (Monster 1162)
+      Scales to your stats plus 20 (min 30, max 200) | HP: 75% of defense.
+      Phylum: beast
+      Always loses initiative.
+      Can't be copied.
 
-            Drops:
-            400 (±80) meat
-        `
+      Drops:
+      400 (±80) meat
+    `
   );
 });

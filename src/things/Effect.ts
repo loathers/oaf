@@ -40,7 +40,7 @@ export class Effect extends Thing {
   readonly descId: string;
   readonly quality: string;
   readonly hookah: boolean;
-  private pizza?: PizzaData;
+  pizza?: PizzaData;
 
   constructor(
     id: number,
@@ -65,16 +65,11 @@ export class Effect extends Thing {
     return `Pizza: ${this.pizza.letters.padEnd(4, "✱")} (${options})`;
   }
 
-  setPizza(pizzaData: PizzaData) {
-    this.pizza = pizzaData;
-  }
-
   @Memoize()
   async getDescription() {
     return [
       bold("Effect"),
       `(Effect ${this.id})`,
-      "",
       await kolClient.getEffectDescription(this.descId),
       "",
       this.describePizzaCompatibility(),

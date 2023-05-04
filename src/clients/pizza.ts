@@ -52,10 +52,10 @@ export class PizzaTree {
     function _calc(node: PizzaNode) {
       let options = node.options;
       for (let option of options) {
-        option.setPizza({
+        option.pizza = {
           letters: node.letters.toUpperCase(),
           options: options.length,
-        });
+        };
       }
       if (options.length > 1) {
         for (let child of node.children.values()) {

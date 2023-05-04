@@ -6,7 +6,7 @@ import { Participation, getParticipationFromRaidLog } from "./skills";
 let participation: Participation = {};
 
 beforeAll(async () => {
-  const file = path.join(__dirname, "../../", "tests/raidlog.html");
+  const file = path.join(__dirname, "__fixtures__/raidlog.html");
   const html = await fs.readFile(file, { encoding: "utf-8" });
   participation = getParticipationFromRaidLog(html);
 });
