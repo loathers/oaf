@@ -1,5 +1,5 @@
 import { bold, hyperlink } from "discord.js";
-import { memoizeAsync } from "utils-decorators";
+import { Memoize } from "typescript-memoize";
 
 import { cleanString, notNull, toWikiLink } from "../utils";
 import { Thing } from "./Thing";
@@ -64,7 +64,7 @@ export class Monster extends Thing {
     this.drops = drops;
   }
 
-  getDropDescription() {
+  private getDropsDescription() {
     const meatMatcher = this.parameters.match(/Meat: (?<meat>[\d]+)/);
 
     if (!this.drops.length && !meatMatcher) return null;
@@ -108,26 +108,26 @@ export class Monster extends Thing {
     return description.join("\n");
   }
 
-  @memoizeAsync()
+  @Memoize()
   async getDescription(): Promise<string> {
     const description = [bold("Monster"), `(Monster ${this.id})`];
 
     const atk = this.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
     const def = this.parameters.match(/Def: (?<def>\-?[\d]+)/);
     const hp = this.parameters.match(/HP: (?<hp>\-?[\d]+)/);
-    const scale = this.parameters.match(/Scale: (?<scale>-?[\d]+)/);
+    const scaleMatcher = this.parameters.match(/Scale: (?<scale>(-?[\d]|\[.*?\])+)/);
 
     if (atk && def && hp) {
       description.push(`Attack: ${atk[1]} | Defense: ${def[1]} | HP: ${hp[1]}`);
-    } else if (!scale && !this.parameters.includes("Scales: ")) {
-      description.push("Scales unusually.");
-    } else {
+    } else if (scaleMatcher) {
       const scaleDetails: string[] = [];
 
-      if (scale) {
-        scaleDetails.push(
-          parseInt(scale[1]) >= 0 ? `plus ${scale[1]}` : `minus ${scale[1].substring(1)}`
-        );
+      const scale = Number(scaleMatcher[1]);
+
+      if (Number.isNaN(scale)) {
+        scaleDetails.push("something weird");
+      } else {
+        scaleDetails.push("your stats", scale >= 0 ? "plus" : "minus", Math.abs(scale).toString());
       }
 
       const scaleBounds: string[] = [];
@@ -138,11 +138,13 @@ export class Monster extends Thing {
       const cap = this.parameters.match(/Cap: (?<cap>[\d]+)/);
       if (cap) scaleBounds.push(`max ${cap[1]}`);
 
-      if (scaleBounds.length > 0) scaleDetails.push(`(${scaleBounds.join(" ")})`);
+      if (scaleBounds.length > 0) scaleDetails.push(`(${scaleBounds.join(", ")})`);
 
       description.push(
-        `Scales to your stats ${scaleDetails.join(" ")} | HP: ${hp ? hp[1] : "75% of defense"}.`
+        `Scales to ${scaleDetails.join(" ")} | HP: ${hp ? hp[1] : "75% of defense"}.`
       );
+    } else {
+      description.push("Scales unusually.");
     }
 
     const phylum = this.parameters.match(/P: (?<phylum>[\a-z]+)/);
@@ -158,7 +160,7 @@ export class Monster extends Thing {
     if (this.parameters.includes("BOSS")) description.push("Instakill immune.");
     if (this.parameters.includes("ULTRARARE")) description.push("Ultra-rare encounter.");
 
-    const drops = this.getDropDescription();
+    const drops = this.getDropsDescription();
     if (drops) {
       description.push("", drops);
     }

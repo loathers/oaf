@@ -1,5 +1,5 @@
 import { bold, hyperlink } from "discord.js";
-import { memoizeAsync } from "utils-decorators";
+import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol";
 import { cleanString, pluralize, titleCase, toWikiLink } from "../utils";
@@ -358,7 +358,7 @@ export class Item extends Thing {
     return output.join("\n");
   }
 
-  @memoizeAsync()
+  @Memoize()
   async getDescription(withAddl: boolean = true): Promise<string> {
     const description: string[] = [this.shortDescription];
 

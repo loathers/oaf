@@ -26,10 +26,11 @@
     "ms": "3.0.0-canary.1",
     "otplib": "^12.0.1",
     "sharp": "^0.32.1",
+    "ts-dedent": "^2.2.0",
     "ts-node": "^10.9.1",
     "typed-emitter": "^2.1.0",
     "typescript": "^5.0.4",
-    "utils-decorators": "^2.0.5",
+    "typescript-memoize": "^1.1.1",
     "xpath": "^0.0.32"
   },
   "devDependencies": {

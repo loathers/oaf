@@ -1,5 +1,5 @@
 import { bold, hyperlink } from "discord.js";
-import { memoizeAsync } from "utils-decorators";
+import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol";
 import { cleanString, indent, toWikiLink } from "../utils";
@@ -309,7 +309,7 @@ export class Familiar extends Thing {
     return types.join("\n");
   }
 
-  @memoizeAsync()
+  @Memoize()
   async getDescription(): Promise<string> {
     const description = [
       bold("Familiar"),

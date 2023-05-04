@@ -1,5 +1,5 @@
 import { bold } from "discord.js";
-import { memoizeAsync } from "utils-decorators";
+import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol";
 import { cleanString } from "../utils";
@@ -46,7 +46,7 @@ export class Skill extends Thing {
     return Math.floor(this.id / 1000);
   }
 
-  @memoizeAsync()
+  @Memoize()
   async getDescription(): Promise<string> {
     const description = [`(Skill ${this.id})`];
     switch (this.type) {

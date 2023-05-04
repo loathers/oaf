@@ -1,5 +1,5 @@
 import { bold } from "discord.js";
-import { memoizeAsync } from "utils-decorators";
+import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol";
 import { cleanString } from "../utils";
@@ -69,7 +69,7 @@ export class Effect extends Thing {
     this.pizza = pizzaData;
   }
 
-  @memoizeAsync()
+  @Memoize()
   async getDescription() {
     return [
       bold("Effect"),
