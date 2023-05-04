@@ -431,7 +431,6 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async getEffectDescription(descId: string | undefined): Promise<string> {
-    console.log(descId);
     if (!descId) return "";
 
     switch (descId) {
@@ -454,14 +453,14 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     return sanitiseBlueText(blueText?.groups?.description);
   }
 
-  async getSkillDescription(id: number): Promise<string> {
+  async getSkillDescription(id: number) {
     const description = await this.visitUrl("desc_skill.php", {
       whichskill: String(id),
     });
     const blueText = description.match(
       /<blockquote[\s\S]+<[Cc]enter>(?<description>[\s\S]+)<\/[Cc]enter>/
     );
-    return blueText ? sanitiseBlueText(blueText.groups?.description) : "";
+    return blueText ? sanitiseBlueText(blueText.groups?.description) : null;
   }
 
   async joinClan(id: number): Promise<boolean> {

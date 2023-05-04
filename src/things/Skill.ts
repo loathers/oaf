@@ -48,7 +48,10 @@ export class Skill extends Thing {
 
   @Memoize()
   async getDescription(): Promise<string> {
-    const description = [`(Skill ${this.id})`];
+    const description: string[] = [];
+
+    let showCost = false;
+
     switch (this.type) {
       case 0:
         description.push(bold("Passive Skill"));
@@ -57,32 +60,42 @@ export class Skill extends Thing {
       case 2:
       case 3:
       case 4:
-        description.push(`${bold("Skill")}\nCost: ${this.manaCost}mp`);
+        description.push(bold("Skill"));
+        showCost = true;
         break;
       case 5:
-        description.push(`${bold("Combat Skill")}\nCost: ${this.manaCost}mp`);
+        description.push(bold("Combat Skill"));
+        showCost = true;
         break;
       case 6:
-        description.push(`${bold("Skill (Boris Song)")}\nCost: ${this.manaCost}mp`);
+        description.push(bold("Skill (Boris Song)"));
+        showCost = true;
         break;
       case 7:
-        description.push(`${bold("Combat/Noncombat Skill")}\nCost: ${this.manaCost}mp`);
+        description.push(bold("Combat/Noncombat Skill"));
+        showCost = true;
         break;
       case 8:
         description.push(bold("Combat Passive Skill"));
         break;
       case 9:
-        description.push(`${bold("Skill (Expression)")}\nCost: ${this.manaCost}mp`);
+        description.push(bold("Skill (Expression)"));
+        showCost = true;
         break;
       case 10:
-        description.push(`${bold("Skill (Walk)")}\nCost: ${this.manaCost}mp`);
+        description.push(bold("Skill (Walk)"));
+        showCost = true;
         break;
       default:
         description.push(bold("Skill"));
         break;
     }
-    description.push("");
-    description.push(await kolClient.getSkillDescription(this.id));
+    description.push(`(Skill ${this.id})`);
+    if (showCost) description.push(`Cost: ${this.manaCost}mp`);
+
+    const skillDescription = await kolClient.getSkillDescription(this.id);
+
+    if (skillDescription) description.push("", skillDescription);
 
     return description.join("\n");
   }
