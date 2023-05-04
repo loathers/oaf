@@ -64,101 +64,105 @@ export class Monster extends Thing {
     this.drops = drops;
   }
 
+  getDropDescription() {
+    const meatMatcher = this.parameters.match(/Meat: (?<meat>[\d]+)/);
+
+    if (!this.drops.length && !meatMatcher) return null;
+
+    const description = ["Drops:"];
+
+    if (meatMatcher) {
+      const meat = parseInt(meatMatcher[1]);
+      description.push(`${meat} (±${Math.floor(meat * 0.2)}) meat`);
+    }
+
+    const drops = new Map<string, number>();
+
+    for (let drop of this.drops) {
+      const dropDetails: string[] = [];
+      if (drop.attributes.accordion) {
+        dropDetails.push("Stealable accordion");
+      } else {
+        dropDetails.push(drop.droprate > 0 ? `${drop.droprate}%` : "Sometimes");
+        if (drop.attributes.pickpocketOnly) dropDetails.push("pickpocket only");
+        if (drop.attributes.noPickpocket) dropDetails.push("can't be stolen");
+        if (drop.attributes.conditional) dropDetails.push("conditional");
+        if (drop.attributes.fixedRate) dropDetails.push("unaffected by item drop modifiers");
+      }
+
+      const dropDescription = `${hyperlink(drop.item, toWikiLink(drop.item))} (${dropDetails.join(
+        ", "
+      )})`;
+
+      drops.set(dropDescription, (drops.get(dropDescription) || 0) + 1);
+    }
+
+    description.push(
+      ...[...drops.entries()]
+        .slice(0, 10)
+        .map(([drop, quantity]) => `${quantity > 1 ? `${quantity}x ` : ""}${drop}`)
+    );
+
+    if (drops.size > 10) description.push("...and more.");
+
+    return description.join("\n");
+  }
+
   @memoizeAsync()
   async getDescription(): Promise<string> {
-    let description = `${bold("Monster")}\n(Monster ${this.id})\n`;
+    const description = [bold("Monster"), `(Monster ${this.id})`];
+
     const atk = this.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
     const def = this.parameters.match(/Def: (?<def>\-?[\d]+)/);
     const hp = this.parameters.match(/HP: (?<hp>\-?[\d]+)/);
     const scale = this.parameters.match(/Scale: (?<scale>-?[\d]+)/);
-    const floor = this.parameters.match(/Floor: (?<floor>[\d]+)/);
-    const cap = this.parameters.match(/Cap: (?<cap>[\d]+)/);
 
     if (atk && def && hp) {
-      description += `Attack: ${atk[1]} | Defense: ${def[1]} | HP: ${hp[1]}\n`;
-    } else if (scale) {
-      let scaleString =
-        parseInt(scale[1]) >= 0 ? `plus ${scale[1]}` : `minus ${scale[1].substring(1)}`;
-      if (cap || floor) {
-        scaleString += " (";
-        if (floor) scaleString += `min ${floor[1]}`;
-        if (floor && cap) scaleString += ", ";
-        if (cap) scaleString += `max ${cap[1]}`;
-        scaleString += ")";
+      description.push(`Attack: ${atk[1]} | Defense: ${def[1]} | HP: ${hp[1]}`);
+    } else if (!scale && !this.parameters.includes("Scales: ")) {
+      description.push("Scales unusually.");
+    } else {
+      const scaleDetails: string[] = [];
+
+      if (scale) {
+        scaleDetails.push(
+          parseInt(scale[1]) >= 0 ? `plus ${scale[1]}` : `minus ${scale[1].substring(1)}`
+        );
       }
-      if (hp) {
-        description += `Scales to your stats ${scaleString} | HP: ${hp[1]}\n`;
-      } else {
-        description += `Scales to your stats ${scaleString} | HP: 75% of defense.\n`;
-      }
-    } else if (this.parameters.indexOf("Scales: ")) {
-      let capString = "";
-      if (cap || floor) {
-        capString += " (";
-        if (floor) capString += `min ${floor[1]}`;
-        if (floor && cap) capString += ", ";
-        if (cap) capString += `max ${cap[1]}`;
-        capString += ")";
-      }
-      if (hp) description += `Scales to your stats${capString} | HP: ${hp[1]}\n`;
-      else description += `Scales to your stats${capString} | HP: 75% of defense.\n`;
-    } else description += "Scales unusually.\n";
+
+      const scaleBounds: string[] = [];
+
+      const floor = this.parameters.match(/Floor: (?<floor>[\d]+)/);
+      if (floor) scaleBounds.push(`min ${floor[1]}`);
+
+      const cap = this.parameters.match(/Cap: (?<cap>[\d]+)/);
+      if (cap) scaleBounds.push(`max ${cap[1]}`);
+
+      if (scaleBounds.length > 0) scaleDetails.push(`(${scaleBounds.join(" ")})`);
+
+      description.push(
+        `Scales to your stats ${scaleDetails.join(" ")} | HP: ${hp ? hp[1] : "75% of defense"}.`
+      );
+    }
 
     const phylum = this.parameters.match(/P: (?<phylum>[\a-z]+)/);
-    if (phylum) {
-      description += `Phylum: ${phylum[1]}\n`;
-    }
-    const element = this.parameters.match(/E: (?<element>[\a-z]+)/);
-    if (element) {
-      description += `Element: ${element[1]}\n`;
-    }
-    if (this.parameters.indexOf("Init: 10000") > -1) description += "Always wins initiative.\n";
-    if (this.parameters.indexOf("Init: -10000") > -1) description += "Always loses initiative.\n";
-    if (this.parameters.indexOf("FREE") > -1) description += "Doesn't cost a turn to fight.\n";
-    if (this.parameters.indexOf("NOCOPY") > -1) description += "Can't be copied.\n";
-    if (this.parameters.indexOf("BOSS") > -1) description += "Instakill immune.\n";
-    if (this.parameters.indexOf("ULTRARARE") > -1) description += "Ultra-rare encounter.\n";
+    if (phylum) description.push(`Phylum: ${phylum[1]}`);
 
-    const meat = this.parameters.match(/Meat: (?<meat>[\d]+)/);
-    if (this.drops.length || meat) {
-      description += "\nDrops:\n";
-      if (meat) {
-        const meatInt = parseInt(meat[1]);
-        description += `${meat[1]} (±${Math.floor(meatInt * 0.2)}) meat\n`;
-      }
-      const dedupedDrops = new Map<string, number>();
-      let dropArray = [];
-      for (let drop of this.drops) {
-        let dropDesc = "";
-        if (drop.attributes.accordion) {
-          dropDesc += `${hyperlink(drop.item, toWikiLink(drop.item))} (Stealable accordion)\n`;
-        } else {
-          dropDesc += `${hyperlink(drop.item, toWikiLink(drop.item))} (${
-            drop.droprate > 0 ? `${drop.droprate}%` : "Sometimes"
-          }`;
-          if (drop.attributes.pickpocketOnly) dropDesc += ", pickpocket only";
-          if (drop.attributes.noPickpocket) dropDesc += ", can't be stolen";
-          if (drop.attributes.conditional) dropDesc += ", conditional";
-          if (drop.attributes.fixedRate) dropDesc += ", unaffected by item drop modifiers";
-          dropDesc += ")";
-        }
-        if (dedupedDrops.has(dropDesc))
-          dedupedDrops.set(dropDesc, (dedupedDrops.get(dropDesc) || 0) + 1);
-        else dedupedDrops.set(dropDesc, 1);
-        dropArray.push(dropDesc);
-      }
-      let dropsWritten = 0;
-      for (let drop of dropArray) {
-        if (dedupedDrops.has(drop)) {
-          const quantity = dedupedDrops.get(drop) || 1;
-          description += `${quantity > 1 ? `${quantity}x ` : ""}${drop}\n`;
-          dedupedDrops.delete(drop);
-          dropsWritten += 1;
-          if (dropsWritten >= 10) break;
-        }
-      }
-      if (dedupedDrops.size > 0) description += "...and more.";
+    const element = this.parameters.match(/E: (?<element>[\a-z]+)/);
+    if (element) description.push(`Element: ${element[1]}`);
+
+    if (this.parameters.includes("Init: 10000")) description.push("Always wins initiative.");
+    if (this.parameters.includes("Init: -10000")) description.push("Always loses initiative.");
+    if (this.parameters.includes("FREE")) description.push("Doesn't cost a turn to fight.");
+    if (this.parameters.includes("NOCOPY")) description.push("Can't be copied.");
+    if (this.parameters.includes("BOSS")) description.push("Instakill immune.");
+    if (this.parameters.includes("ULTRARARE")) description.push("Ultra-rare encounter.");
+
+    const drops = this.getDropDescription();
+    if (drops) {
+      description.push("", drops);
     }
-    return description;
+
+    return description.join("\n");
   }
 }
