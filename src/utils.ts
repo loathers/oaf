@@ -5,7 +5,7 @@ import { decode } from "html-entities";
 export function indent(textToIndent: string): string {
   return textToIndent
     .split("\n")
-    .map((l) => `\t\t${l}`)
+    .map((l) => `${"\u00A0".repeat(8)}${l}`)
     .join("\n");
 }
 

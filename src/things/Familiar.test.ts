@@ -3,7 +3,7 @@ import dedent from "ts-dedent";
 import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
 
 import { kolClient } from "../clients/kol";
-import { loadFixture } from "../testUtils";
+import { respondWithFixture } from "../testUtils";
 import { Familiar } from "./Familiar";
 import { Item } from "./Item";
 
@@ -23,10 +23,8 @@ afterEach(() => {
 
 test("Can describe a Familiar", async () => {
   vi.mocked(axios)
-    .mockResolvedValueOnce({ data: await loadFixture(__dirname, "desc_item_mosquito_larva.html") })
-    .mockResolvedValueOnce({
-      data: await loadFixture(__dirname, "desc_item_hypodermic_needle.html"),
-    });
+    .mockResolvedValueOnce(await respondWithFixture(__dirname, "desc_item_mosquito_larva.html"))
+    .mockResolvedValueOnce(await respondWithFixture(__dirname, "desc_item_hypodermic_needle.html"));
 
   const familiar = Familiar.from(
     "1	Mosquito	familiar1.gif	combat0,hp0	mosquito larva	hypodermic needle	2	1	3	0	animal,bug,eyes,wings,quick,biting,flying"
@@ -48,7 +46,7 @@ test("Can describe a Familiar", async () => {
       Cannot be traded or discarded.
 
       Equipment: [hypodermic needle](https://kol.coldfront.net/thekolwiki/index.php/hypodermic_needle)
-      \t\t+5 to Familiar Weight
+      \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0+5 to Familiar Weight
     `
   );
 });

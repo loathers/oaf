@@ -3,7 +3,7 @@ import dedent from "ts-dedent";
 import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
 
 import { kolClient } from "../clients/kol";
-import { loadFixture } from "../testUtils";
+import { respondWithFixture } from "../testUtils";
 import { Effect } from "./Effect";
 
 vi.mock("axios");
@@ -21,9 +21,9 @@ afterEach(() => {
 });
 
 test("Can describe an Effect", async () => {
-  vi.mocked(axios).mockResolvedValueOnce({
-    data: await loadFixture(__dirname, "desc_effect_pasta_oneness.html"),
-  });
+  vi.mocked(axios).mockResolvedValueOnce(
+    await respondWithFixture(__dirname, "desc_effect_pasta_oneness.html")
+  );
 
   const effect = Effect.from(
     "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation"
@@ -44,9 +44,9 @@ test("Can describe an Effect", async () => {
 });
 
 test("Can describe an avatar effect", async () => {
-  vi.mocked(axios).mockResolvedValueOnce({
-    data: await loadFixture(__dirname, "desc_effect_the_visible_adventurer.html"),
-  });
+  vi.mocked(axios).mockResolvedValueOnce(
+    await respondWithFixture(__dirname, "desc_effect_the_visible_adventurer.html")
+  );
 
   const effect = Effect.from(
     "1888	The Visible Adventurer	handmirror.gif	a38d91d52ace7992b899402e9704d86d	neutral	none	use 1 x-ray mirror",

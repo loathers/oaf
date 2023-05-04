@@ -3,7 +3,7 @@ import dedent from "ts-dedent";
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { kolClient } from "../clients/kol";
-import { loadFixture } from "../testUtils";
+import { respondWithFixture } from "../testUtils";
 import { Item } from "./Item";
 
 vi.mock("axios");
@@ -23,12 +23,10 @@ afterEach(() => {
 describe("Food", () => {
   test("Can describe a food with a range of adventures", async () => {
     vi.mocked(axios)
-      .mockResolvedValueOnce({
-        data: await loadFixture(__dirname, "desc_item_tofurkey_leg.html"),
-      })
-      .mockResolvedValueOnce({
-        data: await loadFixture(__dirname, "backoffice_prices_tofurkey_leg.html"),
-      });
+      .mockResolvedValueOnce(await respondWithFixture(__dirname, "desc_item_tofurkey_leg.html"))
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "backoffice_prices_tofurkey_leg.html")
+      );
 
     const item = Item.from(
       "1365	tofurkey leg	927393854	turkeyleg.gif	food	t,d	50",
@@ -51,12 +49,10 @@ describe("Food", () => {
 
   test("Can describe a food with a set number of adventures", async () => {
     vi.mocked(axios)
-      .mockResolvedValueOnce({
-        data: await loadFixture(__dirname, "desc_item_alien_meat.html"),
-      })
-      .mockResolvedValueOnce({
-        data: await loadFixture(__dirname, "backoffice_prices_alien_meat.html"),
-      });
+      .mockResolvedValueOnce(await respondWithFixture(__dirname, "desc_item_alien_meat.html"))
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "backoffice_prices_alien_meat.html")
+      );
 
     const item = Item.from(
       "9423	alien meat	672000286	alienmeat.gif	food, cook	t,d	8	pieces of alien meat",
