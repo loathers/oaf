@@ -147,7 +147,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const playerEmbed = createEmbed()
-    .setTitle(`${bold(player.name)} (#${player.id})${isOnline ? " 🟢" : ""}`)
+    .setTitle(`${bold(player.name)} (#${player.id})${isOnline ? " 📶" : ""}`)
     .setThumbnail(player.avatar)
     .addFields(fields);
 
