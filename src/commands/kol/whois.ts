@@ -29,9 +29,10 @@ export const data = new SlashCommandBuilder()
       .setMaxLength(30)
   );
 
-export function validUsername(username: string) {
-  // 3 to 30 alphanumeric characters, starting with alpha, may contain underscores or spaces
-  return /^[a-zA-Z][a-zA-Z0-9_ ]{2,29}$/.test(username);
+export function validPlayerIdentifier(identifier: string) {
+  // If a player id: a number!
+  // If a username: 3 to 30 alphanumeric characters, starting with alpha, may contain underscores or spaces
+  return /^([a-zA-Z][a-zA-Z0-9_ ]{2,29})|[0-9]+$/.test(identifier);
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -61,7 +62,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     playerIdentifier = input;
   }
 
-  if (typeof playerIdentifier === "string" && !validUsername(playerIdentifier)) {
+  if (typeof playerIdentifier === "string" && !validPlayerIdentifier(playerIdentifier)) {
     await interaction.editReply(
       "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔"
     );

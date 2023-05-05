@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
 
-import { validUsername } from "./whois";
+import { validPlayerIdentifier } from "./whois";
 
-test("real usernames pass validation", () => {
-  const validUsernames = [
+test("real queries pass validation", () => {
+  const validQueries = [
     "beldur",
     "Butts McGruff",
     "greenfrog74",
@@ -15,17 +15,18 @@ test("real usernames pass validation", () => {
     "captain scotch",
     "Shiverwarp",
     "zarefore",
+    "1197090",
   ];
 
-  for (const username of validUsernames) {
-    expect(validUsername(username), username).toBe(true);
+  for (const query of validQueries) {
+    expect(validPlayerIdentifier(query), query).toBe(true);
   }
 });
 
-test("fake usernames fail validation", () => {
-  const invalidUsernames = ["12", "1gausie", "f@rt"];
+test("fake queries fail validation", () => {
+  const invalidQueries = ["1gausie", "f@rt"];
 
-  for (const username of invalidUsernames) {
-    expect(validUsername(username), username).toBe(false);
+  for (const query of invalidQueries) {
+    expect(validPlayerIdentifier(query), query).toBe(false);
   }
 });
