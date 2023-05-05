@@ -348,6 +348,7 @@ export class WikiClient {
     console.log("Loading items...");
     await this.loadItems(itemTypes, avatarPotions);
     console.log("Loading item groups...");
+    await this.loadFoldGroups();
     await this.loadZapGroups();
     console.log("Loading monsters...");
     await this.loadMonsters();

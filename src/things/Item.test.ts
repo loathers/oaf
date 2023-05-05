@@ -133,3 +133,62 @@ describe("Other", () => {
     );
   });
 });
+
+describe("Foldable", () => {
+  test("Can describe a foldable", async () => {
+    vi.mocked(axios)
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "desc_item_turtle_wax_shield.html")
+      )
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "backoffice_prices_turtle_wax_shield.html")
+      )
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "backoffice_prices_turtle_wax_shield.html")
+      )
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "backoffice_prices_turtle_wax_helmet.html")
+      )
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "backoffice_prices_turtle_wax_greaves.html")
+      );
+
+    const itemMeta = new Map([
+      ["turtle wax helmet", ["turtle wax helmet", "40", "Mox: 5"]],
+      ["turtle wax greaves", ["turtle wax greaves", "40", "Mox: 5"]],
+      ["turtle wax shield", ["turtle wax shield", "40", "Mus: 5", "shield"]],
+    ]);
+
+    const item = Item.from(
+      "3915	turtle wax shield	490908351	waxshield.gif	offhand, usable	t,d	7",
+      itemMeta
+    );
+
+    const group = [
+      item,
+      Item.from("3916	turtle wax helmet	760962787	waxhat.gif	hat, usable	t,d	7", itemMeta),
+      Item.from(
+        "3917	turtle wax greaves	649657203	waxgreaves.gif	pants, usable	t,d	7	pairs of turtle wax greaves",
+        itemMeta
+      ),
+    ];
+
+    item.foldGroup = group;
+
+    const description = await item.getDescription();
+
+    expect(description).toBe(
+      dedent`
+        (Item 3915)
+        **Offhand Shield**
+        40 power, requires 5 Muscle, Damage Reduction: 1.67
+
+        Maximum HP +10
+        Autosell value: 7 meat.
+        Mall Price: [500 meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=3915&timespan=1&noanim=0)
+        Folds into: [turtle wax helmet](https://kol.coldfront.net/thekolwiki/index.php/turtle_wax_helmet), [turtle wax greaves](https://kol.coldfront.net/thekolwiki/index.php/turtle_wax_greaves)
+        (Cheapest: [turtle wax helmet](https://kol.coldfront.net/thekolwiki/index.php/turtle_wax_helmet) @ [100 meat](https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=3916&timespan=1&noanim=0))
+      `
+    );
+  });
+});
