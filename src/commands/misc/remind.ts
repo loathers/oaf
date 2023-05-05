@@ -119,7 +119,7 @@ async function loadRemindersFromDatabase() {
 
   const reminders = await prisma.reminder.findMany({});
 
-  for (let reminder of reminders) {
+  for (const reminder of reminders) {
     // We can safely cast the difference between reminder and now to an int
     const timeLeft = Number(reminder.reminderTime - now);
     if (timeLeft >= RECHECK_TIME) continue;

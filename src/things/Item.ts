@@ -6,6 +6,32 @@ import { cleanString, pluralize, titleCase, toWikiLink } from "../utils";
 import { Familiar } from "./Familiar";
 import { Thing } from "./Thing";
 
+const OTHER_TYPES = [
+  "potion",
+  "reusable",
+  "usable",
+  "multiple",
+  "combat",
+  "combat reusable",
+  "grow",
+] as const;
+type OtherType = (typeof OTHER_TYPES)[number];
+
+const CONSUMABLE_TYPES = ["food", "booze", "spleen"] as const;
+type ConsumableType = (typeof CONSUMABLE_TYPES)[number];
+
+const EQUIPMENT_TYPES = [
+  "weapon",
+  "offhand",
+  "container",
+  "hat",
+  "shirt",
+  "pants",
+  "accessory",
+  "familiar",
+] as const;
+type EquipmentType = (typeof EQUIPMENT_TYPES)[number];
+
 export const isItem = (item?: Thing | null): item is Item => !!item && item instanceof Item;
 
 export type ItemData = {
@@ -38,7 +64,7 @@ export class Item extends Thing {
   zapGroup?: Item[];
   foldGroup?: Item[];
 
-  _addlDescription: string = "";
+  _addlDescription = "";
 
   static from(line: string, itemInfoForUse = new Map<string, string[]>()): Item {
     const parts = line.split(/\t/);
@@ -158,7 +184,11 @@ export class Item extends Thing {
 
     const data = itemInfoForUse.get(this.name.toLowerCase()) || [];
 
-    const consumableType = this.types.find((t) => ["food", "booze", "spleen"].includes(t));
+    const description = [`(Item ${this.id})`];
+
+    const consumableType = this.types.find((t): t is ConsumableType =>
+      CONSUMABLE_TYPES.includes(t as ConsumableType)
+    );
     if (consumableType) {
       const [consumableName, consumableUnit] = (() => {
         switch (consumableType) {
@@ -169,13 +199,10 @@ export class Item extends Thing {
           case "spleen":
             return ["spleen item", "spleen"];
         }
-        return ["", ""];
       })();
 
       const [, sizeString, level, quality, adventures] = data;
       const size = parseInt(sizeString);
-
-      const description = [`(Item ${this.id})`];
 
       description.push(
         `${bold(`${this.mapQuality(quality)} ${consumableName}`)} (Size ${size}${
@@ -190,8 +217,8 @@ export class Item extends Thing {
       return description.concat(itemRules).join("\n");
     }
 
-    const equipmentType = this.types.find((t) =>
-      ["weapon", "offhand", "container", "hat", "shirt", "pants", "accessory"].includes(t)
+    const equipmentType = this.types.find((t): t is EquipmentType =>
+      EQUIPMENT_TYPES.includes(t as EquipmentType)
     );
     if (equipmentType) {
       const [, powerString, requirementString, subtype] = data;
@@ -204,7 +231,6 @@ export class Item extends Thing {
         return `requires ${parts[1]} ${this.mapStat(parts[0])}`;
       })();
 
-      const description: string[] = [];
       const equipInfo: string[] = [];
 
       if (requirement) equipInfo.push(requirement);
@@ -244,9 +270,8 @@ export class Item extends Thing {
       return description.concat(itemRules).join("\n");
     }
 
-    const otherType = this.types.find((t) =>
-      ["potion", "reusable", "usable", "multiple", "combat", "combat reusable", "grow"].includes(t)
-    );
+    const otherType = this.types.find((t): t is OtherType => OTHER_TYPES.includes(t as OtherType));
+
     if (otherType) {
       const alsoCombat = this.types.includes("combat");
 
@@ -256,6 +281,7 @@ export class Item extends Thing {
             return "Potion";
           case "reusable":
             return "Reusable item";
+          case "multiple":
           case "usable":
             return "Usable item";
           case "combat":
@@ -264,16 +290,18 @@ export class Item extends Thing {
             return "Reusable combat item";
           case "grow":
             return "Familiar hatchling";
-          default:
+          case undefined:
             return "Miscellaneous Item";
         }
       })();
 
       const typeDescription: string[] = [bold(title)];
       if (!otherType?.startsWith("combat") && alsoCombat)
-        typeDescription.push("(also usable in combat");
+        typeDescription.push("(also usable in combat)");
 
-      return [typeDescription.join(" ")].concat(itemRules).join("\n");
+      description.push(typeDescription.join(" "));
+      description.push(...itemRules);
+      return description.join("\n");
     }
 
     return ["Miscellaneous Item"].concat(itemRules).join("\n");
@@ -359,7 +387,7 @@ export class Item extends Thing {
   }
 
   @Memoize()
-  async getDescription(withAddl: boolean = true): Promise<string> {
+  async getDescription(withAddl = true): Promise<string> {
     const description: string[] = [this.shortDescription];
 
     if (withAddl) description.push(this._addlDescription);

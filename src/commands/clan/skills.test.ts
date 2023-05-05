@@ -14,7 +14,7 @@ test("Can parse raid log skills", () => {
 
   const otherParticipantsSkills = Object.entries(participation)
     .filter(([u]) => u !== "laggycat")
-    .reduce((sum, [u, { skills }]) => sum + skills, 0);
+    .reduce((sum, [, { skills }]) => sum + skills, 0);
 
   expect(otherParticipantsSkills).toEqual(0);
 });

@@ -2,8 +2,6 @@ import axios from "axios";
 import { parse } from "date-fns";
 
 export class SnapshotClient {
-  constructor() {}
-
   static toLink(input: string) {
     return `https://api.aventuristo.net/av-snapshot?u=${encodeURI(input)}`;
   }

@@ -56,7 +56,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  for (let clan of ALL_CLANS) {
+  for (const clan of ALL_CLANS) {
     await kolClient.addToWhitelist(player.id, clan.id);
   }
 

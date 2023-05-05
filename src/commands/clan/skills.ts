@@ -12,7 +12,7 @@ import {
   getRaidLog,
 } from "./_dread";
 
-const SKILL_KILL_MATCHER = /([A-Za-z0-9\-\_ ]+)\s+\(#\d+\)\s+(defeated\D+(\d+)|used the machine)/i;
+const SKILL_KILL_MATCHER = /([A-Za-z0-9\-_ ]+)\s+\(#\d+\)\s+(defeated\D+(\d+)|used the machine)/i;
 
 export const data = new SlashCommandBuilder()
   .setName("skills")
