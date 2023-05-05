@@ -100,17 +100,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (player.favoriteFood) fields.push({ name: "Favorite Food", value: player.favoriteFood });
   if (player.favoriteBooze) fields.push({ name: "Favorite Booze", value: player.favoriteBooze });
-  if (player.lastLogin) {
+
+  const isOnline = await kolClient.isOnline(player.id);
+  const lastLogin = (() => {
+    if (isOnline) return "Currently online";
+    if (!player.lastLogin) return null;
     // We don't want to get more specific than days, but the Discord relative time formatter will say silly things
     // Like "8 hours ago" even if that player is logged in right now
-    const lastLogin =
-      player.lastLogin.getDay() === new Date().getDay()
-        ? "Today"
-        : Date.now() - player.lastLogin.getTime() < 1000 * 60 * 60 * 24
-        ? "Yesterday"
-        : time(player.lastLogin, "R");
+    if (player.lastLogin.getDay() === new Date().getDay()) return "Today";
+    if (Date.now() - player.lastLogin.getTime() < 1000 * 60 * 60 * 24) return "Yesterday";
+    return time(player.lastLogin, "R");
+  })();
+  if (lastLogin) {
     fields.push({ name: "Last Login", value: lastLogin });
   }
+
   if (player.createdDate)
     fields.push({ name: "Account Created", value: time(player.createdDate, "R") });
 
@@ -143,7 +147,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const playerEmbed = createEmbed()
-    .setTitle(`${bold(player.name)} (#${player.id})`)
+    .setTitle(`${bold(player.name)} (#${player.id})${isOnline ? " 🟢" : ""}`)
     .setThumbnail(player.avatar)
     .addFields(fields);
 
