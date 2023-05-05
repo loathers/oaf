@@ -57,11 +57,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     playerIdentifier = knownPlayer.playerId || knownPlayer.username;
-  } else {
+  } else if (input.match(/\d*/)) {
+    playerIdentifier = Number(input)
+  } else if (validUsername(input)) {
     playerIdentifier = input;
-  }
-
-  if (typeof playerIdentifier === "string" && !validUsername(playerIdentifier)) {
+  } else {
     await interaction.editReply(
       "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔"
     );
