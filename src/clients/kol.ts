@@ -342,15 +342,13 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     url: string,
     parameters: Record<string, string | number | undefined> = {},
     data: Record<string, string | number | undefined> | undefined = undefined,
-    pwd = true,
-    doLog = false
+    pwd = true
   ): Promise<T | null> {
     return (await this.visitUrl(
       url,
       parameters,
       data,
       pwd,
-      doLog,
       null as unknown as string
     )) as unknown as T;
   }
@@ -360,7 +358,6 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     parameters: Record<string, string | number | undefined> = {},
     data: Record<string, string | number | undefined> | undefined = undefined,
     pwd = true,
-    doLog = false,
     fallback = ""
   ): Promise<string> {
     if (this.isRollover || !(await this.logIn())) return fallback;
@@ -381,7 +378,13 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
             }
           : {}),
       });
-      if (doLog) console.log(page.request);
+      if (
+        process.env.DEBUG &&
+        ["api.php", "newchatmessages.php"].every((s) => !url.startsWith(s))
+      ) {
+        console.log(url, parameters);
+        console.log(page.data);
+      }
       return page.data;
     } catch {
       return fallback;
