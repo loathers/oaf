@@ -248,7 +248,7 @@ export class Item extends Thing {
           description.push(bold(`Offhand ${shield ? "Shield" : "Item"}`));
 
           equipInfo.unshift(`${power} power`);
-          if (shield) equipInfo.push(`Damage Reduction: ${power / 15 - 1}`);
+          if (shield) equipInfo.push(`Damage Reduction: ${Number((power / 15 - 1).toFixed(2))}`);
           break;
         }
         case "familiar": {
