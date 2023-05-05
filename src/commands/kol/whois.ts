@@ -100,7 +100,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (player.favoriteFood) fields.push({ name: "Favorite Food", value: player.favoriteFood });
   if (player.favoriteBooze) fields.push({ name: "Favorite Booze", value: player.favoriteBooze });
-  if (player.lastLogin) fields.push({ name: "Last Login", value: time(player.lastLogin, "R") });
+  if (player.lastLogin) {
+    // We don't want to get more specific than days, but the Discord relative time formatter will say silly things
+    // Like "8 hours ago" even if that player is logged in right now
+    const lastLogin =
+      player.lastLogin.getDay() === new Date().getDay()
+        ? "Today"
+        : Date.now() - player.lastLogin.getTime() < 1000 * 60 * 60 * 24
+        ? "Yesterday"
+        : time(player.lastLogin, "R");
+    fields.push({ name: "Last Login", value: lastLogin });
+  }
   if (player.createdDate)
     fields.push({ name: "Account Created", value: time(player.createdDate, "R") });
 
