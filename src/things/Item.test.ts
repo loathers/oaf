@@ -76,3 +76,60 @@ describe("Food", () => {
     );
   });
 });
+
+describe("Equipment", () => {
+  test("Can describe a shield", async () => {
+    vi.mocked(axios)
+      .mockResolvedValueOnce(await respondWithFixture(__dirname, "desc_item_lov_elephant.html"))
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "backoffice_prices_lov_elephant.html")
+      );
+
+    const item = Item.from(
+      "9327	LOV Elephant	284967813	pl_elephant.gif	offhand	g,d	5",
+      new Map([["lov elephant", ["LOV Elephant", "100", "Mus: 25", "shield"]]])
+    );
+
+    const description = await item.getDescription();
+
+    expect(description).toBe(
+      dedent`
+        (Item 9327)
+        **Offhand Shield**
+        100 power, requires 25 Muscle, Damage Reduction: 5.67
+        Gift Item
+        Cannot be traded.
+
+        Damage Reduction: 10
+        Autosell value: 5 meat.
+      `
+    );
+  });
+});
+
+describe("Other", () => {
+  test("Can describe a potion that is multiple use and combat usable", async () => {
+    vi.mocked(axios)
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "desc_item_magical_mystery_juice.html")
+      )
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "backoffice_prices_magical_mystery_juice.html")
+      );
+
+    const item = Item.from("518	magical mystery juice	400545756	potion4.gif	multiple, combat	d	50");
+
+    const description = await item.getDescription();
+
+    expect(description).toBe(
+      dedent`
+        (Item 518)
+        **Usable item** (also usable in combat)
+        Cannot be traded.
+
+        Restores an amount of MP that increases as you level up
+        Autosell value: 50 meat.
+      `
+    );
+  });
+});

@@ -53,12 +53,6 @@ export type DetailedDreadStatus = {
   castle: DreadCastleStatus;
 };
 
-type RaidLogMonsterData = {
-  kills: number;
-  banishes: number;
-  regex: RegExp;
-};
-
 const Monster = {
   Bugbear: "bugbear",
   Werewolf: "werewolf",
@@ -71,10 +65,10 @@ const Monster = {
 type MonsterType = (typeof Monster)[keyof typeof Monster];
 
 const BOSS_REGEXES = {
-  [Monster.Bugbear]: /defeated\s+Falls\-From\-Sky/,
+  [Monster.Bugbear]: /defeated\s+Falls-From-Sky/,
   [Monster.Werewolf]: /defeated\s+The Great Wolf of the Air/,
   [Monster.Ghost]: /defeated\s+Mayor Ghost/,
-  [Monster.Zombie]: /defeated\s+the Zombie Homeowners\' Association/,
+  [Monster.Zombie]: /defeated\s+the Zombie Homeowners' Association/,
   [Monster.Vampire]: /defeated\s+Count Drunkula/,
   [Monster.Skeleton]: /defeated\s+The Unkillable Skeleton/,
 } as const;
@@ -207,7 +201,7 @@ export async function getMissingRaidLogs(clanId: number, parsedRaids: number[]):
         raidLogs.match(
           /kisses<\/td><td class=tiny>\[<a href="clan_viewraidlog\.php\?viewlog=(?<id>\d+)/g
         ) || [];
-      for (let id of matches) {
+      for (const id of matches) {
         const cleanId = Number(id.replace(/\D/g, ""));
         if (parsedRaids.includes(cleanId)) {
           done = true;

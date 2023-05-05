@@ -33,7 +33,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   let purged = 0;
 
-  for (let message of (await channel.messages.fetch()) ?? []) {
+  for (const message of (await channel.messages.fetch()) ?? []) {
     if (purged >= quantity) break;
     if (message[1].author.id === getOwnUserId()) {
       await message[1].delete();

@@ -78,7 +78,7 @@ export class Monster extends Thing {
 
     const drops = new Map<string, number>();
 
-    for (let drop of this.drops) {
+    for (const drop of this.drops) {
       const dropDetails: string[] = [];
       if (drop.attributes.accordion) {
         dropDetails.push("Stealable accordion");
@@ -112,9 +112,9 @@ export class Monster extends Thing {
   async getDescription(): Promise<string> {
     const description = [bold("Monster"), `(Monster ${this.id})`];
 
-    const atk = this.parameters.match(/Atk: (?<atk>\-?[\d]+)/);
-    const def = this.parameters.match(/Def: (?<def>\-?[\d]+)/);
-    const hp = this.parameters.match(/HP: (?<hp>\-?[\d]+)/);
+    const atk = this.parameters.match(/Atk: (?<atk>-?[\d]+)/);
+    const def = this.parameters.match(/Def: (?<def>-?[\d]+)/);
+    const hp = this.parameters.match(/HP: (?<hp>-?[\d]+)/);
     const scaleMatcher = this.parameters.match(/Scale: (?<scale>(-?[\d]|\[.*?\])+)/);
 
     if (atk && def && hp) {
@@ -147,10 +147,10 @@ export class Monster extends Thing {
       description.push("Scales unusually.");
     }
 
-    const phylum = this.parameters.match(/P: (?<phylum>[\a-z]+)/);
+    const phylum = this.parameters.match(/P: (?<phylum>[a-z]+)/);
     if (phylum) description.push(`Phylum: ${phylum[1]}`);
 
-    const element = this.parameters.match(/E: (?<element>[\a-z]+)/);
+    const element = this.parameters.match(/E: (?<element>[a-z]+)/);
     if (element) description.push(`Element: ${element[1]}`);
 
     if (this.parameters.includes("Init: 10000")) description.push("Always wins initiative.");

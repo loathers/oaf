@@ -12,7 +12,7 @@ import { discordClient } from "../../clients/discord";
 import { WikiDownError, wikiClient } from "../../clients/wiki";
 import { lf } from "../../utils";
 
-const ITEMMATCHER = /\[\[([^\[\]]*)\]\]/g;
+const ITEMMATCHER = /\[\[([^[\]]*)\]\]/g;
 
 export const data = new SlashCommandBuilder()
   .setName("wiki")

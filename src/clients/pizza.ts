@@ -30,7 +30,7 @@ export class PizzaTree {
   addEffect(name: string, effect: Effect) {
     function _add(node: PizzaNode, n: string) {
       // If we have reached 4 letters, exhausted the input or have reached an invalid letter, finish descending.
-      if (node.letters.length === 4 || n.length === 0 || n.match(/^[^a-z0-9\"\']/)) {
+      if (node.letters.length === 4 || n.length === 0 || n.match(/^[^a-z0-9"']/)) {
         node.effects.push(effect);
         return;
       }
@@ -50,15 +50,15 @@ export class PizzaTree {
 
   precalculate(): void {
     function _calc(node: PizzaNode) {
-      let options = node.options;
-      for (let option of options) {
+      const options = node.options;
+      for (const option of options) {
         option.pizza = {
           letters: node.letters.toUpperCase(),
           options: options.length,
         };
       }
       if (options.length > 1) {
-        for (let child of node.children.values()) {
+        for (const child of node.children.values()) {
           _calc(child);
         }
       }

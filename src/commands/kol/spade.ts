@@ -203,10 +203,9 @@ async function spadeItem(itemId: number) {
   );
 
   let itemtype = ItemType.Unknown as ItemType;
-  let additionalInfo = "";
 
   if (!exists) {
-    return { id: itemId, exists, tradeable: false, itemtype, additionalInfo };
+    return { id: itemId, exists, tradeable: false, itemtype, additionalInfo: "" };
   }
 
   const tradeable = !/That item cannot be sold or transferred/.test(
@@ -217,9 +216,11 @@ async function spadeItem(itemId: number) {
     })
   );
 
-  for (let property of ITEM_SPADING_CALLS) {
+  for (const property of ITEM_SPADING_CALLS) {
     const { url, visitMatch, type } = property;
-    const page = (await kolClient.visitUrl(...(url(itemId) as [string, object]))) as string;
+    const page = (await kolClient.visitUrl(
+      ...(url(itemId) as [string, Record<string, number>])
+    )) as string;
 
     const match = visitMatch.test(page);
     if (match) {
@@ -228,7 +229,7 @@ async function spadeItem(itemId: number) {
     }
   }
 
-  return { id: itemId, exists, tradeable, itemtype, additionalInfo };
+  return { id: itemId, exists, tradeable, itemtype, additionalInfo: "" };
 }
 
 // Familiars

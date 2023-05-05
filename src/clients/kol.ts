@@ -11,11 +11,14 @@ import { select } from "xpath";
 
 import { cleanString, indent, toWikiLink } from "../utils";
 
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const noop = () => {};
+
 const parser = new DOMParser({
   locator: {},
   errorHandler: {
-    warning: function (w) {},
-    error: function (e) {},
+    warning: noop,
+    error: noop,
     fatalError: function (e) {
       console.error(e);
     },
@@ -256,10 +259,13 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   private lastFetchedWhispers = "0";
 
   async checkWhispers() {
-    const newChatMessagesResponse = (await this.visitUrl("newchatmessages.php", {
-      j: 1,
-      lasttime: this.lastFetchedWhispers,
-    })) as { last: string; msgs: KoLChatMessage[] };
+    const newChatMessagesResponse = await this.visitApi<{ last: string; msgs: KoLChatMessage[] }>(
+      "newchatmessages.php",
+      {
+        j: 1,
+        lasttime: this.lastFetchedWhispers,
+      }
+    );
 
     if (!newChatMessagesResponse || typeof newChatMessagesResponse !== "object") return;
 
@@ -279,10 +285,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async checkKmails() {
-    const newKmailsResponse = (await this.visitUrl("api.php", {
+    const newKmailsResponse = await this.visitApi<KoLKmail[]>("api.php", {
       what: "kmail",
       for: `${this.loginParameters.get("loginname")} Chatbot`,
-    })) as KoLKmail[];
+    });
 
     if (!Array.isArray(newKmailsResponse) || newKmailsResponse.length === 0) return;
 
@@ -332,14 +338,32 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     }
   }
 
+  async visitApi<T = object>(
+    url: string,
+    parameters: Record<string, string | number | undefined> = {},
+    data: Record<string, string | number | undefined> | undefined = undefined,
+    pwd = true,
+    doLog = false
+  ): Promise<T | null> {
+    return (await this.visitUrl(
+      url,
+      parameters,
+      data,
+      pwd,
+      doLog,
+      null as unknown as string
+    )) as unknown as T;
+  }
+
   async visitUrl(
     url: string,
-    parameters: Record<string, any> = {},
-    data: Record<string, any> | undefined = undefined,
-    pwd: Boolean = true,
-    doLog: Boolean = false
-  ): Promise<any> {
-    if (this.isRollover || !(await this.logIn())) return null;
+    parameters: Record<string, string | number | undefined> = {},
+    data: Record<string, string | number | undefined> | undefined = undefined,
+    pwd = true,
+    doLog = false,
+    fallback = ""
+  ): Promise<string> {
+    if (this.isRollover || !(await this.logIn())) return fallback;
     try {
       const page = await axios(`https://www.kingdomofloathing.com/${url}`, {
         method: "POST",
@@ -360,7 +384,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       if (doLog) console.log(page.request);
       return page.data;
     } catch {
-      return null;
+      return fallback;
     }
   }
 
@@ -370,8 +394,8 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       ajax: 1,
       iid: itemId,
     });
-    const unlimitedMatch = prices.match(/<td>unlimited:<\/td><td><b>(?<unlimitedPrice>[\d\,]+)/);
-    const limitedMatch = prices.match(/<td>limited:<\/td><td><b>(?<limitedPrice>[\d\,]+)/);
+    const unlimitedMatch = prices.match(/<td>unlimited:<\/td><td><b>(?<unlimitedPrice>[\d,]+)/);
+    const limitedMatch = prices.match(/<td>limited:<\/td><td><b>(?<limitedPrice>[\d,]+)/);
     const unlimitedPrice = unlimitedMatch ? parseInt(unlimitedMatch[1].replace(/,/g, "")) : 0;
     const limitedPrice = limitedMatch ? parseInt(limitedMatch[1].replace(/,/g, "")) : 0;
     let minPrice = limitedMatch ? limitedPrice : null;
@@ -407,7 +431,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       /<center>\s*<b>\s*<font color="?[\w]+"?>(?<description>[\s\S]+)<\/center>/i
     );
     const effect = description.match(
-      /Effect: \s?<b>\s?<a[^\>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^\>]+>(?<effect>[\s\S]+)<\/a>[^\(]+\((?<duration>[\d]+)/
+      /Effect: \s?<b>\s?<a[^>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^>]+>(?<effect>[\s\S]+)<\/a>[^(]+\((?<duration>[\d]+)/
     );
     const melting = description.match(/This item will disappear at the end of the day\./);
     const singleEquip = description.match(/ You may not equip more than one of these at a time\./);
@@ -541,7 +565,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async getPartialPlayer(nameOrId: string | number) {
-    let id = Number(nameOrId);
+    const id = Number(nameOrId);
 
     if (!Number.isNaN(id) || typeof nameOrId === "number") {
       return await this.getPartialPlayerFromId(id);
@@ -563,9 +587,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   async getPartialPlayerFromName(name: string): Promise<PartialPlayer | null> {
     try {
       const matcher =
-        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]*)\<\/td\>/i;
+        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]*)<\/td>/i;
       const search = await this.visitUrl("searchplayer.php", {
-        searchstring: name.replace(/\_/g, "\\_"),
+        searchstring: name.replace(/_/g, "\\_"),
         searching: "Yep.",
         for: "",
         startswith: 1,
@@ -596,13 +620,13 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async getEquipmentFamiliar(itemId: number): Promise<string | null> {
-    const responseText: string = await this.visitUrl("inv_equip.php", {
+    const responseText = await this.visitUrl("inv_equip.php", {
       action: "equip",
       which: 2,
       whichitem: itemId,
     });
 
-    const match = /Only a specific familiar type \(([^\)]*)\) can equip this item/.exec(
+    const match = /Only a specific familiar type \(([^)]*)\) can equip this item/.exec(
       responseText
     );
 

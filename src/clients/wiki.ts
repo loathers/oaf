@@ -174,20 +174,22 @@ export class WikiClient {
   }
 
   async loadItemTypes(itemTypes: Map<string, string[]>) {
-    for (let fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
+    for (const fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
       const file = await downloadMafiaData(fileName);
-      for (let line of file.data.split(/\n/)) {
+      for (const line of file.data.split(/\n/)) {
         try {
           const item = line.split("\t");
           if (item.length > 1) itemTypes.set(cleanString(item[0]).toLowerCase(), item);
-        } catch {}
+        } catch {
+          continue;
+        }
       }
     }
   }
 
   async loadSkills() {
     const file = await downloadMafiaData("classskills");
-    for (let line of file.data.split(/\n/)) {
+    for (const line of file.data.split(/\n/)) {
       try {
         const skill = Skill.from(line);
         const block = skill.block();
@@ -197,13 +199,15 @@ export class WikiClient {
         if (skill.name) {
           this.register(skill);
         }
-      } catch {}
+      } catch {
+        continue;
+      }
     }
   }
 
   async loadItems(itemInfoForUse: Map<string, string[]>, avatarPotions: Set<string>) {
     const file = await downloadMafiaData("items");
-    for (let line of file.data.split(/\n/)) {
+    for (const line of file.data.split(/\n/)) {
       try {
         const item = Item.from(line, itemInfoForUse);
         if (item.id > this._finalItemId) this._finalItemId = item.id;
@@ -230,7 +234,9 @@ export class WikiClient {
             }
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        continue;
+      }
     }
   }
 
@@ -248,7 +254,9 @@ export class WikiClient {
           for (const item of group) {
             item.zapGroup = group;
           }
-        } catch (error) {}
+        } catch (error) {
+          continue;
+        }
       }
     }
   }
@@ -266,7 +274,9 @@ export class WikiClient {
           for (const item of group) {
             item.foldGroup = group;
           }
-        } catch (error) {}
+        } catch (error) {
+          continue;
+        }
       }
     }
   }
@@ -279,7 +289,9 @@ export class WikiClient {
         if (monster.name) {
           this.register(monster);
         }
-      } catch {}
+      } catch {
+        continue;
+      }
     }
   }
 
@@ -307,17 +319,21 @@ export class WikiClient {
             equipment.addEquppingFamiliar(familiar);
           }
         }
-      } catch {}
+      } catch {
+        continue;
+      }
     }
   }
 
   async loadEffects(avatarPotions: Set<string>) {
     const file = await downloadMafiaData("statuseffects");
-    for (let line of file.data.split(/\n/)) {
+    for (const line of file.data.split(/\n/)) {
       try {
         const effect = Effect.from(line, avatarPotions);
         if (effect) this.register(effect);
-      } catch {}
+      } catch {
+        continue;
+      }
     }
   }
 
@@ -423,8 +439,10 @@ export class WikiClient {
         this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: searchResponseUrl, image });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
-    } catch (error: any) {
-      console.log(error.toString());
+    } catch (error) {
+      if (error instanceof Object) {
+        console.log(error.toString());
+      }
     }
     console.log("Not found in wiki search");
     console.log("Trying stripped wiki search");
@@ -443,8 +461,10 @@ export class WikiClient {
         });
         return this._nameMap.get(searchTerm.toLowerCase());
       }
-    } catch (error: any) {
-      console.log(error.toString());
+    } catch (error) {
+      if (error instanceof Object) {
+        console.log(error.toString());
+      }
     }
     console.log("Not found in stripped wiki search");
     console.log("Trying google search");
@@ -465,23 +485,25 @@ export class WikiClient {
         image,
       });
       return this._nameMap.get(searchTerm.toLowerCase());
-    } catch (error: any) {
-      console.log(error.toString());
+    } catch (error) {
+      if (error instanceof Object) {
+        console.log(error.toString());
+      }
     }
     console.log("Google search stumped, I give up");
     return undefined;
   }
 }
 
-function nameFromWikiPage(url: string, data: any): string {
+function nameFromWikiPage(url: string, data: string): string {
   //Mediawiki redirects are unreliable, so we can't just read off the url, so we do this horrible thing instead.
   const titleMatch = String(data).match(
-    /\<h1 id="firstHeading" class="firstHeading" lang="en">\s*<span dir="auto">(?<pageTitle>.+)<\/span><\/h1>/
+    /<h1 id="firstHeading" class="firstHeading" lang="en">\s*<span dir="auto">(?<pageTitle>.+)<\/span><\/h1>/
   );
   let result = "";
   if (titleMatch?.groups && titleMatch.groups.pageTitle) {
     result = titleMatch.groups.pageTitle;
-  } else result = decodeURIComponent(url.split("/index.php/")[1]).replace(/\_/g, " ");
+  } else result = decodeURIComponent(url.split("/index.php/")[1]).replace(/_/g, " ");
   if (result.endsWith(" (item)")) result = result.replace(" (item)", "");
   if (result.endsWith(" (skill)")) result = result.replace(" (skill)", "");
   if (result.endsWith(" (effect)")) result = result.replace(" (effect)", "");
@@ -496,17 +518,17 @@ function nameFromWikiPage(url: string, data: any): string {
   }
 }
 
-function imageFromWikiPage(url: string, data: any): string {
+function imageFromWikiPage(url: string, data: string): string {
   // As far as I know this is always the first relevant image
   const imageMatch = String(data).match(
-    /https\:\/\/kol.coldfront.net\/thekolwiki\/images\/[^\"\']*\.gif/
+    /https:\/\/kol.coldfront.net\/thekolwiki\/images\/[^"']*\.gif/
   );
   return imageMatch ? imageMatch[0] : "";
 }
 
 function emoteNamesFromEmotes(emoteString: string) {
-  return emoteString.replace(/\<a?:(?<emote>[a-zA-Z\-\_]+):[\d]+\>/g, (match) => {
-    const emoteName = match.match(/:(?<emote>[a-zA-Z\-\_]+):/);
+  return emoteString.replace(/<a?:(?<emote>[a-zA-Z\-_]+):[\d]+>/g, (match) => {
+    const emoteName = match.match(/:(?<emote>[a-zA-Z\-_]+):/);
     return emoteName ? emoteName[1].replace(/:/g, "") : "";
   });
 }
