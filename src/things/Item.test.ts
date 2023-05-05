@@ -76,3 +76,30 @@ describe("Food", () => {
     );
   });
 });
+
+describe("Other", () => {
+  test("Can describe a potion that is multiple use and combat usable", async () => {
+    vi.mocked(axios)
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "desc_item_magical_mystery_juice.html")
+      )
+      .mockResolvedValueOnce(
+        await respondWithFixture(__dirname, "backoffice_prices_magical_mystery_juice.html")
+      );
+
+    const item = Item.from("518	magical mystery juice	400545756	potion4.gif	multiple, combat	d	50");
+
+    const description = await item.getDescription();
+
+    expect(description).toBe(
+      dedent`
+        (Item 518)
+        **Usable item** (also usable in combat)
+        Cannot be traded.
+
+        Restores an amount of MP that increases as you level up
+        Autosell value: 50 meat.
+      `
+    );
+  });
+});

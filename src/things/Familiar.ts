@@ -326,7 +326,11 @@ export class Familiar extends Thing {
     if (this.hatchling) {
       const hatchlingDescription = await this.hatchling.getDescription(false);
       description.push(
-        hatchlingDescription.replace(bold("Familiar hatchling"), "").replace(/\n+/g, "\n").trim()
+        // Skip the first two lines and remove double spaces
+        ...hatchlingDescription
+          .split("\n")
+          .slice(2)
+          .filter((l) => l.length > 0)
       );
     }
 

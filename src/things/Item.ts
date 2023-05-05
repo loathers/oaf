@@ -226,7 +226,7 @@ export class Item extends Thing {
       const power = parseInt(powerString);
 
       const requirement = (() => {
-        if (requirementString === "none") return null;
+        if (!requirementString || requirementString === "none") return null;
         const parts = requirementString.split(": ");
         return `requires ${parts[1]} ${this.mapStat(parts[0])}`;
       })();
