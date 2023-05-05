@@ -60,7 +60,8 @@ async function onMessage(message: Message) {
 
   const queries = matches.map((m) => m[1]).filter((m) => m.length > 0);
 
-  let slashNote = "";
+  const response: string[] = [];
+
   if (matches.length > 0 && matches[0][0] === message.content.trim()) {
     try {
       await message.react("<:deadgarf:915694091541573712>");
@@ -68,7 +69,15 @@ async function onMessage(message: Message) {
       console.warn("Please give me permissions to react to messages!");
     }
     const slashCommand = inlineCode(`/wiki ${matches[0][1]}`);
-    slashNote = `Remember, for this query you could have just run ${slashCommand}\n\n`;
+    response.push(`Remember, for this query you could have just run ${slashCommand}.`);
+
+    // I want to remove a lot of this big annoying block of code so I will continue to make this more unreliable until
+    // people stop using it
+    if (Math.random() < 0.6) {
+      response.push("Try doing that!");
+      await message.reply({ content: response.join(" ") });
+      return;
+    }
   }
 
   if (queries.length === 0) return;
@@ -83,17 +92,19 @@ async function onMessage(message: Message) {
     });
   }
 
+  const terms = lf.format(considered.map((q) => `"${q}"`));
+
+  response.push(`${userMention(member.id)} is searching for ${terms}...`);
+
   const searchingMessage = await message.reply({
-    content: `${slashNote}${userMention(member.id)} is searching for ${lf.format(
-      considered.map((q) => `"${q}"`)
-    )}...`,
+    content: response.join("\n\n"),
     allowedMentions: { parse: [], repliedUser: false },
   });
 
   const embeds = await Promise.all(considered.map((query) => getWikiReply(query)));
 
   await searchingMessage.edit({
-    content: `${slashNote}${userMention(member.id)} searched for...`,
+    content: response.join("\n\n"),
     embeds,
     allowedMentions: {
       parse: [],
