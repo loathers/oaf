@@ -114,7 +114,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   fields.push({
     name: "Snapshot",
     value: snapshot
-      ? hyperlink(`Browse (updated ${time(snapshot.date, "R")})`, snapshot.link)
+      ? `${hyperlink(`Browse`, snapshot.link)} (updated ${time(snapshot.date, "R")})`
       : italic("none"),
   });
 
