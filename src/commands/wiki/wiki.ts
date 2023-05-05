@@ -94,17 +94,15 @@ async function onMessage(message: Message) {
 
   const terms = lf.format(considered.map((q) => `"${q}"`));
 
-  response.push(`${userMention(member.id)} is searching for ${terms}...`);
-
   const searchingMessage = await message.reply({
-    content: response.join("\n\n"),
+    content: [...response, `${userMention(member.id)} is searching for ${terms}...`].join("\n\n"),
     allowedMentions: { parse: [], repliedUser: false },
   });
 
   const embeds = await Promise.all(considered.map((query) => getWikiReply(query)));
 
   await searchingMessage.edit({
-    content: response.join("\n\n"),
+    content: [...response, `${userMention(member.id)} searched for ${terms}...`].join("\n\n"),
     embeds,
     allowedMentions: {
       parse: [],
