@@ -57,7 +57,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     playerIdentifier = knownPlayer.playerId || knownPlayer.username;
-  } else if (input.match(/\d*/)) {
+  } else if (input.match(/\d+/)) {
     playerIdentifier = Number(input)
   } else if (validUsername(input)) {
     playerIdentifier = input;
