@@ -314,10 +314,15 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async useChatMacro(macro: string) {
-    await this.visitUrl("submitnewchat.php", {
+    return await this.visitApi<{ output: string; msgs: string[] }>("submitnewchat.php", {
       graf: `/clan ${macro}`,
       j: 1,
     });
+  }
+
+  async isOnline(playerIdentifier: string | number) {
+    const response = await this.useChatMacro(`/whois ${playerIdentifier}`);
+    return response?.output.includes("This player is currently online");
   }
 
   async whisper(recipientId: number, message: string) {
