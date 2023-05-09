@@ -19,7 +19,7 @@ import {
 import { prisma } from "../../clients/database";
 import { init } from "./tag";
 
-const EXTENDED_TEAM_ROLE = process.env.EXTENDED_TEAM_ROLE_ID!;
+const EXTENDED_TEAM_ROLE_ID = process.env.EXTENDED_TEAM_ROLE_ID!;
 
 export const data = new ContextMenuCommandBuilder()
   .setName("Tag message")
@@ -46,7 +46,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
   }
 
   const highestRole = interaction.member.roles.highest;
-  const canPost = interaction.guild.roles.comparePositions(highestRole, EXTENDED_TEAM_ROLE);
+  const canPost = interaction.guild.roles.comparePositions(highestRole, EXTENDED_TEAM_ROLE_ID);
 
   if (canPost < 0) {
     await interaction.reply({
