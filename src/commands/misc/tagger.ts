@@ -19,6 +19,8 @@ import {
 import { prisma } from "../../clients/database";
 import { init } from "./tag";
 
+const EXTENDED_TEAM_ROLE = process.env.EXTENDED_TEAM_ROLE_ID!;
+
 export const data = new ContextMenuCommandBuilder()
   .setName("Tag message")
   .setType(ApplicationCommandType.Message);
@@ -34,8 +36,6 @@ async function getExistingTagForMessage(message: Message<true>) {
     },
   });
 }
-
-const EXTENDED_TEAM_ROLE = "473316929768128512";
 
 export async function execute(interaction: ContextMenuCommandInteraction) {
   if (!interaction.isMessageContextMenuCommand())

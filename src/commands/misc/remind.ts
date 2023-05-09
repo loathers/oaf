@@ -126,7 +126,7 @@ async function loadRemindersFromDatabase() {
 
     const user = await discordClient.users.fetch(reminder.userId);
     const channel = reminder.guildId
-      ? await discordClient.channels.cache.get(reminder.channelId)
+      ? await discordClient.channels.fetch(reminder.channelId)
       : await user.createDM();
 
     if (!channel || !("send" in channel)) {

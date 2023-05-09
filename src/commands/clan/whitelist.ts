@@ -7,12 +7,7 @@ import {
 import { kolClient } from "../../clients/kol";
 import { ALL_CLANS } from "./_clans";
 
-const PERMITTED_ROLES = [
-  // Extended Team
-  "473316929768128512",
-  // Lyft & Aen
-  "466624206126448641",
-];
+const PERMITTED_ROLE_IDS = process.env.WHITELIST_ROLE_IDS!.split(",");
 
 export const data = new SlashCommandBuilder()
   .setName("whitelist")
@@ -37,7 +32,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const roleManager = member.roles as GuildMemberRoleManager;
 
-  if (!PERMITTED_ROLES.some((r) => roleManager.cache.has(r))) {
+  if (!PERMITTED_ROLE_IDS.some((r) => roleManager.cache.has(r))) {
     interaction.reply({
       content: "You are not permitted to edit clan whitelists.",
       ephemeral: true,
