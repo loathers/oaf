@@ -19,6 +19,8 @@ import {
 import { prisma } from "../../clients/database";
 import { init } from "./tag";
 
+const EXTENDED_TEAM_ROLE_ID = process.env.EXTENDED_TEAM_ROLE_ID!;
+
 export const data = new ContextMenuCommandBuilder()
   .setName("Tag message")
   .setType(ApplicationCommandType.Message);
@@ -35,8 +37,6 @@ async function getExistingTagForMessage(message: Message<true>) {
   });
 }
 
-const EXTENDED_TEAM_ROLE = "473316929768128512";
-
 export async function execute(interaction: ContextMenuCommandInteraction) {
   if (!interaction.isMessageContextMenuCommand())
     throw "Somehow you're trying to tag something that isn't a message";
@@ -46,7 +46,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
   }
 
   const highestRole = interaction.member.roles.highest;
-  const canPost = interaction.guild.roles.comparePositions(highestRole, EXTENDED_TEAM_ROLE);
+  const canPost = interaction.guild.roles.comparePositions(highestRole, EXTENDED_TEAM_ROLE_ID);
 
   if (canPost < 0) {
     await interaction.reply({

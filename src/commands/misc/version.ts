@@ -3,7 +3,7 @@ import ms from "ms";
 
 import { createEmbed, discordClient } from "../../clients/discord";
 
-const TEST_CHANNEL_ID = "592805155448029194";
+const TEST_CHANNEL_ID = process.env.TEST_CHANNEL_ID!;
 let START_TIME = 0;
 
 export const data = new SlashCommandBuilder()
@@ -44,7 +44,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 export async function init() {
   discordClient.on(Events.ClientReady, async (client) => {
     START_TIME = Date.now();
-    const channel = client.channels.cache.find((c) => c.id === TEST_CHANNEL_ID);
+    const channel = await client.channels.fetch(TEST_CHANNEL_ID);
     if (!channel || !("send" in channel)) return;
     channel.send({
       content: "O.A.F. started successfully",
@@ -54,7 +54,8 @@ export async function init() {
 
   process.on("SIGTERM", () => {
     console.log("Shutting down...");
-    const channel = discordClient.channels.cache.find((c) => c.id === TEST_CHANNEL_ID);
+    // Use the cache as we want to do as little as possible async here
+    const channel = discordClient.channels.cache.get(TEST_CHANNEL_ID);
 
     if (!channel || !("send" in channel)) {
       console.warn("No channel available to say bye bye");

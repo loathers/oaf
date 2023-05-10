@@ -1,10 +1,10 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-const THEY_THEM = "741479573337800706";
-const HE_HIM = "741479366319538226";
-const SHE_HER = "741479514902757416";
-const LISTENER = "466622497991688202";
-const NO_ALERTS = "512522219574919179";
+const THEY_THEM_ROLE_ID = process.env.THEY_THEM_ROLE_ID!;
+const HE_HIM_ROLE_ID = process.env.HE_HIM_ROLE_ID!;
+const SHE_HER_ROLE_ID = process.env.SHE_HER_ROLE_ID!;
+const LISTENER_ROLE_ID = process.env.LISTENER_ROLE_ID!;
+const NO_ALERTS_ROLE_ID = process.env.NO_ALERTS_ROLE_ID!;
 
 export const data = new SlashCommandBuilder()
   .setName("role")
@@ -18,9 +18,9 @@ export const data = new SlashCommandBuilder()
           .setName("pronoun")
           .setDescription("Toggle a preferred pronoun. You can come back to set multiple")
           .addChoices(
-            { name: "they/them", value: THEY_THEM },
-            { name: "he/him", value: HE_HIM },
-            { name: "she/her", value: SHE_HER }
+            { name: "they/them", value: THEY_THEM_ROLE_ID },
+            { name: "he/him", value: HE_HIM_ROLE_ID },
+            { name: "she/her", value: SHE_HER_ROLE_ID }
           )
           .setRequired(true)
       )
@@ -45,7 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   switch (subcommand) {
     case "pronouns": {
       const roleId = interaction.options.getString("pronoun", true);
-      const role = member.guild.roles.cache.get(roleId);
+      const role = await member.guild.roles.fetch(roleId);
 
       if (!role) {
         return await interaction.editReply(
@@ -53,7 +53,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         );
       }
 
-      const desired = !member.roles.cache.some((r) => r.id === roleId);
+      const desired = !member.roles.cache.has(roleId);
 
       if (desired) {
         await member.roles.add(role, "Member added via slash command");
@@ -66,8 +66,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       );
     }
     case "alerts": {
-      const listener = member.guild.roles.cache.get(LISTENER);
-      const noAlerts = member.guild.roles.cache.get(NO_ALERTS);
+      const listener = await member.guild.roles.fetch(LISTENER_ROLE_ID);
+      const noAlerts = await member.guild.roles.fetch(NO_ALERTS_ROLE_ID);
 
       if (!listener || !noAlerts) {
         return await interaction.editReply(
@@ -75,14 +75,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         );
       }
 
-      const desired = !member.roles.cache.some((r) => r.id === LISTENER);
+      const desired = !member.roles.cache.has(LISTENER_ROLE_ID);
 
       if (desired) {
-        await member.roles.add(LISTENER, "Member added via slash command");
-        await member.roles.remove(NO_ALERTS, 'Adding "listener" automatically removes "no alerts"');
+        await member.roles.add(LISTENER_ROLE_ID, "Member added via slash command");
+        await member.roles.remove(
+          NO_ALERTS_ROLE_ID,
+          'Adding "listener" automatically removes "no alerts"'
+        );
       } else {
-        await member.roles.remove(LISTENER, "Member removed via slash command");
-        await member.roles.add(NO_ALERTS, 'Removing "listener" automatically adds "no alerts"');
+        await member.roles.remove(LISTENER_ROLE_ID, "Member removed via slash command");
+        await member.roles.add(
+          NO_ALERTS_ROLE_ID,
+          'Removing "listener" automatically adds "no alerts"'
+        );
       }
 
       return await interaction.editReply(

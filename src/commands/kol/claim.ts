@@ -1,9 +1,13 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, inlineCode } from "discord.js";
+import { ChatInputCommandInteraction, Events, SlashCommandBuilder, inlineCode } from "discord.js";
+import { Client } from "discord.js";
 import { totp } from "otplib";
 
 import { prisma } from "../../clients/database";
+import { discordClient } from "../../clients/discord";
 import { kolClient } from "../../clients/kol";
 
+const GUILD_ID = process.env.GUILD_ID!;
+const VERIFIED_ROLE_ID = process.env.VERIFIED_ROLE_ID!;
 const SALT = process.env.SALT;
 const OAF_USER = process.env.KOL_USER?.replaceAll(" ", "_");
 
@@ -80,11 +84,48 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     },
   });
 
+  const guild = interaction.guild || (await discordClient.guilds.fetch(GUILD_ID));
+  const role = await guild.roles.fetch(VERIFIED_ROLE_ID);
+
+  if (role) {
+    const member = await guild.members.fetch(interaction.user.id);
+    await member.roles.add(role);
+  }
+
   await interaction.editReply(
     `Your Discord account has been successfully linked with ${inlineCode(
       `${player.name} (#${player.id})`
     )}`
   );
+}
+
+async function synchroniseRoles(client: Client) {
+  const guild = await client.guilds.fetch(GUILD_ID);
+
+  const role = await guild.roles.fetch(VERIFIED_ROLE_ID);
+
+  if (!role) {
+    console.error("No verified role");
+    return;
+  }
+
+  const expectedMembers = (
+    await prisma.player.findMany({ where: { discordId: { not: null } } })
+  ).map((p) => p.discordId!);
+
+  for (const member of role.members.values()) {
+    const index = expectedMembers.indexOf(member.user.id);
+    if (index < 0) {
+      await member.roles.remove(role);
+    } else {
+      expectedMembers.splice(index, 1);
+    }
+  }
+
+  for (const missing of expectedMembers) {
+    const member = await guild.members.fetch(missing);
+    await member.roles.add(role);
+  }
 }
 
 export async function init() {
@@ -100,4 +141,6 @@ export async function init() {
       `Your token is ${token} (expires in ${totp.timeRemaining()} seconds)`
     );
   });
+
+  discordClient.on(Events.ClientReady, synchroniseRoles);
 }
