@@ -74,9 +74,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
+  const discordId = interaction.user.id;
+
+  const previouslyClaimed = await prisma.player.updateMany({
+    where: { discordId },
+    data: { discordId: null },
+  });
+
   await prisma.player.upsert({
     where: { playerId: player.id },
-    update: { discordId: interaction.user.id },
+    update: { discordId },
     create: {
       username: player.name.toLowerCase(),
       discordId: interaction.user.id,
@@ -92,10 +99,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await member.roles.add(role);
   }
 
+  const previous = previouslyClaimed.count > 0 ? " Any previous link will have been removed." : "";
+
   await interaction.editReply(
     `Your Discord account has been successfully linked with ${inlineCode(
       `${player.name} (#${player.id})`
-    )}`
+    )}.${previous}`
   );
 }
 
