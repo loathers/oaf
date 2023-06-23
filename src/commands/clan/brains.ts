@@ -1,4 +1,4 @@
-import { Player } from "@prisma/client";
+import { Player, PrismaPromise } from "@prisma/client";
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } from "discord.js";
 
 import { prisma } from "../../clients/database";
@@ -20,10 +20,14 @@ export const data = new SlashCommandBuilder()
 
 function formatPlayerList(players: Player[]) {
   if (players.length === 0) return "None available.";
-  return players
+  const playerList = players
     .sort()
     .map((p) => formatPlayer(p))
     .join("\n");
+
+  if (playerList.length > 1024) return playerList.substring(0, 1020) + "...";
+
+  return playerList;
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -35,6 +39,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     where: { OR: [{ brainiac: true }, { skills: { gt: 0 } }] },
   });
 
+  const playerNameUpdates: PrismaPromise<Player>[] = [];
+
   for (const player of players) {
     const current = await kolClient.getPartialPlayerFromId(player.playerId);
 
@@ -43,10 +49,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     // While we're here, let's update any player name changes
     if (current.name !== player.playerName) {
-      await prisma.player.update({
-        where: { playerId: player.playerId },
-        data: { playerName: current.name },
-      });
+      playerNameUpdates.push(
+        prisma.player.update({
+          where: { playerId: player.playerId },
+          data: { playerName: current.name },
+        })
+      );
     }
 
     // Lower than level 15
@@ -72,4 +80,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       },
     ],
   });
+
+  await prisma.$transaction(playerNameUpdates);
 }
