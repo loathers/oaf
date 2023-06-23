@@ -3,25 +3,28 @@ import { beforeAll, expect, test } from "vitest";
 import { loadFixture } from "../../testUtils";
 import { Participation, getParticipationFromRaidLog } from "./skills";
 
-let participation: Participation = {};
+let participation: Participation = new Map();
 
 beforeAll(async () => {
   participation = getParticipationFromRaidLog(await loadFixture(__dirname, "raidlog.html"));
 });
 
-test("Can parse raid log skills", () => {
-  expect(participation["laggycat"]).toHaveProperty("skills", 1);
+const LAGGYCAT = 3137318;
+const SWAGGERFORTUNE = 3268818;
 
-  const otherParticipantsSkills = Object.entries(participation)
-    .filter(([u]) => u !== "laggycat")
+test("Can parse raid log skills", () => {
+  expect(participation.get(LAGGYCAT)).toHaveProperty("skills", 1);
+
+  const otherParticipantsSkills = [...participation.entries()]
+    .filter(([pid]) => pid !== LAGGYCAT)
     .reduce((sum, [, { skills }]) => sum + skills, 0);
 
   expect(otherParticipantsSkills).toEqual(0);
 });
 
 test("Can parse raid log kills", () => {
-  expect(participation["swaggerfortune"]).toHaveProperty("kills", 346);
-  expect(participation["laggycat"]).toHaveProperty("kills", 0);
+  expect(participation.get(SWAGGERFORTUNE)).toHaveProperty("kills", 346);
+  expect(participation.get(LAGGYCAT)).toHaveProperty("kills", 0);
 
   const totalKills = Object.values(participation).reduce((sum, { kills }) => sum + kills, 0);
 
