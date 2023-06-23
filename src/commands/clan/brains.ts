@@ -37,8 +37,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   for (const player of players) {
     const current = await kolClient.getPartialPlayerFromId(player.playerId);
+
+    // If not found, continue
+    if (!current) continue;
+
+    // While we're here, let's update any player name changes
+    if (current.name !== player.playerName) {
+      await prisma.player.update({
+        where: { playerId: player.playerId },
+        data: { playerName: current.name },
+      });
+    }
+
     // Lower than level 15
-    if (!current || current.level < 15) continue;
+    if (current.level < 15) continue;
     // Not in a standard class
     if (!(current.class in classToPlayers)) continue;
 
