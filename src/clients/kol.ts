@@ -601,7 +601,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   async getPartialPlayerFromName(name: string): Promise<PartialPlayer | null> {
     try {
       const matcher =
-        /href="showplayer.php\?who=(?<user_id>\d+)[^<]+\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]*)<\/td>/i;
+        /href="showplayer.php\?who=(?<playerId>\d+)">(?<playerName>.*?)<\/a>\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]*)<\/td>/i;
       const search = await this.visitUrl("searchplayer.php", {
         searchstring: name.replace(/_/g, "\\_"),
         searching: "Yep.",
@@ -616,8 +616,8 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       }
 
       return {
-        id: Number(match.user_id),
-        name,
+        id: Number(match.playerId),
+        name: match.playerName,
         level: parseInt(match.level),
         class: match.class,
       };

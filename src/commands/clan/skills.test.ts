@@ -23,7 +23,6 @@ test("Can parse raid log skills", () => {
 });
 
 test("Can parse raid log kills", () => {
-  console.log(participation);
   expect(participation.get(SWAGGERFORTUNE)).toHaveProperty("kills", 346);
   expect(participation.get(LAGGYCAT)).toHaveProperty("kills", 0);
 
