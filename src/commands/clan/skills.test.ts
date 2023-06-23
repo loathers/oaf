@@ -23,10 +23,11 @@ test("Can parse raid log skills", () => {
 });
 
 test("Can parse raid log kills", () => {
+  console.log(participation);
   expect(participation.get(SWAGGERFORTUNE)).toHaveProperty("kills", 346);
   expect(participation.get(LAGGYCAT)).toHaveProperty("kills", 0);
 
-  const totalKills = Object.values(participation).reduce((sum, { kills }) => sum + kills, 0);
+  const totalKills = [...participation.values()].reduce((sum, { kills }) => sum + kills, 0);
 
   expect(totalKills).toEqual(3677);
 });
