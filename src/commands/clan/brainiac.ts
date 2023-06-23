@@ -20,22 +20,31 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const username = interaction.options.getString("player", true).toLowerCase();
+  const playerName = interaction.options.getString("player", true);
   const available = interaction.options.getBoolean("available", false) ?? true;
 
   await interaction.deferReply();
 
-  const existing = await prisma.player.findFirst({ where: { username } });
+  const existing = await prisma.player.findFirst({
+    where: {
+      playerName: {
+        equals: playerName,
+        mode: "insensitive",
+      },
+    },
+  });
 
   if (!existing) {
-    const player = await kolClient.getPartialPlayerFromName(username);
+    const player = await kolClient.getPartialPlayerFromName(playerName);
 
     if (!player) {
-      await interaction.editReply(`User ${italic(username)} could not be found`);
+      await interaction.editReply(`User ${italic(playerName)} could not be found`);
       return;
     }
 
-    await prisma.player.create({ data: { playerId: player.id, username, brainiac: available } });
+    await prisma.player.create({
+      data: { playerId: player.id, playerName: player.name, brainiac: available },
+    });
   } else {
     await prisma.player.update({
       where: { playerId: existing.playerId },
@@ -44,7 +53,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   await interaction.editReply(
-    `${available ? "Added" : "Removed"} user ${italic(username)} ${
+    `${available ? "Added" : "Removed"} user ${italic(playerName)} ${
       available ? "to" : "from"
     } the list of players always available to help with skills.`
   );
