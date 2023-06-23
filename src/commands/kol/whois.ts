@@ -57,7 +57,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    playerIdentifier = knownPlayer.playerId || knownPlayer.playerName;
+    playerIdentifier = knownPlayer.playerId;
   } else {
     playerIdentifier = input;
   }
