@@ -86,7 +86,7 @@ export function titleCase(title: string) {
     .join(" ");
 }
 
-export function formatPlayer(player: Player | null | undefined, backupId?: number) {
+export function formatPlayer(player: Player | undefined, backupId?: number) {
   const discordId = player?.discordId;
   return discordId
     ? `${userMention(discordId)}${hyperlink(
