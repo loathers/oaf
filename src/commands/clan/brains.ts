@@ -18,16 +18,24 @@ export const data = new SlashCommandBuilder()
   .setName("brains")
   .setDescription("Find players whose brains can be drained for Dreadsylvania skills.");
 
+/**
+ * @param players List of players to format
+ * @returns A text list of players formatted for Discord and trimmed to a maximum of 1024 characters as per API requirements
+ */
 function formatPlayerList(players: Player[]) {
   if (players.length === 0) return "None available.";
-  const playerList = players
-    .sort()
-    .map((p) => formatPlayer(p))
-    .join("\n");
 
-  if (playerList.length > 1024) return playerList.substring(0, 1020) + "...";
+  let output = "";
 
-  return playerList;
+  for (const player of players.sort()) {
+    const formattedPlayer = formatPlayer(player);
+    if (output.length + formattedPlayer.length > 1020) {
+      return output + "...";
+    }
+    output += formattedPlayer + "\n";
+  }
+
+  return output.slice(0, -1);
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
