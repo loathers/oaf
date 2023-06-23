@@ -12,25 +12,35 @@ import {
   getRaidLog,
 } from "./_dread";
 
-const SKILL_KILL_MATCHER = /([A-Za-z0-9\-_ ]+)\s+\(#\d+\)\s+(defeated\D+(\d+)|used the machine)/i;
+const SKILL_KILL_MATCHER = /([A-Za-z0-9\-_ ]+)\s+\(#(\d+)\)\s+(defeated\D+(\d+)|used the machine)/i;
 
 export const data = new SlashCommandBuilder()
   .setName("skills")
   .setDescription("Get a list of everyone currently elgible for Dreadsylvania skills.");
 
-export type Participation = { [username: string]: { skills: number; kills: number } };
+type ParticipationData = { skills: number; kills: number };
+export type Participation = Map<number, ParticipationData>;
+
+function addParticipation(
+  a: Participation,
+  playerId: number,
+  { skills, kills }: Partial<ParticipationData>
+) {
+  const existing = a.get(playerId) || { skills: 0, kills: 0 };
+  a.set(playerId, {
+    skills: existing.skills + (skills || 0),
+    kills: existing.kills + (kills || 0),
+  });
+}
 
 function mergeParticipation(a: Participation, b: Participation) {
-  return Object.entries(b).reduce(
-    (acc, [u, { skills, kills }]) => ({
-      ...acc,
-      [u]: {
-        skills: (acc[u]?.skills ?? 0) + skills,
-        kills: (acc[u]?.kills ?? 0) + kills,
-      },
-    }),
-    a
-  );
+  const merged = new Map(a);
+
+  for (const [playerId, data] of b) {
+    addParticipation(merged, playerId, data);
+  }
+
+  return merged;
 }
 
 async function getParticipationFromCurrentRaid() {
@@ -45,41 +55,27 @@ async function getParticipationFromCurrentRaid() {
 export function getParticipationFromRaidLog(raidLog: string) {
   const lines = raidLog.match(new RegExp(SKILL_KILL_MATCHER, "gi")) || [];
 
-  return lines
+  const participation: Participation = new Map();
+
+  lines
     .map((l) => l.match(SKILL_KILL_MATCHER))
     .filter(notNull)
     .map(
       (m) =>
         [
-          m[1].toLowerCase(),
-          m[2].startsWith("defeated") ? "kills" : "skills",
-          parseInt(m[3] || "1"),
+          parseInt(m[2]),
+          m[3].startsWith("defeated") ? "kills" : "skills",
+          parseInt(m[4] || "1"),
         ] as const
     )
-    .reduce(
-      (acc, [username, type, num]) => ({
-        ...acc,
-        [username]: {
-          ...(acc[username] || { skills: 0, kills: 0 }),
-          [type]: (acc[username]?.[type] ?? 0) + num,
-        },
-      }),
-      {} as { [username: string]: { skills: number; kills: number } }
-    );
-}
+    .forEach(([playerId, type, num]) => {
+      addParticipation(participation, playerId, { [type]: num });
+    });
 
-async function getUsernameToId() {
-  return Object.fromEntries(
-    (await prisma.player.findMany({ where: {}, select: { playerId: true, username: true } })).map(
-      ({ playerId, username }) => [username.toLowerCase(), playerId] as const
-    )
-  );
+  return participation;
 }
 
 async function parseOldLogs() {
-  // Create a map of known username-to-id pairs
-  const usernameToId = await getUsernameToId();
-
   const parsedRaids = (await prisma.raid.findMany({ select: { id: true } })).map(({ id }) => id);
 
   // Determine all the raid ids that are yet to be passed
@@ -89,7 +85,7 @@ async function parseOldLogs() {
     .flat()
     .filter((id) => !parsedRaids.includes(id));
 
-  let participation: Participation = {};
+  let participation: Participation = new Map();
 
   // Parse each raid and extract the player participation
   for (const raidId of raidsToParse) {
@@ -97,29 +93,32 @@ async function parseOldLogs() {
     participation = mergeParticipation(participation, getParticipationFromRaidLog(raidLog));
   }
 
-  // Go through participation records discovering ids for previously unknown players
-  for (const username in Object.keys(participation)) {
-    if (username in usernameToId) continue;
-    const partialPlayer = await kolClient.getPartialPlayerFromName(username);
-    if (!partialPlayer) continue;
-    usernameToId[username] = partialPlayer.id;
-  }
+  await prisma.$transaction(async () => {
+    await prisma.raid.createMany({
+      data: raidsToParse.map((r) => ({ id: r })),
+      skipDuplicates: true,
+    });
 
-  // Prepare operation to update tracked instances
-  const instancesToMarkAsTracked = prisma.raid.createMany({
-    data: raidsToParse.map((r) => ({ id: r })),
-    skipDuplicates: true,
-  });
+    for (const [playerId, { kills, skills }] of participation.entries()) {
+      const player = await prisma.player.findUnique({ where: { playerId } });
 
-  // Prepare player participation to update
-  const playersToUpdate = Object.entries(participation)
-    // Filter out non-existent users I guess
-    .filter(([username]) => username in usernameToId)
-    .map(([username, { kills, skills }]) => {
-      const playerId = usernameToId[username];
-      return prisma.player.upsert({
+      if (!player) {
+        const playerName = await kolClient.getPlayerNameFromId(playerId);
+        if (!playerName) return;
+        prisma.player.create({
+          data: {
+            playerId,
+            playerName,
+            kills,
+            skills,
+          },
+        });
+        return;
+      }
+
+      prisma.player.update({
         where: { playerId },
-        update: {
+        data: {
           kills: {
             increment: kills,
           },
@@ -127,17 +126,9 @@ async function parseOldLogs() {
             increment: skills,
           },
         },
-        create: {
-          playerId,
-          username,
-          kills,
-          skills,
-        },
       });
-    });
-
-  // Perform updates in a transaction
-  await prisma.$transaction([instancesToMarkAsTracked, ...playersToUpdate]);
+    }
+  });
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -146,22 +137,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     await parseOldLogs();
 
-    const players = Object.fromEntries(
-      (await prisma.player.findMany({})).map((p) => [p.username, p] as const)
+    const players = new Map(
+      (await prisma.player.findMany({})).map((p) => [p.playerId, p] as const)
     );
 
     const participation = mergeParticipation(players, await getParticipationFromCurrentRaid());
 
-    const skillsOwed = Object.entries(participation)
-      .filter(([username]) => players[username]?.doneWithSkills !== true)
+    const skillsOwed = [...participation.entries()]
+      .filter(([playerId]) => players.get(playerId)?.doneWithSkills !== true)
       .map(
-        ([username, { skills, kills }]) =>
-          [username, Math.floor((kills + 450) / 900) - skills] as const
+        ([playerId, { skills, kills }]) =>
+          [playerId, Math.floor((kills + 450) / 900) - skills] as const
       )
       .filter(([, owed]) => owed > 0)
       .map(
-        ([username, owed]) =>
-          `${formatPlayer(players[username], username)}: ${pluralize(owed, "skill")}.`
+        ([playerId, owed]) =>
+          `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(owed, "skill")}.`
       )
       .sort();
 

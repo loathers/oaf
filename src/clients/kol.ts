@@ -582,14 +582,20 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     return await this.getPartialPlayerFromName(nameOrId);
   }
 
-  async getPartialPlayerFromId(id: number): Promise<PartialPlayer | null> {
+  async getPlayerNameFromId(id: number): Promise<string | null> {
     try {
       const profile = await this.visitUrl("showplayer.php", { who: id });
       const name = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/)?.[1];
-      return name ? await this.getPartialPlayerFromName(name) : null;
+      return name || null;
     } catch {
       return null;
     }
+  }
+
+  async getPartialPlayerFromId(id: number): Promise<PartialPlayer | null> {
+    const name = await this.getPlayerNameFromId(id);
+    if (!name) return null;
+    return await this.getPartialPlayerFromName(name);
   }
 
   async getPartialPlayerFromName(name: string): Promise<PartialPlayer | null> {

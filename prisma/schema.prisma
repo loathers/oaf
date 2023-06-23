@@ -8,23 +8,22 @@ datasource db {
 }
 
 model Player {
-  /// Lowercased KoL username
-  username         String  @unique
-  kills            Int     @default(0)
-  skills           Int     @default(0)
+  playerId       Int     @id
+  playerName     String
+  kills          Int     @default(0)
+  skills         Int     @default(0)
   doneWithSkills Boolean @default(false)
-  brainiac         Boolean @default(false)
-  discordId       String?
-  playerId         Int     @id
+  brainiac       Boolean @default(false)
+  discordId      String?
 }
 
 model Reminder {
-  id                   Int     @id @default(autoincrement())
-  guildId             String?
-  channelId           String
-  userId              String
-  messageContents     String
-  reminderTime        BigInt
+  id                 Int     @id @default(autoincrement())
+  guildId            String?
+  channelId          String
+  userId             String
+  messageContents    String
+  reminderTime       BigInt
   interactionReplyId String?
 }
 

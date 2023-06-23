@@ -57,7 +57,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    playerIdentifier = knownPlayer.playerId || knownPlayer.username;
+    playerIdentifier = knownPlayer.playerId || knownPlayer.playerName;
   } else {
     playerIdentifier = input;
   }
@@ -136,6 +136,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (knownPlayer === null) {
     knownPlayer = await prisma.player.findFirst({
       where: { playerId: player.id },
+    });
+  }
+
+  // Use this opportunity to update player names either from name changes or capitalization changes
+  if (knownPlayer && knownPlayer.playerName !== player.name) {
+    await prisma.player.update({
+      where: { playerId: player.id },
+      data: { playerName: player.name },
     });
   }
 
