@@ -1,8 +1,10 @@
 import axios, { AxiosError } from "axios";
 import { EmbedBuilder } from "discord.js";
+import { Memoize, clear } from "typescript-memoize";
 
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things";
 import { isItem } from "../things/Item";
+import { isMonster } from "../things/Monster";
 import { cleanString } from "../utils";
 import { createEmbed } from "./discord";
 import { pizzaTree } from "./pizza";
@@ -368,14 +370,21 @@ export class WikiClient {
   async reloadMafiaData(): Promise<boolean> {
     if (this._lastDownloadTime < Date.now() - 3600000) {
       this._thingMap.clear();
+      clear(["things"]);
       await this.loadMafiaData();
       return true;
     }
     return false;
   }
 
+  @Memoize({ tags: ["things"] })
   get items(): Item[] {
     return [...this._thingMap.values()].filter(isItem);
+  }
+
+  @Memoize({ tags: ["things"] })
+  get monsters(): Monster[] {
+    return [...this._thingMap.values()].filter(isMonster);
   }
 
   isItemIdKnown(id: number) {
