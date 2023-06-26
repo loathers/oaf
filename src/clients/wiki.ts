@@ -413,18 +413,18 @@ export class WikiClient {
     if (!searchTerm.length) return undefined;
     if (this._nameMap.has(searchTerm.toLowerCase()))
       return this._nameMap.get(searchTerm.toLowerCase());
-    const cleanedSearchTerm = emoteNamesFromEmotes(searchTerm);
-    const wikiName = cleanedSearchTerm.replace(/\s/g, "_");
-    const wikiSearchName = cleanedSearchTerm.replace(/\s/g, "+");
+    const cleanedSearchTerm = emoteNamesFromEmotes(searchTerm).replace(/\u2019/g, "'");
+    const wikiName = encodeURIComponent(cleanedSearchTerm).replace(/\s/g, "_");
+    const wikiSearchName = encodeURIComponent(cleanedSearchTerm).replace(/%20/g, "+");
     const wikiSearchNameCrushed = cleanedSearchTerm
       .replace(/[^A-Za-z0-9\s]/g, "")
       .toLowerCase()
       .replace(/\s/g, "+");
-    console.log("Trying precise wiki page");
+
     try {
-      const directWikiResponse = await axios(
-        `https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`
-      );
+      const url = `https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`;
+      console.log("Trying precise wiki page", url);
+      const directWikiResponse = await axios(url);
       const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
       if (directResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(directResponseUrl, directWikiResponse.data);
@@ -441,11 +441,10 @@ export class WikiClient {
       }
     }
     console.log("Not found as wiki page");
-    console.log("Trying wiki search");
     try {
-      const wikiSearchResponse = await axios(
-        `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`
-      );
+      const url = `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`;
+      console.log("Trying wiki search", url);
+      const wikiSearchResponse = await axios(url);
       const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
       if (searchResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(searchResponseUrl, wikiSearchResponse.data);
@@ -459,11 +458,10 @@ export class WikiClient {
       }
     }
     console.log("Not found in wiki search");
-    console.log("Trying stripped wiki search");
     try {
-      const crushedWikiSearchResponse = await axios(
-        `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchNameCrushed}`
-      );
+      const url = `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchNameCrushed}`;
+      console.log("Trying stripped wiki search", url);
+      const crushedWikiSearchResponse = await axios(url);
       const crushedSearchResponseUrl = String(crushedWikiSearchResponse.request.res.responseUrl);
       if (crushedSearchResponseUrl.indexOf("index.php?search=") < 0) {
         const name = nameFromWikiPage(crushedSearchResponseUrl, crushedWikiSearchResponse.data);
