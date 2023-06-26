@@ -15,8 +15,12 @@ export class Thing {
     throw "Implement me";
   }
 
+  getImagePath() {
+    return `/itemimages/${this.imageUrl}`;
+  }
+
   async addToEmbed(embed: EmbedBuilder): Promise<void> {
-    embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this.imageUrl}`);
+    embed.setThumbnail(`http://images.kingdomofloathing.com${this.getImagePath()}`);
     embed.setDescription(await this.getDescription());
   }
 }

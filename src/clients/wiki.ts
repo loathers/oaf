@@ -507,6 +507,25 @@ export class WikiClient {
     console.log("Google search stumped, I give up");
     return undefined;
   }
+
+  async getWikiLink(thing: Thing) {
+    const type = thing.constructor.name;
+    const block = Math.floor(thing.id / 100) * 100;
+    const url = `https://kol.coldfront.net/thekolwiki/index.php/${type}s_by_number_(${block}-${
+      block + 99
+    })`;
+
+    try {
+      const blockPage = await axios.get<string>(url);
+
+      const match = blockPage.data.match(new RegExp(`${thing.id}\\. <a href="([^"]+)"`));
+      if (!match) return null;
+
+      return `https://kol.coldfront.net${match[1]}`;
+    } catch (e) {
+      return null;
+    }
+  }
 }
 
 function nameFromWikiPage(url: string, data: string): string {

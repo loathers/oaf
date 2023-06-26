@@ -1,10 +1,10 @@
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
-  EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
 
+import { createEmbed } from "../../clients/discord";
 import { wikiClient } from "../../clients/wiki";
 
 export const data = new SlashCommandBuilder()
@@ -24,7 +24,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const monster = wikiClient.monsters.find((i) => i.id === monsterId);
 
-  const embed = new EmbedBuilder();
+  const embed = createEmbed();
 
   if (!monster) {
     await interaction.editReply({
@@ -34,6 +34,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
+  embed.setTitle(monster.name).setURL(await wikiClient.getWikiLink(monster));
   await monster.addToEmbed(embed);
 
   await interaction.editReply({
