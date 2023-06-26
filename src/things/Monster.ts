@@ -4,6 +4,9 @@ import { Memoize } from "typescript-memoize";
 import { cleanString, notNull, toWikiLink } from "../utils";
 import { Thing } from "./Thing";
 
+export const isMonster = (monster?: Thing | null): monster is Monster =>
+  !!monster && monster instanceof Monster;
+
 export type Drop = {
   item: string;
   droprate: number;

@@ -1,8 +1,10 @@
 import axios, { AxiosError } from "axios";
 import { EmbedBuilder } from "discord.js";
+import { Memoize, clear } from "typescript-memoize";
 
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things";
 import { isItem } from "../things/Item";
+import { isMonster } from "../things/Monster";
 import { cleanString } from "../utils";
 import { createEmbed } from "./discord";
 import { pizzaTree } from "./pizza";
@@ -177,6 +179,7 @@ export class WikiClient {
     for (const fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
       const file = await downloadMafiaData(fileName);
       for (const line of file.data.split(/\n/)) {
+        if (!line.length || line.startsWith("#")) continue;
         try {
           const item = line.split("\t");
           if (item.length > 1) itemTypes.set(cleanString(item[0]).toLowerCase(), item);
@@ -190,6 +193,7 @@ export class WikiClient {
   async loadSkills() {
     const file = await downloadMafiaData("classskills");
     for (const line of file.data.split(/\n/)) {
+      if (!line.length || line.startsWith("#")) continue;
       try {
         const skill = Skill.from(line);
         const block = skill.block();
@@ -208,6 +212,7 @@ export class WikiClient {
   async loadItems(itemInfoForUse: Map<string, string[]>, avatarPotions: Set<string>) {
     const file = await downloadMafiaData("items");
     for (const line of file.data.split(/\n/)) {
+      if (!line.length || line.startsWith("#")) continue;
       try {
         const item = Item.from(line, itemInfoForUse);
         if (item.id > this._finalItemId) this._finalItemId = item.id;
@@ -243,20 +248,19 @@ export class WikiClient {
   async loadZapGroups() {
     const file = await downloadMafiaData("zapgroups");
     for (const line of file.data.split(/\n/)) {
-      if (line.length && !line.startsWith("#")) {
-        try {
-          const group = line
-            .replaceAll("\\,", "🍕")
-            .split(",")
-            .map((itemName) => itemName.replaceAll("🍕", ","))
-            .map((itemName) => this.retrieve(itemName))
-            .filter(isItem);
-          for (const item of group) {
-            item.zapGroup = group;
-          }
-        } catch (error) {
-          continue;
+      if (!line.length || line.startsWith("#")) continue;
+      try {
+        const group = line
+          .replaceAll("\\,", "🍕")
+          .split(",")
+          .map((itemName) => itemName.replaceAll("🍕", ","))
+          .map((itemName) => this.retrieve(itemName))
+          .filter(isItem);
+        for (const item of group) {
+          item.zapGroup = group;
         }
+      } catch (error) {
+        continue;
       }
     }
   }
@@ -264,19 +268,18 @@ export class WikiClient {
   async loadFoldGroups() {
     const file = await downloadMafiaData("foldgroups");
     for (const line of file.data.split(/\n/)) {
-      if (line.length && !line.startsWith("#")) {
-        try {
-          const group = line
-            .split("\t")
-            .slice(1)
-            .map((itemName: string) => this.retrieve(itemName))
-            .filter(isItem);
-          for (const item of group) {
-            item.foldGroup = group;
-          }
-        } catch (error) {
-          continue;
+      if (!line.length || line.startsWith("#")) continue;
+      try {
+        const group = line
+          .split("\t")
+          .slice(1)
+          .map((itemName: string) => this.retrieve(itemName))
+          .filter(isItem);
+        for (const item of group) {
+          item.foldGroup = group;
         }
+      } catch (error) {
+        continue;
       }
     }
   }
@@ -284,6 +287,7 @@ export class WikiClient {
   async loadMonsters() {
     const file = await downloadMafiaData("monsters");
     for (const line of file.data.split(/\n/)) {
+      if (!line.length || line.startsWith("#")) continue;
       try {
         const monster = Monster.from(line);
         if (monster.name) {
@@ -298,6 +302,7 @@ export class WikiClient {
   async loadFamiliars() {
     const file = await downloadMafiaData("familiars");
     for (const line of file.data.split(/\n/)) {
+      if (!line.length || line.startsWith("#")) continue;
       try {
         const familiar = Familiar.from(line);
 
@@ -328,6 +333,7 @@ export class WikiClient {
   async loadEffects(avatarPotions: Set<string>) {
     const file = await downloadMafiaData("statuseffects");
     for (const line of file.data.split(/\n/)) {
+      if (!line.length || line.startsWith("#")) continue;
       try {
         const effect = Effect.from(line, avatarPotions);
         if (effect) this.register(effect);
@@ -364,14 +370,21 @@ export class WikiClient {
   async reloadMafiaData(): Promise<boolean> {
     if (this._lastDownloadTime < Date.now() - 3600000) {
       this._thingMap.clear();
+      clear(["things"]);
       await this.loadMafiaData();
       return true;
     }
     return false;
   }
 
+  @Memoize({ tags: ["things"] })
   get items(): Item[] {
     return [...this._thingMap.values()].filter(isItem);
+  }
+
+  @Memoize({ tags: ["things"] })
+  get monsters(): Monster[] {
+    return [...this._thingMap.values()].filter(isMonster);
   }
 
   isItemIdKnown(id: number) {

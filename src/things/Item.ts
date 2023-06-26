@@ -1,5 +1,5 @@
 import { bold, hyperlink } from "discord.js";
-import { Memoize } from "typescript-memoize";
+import { MemoizeExpiring } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol";
 import { cleanString, pluralize, titleCase, toWikiLink } from "../utils";
@@ -386,7 +386,7 @@ export class Item extends Thing {
     return output.join("\n");
   }
 
-  @Memoize()
+  @MemoizeExpiring(15 * 60 * 1000) // Ensure that prices are accurate to the last 15 minutes
   async getDescription(withAddl = true): Promise<string> {
     const description: string[] = [this.shortDescription];
 

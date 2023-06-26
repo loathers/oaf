@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
-  .setName("item")
+  .setName("itemdrop")
   .setDescription("Find the +item drop required to cap a drop.")
   .addNumberOption((option) =>
     option
