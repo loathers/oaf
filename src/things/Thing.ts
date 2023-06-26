@@ -11,6 +11,10 @@ export class Thing {
     this.imageUrl = imageUrl;
   }
 
+  hashcode() {
+    return `${this.constructor.name.replace(/^_*/, "")}:${this.id}`;
+  }
+
   async getDescription(): Promise<string> {
     throw "Implement me";
   }

@@ -1,10 +1,11 @@
 import axios from "axios";
 import dedent from "ts-dedent";
-import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { kolClient } from "../clients/kol";
 import { respondWithFixture } from "../testUtils";
 import { Effect } from "./Effect";
+import { Monster } from "./Monster";
 
 vi.mock("axios");
 
@@ -20,48 +21,73 @@ afterEach(() => {
   vi.mocked(axios).mockReset();
 });
 
-test("Can describe an Effect", async () => {
-  vi.mocked(axios).mockResolvedValueOnce(
-    await respondWithFixture(__dirname, "desc_effect_pasta_oneness.html")
-  );
+describe("Effect descriptions", () => {
+  test("Can describe an Effect", async () => {
+    vi.mocked(axios).mockResolvedValueOnce(
+      await respondWithFixture(__dirname, "desc_effect_pasta_oneness.html")
+    );
 
-  const effect = Effect.from(
-    "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation"
-  );
-  effect.pizza = { letters: "PAST", options: 2 };
+    const effect = Effect.from(
+      "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation"
+    );
+    effect.pizza = { letters: "PAST", options: 2 };
 
-  const description = await effect.getDescription();
+    const description = await effect.getDescription();
 
-  expect(description).toBe(
-    dedent`
-      **Effect**
-      (Effect 23)
-      Mysticality +2
+    expect(description).toBe(
+      dedent`
+        **Effect**
+        (Effect 23)
+        Mysticality +2
 
-      Pizza: PAST (1 in 2)
-    `
-  );
+        Pizza: PAST (1 in 2)
+      `
+    );
+  });
+
+  test("Can describe an avatar effect", async () => {
+    vi.mocked(axios).mockResolvedValueOnce(
+      await respondWithFixture(__dirname, "desc_effect_the_visible_adventurer.html")
+    );
+
+    const effect = Effect.from(
+      "1888	The Visible Adventurer	handmirror.gif	a38d91d52ace7992b899402e9704d86d	neutral	none	use 1 x-ray mirror",
+      new Set(["x-ray mirror"])
+    );
+
+    const description = await effect.getDescription();
+
+    expect(description).toBe(
+      dedent`
+        **Effect**
+        (Effect 1888)
+        Makes you look like a skeleton
+
+        Ineligible for pizza, wishes, or hookahs.
+      `
+    );
+  });
 });
 
-test("Can describe an avatar effect", async () => {
-  vi.mocked(axios).mockResolvedValueOnce(
-    await respondWithFixture(__dirname, "desc_effect_the_visible_adventurer.html")
-  );
+describe("Hashcodes", () => {
+  test("Can create a reliable hashcode for Effect", () => {
+    const line =
+      "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation";
+    const a = Effect.from(line);
+    const b = Effect.from(line);
 
-  const effect = Effect.from(
-    "1888	The Visible Adventurer	handmirror.gif	a38d91d52ace7992b899402e9704d86d	neutral	none	use 1 x-ray mirror",
-    new Set(["x-ray mirror"])
-  );
+    expect(a.hashcode()).toBe("Effect:23");
+    expect(a.hashcode()).toEqual(b.hashcode());
+  });
 
-  const description = await effect.getDescription();
+  test("Compares by thing type", () => {
+    const a = Effect.from(
+      "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation"
+    );
+    const b = Monster.from(
+      "bar	23	bar.gif	Atk: 3 Def: 2 HP: 5 Init: 50 Meat: 15 P: beast Article: a	bar skin (35)	baritone accordion (a0)"
+    );
 
-  expect(description).toBe(
-    dedent`
-      **Effect**
-      (Effect 1888)
-      Makes you look like a skeleton
-
-      Ineligible for pizza, wishes, or hookahs.
-    `
-  );
+    expect(a.hashcode()).not.toEqual(b.hashcode());
+  });
 });
