@@ -1,7 +1,5 @@
 import { EmbedBuilder } from "discord.js";
 
-import { wikiClient } from "../clients/wiki";
-
 export class Thing {
   readonly id: number;
   readonly name: string;
@@ -11,10 +9,6 @@ export class Thing {
     this.id = id;
     this.name = name;
     this.imageUrl = imageUrl;
-  }
-
-  async getWikiLink() {
-    return wikiClient.getWikiLink(this);
   }
 
   async getDescription(): Promise<string> {

@@ -34,7 +34,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  embed.setTitle(monster.name).setURL(await monster.getWikiLink());
+  embed.setTitle(monster.name).setURL(await wikiClient.getWikiLink(monster));
   await monster.addToEmbed(embed);
 
   await interaction.editReply({
