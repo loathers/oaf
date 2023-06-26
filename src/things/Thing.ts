@@ -1,5 +1,7 @@
 import { EmbedBuilder } from "discord.js";
 
+import { wikiClient } from "../clients/wiki";
+
 export class Thing {
   readonly id: number;
   readonly name: string;
@@ -11,12 +13,20 @@ export class Thing {
     this.imageUrl = imageUrl;
   }
 
+  async getWikiLink() {
+    return wikiClient.getWikiLink(this);
+  }
+
   async getDescription(): Promise<string> {
     throw "Implement me";
   }
 
+  getImagePath() {
+    return `/itemimages/${this.imageUrl}`;
+  }
+
   async addToEmbed(embed: EmbedBuilder): Promise<void> {
-    embed.setThumbnail(`http://images.kingdomofloathing.com/itemimages/${this.imageUrl}`);
+    embed.setThumbnail(`http://images.kingdomofloathing.com${this.getImagePath()}`);
     embed.setDescription(await this.getDescription());
   }
 }

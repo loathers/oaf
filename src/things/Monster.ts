@@ -67,6 +67,10 @@ export class Monster extends Thing {
     this.drops = drops;
   }
 
+  getImagePath() {
+    return `/adventureimages/${this.imageUrl}`;
+  }
+
   private getDropsDescription() {
     const meatMatcher = this.parameters.match(/Meat: (?<meat>[\d]+)/);
 
