@@ -508,6 +508,7 @@ export class WikiClient {
     return undefined;
   }
 
+  @Memoize({ tags: ["things"] })
   async getWikiLink(thing: Thing) {
     const type = thing.constructor.name;
     const block = Math.floor(thing.id / 100) * 100;
