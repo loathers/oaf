@@ -12,7 +12,7 @@ export const data = new SlashCommandBuilder()
 
 const superhero = (text: string) => {
   const encoded = text.replace(
-    /&<>'"/g,
+    /[&<>'"]/g,
     (t) =>
       ({
         "&": "&amp;",
