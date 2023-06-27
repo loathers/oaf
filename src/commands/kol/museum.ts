@@ -6,9 +6,9 @@ import {
   hyperlink,
 } from "discord.js";
 
-import { createEmbed } from "../../clients/discord";
-import { wikiClient } from "../../clients/wiki";
-import { groupToMap } from "../../utils";
+import { createEmbed } from "../../clients/discord.js";
+import { wikiClient } from "../../clients/wiki.js";
+import { groupToMap } from "../../utils.js";
 
 interface MuseumResponse {
   name: string;

@@ -1,8 +1,8 @@
-import dedent from "ts-dedent";
+import { dedent } from "ts-dedent";
 import { describe, expect, test } from "vitest";
 
-import { Effect } from "./Effect";
-import { Monster } from "./Monster";
+import { Effect } from "./Effect.js";
+import { Monster } from "./Monster.js";
 
 describe("Monster description", () => {
   test("Monsters with copied drops are described successfully", async () => {

@@ -1,8 +1,8 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, hyperlink } from "discord.js";
 
-import { createEmbed } from "../../clients/discord";
-import { pizzaTree } from "../../clients/pizza";
-import { wikiClient } from "../../clients/wiki";
+import { createEmbed } from "../../clients/discord.js";
+import { pizzaTree } from "../../clients/pizza.js";
+import { wikiClient } from "../../clients/wiki.js";
 
 export const data = new SlashCommandBuilder()
   .setName("pizza")

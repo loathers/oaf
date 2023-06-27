@@ -2,12 +2,12 @@ import axios, { AxiosError } from "axios";
 import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
 
-import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things";
-import { isItem } from "../things/Item";
-import { isMonster } from "../things/Monster";
-import { cleanString } from "../utils";
-import { createEmbed } from "./discord";
-import { pizzaTree } from "./pizza";
+import { isItem } from "../things/Item.js";
+import { isMonster } from "../things/Monster.js";
+import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things/index.js";
+import { cleanString } from "../utils.js";
+import { createEmbed } from "./discord.js";
+import { pizzaTree } from "./pizza.js";
 
 export class WikiDownError extends Error {
   constructor() {
@@ -453,9 +453,7 @@ export class WikiClient {
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error) {
-      if (error instanceof Object) {
-        console.log(error.toString());
-      }
+      console.error(error);
     }
     console.log("Not found in wiki search");
     try {
@@ -474,9 +472,7 @@ export class WikiClient {
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error) {
-      if (error instanceof Object) {
-        console.log(error.toString());
-      }
+      console.error(error);
     }
     console.log("Not found in stripped wiki search");
     console.log("Trying google search");
@@ -498,9 +494,7 @@ export class WikiClient {
       });
       return this._nameMap.get(searchTerm.toLowerCase());
     } catch (error) {
-      if (error instanceof Object) {
-        console.log(error.toString());
-      }
+      console.error(error);
     }
     console.log("Google search stumped, I give up");
     return undefined;

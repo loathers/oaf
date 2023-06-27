@@ -1,16 +1,17 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { prisma } from "../../clients/database";
-import { kolClient } from "../../clients/kol";
-import { columns, formatPlayer, notNull, pluralize } from "../../utils";
-import { DREAD_CLANS } from "./_clans";
+import { prisma } from "../../clients/database.js";
+import { discordClient } from "../../clients/discord.js";
+import { kolClient } from "../../clients/kol.js";
+import { columnsByMaxLength, formatPlayer, notNull, pluralize } from "../../utils.js";
+import { DREAD_CLANS } from "./_clans.js";
 import {
   JoinClanError,
   RaidLogMissingError,
   getFinishedRaidLog,
   getMissingRaidLogs,
   getRaidLog,
-} from "./_dread";
+} from "./_dread.js";
 
 const SKILL_KILL_MATCHER = /([A-Za-z0-9\-_ ]+)\s+\(#(\d+)\)\s+(defeated\D+(\d+)|used the machine)/i;
 
@@ -48,7 +49,7 @@ async function getParticipationFromCurrentRaid() {
 
   return raidLogs.reduce(
     (p, log) => mergeParticipation(p, getParticipationFromRaidLog(log)),
-    {} as Participation
+    new Map() as Participation
   );
 }
 
@@ -150,33 +151,36 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           [playerId, Math.floor((kills + 450) / 900) - skills] as const
       )
       .filter(([, owed]) => owed > 0)
+      .sort(([, a], [, b]) => b - a)
       .map(
         ([playerId, owed]) =>
           `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(owed, "skill")}.`
-      )
-      .sort();
+      );
 
     await interaction.editReply({
       content: null,
       embeds: [
         {
           title: "Skills owed",
-          fields: columns(skillsOwed, 3),
+          fields: columnsByMaxLength(skillsOwed),
         },
       ],
       allowedMentions: { users: [] },
     });
   } catch (error) {
     if (error instanceof JoinClanError) {
+      await discordClient.alert("Unable to join clan", interaction, error);
       await interaction.editReply("I was unable to join that clan");
       return;
     }
 
     if (error instanceof RaidLogMissingError) {
+      await discordClient.alert("Unable to check raid logs", interaction, error);
       await interaction.editReply("I couldn't see raid logs in that clan for some reason");
       return;
     }
 
+    await discordClient.alert("Unknown error", interaction, error);
     await interaction.editReply(
       "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
     );

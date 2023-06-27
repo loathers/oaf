@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { pluralize } from "../../utils";
-import { fromLevel } from "./level";
+import { pluralize } from "../../utils.js";
+import { fromLevel } from "./level.js";
 
 export const fromMainstat = (mainstat: number) => ({
   level: 1 + Math.floor(Math.sqrt(Math.max(0, mainstat - 4))),

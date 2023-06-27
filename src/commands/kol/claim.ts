@@ -2,9 +2,9 @@ import { ChatInputCommandInteraction, Events, SlashCommandBuilder, inlineCode } 
 import { Client } from "discord.js";
 import { totp } from "otplib";
 
-import { prisma } from "../../clients/database";
-import { discordClient } from "../../clients/discord";
-import { kolClient } from "../../clients/kol";
+import { prisma } from "../../clients/database.js";
+import { discordClient } from "../../clients/discord.js";
+import { kolClient } from "../../clients/kol.js";
 
 const GUILD_ID = process.env.GUILD_ID!;
 const VERIFIED_ROLE_ID = process.env.VERIFIED_ROLE_ID!;
@@ -116,7 +116,7 @@ async function synchroniseRoles(client: Client) {
   const role = await guild.roles.fetch(VERIFIED_ROLE_ID);
 
   if (!role) {
-    console.error("No verified role");
+    await discordClient.alert(`Verified role (${VERIFIED_ROLE_ID}) cannot be found`);
     return;
   }
 

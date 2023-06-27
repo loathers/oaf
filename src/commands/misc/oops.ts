@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "discord.js";
 
-import { execute as purge } from "./purge";
+import { execute as purge } from "./purge.js";
 
 export const data = new SlashCommandBuilder()
   .setName("oops")

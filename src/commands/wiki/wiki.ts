@@ -8,9 +8,9 @@ import {
   userMention,
 } from "discord.js";
 
-import { discordClient } from "../../clients/discord";
-import { WikiDownError, wikiClient } from "../../clients/wiki";
-import { lf } from "../../utils";
+import { discordClient } from "../../clients/discord.js";
+import { WikiDownError, wikiClient } from "../../clients/wiki.js";
+import { lf } from "../../utils.js";
 
 const ITEMMATCHER = /\[\[([^[\]]*)\]\]/g;
 
@@ -64,7 +64,7 @@ async function onMessage(message: Message) {
   if (matches.length > 0 && matches[0][0] === message.content.trim()) {
     try {
       await message.react("<:deadgarf:915694091541573712>");
-    } catch {
+    } catch (error) {
       console.warn("Please give me permissions to react to messages!");
     }
     const slashCommand = inlineCode(`/wiki ${matches[0][1]}`);

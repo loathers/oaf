@@ -1,9 +1,9 @@
 import { bold } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
-import { kolClient } from "../clients/kol";
-import { cleanString } from "../utils";
-import { Thing } from "./Thing";
+import { kolClient } from "../clients/kol.js";
+import { cleanString } from "../utils.js";
+import { Thing } from "./Thing.js";
 
 export type EffectData = {
   id: number;

@@ -1,9 +1,9 @@
 import { Player, PrismaPromise } from "@prisma/client";
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } from "discord.js";
 
-import { prisma } from "../../clients/database";
-import { kolClient } from "../../clients/kol";
-import { formatPlayer } from "../../utils";
+import { prisma } from "../../clients/database.js";
+import { kolClient } from "../../clients/kol.js";
+import { formatPlayer } from "../../utils.js";
 
 const BASE_CLASSES = [
   "Seal Clubber",

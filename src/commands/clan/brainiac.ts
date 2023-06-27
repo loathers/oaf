@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, italic } from "discord.js";
 
-import { prisma } from "../../clients/database";
-import { kolClient } from "../../clients/kol";
+import { prisma } from "../../clients/database.js";
+import { kolClient } from "../../clients/kol.js";
 
 export const data = new SlashCommandBuilder()
   .setName("brainiac")

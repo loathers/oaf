@@ -1,8 +1,9 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold } from "discord.js";
 
-import { pluralize } from "../../utils";
-import { DREAD_CLANS } from "./_clans";
-import { getDreadStatusOverview } from "./_dread";
+import { discordClient } from "../../clients/discord.js";
+import { pluralize } from "../../utils.js";
+import { DREAD_CLANS } from "./_clans.js";
+import { getDreadStatusOverview } from "./_dread.js";
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
@@ -33,7 +34,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         },
       ],
     });
-  } catch {
+  } catch (error) {
+    await discordClient.alert("Unknown error", interaction, error);
     await interaction.editReply(
       "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
     );

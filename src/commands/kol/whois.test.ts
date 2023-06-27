@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { validPlayerIdentifier } from "./whois";
+import { validPlayerIdentifier } from "./whois.js";
 
 test("real queries pass validation", () => {
   const validQueries = [

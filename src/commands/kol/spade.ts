@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { kolClient } from "../../clients/kol";
-import { wikiClient } from "../../clients/wiki";
+import { kolClient } from "../../clients/kol.js";
+import { wikiClient } from "../../clients/wiki.js";
 
 // This is the maximum number of items we can have in our embeds
 const HORIZON = 25;

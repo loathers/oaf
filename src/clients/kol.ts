@@ -6,10 +6,12 @@ import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
 import { EventEmitter } from "node:events";
 import { stringify } from "querystring";
-import TypedEmitter from "typed-emitter";
+import TypedEventEmitter, { EventMap } from "typed-emitter";
 import { select } from "xpath";
 
-import { cleanString, indent, toWikiLink } from "../utils";
+import { cleanString, indent, toWikiLink } from "../utils.js";
+
+type TypedEmitter<T extends EventMap> = TypedEventEmitter.default<T>;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const noop = () => {};
@@ -19,9 +21,7 @@ const parser = new DOMParser({
   errorHandler: {
     warning: noop,
     error: noop,
-    fatalError: function (e) {
-      console.error(e);
-    },
+    fatalError: console.error,
   },
 });
 
@@ -195,7 +195,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       });
       return apiResponse.status === 200;
     } catch {
-      console.log("Login check failed, returning false to be safe.");
+      console.warn("Login check failed, returning false to be safe.");
       return false;
     }
   }

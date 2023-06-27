@@ -1,10 +1,10 @@
 import { bold, hyperlink } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
-import { kolClient } from "../clients/kol";
-import { cleanString, indent, toWikiLink } from "../utils";
-import { Item } from "./Item";
-import { Thing } from "./Thing";
+import { kolClient } from "../clients/kol.js";
+import { cleanString, indent, toWikiLink } from "../utils.js";
+import { Item } from "./Item.js";
+import { Thing } from "./Thing.js";
 
 export type FamiliarActionTypes =
   | "none"
