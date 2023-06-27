@@ -1,5 +1,5 @@
-import { kolClient } from "../../clients/kol";
-import { parseNumber } from "../../utils";
+import { kolClient } from "../../clients/kol.js";
+import { parseNumber } from "../../utils.js";
 
 export class JoinClanError extends Error {
   constructor() {

@@ -16,8 +16,8 @@ import {
   inlineCode,
 } from "discord.js";
 
-import { prisma } from "../../clients/database";
-import { init } from "./tag";
+import { prisma } from "../../clients/database.js";
+import { init } from "./tag.js";
 
 const EXTENDED_TEAM_ROLE_ID = process.env.EXTENDED_TEAM_ROLE_ID!;
 

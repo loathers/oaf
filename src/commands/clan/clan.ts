@@ -8,15 +8,15 @@ import {
   underscore,
 } from "discord.js";
 
-import { createEmbed } from "../../clients/discord";
-import { pluralize } from "../../utils";
-import { DREAD_CLANS } from "./_clans";
+import { createEmbed, discordClient } from "../../clients/discord.js";
+import { pluralize } from "../../utils.js";
+import { DREAD_CLANS } from "./_clans.js";
 import {
   DetailedDreadStatus,
   JoinClanError,
   RaidLogMissingError,
   getDetailedDreadStatus,
-} from "./_dread";
+} from "./_dread.js";
 
 const DREAD_BOSS_MAPPINGS = new Map([
   ["werewolf", "Air Wolf"],
@@ -218,16 +218,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     await interaction.editReply({ content: null, embeds: [embed] });
   } catch (error) {
-    let reason = "";
     if (error instanceof JoinClanError) {
-      reason = "I was unable to join that clan";
-    } else if (error instanceof RaidLogMissingError) {
-      reason = "I couldn't see raid logs in that clan for some reason";
-    } else {
-      reason =
-        "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in.";
+      await discordClient.alert("Unable to join clan", interaction, error);
+      await interaction.editReply("I was unable to join that clan");
+      return;
     }
-    await interaction.editReply(reason);
+
+    if (error instanceof RaidLogMissingError) {
+      await discordClient.alert("Unable to check raid logs", interaction, error);
+      await interaction.editReply("I couldn't see raid logs in that clan for some reason");
+      return;
+    }
+
+    await discordClient.alert("Unknown error", interaction, error);
+    await interaction.editReply(
+      "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
+    );
   }
 }
 

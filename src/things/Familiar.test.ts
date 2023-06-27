@@ -1,11 +1,11 @@
 import axios from "axios";
-import dedent from "ts-dedent";
+import { dedent } from "ts-dedent";
 import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
 
-import { kolClient } from "../clients/kol";
-import { respondWithFixture } from "../testUtils";
-import { Familiar } from "./Familiar";
-import { Item } from "./Item";
+import { kolClient } from "../clients/kol.js";
+import { respondWithFixture } from "../testUtils.js";
+import { Familiar } from "./Familiar.js";
+import { Item } from "./Item.js";
 
 vi.mock("axios");
 

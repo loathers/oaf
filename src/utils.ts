@@ -1,5 +1,5 @@
 import { Player } from "@prisma/client";
-import { hyperlink, userMention } from "discord.js";
+import { APIEmbedField, hyperlink, userMention } from "discord.js";
 import { decode } from "html-entities";
 
 export function indent(textToIndent: string): string {
@@ -65,7 +65,10 @@ export function groupToMap<K, V>(
   return map;
 }
 
-export function columns<T>(data: T[], columns: number) {
+export function columns<T extends { toString: () => string }>(
+  data: T[],
+  columns: number
+): APIEmbedField[] {
   return Array(columns)
     .fill(0)
     .map((_, i) => ({
@@ -77,6 +80,33 @@ export function columns<T>(data: T[], columns: number) {
           .join("\n"),
       inline: true,
     }));
+}
+
+export function columnsByMaxLength<T extends { toString: () => string }>(
+  data: T[],
+  maxLength = 1024
+) {
+  const columns = [];
+
+  let column = "";
+  for (const datum of data) {
+    const str = datum.toString();
+    if (column.length + str.length >= maxLength) {
+      console.log(column.length, str, str.length);
+      columns.push(column.slice(0, -1));
+      column = "";
+    }
+    column += str + "\n";
+  }
+
+  if (column.length > 0) {
+    columns.push(column);
+  }
+
+  return columns.map((col) => ({
+    name: "\u200b",
+    value: "\u200b" + col,
+  }));
 }
 
 export function titleCase(title: string) {

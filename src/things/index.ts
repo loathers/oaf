@@ -1,6 +1,6 @@
-export { Effect } from "./Effect";
-export { Familiar } from "./Familiar";
-export { Item } from "./Item";
-export { Monster } from "./Monster";
-export { Skill } from "./Skill";
-export { Thing } from "./Thing";
+export { Effect } from "./Effect.js";
+export { Familiar } from "./Familiar.js";
+export { Item } from "./Item.js";
+export { Monster } from "./Monster.js";
+export { Skill } from "./Skill.js";
+export { Thing } from "./Thing.js";

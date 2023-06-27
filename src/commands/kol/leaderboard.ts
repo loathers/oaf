@@ -4,8 +4,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { createEmbed } from "../../clients/discord";
-import { SubboardInfo, kolClient } from "../../clients/kol";
+import { createEmbed } from "../../clients/discord.js";
+import { SubboardInfo, kolClient } from "../../clients/kol.js";
 
 const BOARD_MAPPINGS = {
   "Clan Dungeons": 8,

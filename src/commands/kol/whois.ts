@@ -10,11 +10,11 @@ import {
   userMention,
 } from "discord.js";
 
-import { prisma } from "../../clients/database";
-import { createEmbed } from "../../clients/discord";
-import { kolClient } from "../../clients/kol";
-import { snapshotClient } from "../../clients/snapshot";
-import { toKoldbLink, toMuseumLink } from "../../utils";
+import { prisma } from "../../clients/database.js";
+import { createEmbed, discordClient } from "../../clients/discord.js";
+import { kolClient } from "../../clients/kol.js";
+import { snapshotClient } from "../../clients/snapshot.js";
+import { toKoldbLink, toMuseumLink } from "../../utils.js";
 
 export const data = new SlashCommandBuilder()
   .setName("whois")
@@ -165,7 +165,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       embeds: [playerEmbed],
       allowedMentions: { users: [] },
     });
-  } catch {
+  } catch (error) {
+    await discordClient.alert("Unknown error", interaction, error);
     await interaction.editReply(
       "I was unable to fetch this user, sorry. I might be unable to log in!"
     );

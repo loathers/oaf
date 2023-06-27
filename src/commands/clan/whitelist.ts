@@ -4,8 +4,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { kolClient } from "../../clients/kol";
-import { ALL_CLANS } from "./_clans";
+import { kolClient } from "../../clients/kol.js";
+import { ALL_CLANS } from "./_clans.js";
 
 const PERMITTED_ROLE_IDS = process.env.WHITELIST_ROLE_IDS!.split(",");
 

@@ -2,10 +2,13 @@ import { Events } from "discord.js";
 import "dotenv/config";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import * as url from "node:url";
 
-import { CommandHandler, ModalHandler, discordClient } from "./clients/discord";
-import { kolClient } from "./clients/kol";
-import { wikiClient } from "./clients/wiki";
+import { CommandHandler, ModalHandler, discordClient } from "./clients/discord.js";
+import { kolClient } from "./clients/kol.js";
+import { wikiClient } from "./clients/wiki.js";
+
+export {};
 
 async function* walk(dir: string): AsyncGenerator<string> {
   for await (const d of await fs.opendir(dir)) {
@@ -16,7 +19,7 @@ async function* walk(dir: string): AsyncGenerator<string> {
 }
 
 async function loadSlashCommands() {
-  const commandsPath = path.join(__dirname, "commands");
+  const commandsPath = url.fileURLToPath(new URL("./commands", import.meta.url));
   for await (const filePath of walk(commandsPath)) {
     if (!/\/[^_][^/]*(?<!\.test)\.(ts|js)$/.test(filePath)) continue;
     let handled = false;
@@ -36,7 +39,7 @@ async function loadSlashCommands() {
     }
 
     if (!handled) {
-      console.warn("Unusable file found in command directory", filePath);
+      await discordClient.alert(`Unusable file found in command directory ${filePath}`);
     }
   }
 

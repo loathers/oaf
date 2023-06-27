@@ -7,8 +7,8 @@ import {
   userMention,
 } from "discord.js";
 
-import { prisma } from "../../clients/database";
-import { discordClient } from "../../clients/discord";
+import { prisma } from "../../clients/database.js";
+import { discordClient } from "../../clients/discord.js";
 
 const timeMatcher =
   /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
@@ -91,7 +91,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         },
       });
     } catch (error) {
-      console.log(error);
+      await discordClient.alert("Error sending reminder", interaction, error);
     }
   }, timeToWait);
 
@@ -141,7 +141,7 @@ async function loadRemindersFromDatabase() {
       ? { messageReference: reminder.interactionReplyId }
       : undefined;
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
         channel.send({
           content: userMention(reminder.userId),
@@ -152,7 +152,7 @@ async function loadRemindersFromDatabase() {
           reply,
         });
       } catch (error) {
-        console.log(error);
+        await discordClient.alert("Error sending reminder", undefined, error);
       }
     }, timeLeft);
   }

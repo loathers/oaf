@@ -7,7 +7,7 @@ import {
   messageLink,
 } from "discord.js";
 
-import { prisma } from "../../clients/database";
+import { prisma } from "../../clients/database.js";
 
 export const data = new SlashCommandBuilder()
   .setName("tag")

@@ -1,8 +1,8 @@
 import { bold, hyperlink } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
-import { cleanString, notNull, toWikiLink } from "../utils";
-import { Thing } from "./Thing";
+import { cleanString, notNull, toWikiLink } from "../utils.js";
+import { Thing } from "./Thing.js";
 
 export const isMonster = (monster?: Thing | null): monster is Monster =>
   !!monster && monster instanceof Monster;

@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { lf } from "../../utils";
+import { lf } from "../../utils.js";
 
 export const data = new SlashCommandBuilder()
   .setName("roll")

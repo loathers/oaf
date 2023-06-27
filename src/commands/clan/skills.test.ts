@@ -1,7 +1,7 @@
 import { beforeAll, expect, test } from "vitest";
 
-import { loadFixture } from "../../testUtils";
-import { Participation, getParticipationFromRaidLog } from "./skills";
+import { loadFixture } from "../../testUtils.js";
+import { Participation, getParticipationFromRaidLog } from "./skills.js";
 
 let participation: Participation = new Map();
 

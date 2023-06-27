@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { clamp } from "../../utils";
+import { clamp } from "../../utils.js";
 
 export const fromLevel = (level: number) => ({
   level,
