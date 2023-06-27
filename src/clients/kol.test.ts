@@ -1,8 +1,8 @@
 import axios from "axios";
 import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
 
-import { respondWithFixture } from "../testUtils";
-import { kolClient } from "./kol";
+import { respondWithFixture } from "../testUtils.js";
+import { kolClient } from "./kol.js";
 
 vi.mock("axios");
 
