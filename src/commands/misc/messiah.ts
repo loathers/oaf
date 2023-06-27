@@ -11,6 +11,18 @@ export const data = new SlashCommandBuilder()
   );
 
 const superhero = (text: string) => {
+  const encoded = text.replace(
+    /&<>'"/g,
+    (t) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      }[t] || t)
+  );
+
   const skew = 0.261799;
   const width = text.length * 16; // total guess
   const height = Math.ceil(width * Math.tan(skew)); // cool maths
@@ -33,13 +45,13 @@ const superhero = (text: string) => {
             fill: url(#superhero);
           }
         </style>
-        <text x="4" y="60%" class="superhero">${text}</text>
+        <text x="4" y="60%" class="superhero">${encoded}</text>
       </svg>
     `;
 };
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const name = interaction.options.getString("name");
+  const name = interaction.options.getString("name", true);
   const image = superhero(`jesus christ ${name}`);
   const png = await sharp(Buffer.from(image)).png().toBuffer();
   const attachment = new AttachmentBuilder(png).setName("jesuschrist.png");
