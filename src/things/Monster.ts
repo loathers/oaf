@@ -4,9 +4,6 @@ import { Memoize } from "typescript-memoize";
 import { cleanString, notNull, toWikiLink } from "../utils.js";
 import { Thing } from "./Thing.js";
 
-export const isMonster = (monster?: Thing | null): monster is Monster =>
-  !!monster && monster instanceof Monster;
-
 export type Drop = {
   item: string;
   droprate: number;
@@ -39,6 +36,10 @@ export function convertToDrop(drop: string): Drop | null {
 }
 
 export class Monster extends Thing {
+  static is(thing?: Thing | null): thing is Monster {
+    return !!thing && thing instanceof Monster;
+  }
+
   static from(line: string): Monster {
     const parts = line.split(/\t/);
     if (parts.length < 4) throw "Invalid data";

@@ -32,8 +32,6 @@ const EQUIPMENT_TYPES = [
 ] as const;
 type EquipmentType = (typeof EQUIPMENT_TYPES)[number];
 
-export const isItem = (item?: Thing | null): item is Item => !!item && item instanceof Item;
-
 export type ItemData = {
   id: number;
   name: string;
@@ -65,6 +63,10 @@ export class Item extends Thing {
   foldGroup?: Item[];
 
   _addlDescription = "";
+
+  static is(thing?: Thing | null): thing is Item {
+    return !!thing && thing instanceof Item;
+  }
 
   static from(line: string, itemInfoForUse = new Map<string, string[]>()): Item {
     const parts = line.split(/\t/);

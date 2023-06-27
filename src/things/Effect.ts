@@ -20,6 +20,10 @@ export type PizzaData = {
 };
 
 export class Effect extends Thing {
+  static is(thing?: Thing | null): thing is Effect {
+    return !!thing && thing instanceof Effect;
+  }
+
   static from(line: string, avatarPotions = new Set<string>()): Effect {
     const parts = line.split(/\t/);
     if (parts.length < 6) throw "Invalid data";

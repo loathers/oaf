@@ -6,6 +6,10 @@ import { cleanString } from "../utils.js";
 import { Thing } from "./Thing.js";
 
 export class Skill extends Thing {
+  static is(thing?: Thing | null): thing is Skill {
+    return !!thing && thing instanceof Skill;
+  }
+
   static from(line: string): Skill {
     const parts = line.split(/\t/);
     if (parts.length < 6) throw "Invalid data";

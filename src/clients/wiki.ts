@@ -2,8 +2,6 @@ import axios, { AxiosError } from "axios";
 import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
 
-import { isItem } from "../things/Item.js";
-import { isMonster } from "../things/Monster.js";
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things/index.js";
 import { cleanString } from "../utils.js";
 import { createEmbed } from "./discord.js";
@@ -255,7 +253,7 @@ export class WikiClient {
           .split(",")
           .map((itemName) => itemName.replaceAll("🍕", ","))
           .map((itemName) => this.retrieve(itemName))
-          .filter(isItem);
+          .filter(Item.is);
         for (const item of group) {
           item.zapGroup = group;
         }
@@ -274,7 +272,7 @@ export class WikiClient {
           .split("\t")
           .slice(1)
           .map((itemName: string) => this.retrieve(itemName))
-          .filter(isItem);
+          .filter(Item.is);
         for (const item of group) {
           item.foldGroup = group;
         }
@@ -379,12 +377,22 @@ export class WikiClient {
 
   @Memoize({ tags: ["things"] })
   get items(): Item[] {
-    return [...this._thingMap.values()].filter(isItem);
+    return [...this._thingMap.values()].filter(Item.is);
   }
 
   @Memoize({ tags: ["things"] })
   get monsters(): Monster[] {
-    return [...this._thingMap.values()].filter(isMonster);
+    return [...this._thingMap.values()].filter(Monster.is);
+  }
+
+  @Memoize({ tags: ["things"] })
+  get skills(): Skill[] {
+    return [...this._thingMap.values()].filter(Skill.is);
+  }
+
+  @Memoize({ tags: ["things"] })
+  get effects(): Effect[] {
+    return [...this._thingMap.values()].filter(Effect.is);
   }
 
   isItemIdKnown(id: number) {
