@@ -1,7 +1,7 @@
 import { bold, hyperlink } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
-import { cleanString, notNull, toWikiLink } from "../utils.js";
+import { cleanString, notNull, toWikiLink } from "../utils/index.js";
 import { Thing } from "./Thing.js";
 
 export type Drop = {

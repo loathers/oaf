@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { toWeight } from "../../utils.js";
+import { toWeight } from "../../utils/index.js";
 
 export const data = new SlashCommandBuilder()
   .setName("reversefairy")

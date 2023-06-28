@@ -3,7 +3,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import { columnsByMaxLength, formatPlayer, notNull, pluralize } from "../../utils.js";
+import { columnsByMaxLength, formatPlayer, notNull, pluralize } from "../../utils/index.js";
 import { DREAD_CLANS } from "./_clans.js";
 import {
   JoinClanError,

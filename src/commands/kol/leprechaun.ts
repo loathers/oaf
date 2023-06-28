@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { toDrop } from "../../utils.js";
+import { toDrop } from "../../utils/index.js";
 
 export const data = new SlashCommandBuilder()
   .setName("leprechaun")

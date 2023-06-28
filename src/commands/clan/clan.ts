@@ -9,7 +9,7 @@ import {
 } from "discord.js";
 
 import { createEmbed, discordClient } from "../../clients/discord.js";
-import { pluralize } from "../../utils.js";
+import { pluralize } from "../../utils/index.js";
 import { DREAD_CLANS } from "./_clans.js";
 import {
   DetailedDreadStatus,

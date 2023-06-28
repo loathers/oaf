@@ -3,7 +3,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } fr
 
 import { prisma } from "../../clients/database.js";
 import { kolClient } from "../../clients/kol.js";
-import { formatPlayer } from "../../utils.js";
+import { formatPlayer } from "../../utils/index.js";
 
 const BASE_CLASSES = [
   "Seal Clubber",

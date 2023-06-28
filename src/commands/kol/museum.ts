@@ -8,7 +8,7 @@ import {
 
 import { createEmbed } from "../../clients/discord.js";
 import { wikiClient } from "../../clients/wiki.js";
-import { groupToMap } from "../../utils.js";
+import { groupToMap } from "../../utils/index.js";
 
 interface MuseumResponse {
   name: string;

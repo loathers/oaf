@@ -14,7 +14,7 @@ import { prisma } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { snapshotClient } from "../../clients/snapshot.js";
-import { toKoldbLink, toMuseumLink } from "../../utils.js";
+import { toKoldbLink, toMuseumLink } from "../../utils/index.js";
 
 export const data = new SlashCommandBuilder()
   .setName("whois")

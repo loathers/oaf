@@ -6,6 +6,7 @@ import {
 
 import { createEmbed } from "../../clients/discord.js";
 import { wikiClient } from "../../clients/wiki.js";
+import SuffixArrayMatcher from "../../utils/SuffixArrayMatcher.js";
 
 export const data = new SlashCommandBuilder()
   .setName("monster")
@@ -44,12 +45,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 }
 
+const matcher = new SuffixArrayMatcher(wikiClient.monsters, (monster) =>
+  monster.name.toLowerCase()
+);
+
 export async function autocomplete(interaction: AutocompleteInteraction) {
   const focusedValue = interaction.options.getFocused();
 
-  const filtered = wikiClient.monsters
-    .map(({ name, id }) => ({ name, value: id }))
-    .filter(({ name }) => name.toLowerCase().includes(focusedValue.toLowerCase()))
+  const filtered = matcher
+    .match(focusedValue.toLowerCase())
+    .map((monster) => ({ name: monster.name, value: monster.id }))
     .slice(0, 25);
 
   await interaction.respond(filtered);

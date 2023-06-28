@@ -10,7 +10,7 @@ import {
 
 import { discordClient } from "../../clients/discord.js";
 import { WikiDownError, wikiClient } from "../../clients/wiki.js";
-import { lf } from "../../utils.js";
+import { lf } from "../../utils/index.js";
 
 const ITEMMATCHER = /\[\[([^[\]]*)\]\]/g;
 

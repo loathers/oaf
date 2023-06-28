@@ -3,7 +3,7 @@ import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
 
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things/index.js";
-import { cleanString } from "../utils.js";
+import { cleanString } from "../utils/index.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 

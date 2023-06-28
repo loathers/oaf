@@ -9,7 +9,7 @@ import { stringify } from "querystring";
 import TypedEventEmitter, { EventMap } from "typed-emitter";
 import { select } from "xpath";
 
-import { cleanString, indent, toWikiLink } from "../utils.js";
+import { cleanString, indent, toWikiLink } from "../utils/index.js";
 
 type TypedEmitter<T extends EventMap> = TypedEventEmitter.default<T>;
 

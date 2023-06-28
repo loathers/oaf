@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, bold } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
-import { pluralize } from "../../utils.js";
+import { pluralize } from "../../utils/index.js";
 import { DREAD_CLANS } from "./_clans.js";
 import { getDreadStatusOverview } from "./_dread.js";
 

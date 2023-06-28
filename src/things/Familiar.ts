@@ -2,7 +2,7 @@ import { bold, hyperlink } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol.js";
-import { cleanString, indent, toWikiLink } from "../utils.js";
+import { cleanString, indent, toWikiLink } from "../utils/index.js";
 import { Item } from "./Item.js";
 import { Thing } from "./Thing.js";
 
