@@ -651,7 +651,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     try {
       const profile = await this.visitUrl("showplayer.php", { who: playerToLookup.id });
       const header = profile.match(
-        /<center><table><tr><td>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/
+        /<center><table><tr><td><center>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/
       );
       if (!header) return null;
 
