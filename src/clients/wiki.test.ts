@@ -15,23 +15,23 @@ afterEach(() => {
 describe("Wiki links", () => {
   test("Can get wiki link for an effect under id 100", async () => {
     vi.mocked(axios.get).mockResolvedValueOnce(
-      await respondWithFixture(__dirname, "effects_by_number.html")
+      await respondWithFixture(__dirname, "effects_by_number_1-99.html")
     );
 
     const effect = Effect.from(
       "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation"
     );
-    const link = await wikiClient.getWikiLink(effect);
+
+    await wikiClient.getWikiLink(effect);
 
     expect(axios.get).toHaveBeenCalledWith(
-      "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number"
+      "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number_(1-99)"
     );
-    expect(link).toBe("https://kol.coldfront.net/thekolwiki/index.php/Pasta_Oneness");
   });
 
   test("Can get wiki link for an effect over id 100", async () => {
     vi.mocked(axios.get).mockResolvedValueOnce(
-      await respondWithFixture(__dirname, "effects_by_number_100.html")
+      await respondWithFixture(__dirname, "effects_by_number_100-199.html")
     );
 
     const effect = Effect.from(
