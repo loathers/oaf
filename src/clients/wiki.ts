@@ -510,16 +510,23 @@ export class WikiClient {
 
   @Memoize({ tags: ["things"] })
   async getWikiLink(thing: Thing) {
-    const type = thing.constructor.name;
+    const type = thing.constructor.name.replace(/^_/, "");
     const block = Math.floor(thing.id / 100) * 100;
-    const url = `https://kol.coldfront.net/thekolwiki/index.php/${type}s_by_number_(${block}-${
-      block + 99
-    })`;
+
+    let url = `https://kol.coldfront.net/thekolwiki/index.php/${type}s_by_number`;
+    if (type !== "Skill" && block > 0) {
+      url += `_(${block}-${block + 99})`;
+    }
+
+    const pattern =
+      type === "Skill"
+        ? new RegExp(`${thing.id.toString().padStart(4, "0")} <a href="([^"]+)"`)
+        : new RegExp(`${thing.id}\\. <a href="([^"]+)"`);
 
     try {
       const blockPage = await axios.get<string>(url);
 
-      const match = blockPage.data.match(new RegExp(`${thing.id}\\. <a href="([^"]+)"`));
+      const match = blockPage.data.match(pattern);
       if (!match) return null;
 
       return `https://kol.coldfront.net${match[1]}`;
