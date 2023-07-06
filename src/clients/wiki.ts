@@ -511,11 +511,13 @@ export class WikiClient {
   @Memoize({ tags: ["things"] })
   async getWikiLink(thing: Thing) {
     const type = thing.constructor.name.replace(/^_/, "");
-    const block = Math.floor(thing.id / 100) * 100;
+
+    const block = thing.id < 0 ? -1 : Math.floor(thing.id / 100) * 100;
 
     let url = `https://kol.coldfront.net/thekolwiki/index.php/${type}s_by_number`;
-    if (type !== "Skill" && block > 0) {
-      url += `_(${block}-${block + 99})`;
+    if (type !== "Skill") {
+      const blockDescription = block < 0 ? "negative" : `${Math.max(1, block)}-${block + 99}`;
+      url += `_(${blockDescription})`;
     }
 
     const pattern =
