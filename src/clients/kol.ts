@@ -329,6 +329,19 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     await this.useChatMacro(`/w ${recipientId} ${message}`);
   }
 
+  async kmail(recipientId: number, message: string) {
+    await this.visitUrl("sendmessage.php", {
+      action: "send",
+      j: 1,
+      towho: recipientId,
+      contact: 0,
+      message: message,
+      howmany1: 1,
+      whichitem1: 0,
+      sendmeat: 0,
+    });
+  }
+
   async rolloverCheck() {
     const isRollover = /The system is currently down for nightly maintenance/.test(
       (await axios("https://www.kingdomofloathing.com/")).data

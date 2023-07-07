@@ -8,13 +8,15 @@ datasource db {
 }
 
 model Player {
-  playerId       Int     @id
-  playerName     String
-  kills          Int     @default(0)
-  skills         Int     @default(0)
-  doneWithSkills Boolean @default(false)
-  brainiac       Boolean @default(false)
-  discordId      String?
+  playerId           Int       @id
+  playerName         String
+  kills              Int       @default(0)
+  skills             Int       @default(0)
+  doneWithSkills     Boolean   @default(false)
+  brainiac           Boolean   @default(false)
+  discordId          String?
+  greenboxString     String?
+  greenboxLastUpdate DateTime?
 }
 
 model Reminder {

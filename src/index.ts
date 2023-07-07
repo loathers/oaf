@@ -4,9 +4,11 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
 
+import { prisma } from "./clients/database.js";
 import { CommandHandler, ModalHandler, discordClient } from "./clients/discord.js";
 import { kolClient } from "./clients/kol.js";
 import { wikiClient } from "./clients/wiki.js";
+import { startApiServer } from "./server.js";
 
 export {};
 
@@ -48,7 +50,10 @@ async function loadSlashCommands() {
   console.log(`Loaded ${commands.length} commands`);
 }
 
-async function performSetup() {
+async function main() {
+  console.log("Starting API server");
+  startApiServer();
+
   console.log("Downloading mafia data.");
   await wikiClient.loadMafiaData();
   console.log("All mafia data downloaded.");
@@ -74,10 +79,35 @@ async function performSetup() {
     );
   });
 
-  return discordClient;
-}
+  // Collect greenbox submissions
+  kolClient.on("kmail", async (message) => {
+    if (!message.msg.startsWith("GREENBOX:")) return;
 
-performSetup().then((discordClient) => {
+    const text = message.msg.replace(/ /g, "").slice(9);
+
+    const greenboxLastUpdate = new Date();
+
+    try {
+      await prisma.player.upsert({
+        where: { playerId: message.who.id },
+        update: { greenboxString: text, greenboxLastUpdate },
+        create: {
+          playerId: message.who.id,
+          playerName: message.who.name,
+          greenboxString: text,
+          greenboxLastUpdate,
+        },
+      });
+    } catch (error) {
+      await kolClient.kmail(
+        message.who.id,
+        "There was an error processing your greenbox submission"
+      );
+    }
+  });
+
   console.log("Starting bot.");
   discordClient.start();
-});
+}
+
+main();
