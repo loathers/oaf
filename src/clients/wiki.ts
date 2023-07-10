@@ -443,7 +443,7 @@ export class WikiClient {
     } catch (error) {
       if (error instanceof AxiosError) {
         if (error.code === "ENOTFOUND") throw new WikiDownError();
-        console.error(error);
+        if (error.status !== 404) console.error(error);
       } else {
         throw error;
       }
