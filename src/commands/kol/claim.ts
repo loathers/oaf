@@ -134,8 +134,9 @@ async function synchroniseRoles(client: Client) {
   }
 
   for (const missing of expectedMembers) {
-    const member = await guild.members.fetch(missing);
-    await member.roles.add(role);
+    // Catch cases where user has left the guild
+    const member = await guild.members.fetch(missing).catch(() => null);
+    if (member) await member.roles.add(role);
   }
 }
 
