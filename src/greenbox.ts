@@ -1,3 +1,5 @@
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/index.js";
+
 import { prisma } from "./clients/database.js";
 import { KoLMessage, kolClient } from "./clients/kol.js";
 
@@ -30,11 +32,33 @@ async function update(playerId: number, playerName: string, greenboxString: stri
   }
 }
 
-async function wipe(playerId: number) {
-  await prisma.player.update({
-    where: { playerId },
-    data: { greenboxString: null, greenboxLastUpdate: null },
-  });
+const PRISMA_RECORD_NOT_FOUND_ERROR = "P2025";
 
-  await kolClient.kmail(playerId, "At your request, your public Greenbox profile has been removed");
+function isRecordNotFoundError(error: unknown): error is PrismaClientKnownRequestError & {
+  code: typeof PRISMA_RECORD_NOT_FOUND_ERROR;
+} {
+  return (
+    error instanceof PrismaClientKnownRequestError && error.code === PRISMA_RECORD_NOT_FOUND_ERROR
+  );
+}
+
+async function wipe(playerId: number) {
+  try {
+    await prisma.player.update({
+      where: { playerId },
+      data: { greenboxString: null, greenboxLastUpdate: null },
+    });
+  } catch (error) {
+    if (!isRecordNotFoundError(error)) {
+      return await kolClient.kmail(
+        playerId,
+        "There was an error wiping your public greenbox profile"
+      );
+    }
+  }
+
+  await kolClient.kmail(
+    playerId,
+    "At your request, your public greenbox profile, if it existed, has been removed"
+  );
 }
