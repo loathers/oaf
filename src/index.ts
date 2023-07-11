@@ -4,10 +4,10 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
 
-import { prisma } from "./clients/database.js";
 import { CommandHandler, ModalHandler, discordClient } from "./clients/discord.js";
 import { kolClient } from "./clients/kol.js";
 import { wikiClient } from "./clients/wiki.js";
+import { handleGreenboxKmail } from "./greenbox.js";
 import { startApiServer } from "./server.js";
 
 export {};
@@ -79,31 +79,8 @@ async function main() {
     );
   });
 
-  // Collect greenbox submissions
   kolClient.on("kmail", async (message) => {
-    if (!message.msg.startsWith("GREENBOX:")) return;
-
-    const text = message.msg.replace(/ /g, "").slice(9);
-
-    const greenboxLastUpdate = new Date();
-
-    try {
-      await prisma.player.upsert({
-        where: { playerId: message.who.id },
-        update: { greenboxString: text, greenboxLastUpdate },
-        create: {
-          playerId: message.who.id,
-          playerName: message.who.name,
-          greenboxString: text,
-          greenboxLastUpdate,
-        },
-      });
-    } catch (error) {
-      await kolClient.kmail(
-        message.who.id,
-        "There was an error processing your greenbox submission"
-      );
-    }
+    if (message.msg.startsWith("GREENBOX:")) await handleGreenboxKmail(message);
   });
 
   console.log("Starting bot.");

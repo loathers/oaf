@@ -121,15 +121,15 @@ function sanitiseBlueText(blueText: string | undefined): string {
   ).trim();
 }
 
-type Message = {
+export type KoLMessage = {
   who: KoLUser;
   msg: string;
   time: Date;
 };
 
 type Events = {
-  kmail: (message: Message) => void;
-  whisper: (message: Message) => void;
+  kmail: (message: KoLMessage) => void;
+  whisper: (message: KoLMessage) => void;
   rollover: () => void;
 };
 
