@@ -1,6 +1,4 @@
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/index.js";
-
-import { prisma } from "./clients/database.js";
+import { isRecordNotFoundError, prisma } from "./clients/database.js";
 import { KoLMessage, kolClient } from "./clients/kol.js";
 
 export async function handleGreenboxKmail(message: KoLMessage) {
@@ -30,16 +28,6 @@ async function update(playerId: number, playerName: string, greenboxString: stri
   } catch (error) {
     await kolClient.kmail(playerId, "There was an error processing your greenbox submission");
   }
-}
-
-const PRISMA_RECORD_NOT_FOUND_ERROR = "P2025";
-
-function isRecordNotFoundError(error: unknown): error is PrismaClientKnownRequestError & {
-  code: typeof PRISMA_RECORD_NOT_FOUND_ERROR;
-} {
-  return (
-    error instanceof PrismaClientKnownRequestError && error.code === PRISMA_RECORD_NOT_FOUND_ERROR
-  );
 }
 
 async function wipe(playerId: number) {
