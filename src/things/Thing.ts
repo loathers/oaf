@@ -23,8 +23,12 @@ export class Thing {
     return `/itemimages/${this.imageUrl}`;
   }
 
-  async addToEmbed(embed: EmbedBuilder): Promise<void> {
+  addImageToEmbed(embed: EmbedBuilder) {
     embed.setThumbnail(`http://images.kingdomofloathing.com${this.getImagePath()}`);
+  }
+
+  async addToEmbed(embed: EmbedBuilder): Promise<void> {
+    this.addImageToEmbed(embed);
     embed.setDescription(await this.getDescription());
   }
 }
