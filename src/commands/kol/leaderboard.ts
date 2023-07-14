@@ -17,7 +17,7 @@ const BOARD_MAPPINGS = {
   "Zombie Slayer": 14,
   "Class Act": 15,
   "Avatar of Jarlsberg": 16,
-  "BIG!": 7,
+  "BIG!": 17,
   KOLHS: 18,
   "Class Act II": 19,
   "Avatar of Sneaky Pete": 20,
@@ -33,7 +33,7 @@ const BOARD_MAPPINGS = {
   "Nuclear Autumn": 30,
   "Gelatinous Noob": 31,
   "License to Adventure": 32,
-  "Live. Ascend. Repeat.": 3,
+  "Live. Ascend. Repeat.": 33,
   "Pocket Familiars": 34,
   "G Lover": 35,
   "Disguises Delimit": 36,
@@ -49,8 +49,10 @@ const BOARD_MAPPINGS = {
   "Grey You": 46,
   Journeyman: 47,
   "Fall of the Dinosaurs": 48,
-  "Elf Gratitude": 49,
+  "Avatars of Shadows Over Loathing": 49,
+  "Legacy of Loathing": 50,
   Standard: 99,
+  "Elf Gratitude": 900,
 } as const;
 
 const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
@@ -123,6 +125,9 @@ const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
   fotd: "Fall of the Dinosaurs",
   crimbo22: "Elf Gratitude",
   gratitude: "Elf Gratitude",
+  aosol: "Avatars of Shadows Over Loathing",
+  asol: "Avatars of Shadows Over Loathing",
+  lol: "Legacy of Loathing",
 };
 
 const AUTOCOMPLETE_CHOICES = [
