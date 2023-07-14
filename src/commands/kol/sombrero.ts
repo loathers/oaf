@@ -10,10 +10,10 @@ export const data = new SlashCommandBuilder()
       .setName("weight")
       .setDescription("The weight of the sombrero.")
       .setRequired(true)
-      .setMinValue(1)
+      .setMinValue(1),
   )
   .addIntegerOption((option) =>
-    option.setName("ml").setDescription("Monster Level modifier").setRequired(true)
+    option.setName("ml").setDescription("Monster Level modifier").setRequired(true),
   );
 
 export function execute(interaction: ChatInputCommandInteraction) {
@@ -23,7 +23,7 @@ export function execute(interaction: ChatInputCommandInteraction) {
   interaction.reply(
     `A ${weight}lb sombrero with ${ml} ML provides +${sombreroSubstats(
       weight,
-      ml
-    )} substats per combat.`
+      ml,
+    )} substats per combat.`,
   );
 }

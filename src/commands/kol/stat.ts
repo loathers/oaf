@@ -17,7 +17,7 @@ export const data = new SlashCommandBuilder()
       .setName("stat")
       .setDescription("The amount of mainstat you are reaching.")
       .setRequired(true)
-      .setMinValue(1)
+      .setMinValue(1),
   );
 
 export function execute(interaction: ChatInputCommandInteraction): void {
@@ -27,7 +27,7 @@ export function execute(interaction: ChatInputCommandInteraction): void {
 
   let reply = `Mainstat ${mainstat.toLocaleString()} (reached at ${pluralize(
     substat,
-    "total substat"
+    "total substat",
   )}) reaches ${level >= 255 ? "maximum " : ""}level ${level}.`;
 
   if (level <= 255) {
@@ -36,7 +36,7 @@ export function execute(interaction: ChatInputCommandInteraction): void {
       next.mainstat - mainstat
     ).toLocaleString()} mainstat (requiring ${pluralize(
       next.substat - substat,
-      "more substat"
+      "more substat",
     )}) is required to reach level ${next.level}.`;
   }
 

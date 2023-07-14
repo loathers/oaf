@@ -75,7 +75,7 @@ async function main() {
     console.log(
       new Date(message.createdTimestamp).toLocaleTimeString(),
       message.author.username,
-      `said "${message.content}" in channel ${message.channel}`
+      `said "${message.content}" in channel ${message.channel}`,
     );
   });
 

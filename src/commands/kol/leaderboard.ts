@@ -57,7 +57,7 @@ const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
   // Automatically alias board names without non-alphanumerics
   ...Object.keys(BOARD_MAPPINGS).reduce(
     (acc, key) => ({ ...acc, [key.toLowerCase().replace(/[\W_]+/g, "")]: key }),
-    {}
+    {},
   ),
   clan: "Clan Dungeons",
   slimetube: "Clan Dungeons",
@@ -153,7 +153,7 @@ const parseBoard = (input: string) => {
 
 const formatSubboard = (subboard: SubboardInfo) => {
   const runs = subboard.runs.map(
-    (run) => `${run.player} - ${run.days ? `${run.days}/` : ""}${run.turns}`
+    (run) => `${run.player} - ${run.days ? `${run.days}/` : ""}${run.turns}`,
   );
   if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
   if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
@@ -174,7 +174,7 @@ export const data = new SlashCommandBuilder()
       .setName("leaderboard")
       .setDescription("The name or id of the leaderboard you want to display.")
       .setRequired(true)
-      .setAutocomplete(true)
+      .setAutocomplete(true),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -213,7 +213,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 export async function autocomplete(interaction: AutocompleteInteraction) {
   const focusedValue = interaction.options.getFocused();
   const filtered = AUTOCOMPLETE_CHOICES.filter(({ match }) =>
-    match.toLowerCase().includes(focusedValue.toLowerCase())
+    match.toLowerCase().includes(focusedValue.toLowerCase()),
   )
     .filter(({ value }, i, a) => a.findIndex((c) => c.value === value) === i)
     .slice(0, 25);

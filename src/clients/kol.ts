@@ -11,6 +11,12 @@ import { select } from "xpath";
 
 import { cleanString, indent, toWikiLink } from "../utils.js";
 
+const selectMulti = (expression: string, node: Node) => {
+  const selection = select(expression, node);
+  if (Array.isArray(selection)) return selection;
+  return selection instanceof Node ? [selection] : [];
+};
+
 type TypedEmitter<T extends EventMap> = TypedEventEmitter.default<T>;
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -59,7 +65,7 @@ type KoLChatMessage = {
 };
 
 const isPrivateWhisper = (
-  msg: KoLChatMessage
+  msg: KoLChatMessage,
 ): msg is { type: "private"; who: KoLUser; msg: string; time: string } =>
   msg.type === "private" && !!msg.who && !!msg.msg;
 
@@ -117,7 +123,7 @@ function sanitiseBlueText(blueText: string | undefined): string {
       .replace(/(<p><\/p>)|(<br>)|(<Br>)|(<br \/>)|(<Br \/>)/g, "\n")
       .replace(/<[^<>]+>/g, "")
       .replace(/(\n+)/g, "\n")
-      .replace(/(\n)+$/, "")
+      .replace(/(\n)+$/, ""),
   ).trim();
 }
 
@@ -162,7 +168,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         whisper.who.name,
         "said",
         `"${whisper.msg}"`,
-        "in KoL chat"
+        "in KoL chat",
       );
     });
 
@@ -172,7 +178,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         kmail.who.name,
         "said",
         `"${kmail.msg}"`,
-        "in a kmail"
+        "in a kmail",
       );
     });
   }
@@ -264,7 +270,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       {
         j: 1,
         lasttime: this.lastFetchedWhispers,
-      }
+      },
     );
 
     if (!newChatMessagesResponse || typeof newChatMessagesResponse !== "object") return;
@@ -344,7 +350,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
   async rolloverCheck() {
     const isRollover = /The system is currently down for nightly maintenance/.test(
-      (await axios("https://www.kingdomofloathing.com/")).data
+      (await axios("https://www.kingdomofloathing.com/")).data,
     );
     if (this.isRollover && !isRollover) {
       this.postRolloverLatch = true;
@@ -360,14 +366,14 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     url: string,
     parameters: Record<string, string | number | undefined> = {},
     data: Record<string, string | number | undefined> | undefined = undefined,
-    pwd = true
+    pwd = true,
   ): Promise<T | null> {
     return (await this.visitUrl(
       url,
       parameters,
       data,
       pwd,
-      null as unknown as string
+      null as unknown as string,
     )) as unknown as T;
   }
 
@@ -376,7 +382,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     parameters: Record<string, string | number | undefined> = {},
     data: Record<string, string | number | undefined> | undefined = undefined,
     pwd = true,
-    fallback = ""
+    fallback = "",
   ): Promise<string> {
     if (this.isRollover || !(await this.logIn())) return fallback;
     try {
@@ -449,10 +455,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       whichitem: descId,
     });
     const blueText = description.match(
-      /<center>\s*<b>\s*<font color="?[\w]+"?>(?<description>[\s\S]+)<\/center>/i
+      /<center>\s*<b>\s*<font color="?[\w]+"?>(?<description>[\s\S]+)<\/center>/i,
     );
     const effect = description.match(
-      /Effect: \s?<b>\s?<a[^>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^>]+>(?<effect>[\s\S]+)<\/a>[^(]+\((?<duration>[\d]+)/
+      /Effect: \s?<b>\s?<a[^>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^>]+>(?<effect>[\s\S]+)<\/a>[^(]+\((?<duration>[\d]+)/,
     );
     const melting = description.match(/This item will disappear at the end of the day\./);
     const singleEquip = description.match(/ You may not equip more than one of these at a time\./);
@@ -467,10 +473,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         `Gives ${effect.groups?.duration} adventures of ${bold(
           hyperlink(
             cleanString(effect.groups?.effect),
-            toWikiLink(cleanString(effect.groups?.effect))
-          )
+            toWikiLink(cleanString(effect.groups?.effect)),
+          ),
         )}`,
-        indent(await this.getEffectDescription(effect.groups?.descid))
+        indent(await this.getEffectDescription(effect.groups?.descid)),
       );
 
     return output.join("\n");
@@ -493,7 +499,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     });
 
     const blueText = description.match(
-      /<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/m
+      /<center><font color="?[\w]+"?>(?<description>[\s\S]+)<\/div>/m,
     );
 
     return sanitiseBlueText(blueText?.groups?.description);
@@ -504,7 +510,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       whichskill: String(id),
     });
     const blueText = description.match(
-      /<blockquote[\s\S]+<[Cc]enter>(?<description>[\s\S]+)<\/[Cc]enter>/
+      /<blockquote[\s\S]+<[Cc]enter>(?<description>[\s\S]+)<\/[Cc]enter>/,
     );
     return blueText ? sanitiseBlueText(blueText.groups?.description) : null;
   }
@@ -540,11 +546,11 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       });
 
       const document = parser.parseFromString(leaderboard);
-      const [board, ...boards] = select("//table", document);
+      const [board, ...boards] = selectMulti("//table", document);
 
       return {
-        name: select(".//text()", (board as Node).firstChild as ChildNode)
-          .map((node) => (node as Node).nodeValue)
+        name: selectMulti(".//text()", board.firstChild!)
+          .map((node) => node.nodeValue)
           .join("")
           .replace(/\s+/g, " ")
           .trim(),
@@ -552,19 +558,19 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
           .slice(1)
           .filter(
             (board) =>
-              (select("./tr//text()", board as Node)[0] as Node)?.nodeValue?.match(
-                /^((Fast|Funn|B)est|Most (Goo|Elf))/
-              ) && select("./tr", board as Node).length > 1
+              selectMulti("./tr//text()", board)[0]?.nodeValue?.match(
+                /^((Fast|Funn|B)est|Most (Goo|Elf))/,
+              ) && selectMulti("./tr", board).length > 1,
           )
           .map((subboard) => {
-            const rows = select("./tr", subboard as Node);
+            const rows = selectMulti("./tr", subboard);
             return {
-              name: ((select(".//text()", rows[0] as Node)[0] as Node)?.nodeValue || "").trim(),
-              runs: select("./td//tr", rows[1] as Node)
+              name: (selectMulti(".//text()", rows[0])[0]?.nodeValue || "").trim(),
+              runs: selectMulti("./td//tr", rows[1])
                 .slice(2)
                 .map((node) => {
-                  const rowText = select(".//text()", node as Node).map((text) =>
-                    text.toString().replace(/&amp;nbsp;/g, "")
+                  const rowText = selectMulti(".//text()", node).map((text) =>
+                    text.toString().replace(/&amp;nbsp;/g, ""),
                   );
                   const hasTwoNumbers = !!parseInt(rowText[rowText.length - 2]);
                   return {
@@ -654,7 +660,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     });
 
     const match = /Only a specific familiar type \(([^)]*)\) can equip this item/.exec(
-      responseText
+      responseText,
     );
 
     return match?.[1] ?? null;
@@ -664,7 +670,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     try {
       const profile = await this.visitUrl("showplayer.php", { who: playerToLookup.id });
       const header = profile.match(
-        /<center><table><tr><td><center>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/
+        /<center><table><tr><td><center>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
       );
       if (!header) return null;
 
@@ -675,10 +681,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       const ascensions = Number(ascensionsString) || 0;
 
       const trophies = Number(
-        profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0
+        profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0,
       );
       const tattoos = Number(
-        profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0
+        profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0,
       );
       const favoriteFood = profile.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
       const favoriteBooze = profile.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1];

@@ -17,7 +17,7 @@ export const data = new SlashCommandBuilder()
       .setName("tag")
       .setDescription("The unique tag for the message to which you'd like to link")
       .setAutocomplete(true)
-      .setRequired(true)
+      .setRequired(true),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -35,8 +35,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.editReply(
     hyperlink(
       `Click to jump to message tagged with ${bold(tagName)}`,
-      messageLink(tag.channelId, tag.messageId, tag.guildId)
-    )
+      messageLink(tag.channelId, tag.messageId, tag.guildId),
+    ),
   );
 }
 

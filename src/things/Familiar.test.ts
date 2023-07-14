@@ -27,7 +27,7 @@ test("Can describe a Familiar", async () => {
     .mockResolvedValueOnce(await respondWithFixture(__dirname, "desc_item_hypodermic_needle.html"));
 
   const familiar = Familiar.from(
-    "1	Mosquito	familiar1.gif	combat0,hp0	mosquito larva	hypodermic needle	2	1	3	0	animal,bug,eyes,wings,quick,biting,flying"
+    "1	Mosquito	familiar1.gif	combat0,hp0	mosquito larva	hypodermic needle	2	1	3	0	animal,bug,eyes,wings,quick,biting,flying",
   );
   familiar.hatchling = Item.from("275	mosquito larva	187601582	larva.gif	grow	q	0	mosquito larvae");
   familiar.equipment = Item.from("848	hypodermic needle	10000001	syringe.gif	familiar	t,d	75");
@@ -47,6 +47,6 @@ test("Can describe a Familiar", async () => {
 
       Equipment: [hypodermic needle](https://kol.coldfront.net/thekolwiki/index.php/hypodermic_needle)
       \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0+5 to Familiar Weight
-    `
+    `,
   );
 });

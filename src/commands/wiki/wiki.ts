@@ -18,7 +18,7 @@ export const data = new SlashCommandBuilder()
   .setName("wiki")
   .setDescription("Search the KoL wiki for the given term.")
   .addStringOption((option) =>
-    option.setName("term").setDescription("The term to search for in the wiki.").setRequired(true)
+    option.setName("term").setDescription("The term to search for in the wiki.").setRequired(true),
   );
 
 const blankEmbed = (description: string) => new EmbedBuilder().setDescription(description);
@@ -85,7 +85,7 @@ async function onMessage(message: Message) {
 
   const searchingMessage = await message.reply({
     content: `${slashNote}${userMention(member.id)} is searching for ${lf.format(
-      considered.map((q) => `"${q}"`)
+      considered.map((q) => `"${q}"`),
     )}...`,
     allowedMentions: { parse: [], repliedUser: false },
   });

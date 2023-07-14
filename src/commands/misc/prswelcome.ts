@@ -23,7 +23,7 @@ export const data = new SlashCommandBuilder()
   .setName("prswelcome")
   .setDescription("Links to the PRs and issues assigned to you for a given LASS project")
   .addStringOption((option) =>
-    option.setName("repository").setDescription("Name of the project to link").setRequired(true)
+    option.setName("repository").setDescription("Name of the project to link").setRequired(true),
   );
 
 async function guessOrg(project: string) {

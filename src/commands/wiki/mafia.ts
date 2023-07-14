@@ -21,8 +21,8 @@ export const data = new SlashCommandBuilder()
         option
           .setName("term")
           .setDescription("The term to search for in the mafia wiki.")
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
@@ -33,8 +33,8 @@ export const data = new SlashCommandBuilder()
           .setName("function")
           .setDescription("The function to reference")
           .setAutocomplete(true)
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
   );
 
 let JS_FUNCTION_CACHE = new Map<string, string[]>();
@@ -68,7 +68,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             cx: process.env.MAFIA_CUSTOM_SEARCH || "",
             q: item,
           },
-        }
+        },
       );
 
       if (!googleSearchResponse.data.items?.length) {

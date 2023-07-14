@@ -20,15 +20,15 @@ export const data = new SlashCommandBuilder()
           .addChoices(
             { name: "they/them", value: THEY_THEM_ROLE_ID },
             { name: "he/him", value: HE_HIM_ROLE_ID },
-            { name: "she/her", value: SHE_HER_ROLE_ID }
+            { name: "she/her", value: SHE_HER_ROLE_ID },
           )
-          .setRequired(true)
-      )
+          .setRequired(true),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
       .setName("alerts")
-      .setDescription("Toggle whether you receive listener alerts on the server")
+      .setDescription("Toggle whether you receive listener alerts on the server"),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -49,7 +49,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       if (!role) {
         return await interaction.editReply(
-          `Relevant role(s) not found. Is this being used on the right Guild?`
+          `Relevant role(s) not found. Is this being used on the right Guild?`,
         );
       }
 
@@ -62,7 +62,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       }
 
       return await interaction.editReply(
-        `${desired ? "Added" : "Removed"} ${role.name} pronouns from your account on this server`
+        `${desired ? "Added" : "Removed"} ${role.name} pronouns from your account on this server`,
       );
     }
     case "alerts": {
@@ -71,7 +71,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       if (!listener || !noAlerts) {
         return await interaction.editReply(
-          `Relevant role(s) not found. Is this being used on the right Guild?`
+          `Relevant role(s) not found. Is this being used on the right Guild?`,
         );
       }
 
@@ -81,23 +81,23 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await member.roles.add(LISTENER_ROLE_ID, "Member added via slash command");
         await member.roles.remove(
           NO_ALERTS_ROLE_ID,
-          'Adding "listener" automatically removes "no alerts"'
+          'Adding "listener" automatically removes "no alerts"',
         );
       } else {
         await member.roles.remove(LISTENER_ROLE_ID, "Member removed via slash command");
         await member.roles.add(
           NO_ALERTS_ROLE_ID,
-          'Removing "listener" automatically adds "no alerts"'
+          'Removing "listener" automatically adds "no alerts"',
         );
       }
 
       return await interaction.editReply(
-        `You will ${desired ? "now" : "no longer"} receive listener alerts`
+        `You will ${desired ? "now" : "no longer"} receive listener alerts`,
       );
     }
     default:
       return await interaction.editReply(
-        "Invalid subcommand. It shouldn't be possible to see this message. Please report it."
+        "Invalid subcommand. It shouldn't be possible to see this message. Please report it.",
       );
   }
 }

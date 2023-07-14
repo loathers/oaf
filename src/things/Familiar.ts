@@ -266,7 +266,7 @@ export class Familiar extends Thing {
       parts[3].split(","),
       cleanString(parts[4]),
       cleanString(parts[5]),
-      parts[10] ? parts[10].replace(/,/g, ", ") : ""
+      parts[10] ? parts[10].replace(/,/g, ", ") : "",
     );
   }
 
@@ -277,7 +277,7 @@ export class Familiar extends Thing {
     types: string[],
     larva: string,
     item: string,
-    attributes: string
+    attributes: string,
   ) {
     super(id, name, imageUrl);
     this.types = this.parseTypes(types);
@@ -299,7 +299,7 @@ export class Familiar extends Thing {
       if (classification.combination.every((type) => typesToConsider.includes(type))) {
         // ... remove the types that are reflected by this classification from future consideration...
         typesToConsider = typesToConsider.filter(
-          (type) => !classification.combination.includes(type)
+          (type) => !classification.combination.includes(type),
         );
         // ... and add this classification to the list we use to describe this familair.
         types.push(classification.description);
@@ -330,7 +330,7 @@ export class Familiar extends Thing {
         ...hatchlingDescription
           .split("\n")
           .slice(2)
-          .filter((l) => l.length > 0)
+          .filter((l) => l.length > 0),
       );
     }
 

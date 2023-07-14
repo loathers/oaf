@@ -54,7 +54,7 @@ export const pluralize = (count: number, singular: string, plural?: string) =>
 
 export function groupToMap<K, V>(
   array: V[],
-  callbackFn: (element: V, index?: number, array?: V[]) => K
+  callbackFn: (element: V, index?: number, array?: V[]) => K,
 ) {
   const map = new Map<K, V[]>();
   for (let i = 0; i < array.length; i++) {
@@ -67,7 +67,7 @@ export function groupToMap<K, V>(
 
 export function columns<T extends { toString: () => string }>(
   data: T[],
-  columns: number
+  columns: number,
 ): APIEmbedField[] {
   return Array(columns)
     .fill(0)
@@ -84,7 +84,7 @@ export function columns<T extends { toString: () => string }>(
 
 export function columnsByMaxLength<T extends { toString: () => string }>(
   data: T[],
-  maxLength = 1024
+  maxLength = 1024,
 ) {
   const columns = [];
 
@@ -122,7 +122,11 @@ export function formatPlayer(player: Player | undefined, backupId?: number) {
     ? `${userMention(discordId)}${hyperlink(
         "👤",
         `https://www.kingdomofloathing.com/showplayer.php?who=${player.playerId}`,
-        player.playerName
+        player.playerName,
       )}`
     : player?.playerName || `Player #${backupId}` || "Unknown player";
+}
+
+export function ensureArray<T>(v: T | T[]) {
+  return Array.isArray(v) ? v : [v];
 }

@@ -127,7 +127,7 @@ export class DiscordClient extends Client {
         new EmbedBuilder().setTitle("Circumstances").addFields([
           { name: "Command run", value: interaction.toString() },
           { name: "User", value: userMention(interaction.user.id) },
-        ])
+        ]),
       );
     }
 
@@ -160,5 +160,5 @@ export const createEmbed = () =>
 export const discordClient = new DiscordClient(
   process.env.CLIENT_ID || "",
   process.env.DISCORD_TOKEN || "",
-  process.env.ALERTS_CHANNEL_ID || ""
+  process.env.ALERTS_CHANNEL_ID || "",
 );

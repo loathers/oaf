@@ -24,11 +24,11 @@ afterEach(() => {
 describe("Effect descriptions", () => {
   test("Can describe an Effect", async () => {
     vi.mocked(axios).mockResolvedValueOnce(
-      await respondWithFixture(__dirname, "desc_effect_pasta_oneness.html")
+      await respondWithFixture(__dirname, "desc_effect_pasta_oneness.html"),
     );
 
     const effect = Effect.from(
-      "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation"
+      "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation",
     );
     effect.pizza = { letters: "PAST", options: 2 };
 
@@ -41,18 +41,18 @@ describe("Effect descriptions", () => {
         Mysticality +2
 
         Pizza: PAST (1 in 2)
-      `
+      `,
     );
   });
 
   test("Can describe an avatar effect", async () => {
     vi.mocked(axios).mockResolvedValueOnce(
-      await respondWithFixture(__dirname, "desc_effect_the_visible_adventurer.html")
+      await respondWithFixture(__dirname, "desc_effect_the_visible_adventurer.html"),
     );
 
     const effect = Effect.from(
       "1888	The Visible Adventurer	handmirror.gif	a38d91d52ace7992b899402e9704d86d	neutral	none	use 1 x-ray mirror",
-      new Set(["x-ray mirror"])
+      new Set(["x-ray mirror"]),
     );
 
     const description = await effect.getDescription();
@@ -64,7 +64,7 @@ describe("Effect descriptions", () => {
         Makes you look like a skeleton
 
         Ineligible for pizza, wishes, or hookahs.
-      `
+      `,
     );
   });
 });
@@ -82,10 +82,10 @@ describe("Hashcodes", () => {
 
   test("Compares by thing type", () => {
     const a = Effect.from(
-      "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation"
+      "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation",
     );
     const b = Monster.from(
-      "bar	23	bar.gif	Atk: 3 Def: 2 HP: 5 Init: 50 Meat: 15 P: beast Article: a	bar skin (35)	baritone accordion (a0)"
+      "bar	23	bar.gif	Atk: 3 Def: 2 HP: 5 Init: 50 Meat: 15 P: beast Article: a	bar skin (35)	baritone accordion (a0)",
     );
 
     expect(a.hashcode()).not.toEqual(b.hashcode());

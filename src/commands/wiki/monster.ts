@@ -15,7 +15,7 @@ export const data = new SlashCommandBuilder()
       .setName("monster")
       .setDescription("The KoL monster to query.")
       .setRequired(true)
-      .setAutocomplete(true)
+      .setAutocomplete(true),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {

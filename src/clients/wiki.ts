@@ -131,7 +131,7 @@ type FoundName = {
 
 async function downloadMafiaData(fileName: string) {
   return await axios.get<string>(
-    `https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/${fileName}.txt`
+    `https://raw.githubusercontent.com/kolmafia/kolmafia/main/src/data/${fileName}.txt`,
   );
 }
 
@@ -541,7 +541,7 @@ export class WikiClient {
 function nameFromWikiPage(url: string, data: string): string {
   //Mediawiki redirects are unreliable, so we can't just read off the url, so we do this horrible thing instead.
   const titleMatch = String(data).match(
-    /<h1 id="firstHeading" class="firstHeading" lang="en">\s*<span dir="auto">(?<pageTitle>.+)<\/span><\/h1>/
+    /<h1 id="firstHeading" class="firstHeading" lang="en">\s*<span dir="auto">(?<pageTitle>.+)<\/span><\/h1>/,
   );
   let result = "";
   if (titleMatch?.groups && titleMatch.groups.pageTitle) {
@@ -564,7 +564,7 @@ function nameFromWikiPage(url: string, data: string): string {
 function imageFromWikiPage(url: string, data: string): string {
   // As far as I know this is always the first relevant image
   const imageMatch = String(data).match(
-    /https:\/\/kol.coldfront.net\/thekolwiki\/images\/[^"']*\.gif/
+    /https:\/\/kol.coldfront.net\/thekolwiki\/images\/[^"']*\.gif/,
   );
   return imageMatch ? imageMatch[0] : "";
 }
@@ -578,5 +578,5 @@ function emoteNamesFromEmotes(emoteString: string) {
 
 export const wikiClient = new WikiClient(
   process.env.GOOGLE_API_KEY || "",
-  process.env.CUSTOM_SEARCH || ""
+  process.env.CUSTOM_SEARCH || "",
 );

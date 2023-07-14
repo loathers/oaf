@@ -12,7 +12,7 @@ export const data = new SlashCommandBuilder()
       .setName("count")
       .setDescription("Quantity of messages to purge (default 1)")
       .setRequired(false)
-      .setMinValue(1)
+      .setMinValue(1),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {

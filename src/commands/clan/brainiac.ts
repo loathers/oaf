@@ -10,13 +10,13 @@ export const data = new SlashCommandBuilder()
     option
       .setName("player")
       .setDescription("The player to set as always available for brain draining.")
-      .setRequired(true)
+      .setRequired(true),
   )
   .addBooleanOption((option) =>
     option
       .setName("available")
       .setDescription("Whether the player is available or not (default: true)")
-      .setRequired(false)
+      .setRequired(false),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -55,6 +55,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.editReply(
     `${available ? "Added" : "Removed"} user ${italic(playerName)} ${
       available ? "to" : "from"
-    } the list of players always available to help with skills.`
+    } the list of players always available to help with skills.`,
   );
 }

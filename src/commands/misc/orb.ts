@@ -41,7 +41,7 @@ export const data = new SlashCommandBuilder()
   .setName("orb")
   .setDescription("Consult OAF's miniature crystal ball.")
   .addStringOption((option) =>
-    option.setName("asktheorb").setDescription("THE ORB KNOWS ALL").setRequired(false)
+    option.setName("asktheorb").setDescription("THE ORB KNOWS ALL").setRequired(false),
   );
 
 export function execute(interaction: ChatInputCommandInteraction) {

@@ -29,14 +29,14 @@ const oauf = Object.assign(
         oauf.check(totpToken.toString().padStart(6, "0"), playerSecret(playerId)),
       ] as [playerId: number, valid: boolean];
     },
-  }
+  },
 );
 
 export const data = new SlashCommandBuilder()
   .setName("claim")
   .setDescription("Claim a KoL player account.")
   .addStringOption((option) =>
-    option.setName("token").setDescription("The token that OAF sent you").setRequired(false)
+    option.setName("token").setDescription("The token that OAF sent you").setRequired(false),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -45,7 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!token) {
     await interaction.reply({
       content: `Get a verification token by sending ${inlineCode(
-        `/msg ${OAF_USER} claim`
+        `/msg ${OAF_USER} claim`,
       )} in chat`,
       ephemeral: true,
     });
@@ -105,8 +105,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.editReply(
     `Your Discord account has been successfully linked with ${inlineCode(
-      `${player.name} (#${player.id})`
-    )}.${previous}`
+      `${player.name} (#${player.id})`,
+    )}.${previous}`,
   );
 }
 
@@ -120,9 +120,10 @@ async function synchroniseRoles(client: Client) {
     return;
   }
 
-  const expectedMembers = (
-    await prisma.player.findMany({ where: { discordId: { not: null } } })
-  ).map((p) => p.discordId!);
+  const playersWithDiscordId = await prisma.player.findMany({
+    where: { discordId: { not: null } },
+  });
+  const expectedMembers = playersWithDiscordId.map((p) => p.discordId!);
 
   for (const member of role.members.values()) {
     const index = expectedMembers.indexOf(member.user.id);
@@ -150,7 +151,7 @@ export async function init() {
 
     await kolClient.whisper(
       playerId,
-      `Your token is ${token} (expires in ${totp.timeRemaining()} seconds)`
+      `Your token is ${token} (expires in ${totp.timeRemaining()} seconds)`,
     );
   });
 

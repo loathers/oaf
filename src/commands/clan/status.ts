@@ -22,7 +22,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return `${bold(clan.name)}: ${overview.forest}/${overview.village}/${
           overview.castle
         } (${capacitorString})`;
-      })
+      }),
     );
 
     await interaction.editReply({
@@ -37,7 +37,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   } catch (error) {
     await discordClient.alert("Unknown error", interaction, error);
     await interaction.editReply(
-      "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in."
+      "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in.",
     );
   }
 }

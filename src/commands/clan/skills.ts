@@ -25,7 +25,7 @@ export type Participation = Map<number, ParticipationData>;
 function addParticipation(
   a: Participation,
   playerId: number,
-  { skills, kills }: Partial<ParticipationData>
+  { skills, kills }: Partial<ParticipationData>,
 ) {
   const existing = a.get(playerId) || { skills: 0, kills: 0 };
   a.set(playerId, {
@@ -49,7 +49,7 @@ async function getParticipationFromCurrentRaid() {
 
   return raidLogs.reduce(
     (p, log) => mergeParticipation(p, getParticipationFromRaidLog(log)),
-    new Map() as Participation
+    new Map() as Participation,
   );
 }
 
@@ -67,7 +67,7 @@ export function getParticipationFromRaidLog(raidLog: string) {
           parseInt(m[2]),
           m[3].startsWith("defeated") ? "kills" : "skills",
           parseInt(m[4] || "1"),
-        ] as const
+        ] as const,
     )
     .forEach(([playerId, type, num]) => {
       addParticipation(participation, playerId, { [type]: num });
@@ -139,7 +139,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await parseOldLogs();
 
     const players = new Map(
-      (await prisma.player.findMany({})).map((p) => [p.playerId, p] as const)
+      (await prisma.player.findMany({})).map((p) => [p.playerId, p] as const),
     );
 
     const participation = mergeParticipation(players, await getParticipationFromCurrentRaid());
@@ -148,13 +148,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .filter(([playerId]) => players.get(playerId)?.doneWithSkills !== true)
       .map(
         ([playerId, { skills, kills }]) =>
-          [playerId, Math.floor((kills + 450) / 900) - skills] as const
+          [playerId, Math.floor((kills + 450) / 900) - skills] as const,
       )
       .filter(([, owed]) => owed > 0)
       .sort(([, a], [, b]) => b - a)
       .map(
         ([playerId, owed]) =>
-          `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(owed, "skill")}.`
+          `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(owed, "skill")}.`,
       );
 
     await interaction.editReply({
@@ -182,7 +182,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     await discordClient.alert("Unknown error", interaction, error);
     await interaction.editReply(
-      "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
+      "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in.",
     );
   }
 }

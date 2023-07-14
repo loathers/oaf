@@ -68,7 +68,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
       .setLabel("Pick a short tag for this message")
       .setStyle(TextInputStyle.Short)
       .setRequired(true)
-      .setValue(existing?.tag ?? "")
+      .setValue(existing?.tag ?? ""),
   );
 
   const reason = new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -78,7 +78,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
       .setPlaceholder("In case it isn't obvious many years from now")
       .setStyle(TextInputStyle.Paragraph)
       .setRequired(false)
-      .setValue(existing?.reason ?? "")
+      .setValue(existing?.reason ?? ""),
   );
 
   modal.addComponents(tagName, reason);
@@ -123,7 +123,7 @@ async function handleModal(targetMessage: Message<true>, interaction: ModalSubmi
 
     await prisma.tag.delete({ where: { tag: existing.tag } });
     await interaction.editReply(
-      `Tag removed from the message that was previously tagged with ${bold(existing.tag)}`
+      `Tag removed from the message that was previously tagged with ${bold(existing.tag)}`,
     );
     return;
   }
@@ -134,7 +134,7 @@ async function handleModal(targetMessage: Message<true>, interaction: ModalSubmi
       ? ` To save you having to retype, your reason was\n${blockQuote(reason)}`
       : "";
     await interaction.editReply(
-      `Tag ${bold(tag)} is already in use, so you'll have to try again.${reasonQuote}`
+      `Tag ${bold(tag)} is already in use, so you'll have to try again.${reasonQuote}`,
     );
     return;
   }
@@ -161,8 +161,8 @@ async function handleModal(targetMessage: Message<true>, interaction: ModalSubmi
 
   await interaction.editReply(
     `A ${hyperlink("message", targetMessage.url)} has been ${verb} ${bold(
-      tag
-    )}. From now on, running ${inlineCode(`/tag ${tag}`)} will drop a link to this message!`
+      tag,
+    )}. From now on, running ${inlineCode(`/tag ${tag}`)} will drop a link to this message!`,
   );
 
   return;

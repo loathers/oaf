@@ -61,7 +61,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         prisma.player.update({
           where: { playerId: player.playerId },
           data: { playerName: current.name },
-        })
+        }),
       );
     }
 

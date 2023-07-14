@@ -42,7 +42,7 @@ export const data = new SlashCommandBuilder()
       .setName("clan")
       .setDescription("The clan whose status you wish to check.")
       .setRequired(true)
-      .setAutocomplete(true)
+      .setAutocomplete(true),
   );
 
 const sidenote = (...steps: string[]) =>
@@ -70,7 +70,7 @@ function getForestSummary(status: DetailedDreadStatus) {
       "Intricate music box parts available.",
       sidenote("Cabin", "Attic", "Music Box"),
       sidenote("Requires Accordion Thief"),
-      sidenote("Also banishes spooky from forest")
+      sidenote("Also banishes spooky from forest"),
     );
   }
 
@@ -81,7 +81,7 @@ function getForestSummary(status: DetailedDreadStatus) {
       "Blood kiwi available.",
       sidenote("Person A: Tree", "Root Around", "Look Up"),
       sidenote("Person B: Tree", "Climb", "Stomp"),
-      sidenote("Requires muscle class (Person B)")
+      sidenote("Requires muscle class (Person B)"),
     );
   }
 
@@ -91,7 +91,7 @@ function getForestSummary(status: DetailedDreadStatus) {
     summary.push(
       "Moon-amber available.",
       sidenote("Tree", "Climb", "Shiny Thing"),
-      sidenote("Requires muscle class")
+      sidenote("Requires muscle class"),
     );
   }
 
@@ -106,14 +106,14 @@ function getVillageSummary(status: DetailedDreadStatus) {
   if (status.village.schoolhouse) {
     summary.push(
       "Schoolhouse is open, go get your pencils!",
-      sidenote("Square", "Schoolhouse", "Desk")
+      sidenote("Square", "Schoolhouse", "Desk"),
     );
   }
 
   if (status.village.suite) {
     summary.push(
       "Master suite is open, grab some eau de mort?",
-      sidenote("Duke's Estate", "Master Suite", "Nightstand")
+      sidenote("Duke's Estate", "Master Suite", "Nightstand"),
     );
   }
 
@@ -123,7 +123,7 @@ function getVillageSummary(status: DetailedDreadStatus) {
     summary.push(
       "Hanging available.",
       sidenote("Person A: Square", "Gallows", "Stand on Trap Door"),
-      sidenote("Person B: Square", "Gallows", "Pull Lever")
+      sidenote("Person B: Square", "Gallows", "Pull Lever"),
     );
   }
 
@@ -157,7 +157,7 @@ function parseCastleStatus(status: DetailedDreadStatus) {
     summary.push(
       "Wax banana available.",
       sidenote("Great Hall", "Dining Room", "Levitate"),
-      sidenote("Requires myst class")
+      sidenote("Requires myst class"),
     );
   }
 
@@ -166,7 +166,7 @@ function parseCastleStatus(status: DetailedDreadStatus) {
   } else {
     summary.push(
       "Stinking agaricus available.",
-      sidenote("Dungeons", "Guard Room", "Break off bits")
+      sidenote("Dungeons", "Guard Room", "Break off bits"),
     );
   }
 
@@ -177,7 +177,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const clanName = interaction.options.getString("clan", true).toLowerCase();
 
   const clan = DREAD_CLANS.find(
-    (clan) => clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName)
+    (clan) => clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName),
   );
 
   if (!clan) {
@@ -192,25 +192,25 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const embed = createEmbed().setTitle(`Status update for ${clan.name}`);
 
     embed.setDescription(
-      `Kills remaining: ${status.overview.forest}/${status.overview.village}/${status.overview.castle}`
+      `Kills remaining: ${status.overview.forest}/${status.overview.village}/${status.overview.castle}`,
     );
 
     embed.addFields([
       {
         name: `${underscore(bold("Forest"))} (${DREAD_BOSS_MAPPINGS.get(
-          status.overview.bosses[0]
+          status.overview.bosses[0],
         )})`,
         value: getForestSummary(status),
       },
       {
         name: `${underscore(bold("Village"))} (${DREAD_BOSS_MAPPINGS.get(
-          status.overview.bosses[1]
+          status.overview.bosses[1],
         )})`,
         value: getVillageSummary(status),
       },
       {
         name: `${underscore(bold("Castle"))} (${DREAD_BOSS_MAPPINGS.get(
-          status.overview.bosses[2]
+          status.overview.bosses[2],
         )})`,
         value: parseCastleStatus(status),
       },
@@ -232,7 +232,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     await discordClient.alert("Unknown error", interaction, error);
     await interaction.editReply(
-      "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in."
+      "I was unable to fetch skill status, sorry. I might be stuck in a clan, or I might be unable to log in.",
     );
   }
 }
@@ -243,7 +243,7 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
   const filtered = DREAD_CLANS.filter(
     (clan) =>
       clan.name.toLowerCase().includes(focusedValue) ||
-      clan.synonyms.some((s) => s.includes(focusedValue))
+      clan.synonyms.some((s) => s.includes(focusedValue)),
   ).map((clan) => ({ name: clan.name, value: clan.name }));
 
   await interaction.respond(filtered);

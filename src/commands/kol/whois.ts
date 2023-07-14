@@ -23,10 +23,10 @@ export const data = new SlashCommandBuilder()
     option
       .setName("player")
       .setDescription(
-        "The name or id of the KoL player you're looking up, or a mention of a Discord user."
+        "The name or id of the KoL player you're looking up, or a mention of a Discord user.",
       )
       .setRequired(true)
-      .setMaxLength(30)
+      .setMaxLength(30),
   );
 
 export function validPlayerIdentifier(identifier: string) {
@@ -64,7 +64,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (typeof playerIdentifier === "string" && !validPlayerIdentifier(playerIdentifier)) {
     await interaction.editReply(
-      "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔"
+      "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔",
     );
     return;
   }
@@ -75,7 +75,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.editReply(
       `According to KoL, player ${
         typeof playerIdentifier === "number" ? "#" : ""
-      }${playerIdentifier} does not exist.`
+      }${playerIdentifier} does not exist.`,
     );
     return;
   }
@@ -84,7 +84,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!player) {
     await interaction.editReply(
-      `While player ${bold(partialPlayer.name)} exists, this command didn't work. Weird.`
+      `While player ${bold(partialPlayer.name)} exists, this command didn't work. Weird.`,
     );
     return;
   }
@@ -168,7 +168,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   } catch (error) {
     await discordClient.alert("Unknown error", interaction, error);
     await interaction.editReply(
-      "I was unable to fetch this user, sorry. I might be unable to log in!"
+      "I was unable to fetch this user, sorry. I might be unable to log in!",
     );
   }
 }

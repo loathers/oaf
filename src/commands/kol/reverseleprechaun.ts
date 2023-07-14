@@ -10,7 +10,7 @@ export const data = new SlashCommandBuilder()
       .setName("meatdrop")
       .setDescription("The meat drop % you are looking to get from your leprechaun.")
       .setRequired(true)
-      .setMinValue(0.1)
+      .setMinValue(0.1),
   );
 
 export function execute(interaction: ChatInputCommandInteraction) {
@@ -19,6 +19,6 @@ export function execute(interaction: ChatInputCommandInteraction) {
   interaction.reply(
     `To get ${meatDrop}% meat drop from a leprechaun, ` +
       `it should weigh at least ${toWeight(meatDrop).toFixed(1)} lbs, ` +
-      `or be a Hobo Monkey that weighs at least ${toWeight(meatDrop).toFixed(1)} lbs.`
+      `or be a Hobo Monkey that weighs at least ${toWeight(meatDrop).toFixed(1)} lbs.`,
   );
 }

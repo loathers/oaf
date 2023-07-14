@@ -12,7 +12,7 @@ export class PizzaNode {
   get options(): Effect[] {
     return Array.from(this.children.values()).reduce(
       (acc, curr) => acc.concat(curr.options),
-      this.effects
+      this.effects,
     );
   }
 }

@@ -55,7 +55,7 @@ export class Monster extends Thing {
             .map((drop) => convertToDrop(cleanString(drop)))
             .filter(notNull)
             .sort((a, b) => b.droprate - a.droprate)
-        : []
+        : [],
     );
   }
 
@@ -99,7 +99,7 @@ export class Monster extends Thing {
       }
 
       const dropDescription = `${hyperlink(drop.item, toWikiLink(drop.item))} (${dropDetails.join(
-        ", "
+        ", ",
       )})`;
 
       drops.set(dropDescription, (drops.get(dropDescription) || 0) + 1);
@@ -108,7 +108,7 @@ export class Monster extends Thing {
     description.push(
       ...[...drops.entries()]
         .slice(0, 10)
-        .map(([drop, quantity]) => `${quantity > 1 ? `${quantity}x ` : ""}${drop}`)
+        .map(([drop, quantity]) => `${quantity > 1 ? `${quantity}x ` : ""}${drop}`),
     );
 
     if (drops.size > 10) description.push("...and more.");
@@ -149,7 +149,7 @@ export class Monster extends Thing {
       if (scaleBounds.length > 0) scaleDetails.push(`(${scaleBounds.join(", ")})`);
 
       description.push(
-        `Scales to ${scaleDetails.join(" ")} | HP: ${hp ? hp[1] : "75% of defense"}.`
+        `Scales to ${scaleDetails.join(" ")} | HP: ${hp ? hp[1] : "75% of defense"}.`,
       );
     } else {
       description.push("Scales unusually.");
