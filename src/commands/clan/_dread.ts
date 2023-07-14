@@ -190,7 +190,7 @@ export async function getDetailedDreadStatus(clanId: number): Promise<DetailedDr
 }
 
 export async function getMissingRaidLogs(clanId: number, parsedRaids: number[]): Promise<number[]> {
-  return await kolClient.clanActionMutex.runExclusive(async () => {
+  return await kolClient.actionMutex.runExclusive(async () => {
     if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
     let raidLogs = await kolClient.visitUrl("clan_oldraidlogs.php", {});
     const raidIds: number[] = [];
@@ -226,7 +226,7 @@ export async function getFinishedRaidLog(raidId: number) {
 }
 
 export async function getRaidLog(clanId: number): Promise<string> {
-  return await kolClient.clanActionMutex.runExclusive(async () => {
+  return await kolClient.actionMutex.runExclusive(async () => {
     if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
     const log = await kolClient.visitUrl("clan_raidlogs.php", {});
     if (!log) throw new RaidLogMissingError();

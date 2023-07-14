@@ -138,7 +138,7 @@ function wait(ms: number) {
 }
 
 export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) {
-  clanActionMutex = new Mutex();
+  actionMutex = new Mutex();
   static loginMutex = new Mutex();
   mockLoggedIn = false;
 
@@ -519,7 +519,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async addToWhitelist(playerId: number, clanId: number): Promise<boolean> {
-    return await this.clanActionMutex.runExclusive(async () => {
+    return await this.actionMutex.runExclusive(async () => {
       if (!(await this.joinClan(clanId))) return false;
       await this.visitUrl("clan_whitelist.php", {
         addwho: playerId,
