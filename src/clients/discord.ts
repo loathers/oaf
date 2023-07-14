@@ -117,6 +117,8 @@ export class DiscordClient extends Client {
   async alert(description: string, interaction?: Interaction, error?: Error | unknown) {
     console.error(description, error);
 
+    if (!process.env.DEBUG) return;
+
     if (!this.alertsChannel) return;
     const embeds: JSONEncodable<APIEmbed>[] = [];
 

@@ -43,6 +43,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 export async function init() {
   discordClient.on(Events.ClientReady, async (client) => {
+    if (process.env.DEBUG) return;
     START_TIME = Date.now();
     const channel = await client.channels.fetch(TEST_CHANNEL_ID);
     if (!channel || !("send" in channel)) return;
