@@ -37,7 +37,7 @@ export const data = new SlashCommandBuilder()
       .setName("item")
       .setDescription("Select an item from the autocomplete or supply an item id")
       .setAutocomplete(true)
-      .setRequired(true)
+      .setRequired(true),
   );
 
 const getRankSymbol = (rank: number) => {
@@ -58,7 +58,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
   const { data, status } = await axios.get<MuseumResponse>(
-    `https://museum.loathers.net/api/item/${id}`
+    `https://museum.loathers.net/api/item/${id}`,
   );
 
   if (status !== 200) {
@@ -82,13 +82,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     .setTitle(`Museum 🏛️`)
     .addFields({ name: `Top 10 "${data.name}" Collections`, value: leaderboard.join("\n") })
     .setThumbnail(
-      `https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/${data.picture}.gif`
+      `https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/${data.picture}.gif`,
     );
 
   await interaction.editReply({
     content: `${hyperlink(
       `Browse the full "${data.name}" leaderboard`,
-      `https://museum.loathers.net/item/${id}`
+      `https://museum.loathers.net/item/${id}`,
     )}`,
     embeds: [embed],
   });

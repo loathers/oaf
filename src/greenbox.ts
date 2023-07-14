@@ -40,13 +40,13 @@ async function wipe(playerId: number) {
     if (!isRecordNotFoundError(error)) {
       return await kolClient.kmail(
         playerId,
-        "There was an error wiping your public greenbox profile"
+        "There was an error wiping your public greenbox profile",
       );
     }
   }
 
   await kolClient.kmail(
     playerId,
-    "At your request, your public greenbox profile, if it existed, has been removed"
+    "At your request, your public greenbox profile, if it existed, has been removed",
   );
 }

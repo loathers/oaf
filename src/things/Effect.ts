@@ -37,7 +37,7 @@ export class Effect extends Thing {
       parts[2],
       parts[3],
       parts[4],
-      !isAvatar && !parts[5].includes("nohookah") && parts[4] !== "bad"
+      !isAvatar && !parts[5].includes("nohookah") && parts[4] !== "bad",
     );
   }
 
@@ -52,7 +52,7 @@ export class Effect extends Thing {
     imageUrl: string,
     descId: string,
     quality: string,
-    hookah: boolean
+    hookah: boolean,
   ) {
     super(id, name, imageUrl);
     this.descId = descId;

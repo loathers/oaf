@@ -84,7 +84,7 @@ export class Item extends Thing {
       parts[5].indexOf("d") >= 0,
       parseInt(parts[6]),
       cleanString(parts[7]) || `${cleanString(parts[1])}s`,
-      itemInfoForUse
+      itemInfoForUse,
     );
   }
 
@@ -100,7 +100,7 @@ export class Item extends Thing {
     discardable: boolean,
     autosell: number,
     pluralName: string,
-    itemInfoForUse: Map<string, string[]>
+    itemInfoForUse: Map<string, string[]>,
   ) {
     super(id, name, imageUrl);
     this.descId = descId;
@@ -189,7 +189,7 @@ export class Item extends Thing {
     const description = [`(Item ${this.id})`];
 
     const consumableType = this.types.find((t): t is ConsumableType =>
-      CONSUMABLE_TYPES.includes(t as ConsumableType)
+      CONSUMABLE_TYPES.includes(t as ConsumableType),
     );
     if (consumableType) {
       const [consumableName, consumableUnit] = (() => {
@@ -209,7 +209,7 @@ export class Item extends Thing {
       description.push(
         `${bold(`${this.mapQuality(quality)} ${consumableName}`)} (Size ${size}${
           level !== "1" ? `, requires level ${level}` : ""
-        })`
+        })`,
       );
 
       if (adventures !== "0") {
@@ -220,7 +220,7 @@ export class Item extends Thing {
     }
 
     const equipmentType = this.types.find((t): t is EquipmentType =>
-      EQUIPMENT_TYPES.includes(t as EquipmentType)
+      EQUIPMENT_TYPES.includes(t as EquipmentType),
     );
     if (equipmentType) {
       const [, powerString, requirementString, subtype] = data;
@@ -311,7 +311,7 @@ export class Item extends Thing {
 
   addGrowingFamiliar(familiar: Familiar): void {
     this._addlDescription = `Grows into: ${bold(
-      hyperlink(familiar.name, toWikiLink(familiar.name))
+      hyperlink(familiar.name, toWikiLink(familiar.name)),
     )}\n`;
   }
 
@@ -336,7 +336,7 @@ export class Item extends Thing {
     } else if (limitedMallPrice) {
       return `Mall Price: ${hyperlink(
         `${formattedLimitedMallPrice} meat (only available limited per day)`,
-        url
+        url,
       )}`;
     } else {
       return "Mall extinct.";
@@ -354,7 +354,7 @@ export class Item extends Thing {
       .join(", ");
 
     output.push(
-      `${titleCase(groupType)}s into: ${turnsInto}${group.length > 8 ? " ...and more." : ""}`
+      `${titleCase(groupType)}s into: ${turnsInto}${group.length > 8 ? " ...and more." : ""}`,
     );
 
     const tradeables = (
@@ -364,7 +364,7 @@ export class Item extends Thing {
           .map(async (item) => ({
             item: item,
             price: await kolClient.getMallPrice(item.id),
-          }))
+          })),
       )
     )
       .filter((item) => item.price.minPrice)
@@ -378,7 +378,7 @@ export class Item extends Thing {
         const wikiLink = hyperlink(cheapest.name, toWikiLink(cheapest.name));
         const mallHistoryLink = hyperlink(
           `${tradeables[0].price.formattedMinPrice} meat`,
-          `https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${cheapest.id}&timespan=1&noanim=0`
+          `https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${cheapest.id}&timespan=1&noanim=0`,
         );
 
         output.push(`(Cheapest: ${wikiLink} @ ${mallHistoryLink})`);
@@ -418,13 +418,13 @@ export class Item extends Thing {
     if (withAddl && this.container) {
       description.push(
         `Enclosed in: ${bold(hyperlink(this.container.name, toWikiLink(this.container.name)))}`,
-        await this.container?.getDescription(false)
+        await this.container?.getDescription(false),
       );
     }
 
     if (withAddl && this.contents) {
       description.push(
-        `Encloses: ${bold(hyperlink(this.contents.name, toWikiLink(this.contents.name)))}`
+        `Encloses: ${bold(hyperlink(this.contents.name, toWikiLink(this.contents.name)))}`,
       );
       description.push(await this.contents?.getDescription(false));
     }

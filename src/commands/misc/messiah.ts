@@ -4,10 +4,10 @@ import sharp from "sharp";
 export const data = new SlashCommandBuilder()
   .setName("messiah")
   .setDescription(
-    "Let someone know their actions caused you to lose faith in humanity a little bit"
+    "Let someone know their actions caused you to lose faith in humanity a little bit",
   )
   .addStringOption((option) =>
-    option.setName("name").setDescription("the person who ruined your day").setRequired(true)
+    option.setName("name").setDescription("the person who ruined your day").setRequired(true),
   );
 
 const superhero = (text: string) => {
@@ -20,7 +20,7 @@ const superhero = (text: string) => {
         ">": "&gt;",
         "'": "&#39;",
         '"': "&quot;",
-      }[t] || t)
+      })[t] || t,
   );
 
   const skew = 0.261799;

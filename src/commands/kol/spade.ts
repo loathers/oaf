@@ -92,8 +92,8 @@ export const data = new SlashCommandBuilder()
         option
           .setName("start")
           .setDescription("Latest item id from which to start spading.")
-          .setRequired(false)
-      )
+          .setRequired(false),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
@@ -103,16 +103,16 @@ export const data = new SlashCommandBuilder()
         option
           .setName("start")
           .setDescription("Latest familiar id from which to start spading.")
-          .setRequired(false)
-      )
+          .setRequired(false),
+      ),
   )
   .addSubcommand((subcommand) =>
     subcommand
       .setName("skills")
       .setDescription("Spade unreleased skills")
       .addIntegerOption((option) =>
-        option.setName("classid").setDescription("class ID to spade skills for").setRequired(false)
-      )
+        option.setName("classid").setDescription("class ID to spade skills for").setRequired(false),
+      ),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -199,7 +199,7 @@ async function spadeItem(itemId: number) {
       action: "equip",
       which: 2,
       whichitem: itemId,
-    })
+    }),
   );
 
   let itemtype = ItemType.Unknown as ItemType;
@@ -213,13 +213,13 @@ async function spadeItem(itemId: number) {
       whichitem: itemId,
       sellprice: "",
       selling: "Yep.",
-    })
+    }),
   );
 
   for (const property of ITEM_SPADING_CALLS) {
     const { url, visitMatch, type } = property;
     const page = (await kolClient.visitUrl(
-      ...(url(itemId) as [string, Record<string, number>])
+      ...(url(itemId) as [string, Record<string, number>]),
     )) as string;
 
     const match = visitMatch.test(page);

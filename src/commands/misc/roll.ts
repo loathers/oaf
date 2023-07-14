@@ -11,7 +11,7 @@ export const data = new SlashCommandBuilder()
       .setDescription("Number of sides on each die")
       .setRequired(true)
       .setMinValue(1)
-      .setMaxValue(1000000)
+      .setMaxValue(1000000),
   )
   .addIntegerOption((option) =>
     option
@@ -19,7 +19,7 @@ export const data = new SlashCommandBuilder()
       .setDescription("Number of dice to roll (default 1)")
       .setRequired(false)
       .setMinValue(1)
-      .setMaxValue(100)
+      .setMaxValue(100),
   );
 
 export function execute(interaction: ChatInputCommandInteraction) {
@@ -38,7 +38,7 @@ export function execute(interaction: ChatInputCommandInteraction) {
 
   return interaction.reply(
     `Rolled a total of ${total} on ${dnd} (individal rolls ${lf.format(
-      rolls.map((n) => n.toString())
-    )})`
+      rolls.map((n) => n.toString()),
+    )})`,
   );
 }

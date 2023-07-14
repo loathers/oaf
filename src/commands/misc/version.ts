@@ -30,7 +30,7 @@ function getVersionEmbed() {
       {
         name: "Build Date",
         value: process.env.HEROKU_RELEASE_CREATED_AT || "unknown",
-      }
+      },
     );
 }
 

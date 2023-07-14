@@ -19,7 +19,7 @@ async function visitBookMobile(): Promise<string> {
         {
           whichchoice: 1200,
           option: 2,
-        }
+        },
       );
     }
     return p;
@@ -53,7 +53,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!info)
     return void (await interaction.editReply(
-      "I wasn't able to understand what The Bookmobile bro said"
+      "I wasn't able to understand what The Bookmobile bro said",
     ));
 
   const embed = createEmbed().setTitle(`The Bookmobile`);

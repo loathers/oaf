@@ -10,7 +10,7 @@ export const data = new SlashCommandBuilder()
       .setName("itemdrop")
       .setDescription("The item drop % you are looking to get from your fairy.")
       .setRequired(true)
-      .setMinValue(0.1)
+      .setMinValue(0.1),
   );
 
 export function execute(interaction: ChatInputCommandInteraction): void {
@@ -19,6 +19,8 @@ export function execute(interaction: ChatInputCommandInteraction): void {
   interaction.reply(
     `To get ${itemDrop}% item drop from a fairy, ` +
       `it should be weigh at least ${toWeight(itemDrop).toFixed(1)} lbs, ` +
-      `or be a Jumpsuited Hounddog that weighs at least ${toWeight(itemDrop, 1.25).toFixed(1)} lbs.`
+      `or be a Jumpsuited Hounddog that weighs at least ${toWeight(itemDrop, 1.25).toFixed(
+        1,
+      )} lbs.`,
   );
 }

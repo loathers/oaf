@@ -95,13 +95,13 @@ function parseKillsAndBanishes(raidLog: string) {
 
 function extractDreadOverview(raidLog: string): DreadStatus {
   const forest = raidLog.match(
-    /Your clan has defeated <b>(?<forest>[\d,]+)<\/b> monster\(s\) in the Forest/
+    /Your clan has defeated <b>(?<forest>[\d,]+)<\/b> monster\(s\) in the Forest/,
   );
   const village = raidLog.match(
-    /Your clan has defeated <b>(?<village>[\d,]+)<\/b> monster\(s\) in the Village/
+    /Your clan has defeated <b>(?<village>[\d,]+)<\/b> monster\(s\) in the Village/,
   );
   const castle = raidLog.match(
-    /Your clan has defeated <b>(?<castle>[\d,]+)<\/b> monster\(s\) in the Castle/
+    /Your clan has defeated <b>(?<castle>[\d,]+)<\/b> monster\(s\) in the Castle/,
   );
 
   const monsters = parseKillsAndBanishes(raidLog);
@@ -199,7 +199,7 @@ export async function getMissingRaidLogs(clanId: number, parsedRaids: number[]):
     while (!raidLogs.includes("No previous Clan Dungeon records found") && !done) {
       const matches =
         raidLogs.match(
-          /kisses<\/td><td class=tiny>\[<a href="clan_viewraidlog\.php\?viewlog=(?<id>\d+)/g
+          /kisses<\/td><td class=tiny>\[<a href="clan_viewraidlog\.php\?viewlog=(?<id>\d+)/g,
         ) || [];
       for (const id of matches) {
         const cleanId = Number(id.replace(/\D/g, ""));

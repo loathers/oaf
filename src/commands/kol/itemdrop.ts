@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
       .setDescription("The droprate of the item in question.")
       .setRequired(true)
       .setMinValue(0.1)
-      .setMaxValue(99.9)
+      .setMaxValue(99.9),
   );
 
 export function execute(interaction: ChatInputCommandInteraction): void {
@@ -18,6 +18,6 @@ export function execute(interaction: ChatInputCommandInteraction): void {
   interaction.reply(
     `A ${drop.toFixed(1)}% drop requires a +${
       Math.ceil(10000 / drop) - 100
-    }% item drop bonus to cap.`
+    }% item drop bonus to cap.`,
   );
 }

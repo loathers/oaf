@@ -16,7 +16,7 @@ export const data = new SlashCommandBuilder()
     o
       .setName("player")
       .setDescription("The name of the player to add to the whitelists.")
-      .setRequired(true)
+      .setRequired(true),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {

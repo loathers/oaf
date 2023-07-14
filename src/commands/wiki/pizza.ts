@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
       .setDescription("The first letters of the items you want to bake into a pizza.")
       .setRequired(true)
       .setMinLength(1)
-      .setMaxLength(4)
+      .setMaxLength(4),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -45,19 +45,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     embed.setDescription(
       `${article} ${pizzaName}${
         functionalLetters < letters.length ? ` (functionally ${functionalName})` : ""
-      } pizza has too many possible effects to list.`
+      } pizza has too many possible effects to list.`,
     );
   } else {
     const description: string[] = await Promise.all(
       options.map(async (effect) => {
         const foundName = await wikiClient.findName(effect.name);
         return hyperlink(foundName?.name ?? "", encodeURI(foundName?.url || ""));
-      })
+      }),
     );
 
     if (functionalLetters < letters.length) {
       description.unshift(
-        `(Note: ${article} ${pizzaName} pizza functions as ${article.toLowerCase()} ${functionalName} pizza)`
+        `(Note: ${article} ${pizzaName} pizza functions as ${article.toLowerCase()} ${functionalName} pizza)`,
       );
     }
 

@@ -15,7 +15,7 @@ export const data = new SlashCommandBuilder()
       .setName("effect")
       .setDescription("The KoL effect to query.")
       .setRequired(true)
-      .setAutocomplete(true)
+      .setAutocomplete(true),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {

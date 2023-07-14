@@ -24,7 +24,7 @@ function expectNotNull<T>(value: T | null): asserts value is T {
 
 test("Can search for a player by name", async () => {
   vi.mocked(axios).mockResolvedValueOnce(
-    await respondWithFixture(__dirname, "searchplayer_mad_carew.html")
+    await respondWithFixture(__dirname, "searchplayer_mad_carew.html"),
   );
 
   const player = await kolClient.getPartialPlayerFromName("mad carew");
@@ -41,7 +41,7 @@ test("Can search for a player by name", async () => {
 describe("Profile parsing", () => {
   test("Can parse a profile picture", async () => {
     vi.mocked(axios).mockResolvedValueOnce(
-      await respondWithFixture(__dirname, "showplayer_regular.html")
+      await respondWithFixture(__dirname, "showplayer_regular.html"),
     );
 
     const player = await kolClient.getPlayerInformation({
@@ -57,7 +57,7 @@ describe("Profile parsing", () => {
 
   test("Can parse a profile picture on dependence day", async () => {
     vi.mocked(axios).mockResolvedValueOnce(
-      await respondWithFixture(__dirname, "showplayer_dependence_day.html")
+      await respondWithFixture(__dirname, "showplayer_dependence_day.html"),
     );
 
     const player = await kolClient.getPlayerInformation({

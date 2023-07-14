@@ -17,7 +17,7 @@ export const data = new SlashCommandBuilder()
       .setDescription("The level you are looking to reach.")
       .setRequired(true)
       .setMinValue(1)
-      .setMaxValue(255)
+      .setMaxValue(255),
   );
 
 export function execute(interaction: ChatInputCommandInteraction) {
@@ -28,6 +28,6 @@ export function execute(interaction: ChatInputCommandInteraction) {
   interaction.reply(
     `Level ${level}${
       level === 255 ? " (the maximum)" : ""
-    } requires ${mainstat.toLocaleString()} mainstat or ${substat.toLocaleString()} total substats.`
+    } requires ${mainstat.toLocaleString()} mainstat or ${substat.toLocaleString()} total substats.`,
   );
 }

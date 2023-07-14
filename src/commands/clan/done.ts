@@ -10,13 +10,13 @@ export const data = new SlashCommandBuilder()
     option
       .setName("player")
       .setDescription("The player to set as done with skills.")
-      .setRequired(true)
+      .setRequired(true),
   )
   .addBooleanOption((option) =>
     option
       .setName("done")
       .setDescription("Whether the player is done or not (default: true)")
-      .setRequired(false)
+      .setRequired(false),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -55,6 +55,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.editReply(
     `${doneWithSkills ? "Added" : "Removed"} user ${italic(playerName)} ${
       doneWithSkills ? "to" : "from"
-    } the list of players done with skills.`
+    } the list of players done with skills.`,
   );
 }

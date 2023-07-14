@@ -20,10 +20,10 @@ export const data = new SlashCommandBuilder()
     option
       .setName("when")
       .setDescription('When to remind you (In either the form "1w2d3h4m5s" or "rollover")')
-      .setRequired(true)
+      .setRequired(true),
   )
   .addStringOption((option) =>
-    option.setName("reminder").setDescription("What to remind you").setRequired(false)
+    option.setName("reminder").setDescription("What to remind you").setRequired(false),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -60,8 +60,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.reply(
       `Okay, I'll remind you in ${time(
         Math.round(reminderTime / 1000),
-        TimestampStyles.RelativeTime
-      )}.`
+        TimestampStyles.RelativeTime,
+      )}.`,
     );
   } else {
     reminderTime = new Date(Date.now()).setHours(3, 40);
@@ -132,7 +132,7 @@ async function loadRemindersFromDatabase() {
     if (!channel || !("send" in channel)) {
       console.log(
         "Skipping reminder due to unknown channel or cannot be posted in",
-        reminder.channelId
+        reminder.channelId,
       );
       continue;
     }

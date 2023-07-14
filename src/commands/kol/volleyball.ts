@@ -8,7 +8,7 @@ export const data = new SlashCommandBuilder()
       .setName("weight")
       .setDescription("The weight of the volleyball.")
       .setRequired(true)
-      .setMinValue(1)
+      .setMinValue(1),
   );
 
 export function execute(interaction: ChatInputCommandInteraction) {

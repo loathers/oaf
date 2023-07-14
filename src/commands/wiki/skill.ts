@@ -15,7 +15,7 @@ export const data = new SlashCommandBuilder()
       .setName("skill")
       .setDescription("The KoL skill to query.")
       .setRequired(true)
-      .setAutocomplete(true)
+      .setAutocomplete(true),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {

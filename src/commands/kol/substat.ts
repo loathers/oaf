@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
       .setName("substat")
       .setDescription("The amount of substat you are reaching.")
       .setRequired(true)
-      .setMinValue(1)
+      .setMinValue(1),
   );
 
 export function execute(interaction: ChatInputCommandInteraction) {
