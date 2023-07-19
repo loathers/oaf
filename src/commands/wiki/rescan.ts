@@ -4,7 +4,7 @@ import { wikiClient } from "../../clients/wiki.js";
 
 export const data = new SlashCommandBuilder()
   .setName("rescan")
-  .setDescription("Reload OAF's in-game information from mafia's datafiles.");
+  .setDescription("Reload my in-game information from KoLmafia's datafiles.");
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();

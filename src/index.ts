@@ -54,9 +54,9 @@ async function main() {
   console.log("Starting API server");
   startApiServer();
 
-  console.log("Downloading mafia data.");
+  console.log("Downloading KoLmafia data.");
   await wikiClient.loadMafiaData();
-  console.log("All mafia data downloaded.");
+  console.log("All KoLmafia data downloaded.");
 
   console.log("Loading commands and syncing relevant data");
   await loadSlashCommands();

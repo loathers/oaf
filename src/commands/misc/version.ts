@@ -3,7 +3,6 @@ import ms from "pretty-ms";
 
 import { createEmbed, discordClient } from "../../clients/discord.js";
 
-const TEST_CHANNEL_ID = process.env.TEST_CHANNEL_ID!;
 let START_TIME = 0;
 
 export const data = new SlashCommandBuilder()
@@ -42,27 +41,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export async function init() {
-  discordClient.on(Events.ClientReady, async (client) => {
-    if (process.env.DEBUG) return;
+  discordClient.on(Events.ClientReady, async () => {
     START_TIME = Date.now();
-    const channel = await client.channels.fetch(TEST_CHANNEL_ID);
-    if (!channel || !("send" in channel)) return;
-    channel.send({
-      content: "O.A.F. started successfully",
-      embeds: [getVersionEmbed()],
-    });
+    discordClient.alert("O.A.F. started");
   });
 
   process.on("SIGTERM", () => {
-    console.log("Shutting down...");
-    // Use the cache as we want to do as little as possible async here
-    const channel = discordClient.channels.cache.get(TEST_CHANNEL_ID);
-
-    if (!channel || !("send" in channel)) {
-      console.warn("No channel available to say bye bye");
-      process.exit(0);
-    }
-
-    channel.send("O.A.F. shutting down...").then(() => process.exit(0));
+    discordClient.alert("O.A.F. shutting down...").then(() => process.exit(0));
   });
 }

@@ -139,7 +139,7 @@ export class DiscordClient extends Client {
       embeds.push(new EmbedBuilder().setTitle("Error").addFields(fields));
     }
 
-    this.alertsChannel.send({
+    return this.alertsChannel.send({
       content: description,
       embeds,
       allowedMentions: { users: [] },

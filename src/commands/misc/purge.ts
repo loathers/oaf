@@ -6,7 +6,7 @@ const getOwnUserId = () => discordClient.user?.id;
 
 export const data = new SlashCommandBuilder()
   .setName("purge")
-  .setDescription("Purges the last x messages from OAF in this channel.")
+  .setDescription("Purges the last <count> messages from me in this channel.")
   .addIntegerOption((option) =>
     option
       .setName("count")

@@ -39,7 +39,7 @@ const ORB_RESPONSES: string[] = [
 
 export const data = new SlashCommandBuilder()
   .setName("orb")
-  .setDescription("Consult OAF's miniature crystal ball.")
+  .setDescription("Consult my miniature crystal ball.")
   .addStringOption((option) =>
     option.setName("asktheorb").setDescription("THE ORB KNOWS ALL").setRequired(false),
   );

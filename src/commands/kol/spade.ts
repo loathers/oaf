@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, inlineCode } from "discord.js";
 
 import { kolClient } from "../../clients/kol.js";
 import { wikiClient } from "../../clients/wiki.js";
@@ -184,7 +184,7 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
           inline: true,
         })),
         footer: {
-          text: `OAF can detect the following item types: ${Object.values(ItemType)
+          text: `${inlineCode("oaf")} can detect the following item types: ${Object.values(ItemType)
             .filter((type) => type)
             .join(", ")}. If no type is shown, the item is none of these.`,
         },

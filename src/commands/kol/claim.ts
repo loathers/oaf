@@ -36,7 +36,7 @@ export const data = new SlashCommandBuilder()
   .setName("claim")
   .setDescription("Claim a KoL player account.")
   .addStringOption((option) =>
-    option.setName("token").setDescription("The token that OAF sent you").setRequired(false),
+    option.setName("token").setDescription("The token that I sent you").setRequired(false),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
