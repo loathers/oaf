@@ -9,6 +9,7 @@ import {
   GatewayIntentBits,
   Interaction,
   JSONEncodable,
+  MessageCreateOptions,
   ModalSubmitInteraction,
   Partials,
   REST,
@@ -16,6 +17,7 @@ import {
   Routes,
   SlashCommandBuilder,
   TextBasedChannel,
+  TextChannel,
   codeBlock,
   userMention,
 } from "discord.js";
@@ -35,6 +37,7 @@ export type CommandHandler = {
 
 export class DiscordClient extends Client {
   private clientId: string;
+  private alertsQueue: MessageCreateOptions[] = [];
   private alertsChannel: TextBasedChannel | null = null;
   commands = new Collection<string, CommandHandler>();
   modals = new Collection<string, ModalHandler>();
@@ -60,7 +63,7 @@ export class DiscordClient extends Client {
     this.on(Events.ClientReady, async (client) => {
       const channel = await client.channels.fetch(alertsChannelId);
       if (!channel?.isTextBased()) return;
-      this.alertsChannel = channel;
+      await this.initAlertsChannel(channel);
     });
   }
 
@@ -114,6 +117,15 @@ export class DiscordClient extends Client {
     }
   }
 
+  async initAlertsChannel(channel: TextBasedChannel) {
+    this.alertsChannel = channel;
+    while (this.alertsQueue.length > 0) {
+      const alert = this.alertsQueue.shift();
+      if (!alert) break;
+      await this.alertsChannel.send(alert);
+    }
+  }
+
   async alert(description: string, interaction?: Interaction, error?: Error | unknown) {
     if (!interaction) {
       console.warn(description);
@@ -125,11 +137,6 @@ export class DiscordClient extends Client {
 
     if (process.env.DEBUG) {
       console.warn("(Suppressing alerts due to debug mode)");
-      return;
-    }
-
-    if (!this.alertsChannel) {
-      console.warn("No alerts channel to holler at");
       return;
     }
 
@@ -152,11 +159,19 @@ export class DiscordClient extends Client {
       embeds.push(new EmbedBuilder().setTitle("Error").addFields(fields));
     }
 
-    return this.alertsChannel.send({
+    const alert = {
       content: description,
       embeds,
       allowedMentions: { users: [] },
-    });
+    };
+
+    if (!this.alertsChannel) {
+      console.warn("Queuing alert as no channel initialised yet");
+      this.alertsQueue.push(alert);
+      return;
+    }
+
+    return this.alertsChannel.send(alert);
   }
 
   start(): void {
