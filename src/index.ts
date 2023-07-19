@@ -73,9 +73,10 @@ async function main() {
   discordClient.on(Events.MessageCreate, async (message) => {
     if (message.content.length === 0) return;
     console.log(
-      new Date(message.createdTimestamp).toLocaleTimeString(),
-      message.author.username,
-      `said "${message.content}" in channel ${message.channel}`,
+      `[${new Date(message.createdTimestamp).toLocaleTimeString()}]`,
+      message.inGuild() ? `#${message.channel.name}` : "DM",
+      `${message.author.username}:`,
+      `"${message.content}"`,
     );
   });
 
