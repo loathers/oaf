@@ -114,8 +114,8 @@ export class DiscordClient extends Client {
     }
   }
 
-  async alert(description: string, interaction?: Interaction, error?: Error | unknown) {
-    console.error(description, error);
+  async alert(description: string, interaction?: Interaction, error?: false | Error | unknown) {
+    if (!error !== false) console.error(description, error);
 
     if (!process.env.DEBUG) return;
 

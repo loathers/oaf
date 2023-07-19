@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, inlineCode } from "discord.js";
 
 const ORB_RESPONSES: string[] = [
   "It is certain.",
@@ -48,9 +48,9 @@ export function execute(interaction: ChatInputCommandInteraction) {
   const question = interaction.options.getString("asktheorb");
 
   interaction.reply({
-    content: `${
-      question ? `"${question}", you ask.\n` : ""
-    }O.A.F. gazes into the mini crystal ball. "${
+    content: `${question ? `"${question}", you ask.\n` : ""}${inlineCode(
+      "oaf",
+    )} gazes into the mini crystal ball. "${
       ORB_RESPONSES[Math.floor(Math.random() * ORB_RESPONSES.length)]
     }", they report.`,
     allowedMentions: {
