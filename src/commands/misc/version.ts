@@ -49,12 +49,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 export async function init() {
   discordClient.on(Events.ClientReady, async () => {
     START_TIME = Date.now();
-    discordClient.alert(`${inlineCode("oaf")} started`, undefined, false);
+    discordClient.alert(`${inlineCode("oaf")} started`);
   });
 
   process.on("SIGTERM", () => {
-    discordClient
-      .alert(`${inlineCode("oaf")} shutting down`, undefined, false)
-      .then(() => process.exit(0));
+    discordClient.alert(`${inlineCode("oaf")} shutting down`).then(() => process.exit(0));
   });
 }

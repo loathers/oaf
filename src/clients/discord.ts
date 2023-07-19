@@ -114,12 +114,25 @@ export class DiscordClient extends Client {
     }
   }
 
-  async alert(description: string, interaction?: Interaction, error?: false | Error | unknown) {
-    if (error !== false) console.error(description, error);
+  async alert(description: string, interaction?: Interaction, error?: Error | unknown) {
+    if (!interaction) {
+      console.warn(description);
+    } else if (error) {
+      console.error(description, error);
+    } else {
+      console.error(description);
+    }
 
-    if (process.env.DEBUG) return;
+    if (process.env.DEBUG) {
+      console.warn("(Suppressing alerts due to debug mode)");
+      return;
+    }
 
-    if (!this.alertsChannel) return;
+    if (!this.alertsChannel) {
+      console.warn("No alerts channel to holler at");
+      return;
+    }
+
     const embeds: JSONEncodable<APIEmbed>[] = [];
 
     if (interaction) {
