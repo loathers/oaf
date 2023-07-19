@@ -17,7 +17,6 @@ import {
   Routes,
   SlashCommandBuilder,
   TextBasedChannel,
-  TextChannel,
   codeBlock,
   userMention,
 } from "discord.js";
