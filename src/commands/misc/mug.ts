@@ -92,12 +92,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
 
   if (images.length === 0) {
-    interaction.reply({
+    return await interaction.reply({
       content:
         "A personalized coffee mug with no message is like a skunk with no bad smells. It just don't make sense.",
       ephemeral: true,
     });
-    return;
   }
 
   const png = await sharp(path.join(__dirname, "cup.png")).composite(images).png().toBuffer();
