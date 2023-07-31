@@ -5,7 +5,7 @@ import {
   roleMention,
 } from "discord.js";
 
-const PERMITTED_ROLE_IDS = process.env.SUBS_ROLLING_ROLE_IDS!.split(",");
+const PERMITTED_ROLE_IDS = process.env.SUBS_ROLLING_INITIATOR_ROLE_IDS!.split(",");
 const SUBSCRIBER_ROLE_ID = process.env.SUBSCRIBER_ROLE_ID!;
 
 export const data = new SlashCommandBuilder()
