@@ -30,7 +30,14 @@ export const data = new SlashCommandBuilder()
     subcommand
       .setName("alerts")
       .setDescription("Toggle whether you receive listener alerts on the server"),
-  ).addSubcommand((subcommand) => subcommand.setName("subscriber").setDescription("Toggle whether you want to get pinged when subscriptions are rolling in the Kingdom of Loathing"));
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("subscriber")
+      .setDescription(
+        "Toggle whether you want to get pinged when subscriptions are rolling in the Kingdom of Loathing",
+      ),
+  );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
@@ -102,7 +109,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       if (!subscriber) {
         return await interaction.editReply(
           `Relevant role(s) not found. Is this being used on the right Guild?`,
-        )
+        );
       }
 
       const desired = !member.roles.cache.has(SUBSCRIBER_ROLE_ID);
@@ -110,10 +117,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       if (desired) {
         await member.roles.add(SUBSCRIBER_ROLE_ID, "Member added via slash command");
       } else {
-        await member.roles.remove(SUBSCRIBER_ROLE_ID, "Member removed via slash command")
+        await member.roles.remove(SUBSCRIBER_ROLE_ID, "Member removed via slash command");
       }
 
-      return await interaction.editReply(`You will ${desired ? "now" : "no longer"} receive pings when subs roll`)
+      return await interaction.editReply(
+        `You will ${desired ? "now" : "no longer"} receive pings when subs roll`,
+      );
     }
 
     default:
