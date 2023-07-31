@@ -18,7 +18,7 @@ export function execute(interaction: ChatInputCommandInteraction) {
 
   interaction.reply(
     `To get ${meatDrop}% meat drop from a leprechaun, ` +
-      `it should weigh at least ${toWeight(meatDrop).toFixed(1)} lbs, ` +
-      `or be a Hobo Monkey that weighs at least ${toWeight(meatDrop).toFixed(1)} lbs.`,
+      `it should weigh at least ${toWeight(meatDrop / 2).toFixed(1)} lbs, ` +
+      `or be a Hobo Monkey that weighs at least ${toWeight(meatDrop / 2).toFixed(1)} lbs.`,
   );
 }

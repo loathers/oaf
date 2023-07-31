@@ -17,7 +17,7 @@ export function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
 
   interaction.reply(
-    `A ${weight}lb leprechaun provides +${toDrop(weight).toFixed(2)}% meat drop. ` +
-      `(+${toDrop(weight, 1.25).toFixed(2)}% for Hobo Monkey)`,
+    `A ${weight}lb leprechaun provides +${(2 * toDrop(weight)).toFixed(2)}% meat drop. ` +
+      `(+${(2 * toDrop(weight, 1.25)).toFixed(2)}% for Hobo Monkey)`,
   );
 }
