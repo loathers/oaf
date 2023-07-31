@@ -5,7 +5,7 @@ import {
   roleMention,
 } from "discord.js";
 
-const PERMITTED_ROLE_IDS = process.env.SUBS_ROLLING_INITIATOR_ROLE_IDS!.split(",");
+const PLAYER_DEV_ROLE_ID = process.env.PLAYER_DEV_ROLE_ID!;
 const SUBSCRIBER_ROLE_ID = process.env.SUBSCRIBER_ROLE_ID!;
 
 export const data = new SlashCommandBuilder()
@@ -25,7 +25,7 @@ export function execute(interaction: ChatInputCommandInteraction) {
 
   const roleManager = member.roles as GuildMemberRoleManager;
 
-  if (!PERMITTED_ROLE_IDS.some((r) => roleManager.cache.has(r))) {
+  if (!roleManager.cache.has(PLAYER_DEV_ROLE_ID)) {
     interaction.reply({
       content: "You are not permitted to blow the Gjallarhorn.",
       ephemeral: true,
