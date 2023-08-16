@@ -51,6 +51,7 @@ const BOARD_MAPPINGS = {
   "Fall of the Dinosaurs": 48,
   "Avatars of Shadows Over Loathing": 49,
   "Legacy of Loathing": 50,
+  "A Shrunken Adventurer am I": 51,
   Standard: 99,
   "Elf Gratitude": 900,
 } as const;
@@ -128,6 +129,10 @@ const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
   aosol: "Avatars of Shadows Over Loathing",
   asol: "Avatars of Shadows Over Loathing",
   lol: "Legacy of Loathing",
+  small: "A Shrunken Adventurer am I",
+  smol: "A Shrunken Adventurer am I",
+  shrunk: "A Shrunken Adventurer am I",
+  shrunken: "A Shrunken Adventurer am I",
 };
 
 const AUTOCOMPLETE_CHOICES = [
