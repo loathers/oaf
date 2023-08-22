@@ -325,7 +325,7 @@ export class Item extends Thing {
     const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
       await kolClient.getMallPrice(this.id);
 
-    const url = `https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${this.id}&timespan=1&noanim=0`;
+    const url = `https://api.aventuristo.net/itemgraph?itemid=${this.id}&timespan=1&noanim=0`;
 
     if (mallPrice) {
       let output = `Mall Price: ${hyperlink(`${formattedMallPrice} meat`, url)}`;
@@ -378,7 +378,7 @@ export class Item extends Thing {
         const wikiLink = hyperlink(cheapest.name, toWikiLink(cheapest.name));
         const mallHistoryLink = hyperlink(
           `${tradeables[0].price.formattedMinPrice} meat`,
-          `https://g1wjmf0i0h.execute-api.us-east-2.amazonaws.com/default/itemgraph?itemid=${cheapest.id}&timespan=1&noanim=0`,
+          `https://api.aventuristo.net/itemgraph?itemid=${cheapest.id}&timespan=1&noanim=0`,
         );
 
         output.push(`(Cheapest: ${wikiLink} @ ${mallHistoryLink})`);
