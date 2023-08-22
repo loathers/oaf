@@ -66,6 +66,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
+  if (data.collection.length === 0) {
+    await interaction.editReply(`That item exists but no-one has one in their display case!`);
+    return;
+  }
+
   const grouped = groupToMap(data.collection, (d) => d.rank);
   const ranks = [...grouped.keys()].sort((a, b) => a - b);
 
@@ -80,7 +85,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const embed = createEmbed()
     .setTitle(`Museum 🏛️`)
-    .addFields({ name: `Top 10 "${data.name}" Collections`, value: leaderboard.join("\n") })
+    .addFields({
+      name: `Top 10 "${data.name}" Collections`,
+      value: leaderboard.join("\n") || "Couldn't find any collections",
+    })
     .setThumbnail(
       `https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/${data.picture}.gif`,
     );

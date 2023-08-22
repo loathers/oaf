@@ -153,7 +153,7 @@ export class DiscordClient extends Client {
     if (error && isErrorLike(error)) {
       const fields = Object.entries(serializeError(error)).map(([k, v]) => ({
         name: k,
-        value: codeBlock(v as string),
+        value: codeBlock(JSON.stringify(v)),
       }));
       embeds.push(new EmbedBuilder().setTitle("Error").addFields(fields));
     }
