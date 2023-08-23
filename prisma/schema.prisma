@@ -45,3 +45,8 @@ model Tag {
   // A message can only have one tag
   @@unique([guildId, channelId, messageId])
 }
+
+model Settings {
+  key String  @id
+  value Json
+}
