@@ -31,7 +31,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!roleManager.cache.has(PLAYER_DEV_ROLE_ID)) {
     interaction.reply({
-      content: "You are not permitted to blow the Gjallarhorn.",
+      content: "You are not permitted to announce sandwich rotation of any sort.",
       ephemeral: true,
     });
     return;
@@ -50,7 +50,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (Date.now() - Number(lastTime) <= 1000 * 60 * 60 * 24) {
     interaction.reply({
       ephemeral: true,
-      content: `Sorry bucko, looks like ${lastPlayer} already sounded the Gjallarhorn too recently.`,
+      content: `Sorry bucko, looks like ${lastPlayer} already sent the Red October on a barrel roll, if you catch my drift.`,
     });
     return;
   }
@@ -58,7 +58,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   interaction.reply({
     content: `Attention ${roleMention(SUBSCRIBER_ROLE_ID)}, ${
       member.user.username
-    } has blown the Gjallarhorn! Subs are rolling!`,
+    } has set those subtitles aspin! Looks like you'll have to use dubs, like a Philistine.`,
     allowedMentions: {
       roles: [SUBSCRIBER_ROLE_ID],
     },
