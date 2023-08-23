@@ -12,6 +12,8 @@ const SUBSCRIBER_ROLE_ID = process.env.SUBSCRIBER_ROLE_ID!;
 
 const COMMAND_KEY = "LAST_SUB_PING";
 
+type CommandValue = { lastTime: number; lastPlayer: string };
+
 export const data = new SlashCommandBuilder()
   .setName("subsrolling")
   .setDescription("Pings users to let them know that subs are rolling");
@@ -43,9 +45,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     },
   });
 
-  const { lastTime, lastPlayer } = JSON.parse(
-    (last?.value as string) ?? `{"lastTime":0,"lastPlayer":"nobody"}`,
-  );
+  const { lastTime, lastPlayer } = (last?.value ?? {
+    lastTime: 0,
+    lastPlayer: "nobody",
+  }) as CommandValue;
 
   if (Date.now() - Number(lastTime) <= 1000 * 60 * 60 * 24) {
     interaction.reply({
@@ -64,7 +67,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     },
   });
 
-  const value = JSON.stringify({ lastPlayer: interaction.user.username, lastTime: Date.now() });
+  const value = { lastPlayer: interaction.user.username, lastTime: Date.now() };
 
   await prisma.settings.upsert({
     where: {
