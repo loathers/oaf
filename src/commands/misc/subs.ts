@@ -64,18 +64,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     },
   });
 
-  const data = {
-    key: COMMAND_KEY,
-    value: { lastPlayer: interaction.user.username, lastTime: Date.now() },
-  };
-  if (last) {
-    await prisma.settings.update({
-      where: {
-        key: COMMAND_KEY,
-      },
-      data,
-    });
-  } else {
-    await prisma.settings.create({ data });
-  }
+  const value = JSON.stringify({ lastPlayer: interaction.user.username, lastTime: Date.now() });
+
+  await prisma.settings.upsert({
+    where: {
+      key: COMMAND_KEY,
+    },
+    update: {
+      value,
+    },
+    create: {
+      key: COMMAND_KEY,
+      value,
+    },
+  });
 }
