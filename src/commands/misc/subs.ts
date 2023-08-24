@@ -3,6 +3,7 @@ import {
   GuildMemberRoleManager,
   SlashCommandBuilder,
   roleMention,
+  userMention,
 } from "discord.js";
 
 import { prisma } from "../../clients/database.js";
@@ -10,12 +11,12 @@ import { prisma } from "../../clients/database.js";
 const PLAYER_DEV_ROLE_ID = process.env.PLAYER_DEV_ROLE_ID!;
 const SUBSCRIBER_ROLE_ID = process.env.SUBSCRIBER_ROLE_ID!;
 
-const COMMAND_KEY = "LAST_SUB_PING";
+const COMMAND_KEY = "lastSubPing";
 
 type CommandValue = { lastTime: number; lastPlayer: string };
 
 export const data = new SlashCommandBuilder()
-  .setName("subsrolling")
+  .setName("subs")
   .setDescription("Pings users to let them know that subs are rolling");
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -39,29 +40,24 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const last = await prisma.settings.findUnique({
+  const last = (await prisma.settings.findUnique({
     where: {
       key: COMMAND_KEY,
     },
-  });
+  })) as { key: string; value: CommandValue } | null;
 
-  const { lastTime, lastPlayer } = (last?.value ?? {
-    lastTime: 0,
-    lastPlayer: "nobody",
-  }) as CommandValue;
-
-  if (Date.now() - Number(lastTime) <= 1000 * 60 * 60 * 24) {
+  if (last && Date.now() - Number(last.value.lastTime) <= 1000 * 60 * 60 * 24) {
     interaction.reply({
       ephemeral: true,
-      content: `Sorry bucko, looks like ${lastPlayer} already sent the Red October on a barrel roll, if you catch my drift.`,
+      content: `Sorry bucko, looks like ${last.value.lastPlayer} already sent the Red October on a barrel roll, if you catch my drift.`,
     });
     return;
   }
 
-  interaction.reply({
-    content: `Attention ${roleMention(SUBSCRIBER_ROLE_ID)}, ${
-      member.user.username
-    } has set those subtitles aspin! Looks like you'll have to use dubs, like a Philistine.`,
+  await interaction.reply({
+    content: `Attention ${roleMention(SUBSCRIBER_ROLE_ID)}, ${userMention(
+      interaction.user.id,
+    )} has kindly indicated that subs are now rolling.`,
     allowedMentions: {
       roles: [SUBSCRIBER_ROLE_ID],
     },
