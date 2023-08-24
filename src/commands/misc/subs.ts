@@ -3,7 +3,6 @@ import {
   GuildMemberRoleManager,
   SlashCommandBuilder,
   roleMention,
-  userMention,
 } from "discord.js";
 
 import { prisma } from "../../clients/database.js";
