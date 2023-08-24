@@ -9,6 +9,7 @@ import { prisma } from "../../clients/database.js";
 
 const PLAYER_DEV_ROLE_ID = process.env.PLAYER_DEV_ROLE_ID!;
 const SUBSCRIBER_ROLE_ID = process.env.SUBSCRIBER_ROLE_ID!;
+const IOTM_CHANNEL_ID = process.env.IOTM_CHANNEL_ID!;
 
 const COMMAND_KEY = "lastSubPing";
 
@@ -53,27 +54,44 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await interaction.reply({
-    content: `Attention ${roleMention(
-      SUBSCRIBER_ROLE_ID,
-    )}! A member of the /dev team has kindly indicated that subscriptions are now rolling.`,
-    allowedMentions: {
-      parse: ["roles"],
-    },
-  });
+  const iotmChannel = interaction.guild?.channels.cache.get(IOTM_CHANNEL_ID);
 
-  const value = { lastPlayer: interaction.user.username, lastTime: Date.now() };
+  if (!iotmChannel?.isTextBased()) {
+    await interaction.reply({
+      content: "IOTM channel not specified appropriately!",
+      ephemeral: true,
+    });
+    return;
+  }
 
-  await prisma.settings.upsert({
-    where: {
-      key: COMMAND_KEY,
-    },
-    update: {
-      value,
-    },
-    create: {
-      key: COMMAND_KEY,
-      value,
-    },
-  });
+  await iotmChannel
+    .send({
+      content: `Attention ${roleMention(
+        SUBSCRIBER_ROLE_ID,
+      )}! A member of the /dev team has kindly indicated that subscriptions are now rolling.`,
+      allowedMentions: {
+        roles: [SUBSCRIBER_ROLE_ID],
+      },
+    })
+    .then(() => {
+      const value = { lastPlayer: interaction.user.username, lastTime: Date.now() };
+      return prisma.settings.upsert({
+        where: {
+          key: COMMAND_KEY,
+        },
+        update: {
+          value,
+        },
+        create: {
+          key: COMMAND_KEY,
+          value,
+        },
+      });
+    })
+    .then(() =>
+      interaction.reply({
+        content: "The deed is done.",
+        ephemeral: true,
+      }),
+    );
 }
