@@ -55,11 +55,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   await interaction.reply({
-    content: `Attention ${roleMention(SUBSCRIBER_ROLE_ID)}, ${userMention(
-      interaction.user.id,
-    )} has kindly indicated that subs are now rolling.`,
+    content: `Attention ${roleMention(
+      SUBSCRIBER_ROLE_ID,
+    )}! A member of the /dev team has kindly indicated that subscriptions are now rolling.`,
     allowedMentions: {
-      roles: [SUBSCRIBER_ROLE_ID],
+      parse: ["roles"],
     },
   });
 
