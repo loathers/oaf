@@ -64,34 +64,30 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await iotmChannel
-    .send({
-      content: `Attention ${roleMention(
-        SUBSCRIBER_ROLE_ID,
-      )}! A member of the /dev team has kindly indicated that subscriptions are now rolling.`,
-      allowedMentions: {
-        roles: [SUBSCRIBER_ROLE_ID],
-      },
-    })
-    .then(() => {
-      const value = { lastPlayer: interaction.user.username, lastTime: Date.now() };
-      return prisma.settings.upsert({
-        where: {
-          key: COMMAND_KEY,
-        },
-        update: {
-          value,
-        },
-        create: {
-          key: COMMAND_KEY,
-          value,
-        },
-      });
-    })
-    .then(() =>
-      interaction.reply({
-        content: "The deed is done.",
-        ephemeral: true,
-      }),
-    );
+  await iotmChannel.send({
+    content: `Attention ${roleMention(
+      SUBSCRIBER_ROLE_ID,
+    )}! A member of the /dev team has kindly indicated that subscriptions are now rolling.`,
+    allowedMentions: {
+      roles: [SUBSCRIBER_ROLE_ID],
+    },
+  });
+
+  const value = { lastPlayer: interaction.user.username, lastTime: Date.now() };
+  await prisma.settings.upsert({
+    where: {
+      key: COMMAND_KEY,
+    },
+    update: {
+      value,
+    },
+    create: {
+      key: COMMAND_KEY,
+      value,
+    },
+  });
+  await interaction.reply({
+    content: "The deed is done.",
+    ephemeral: true,
+  });
 }
