@@ -16,7 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^5.0.0",
+    "@prisma/client": "^5.2.0",
     "@tinyhttp/app": "^2.1.0",
     "@tinyhttp/cors": "^2.0.0",
     "@types/node": "^20.4.2",
@@ -49,7 +49,7 @@
     "husky": ">=6",
     "lint-staged": ">=13.2.3",
     "prettier": "^3.0.0",
-    "prisma": "^5.0.0",
+    "prisma": "^5.2.0",
     "vitest": "^0.33.0"
   },
   "engines": {
