@@ -23,7 +23,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   const member = interaction.member;
 
-  interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ ephemeral: true });
 
   if (!member) {
     return void (await interaction.editReply({
@@ -86,6 +86,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 
   await interaction.editReply({
-    content: `The deed is done. ${messageLink(sentMessage.channelId, sentMessage.id)}`,
+    content: `The deed is done: ${messageLink(sentMessage.channelId, sentMessage.id)}`,
   });
 }
