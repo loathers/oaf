@@ -1,5 +1,8 @@
 import {
+  ApplicationCommandPermissionType,
   ChatInputCommandInteraction,
+  Client,
+  Events,
   GuildMemberRoleManager,
   SlashCommandBuilder,
   messageLink,
@@ -7,18 +10,23 @@ import {
 } from "discord.js";
 
 import { prisma } from "../../clients/database.js";
+import { discordClient } from "../../clients/discord.js";
 
 const PLAYER_DEV_ROLE_ID = process.env.PLAYER_DEV_ROLE_ID!;
 const SUBSCRIBER_ROLE_ID = process.env.SUBSCRIBER_ROLE_ID!;
 const IOTM_CHANNEL_ID = process.env.IOTM_CHANNEL_ID!;
+const GUILD_ID = process.env.GUILD_ID!;
 
 const COMMAND_KEY = "lastSubPing";
+
+const COMMAND_NAME = "subs";
 
 type CommandValue = { lastTime: number; lastPlayer: string };
 
 export const data = new SlashCommandBuilder()
-  .setName("subs")
-  .setDescription("Pings users to let them know that subs are rolling");
+  .setName(COMMAND_NAME)
+  .setDescription("Pings users to let them know that subs are rolling")
+  .setDefaultMemberPermissions(0);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const member = interaction.member;
@@ -88,4 +96,38 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.editReply({
     content: `The deed is done: ${messageLink(sentMessage.channelId, sentMessage.id)}`,
   });
+}
+
+async function setPermissionsForCommand(client: Client) {
+  try {
+    const oauthToken = await discordClient.getOauthToken();
+
+    const commands = client.application?.commands;
+
+    if (!commands) throw new Error("No commands found");
+
+    await commands.fetch();
+    const command = commands.cache.find((c) => c.name === COMMAND_NAME);
+
+    if (!command) throw new Error("Couldn't find command");
+
+    await commands.permissions.add({
+      guild: GUILD_ID,
+      command: command.id,
+      token: oauthToken,
+      permissions: [
+        {
+          id: PLAYER_DEV_ROLE_ID,
+          type: ApplicationCommandPermissionType.Role,
+          permission: true,
+        },
+      ],
+    });
+  } catch (error) {
+    await discordClient.alert("Failed to add permissions to /subs command", undefined, error);
+  }
+}
+
+export async function init() {
+  discordClient.on(Events.ClientReady, setPermissionsForCommand);
 }

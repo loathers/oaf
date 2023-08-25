@@ -38,6 +38,8 @@ export class DiscordClient extends Client {
   private clientId: string;
   private alertsQueue: MessageCreateOptions[] = [];
   private alertsChannel: TextBasedChannel | null = null;
+  private oauthToken = "";
+  private oauthExpiry = 0;
   commands = new Collection<string, CommandHandler>();
   modals = new Collection<string, ModalHandler>();
 
@@ -64,6 +66,34 @@ export class DiscordClient extends Client {
       if (!channel?.isTextBased()) return;
       await this.initAlertsChannel(channel);
     });
+  }
+
+  async getOauthToken() {
+    if (this.oauthToken && Date.now() < this.oauthExpiry) {
+      return this.oauthToken;
+    }
+
+    const request = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      body: new URLSearchParams({
+        client_id: process.env.CLIENT_ID!,
+        client_secret: process.env.CLIENT_SECRET!,
+        grant_type: "refresh_token",
+        refresh_token: process.env.OAUTH_REFRESH_TOKEN!,
+      }).toString(),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+    });
+
+    const { access_token, expires_in } = (await request.json()) as {
+      access_token: string;
+      expires_in: number;
+    };
+
+    this.oauthExpiry = Date.now() + expires_in;
+
+    return (this.oauthToken = access_token);
   }
 
   async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
