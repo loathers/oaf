@@ -2,6 +2,7 @@ import {
   ChatInputCommandInteraction,
   GuildMemberRoleManager,
   SlashCommandBuilder,
+  messageLink,
   roleMention,
 } from "discord.js";
 
@@ -9,6 +10,7 @@ import { prisma } from "../../clients/database.js";
 
 const PLAYER_DEV_ROLE_ID = process.env.PLAYER_DEV_ROLE_ID!;
 const SUBSCRIBER_ROLE_ID = process.env.SUBSCRIBER_ROLE_ID!;
+const IOTM_CHANNEL_ID = process.env.IOTM_CHANNEL_ID!;
 
 const COMMAND_KEY = "lastSubPing";
 
@@ -21,22 +23,20 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   const member = interaction.member;
 
+  await interaction.deferReply({ ephemeral: true });
+
   if (!member) {
-    interaction.reply({
+    return void (await interaction.editReply({
       content: "You have to perform this action from within a Guild.",
-      ephemeral: true,
-    });
-    return;
+    }));
   }
 
   const roleManager = member.roles as GuildMemberRoleManager;
 
   if (!roleManager.cache.has(PLAYER_DEV_ROLE_ID)) {
-    interaction.reply({
+    return void (await interaction.editReply({
       content: "You are not permitted to announce sandwich rotation of any sort.",
-      ephemeral: true,
-    });
-    return;
+    }));
   }
 
   const last = (await prisma.settings.findUnique({
@@ -46,19 +46,27 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   })) as { key: string; value: CommandValue } | null;
 
   if (last && Date.now() - Number(last.value.lastTime) <= 1000 * 60 * 60 * 24) {
-    interaction.reply({
-      ephemeral: true,
+    return void (await interaction.editReply({
       content: `Sorry bucko, looks like ${last.value.lastPlayer} already sent the Red October on a barrel roll, if you catch my drift.`,
-    });
-    return;
+    }));
   }
 
-  await interaction.reply({
-    content: `Attention ${roleMention(
+  const iotmChannel = interaction.guild?.channels.cache.get(IOTM_CHANNEL_ID);
+
+  if (!iotmChannel?.isTextBased()) {
+    return void (await interaction.editReply({
+      content: "Cannot send messages to configured IotM channel",
+    }));
+  }
+
+  const subRollEmoji = interaction.guild?.emojis.cache.find((e) => e.name === "subsRolling") || "";
+
+  const sentMessage = await iotmChannel.send({
+    content: `🚨${subRollEmoji} Attention ${roleMention(
       SUBSCRIBER_ROLE_ID,
-    )}! A member of the /dev team has kindly indicated that subscriptions are now rolling.`,
+    )}! A member of the /dev team has kindly indicated that subscriptions are now rolling ${subRollEmoji}🚨`,
     allowedMentions: {
-      parse: ["roles"],
+      roles: [SUBSCRIBER_ROLE_ID],
     },
   });
 
@@ -75,5 +83,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       key: COMMAND_KEY,
       value,
     },
+  });
+
+  await interaction.editReply({
+    content: `The deed is done: ${messageLink(sentMessage.channelId, sentMessage.id)}`,
   });
 }
