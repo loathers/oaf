@@ -1,8 +1,6 @@
 import {
   ApplicationCommandPermissionType,
   ChatInputCommandInteraction,
-  Client,
-  Events,
   GuildMemberRoleManager,
   SlashCommandBuilder,
   messageLink,
@@ -98,11 +96,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 }
 
-async function setPermissionsForCommand(client: Client) {
+async function setPermissionsForCommand() {
   try {
     const oauthToken = await discordClient.getOauthToken();
 
-    const commands = client.application?.commands;
+    const commands = discordClient.application?.commands;
 
     if (!commands) throw new Error("No commands found");
 
@@ -129,5 +127,5 @@ async function setPermissionsForCommand(client: Client) {
 }
 
 export async function init() {
-  discordClient.on(Events.ClientReady, setPermissionsForCommand);
+  discordClient.on("oafOauth", setPermissionsForCommand);
 }

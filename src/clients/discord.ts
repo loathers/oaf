@@ -22,6 +22,8 @@ import {
 } from "discord.js";
 import { isErrorLike, serializeError } from "serialize-error";
 
+import { prisma } from "./database.js";
+
 export type ModalHandler = {
   customId: string;
   handle: (interaction: ModalSubmitInteraction) => Promise<void>;
@@ -66,6 +68,17 @@ export class DiscordClient extends Client {
       if (!channel?.isTextBased()) return;
       await this.initAlertsChannel(channel);
     });
+
+    this.on(Events.ClientReady, async () => {
+      await this.getOauthToken();
+    });
+  }
+
+  setOauthToken(accessToken: string, expiresIn: number) {
+    this.oauthExpiry = Date.now() + expiresIn;
+    this.oauthToken = accessToken;
+    this.emit("oafOauth");
+    return this.oauthToken;
   }
 
   async getOauthToken() {
@@ -73,27 +86,33 @@ export class DiscordClient extends Client {
       return this.oauthToken;
     }
 
+    const token = (await prisma.settings.findUnique({
+      where: { key: "oauthRefreshToken" },
+    })) as { value: string } | null;
+
+    if (!token) return "";
+
     const request = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
       body: new URLSearchParams({
         client_id: process.env.CLIENT_ID!,
         client_secret: process.env.CLIENT_SECRET!,
         grant_type: "refresh_token",
-        refresh_token: process.env.OAUTH_REFRESH_TOKEN!,
+        refresh_token: token.value,
       }).toString(),
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
 
-    const { access_token, expires_in } = (await request.json()) as {
-      access_token: string;
-      expires_in: number;
-    };
+    const data = await request.json();
 
-    this.oauthExpiry = Date.now() + expires_in;
+    await prisma.settings.update({
+      where: { key: "oauthRefreshToken" },
+      data: { value: data.refresh_token as string },
+    });
 
-    return (this.oauthToken = access_token);
+    return this.setOauthToken(data.access_token as string, data.expires_in as number);
   }
 
   async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
