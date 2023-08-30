@@ -63,9 +63,9 @@ async function onMessage(message: Message) {
   let slashNote = "";
   if (matches.length > 0 && matches[0][0] === message.content.trim()) {
     try {
-      await message.react("<:deadgarf:915694091541573712>");
+      await message.react("<:kol_mad:516763545657016320>");
     } catch (error) {
-      console.warn("Please give me permissions to react to messages!");
+      discordClient.alert("Please give me permissions to react to messages!");
     }
     const slashCommand = inlineCode(`/wiki ${matches[0][1]}`);
     slashNote = `Remember, for this query you could have just run ${slashCommand}\n\n`;
