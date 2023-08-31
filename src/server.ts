@@ -3,6 +3,7 @@ import { cors } from "@tinyhttp/cors";
 import { StatusCodes } from "http-status-codes";
 
 import { prisma } from "./clients/database.js";
+import { rollSubs } from "./subs.js";
 
 const app = new App();
 
@@ -26,6 +27,25 @@ app
       greenboxString,
       greenboxLastUpdate,
     });
+  })
+  .get("/webhooks/subsrolling", async (req, res) => {
+    const token = req.query.token;
+    const SUBS_ROLLING_TOKEN = process.env.SUBS_ROLLING_TOKEN!;
+
+    if (!token) return res.status(StatusCodes.UNAUTHORIZED).json({ error: "No token" });
+    if (token !== SUBS_ROLLING_TOKEN)
+      return res.status(StatusCodes.FORBIDDEN).json({ error: "Invalid token" });
+
+    try {
+      await rollSubs();
+      return res.status(StatusCodes.OK).json({ status: "Thanks Chris!" });
+    } catch (e) {
+      if (e instanceof Error) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: e.message });
+      }
+
+      throw e;
+    }
   });
 
 export const startApiServer = () => app.listen(Number(process.env.PORT) || 8080);
