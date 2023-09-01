@@ -69,4 +69,7 @@ export const schema = {
 
 export type Env = EnvType<typeof schema>;
 
-export const config = load(schema);
+// Do not attempt to load if in testing environment
+export const config = process.env.VITEST_WORKER_ID
+  ? ({} as { PORT: number } & { [key: string]: string })
+  : load(schema);
