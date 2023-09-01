@@ -1,5 +1,4 @@
 import { Events } from "discord.js";
-import "dotenv/config";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";

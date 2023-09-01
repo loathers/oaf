@@ -3,6 +3,7 @@ import { cors } from "@tinyhttp/cors";
 import { StatusCodes } from "http-status-codes";
 
 import { prisma } from "./clients/database.js";
+import { config } from "./config.js";
 import { rollSubs } from "./subs.js";
 
 const app = new App();
@@ -30,10 +31,9 @@ app
   })
   .get("/webhooks/subsrolling", async (req, res) => {
     const token = req.query.token;
-    const SUBS_ROLLING_TOKEN = process.env.SUBS_ROLLING_TOKEN!;
 
     if (!token) return res.status(StatusCodes.UNAUTHORIZED).json({ error: "No token" });
-    if (token !== SUBS_ROLLING_TOKEN)
+    if (token !== config.SUBS_ROLLING_TOKEN)
       return res.status(StatusCodes.FORBIDDEN).json({ error: "Invalid token" });
 
     try {
@@ -48,4 +48,4 @@ app
     }
   });
 
-export const startApiServer = () => app.listen(Number(process.env.PORT) || 8080);
+export const startApiServer = () => app.listen(config.PORT);

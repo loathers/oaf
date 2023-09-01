@@ -5,15 +5,13 @@ import { totp } from "otplib";
 import { prisma } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
+import { config } from "../../config.js";
 
-const GUILD_ID = process.env.GUILD_ID!;
-const VERIFIED_ROLE_ID = process.env.VERIFIED_ROLE_ID!;
-const SALT = process.env.SALT;
-const OAF_USER = process.env.KOL_USER?.replaceAll(" ", "_");
+const OAF_USER = config.KOL_USER.replaceAll(" ", "_");
 
 const intDiv = (num: number, div: number) =>
   [Math.floor(num / div), num % div] as [quotient: number, remainder: number];
-const playerSecret = (playerId: number) => `${SALT}-${playerId}`;
+const playerSecret = (playerId: number) => `${config.SALT}-${playerId}`;
 
 const oauf = Object.assign(
   totp,
@@ -93,8 +91,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     },
   });
 
-  const guild = interaction.guild || (await discordClient.guilds.fetch(GUILD_ID));
-  const role = await guild.roles.fetch(VERIFIED_ROLE_ID);
+  const guild = interaction.guild || (await discordClient.guilds.fetch(config.GUILD_ID));
+  const role = await guild.roles.fetch(config.VERIFIED_ROLE_ID);
 
   if (role) {
     const member = await guild.members.fetch(interaction.user.id);
@@ -111,12 +109,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 async function synchroniseRoles(client: Client) {
-  const guild = await client.guilds.fetch(GUILD_ID);
+  const guild = await client.guilds.fetch(config.GUILD_ID);
 
-  const role = await guild.roles.fetch(VERIFIED_ROLE_ID);
+  const role = await guild.roles.fetch(config.VERIFIED_ROLE_ID);
 
   if (!role) {
-    await discordClient.alert(`Verified role (${VERIFIED_ROLE_ID}) cannot be found`);
+    await discordClient.alert(`Verified role (${config.VERIFIED_ROLE_ID}) cannot be found`);
     return;
   }
 

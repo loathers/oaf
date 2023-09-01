@@ -2,14 +2,19 @@ import axios, { AxiosError } from "axios";
 import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
 
+import { config } from "../config.js";
 import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things/index.js";
 import { cleanString } from "../utils.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 
-export class WikiDownError extends Error {
-  constructor() {
-    super("Wiki is down");
+export class WikiSearchError extends Error {
+  step: string;
+  axiosError: AxiosError;
+  constructor(step: string, error: AxiosError) {
+    super("Wiki search error");
+    this.step = step;
+    this.axiosError = error;
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
@@ -146,7 +151,7 @@ export class WikiClient {
   private _finalSkillIds: { [block: number]: number } = {};
   private _lastDownloadTime = -1;
 
-  constructor(googleApiKey: string, customSearch: string) {
+  constructor(googleApiKey = "", customSearch = "") {
     this._searchApiKey = googleApiKey;
     this._customSearch = customSearch;
   }
@@ -429,9 +434,9 @@ export class WikiClient {
       .toLowerCase()
       .replace(/\s/g, "+");
 
+    // Trying precise wiki page
     try {
       const url = `https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`;
-      console.log("Trying precise wiki page", url);
       const directWikiResponse = await axios(url);
       const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
       if (directResponseUrl.indexOf("index.php?search=") < 0) {
@@ -441,17 +446,15 @@ export class WikiClient {
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error) {
-      if (error instanceof AxiosError) {
-        if (error.code === "ENOTFOUND") throw new WikiDownError();
-        if (error.status !== 404) console.error(error);
-      } else {
-        throw error;
+      if (!(error instanceof AxiosError)) throw error;
+      if (error.response?.status !== 404) {
+        throw new WikiSearchError("kolwiki precise", error);
       }
     }
-    console.log("Not found as wiki page");
+
+    // Not found as precise wiki page, trying wiki search
     try {
       const url = `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`;
-      console.log("Trying wiki search", url);
       const wikiSearchResponse = await axios(url);
       const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
       if (searchResponseUrl.indexOf("index.php?search=") < 0) {
@@ -461,12 +464,15 @@ export class WikiClient {
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error) {
-      console.error(error);
+      if (!(error instanceof AxiosError)) throw error;
+      if (error.response?.status !== 404) {
+        throw new WikiSearchError("kolwiki search", error);
+      }
     }
-    console.log("Not found in wiki search");
+
+    // Not found in wiki search, trying stripped wiki search
     try {
       const url = `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchNameCrushed}`;
-      console.log("Trying stripped wiki search", url);
       const crushedWikiSearchResponse = await axios(url);
       const crushedSearchResponseUrl = String(crushedWikiSearchResponse.request.res.responseUrl);
       if (crushedSearchResponseUrl.indexOf("index.php?search=") < 0) {
@@ -480,10 +486,13 @@ export class WikiClient {
         return this._nameMap.get(searchTerm.toLowerCase());
       }
     } catch (error) {
-      console.error(error);
+      if (!(error instanceof AxiosError)) throw error;
+      if (error.response?.status !== 404) {
+        throw new WikiSearchError("kolwiki search crushed", error);
+      }
     }
-    console.log("Not found in stripped wiki search");
-    console.log("Trying google search");
+
+    // Not found in stripped wiki search, trying google search
     try {
       const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
         params: {
@@ -502,9 +511,13 @@ export class WikiClient {
       });
       return this._nameMap.get(searchTerm.toLowerCase());
     } catch (error) {
-      console.error(error);
+      if (!(error instanceof AxiosError)) throw error;
+      if (error.response?.status !== 404) {
+        throw new WikiSearchError("google", error);
+      }
     }
-    console.log("Google search stumped, I give up");
+
+    // Google search stumped, I give up
     return undefined;
   }
 
@@ -576,7 +589,4 @@ function emoteNamesFromEmotes(emoteString: string) {
   });
 }
 
-export const wikiClient = new WikiClient(
-  process.env.GOOGLE_API_KEY || "",
-  process.env.CUSTOM_SEARCH || "",
-);
+export const wikiClient = new WikiClient(config.GOOGLE_API_KEY, config.CUSTOM_SEARCH);

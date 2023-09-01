@@ -9,6 +9,7 @@ import { stringify } from "querystring";
 import TypedEventEmitter, { EventMap } from "typed-emitter";
 import { select } from "xpath";
 
+import { config } from "../config.js";
 import { cleanString, indent, toWikiLink } from "../utils.js";
 
 const selectMulti = (expression: string, node: Node) => {
@@ -402,10 +403,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
             }
           : {}),
       });
-      if (
-        process.env.DEBUG &&
-        ["api.php", "newchatmessages.php"].every((s) => !url.startsWith(s))
-      ) {
+      if (config.DEBUG && ["api.php", "newchatmessages.php"].every((s) => !url.startsWith(s))) {
         console.log(url, parameters);
         console.log(page.data);
       }
@@ -711,4 +709,4 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 }
 
-export const kolClient = new KoLClient(process.env.KOL_USER || "", process.env.KOL_PASS || "");
+export const kolClient = new KoLClient(config.KOL_USER, config.KOL_PASS);

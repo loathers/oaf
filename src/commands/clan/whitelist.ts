@@ -5,9 +5,10 @@ import {
 } from "discord.js";
 
 import { kolClient } from "../../clients/kol.js";
+import { config } from "../../config.js";
 import { ALL_CLANS } from "./_clans.js";
 
-const PERMITTED_ROLE_IDS = process.env.WHITELIST_ROLE_IDS!.split(",");
+const PERMITTED_ROLE_IDS = config.WHITELIST_ROLE_IDS.split(",");
 
 export const data = new SlashCommandBuilder()
   .setName("whitelist")
