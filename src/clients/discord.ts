@@ -22,6 +22,8 @@ import {
 } from "discord.js";
 import { isErrorLike, serializeError } from "serialize-error";
 
+import { config } from "../config.js";
+
 export type ModalHandler = {
   customId: string;
   handle: (interaction: ModalSubmitInteraction) => Promise<void>;
@@ -134,7 +136,7 @@ export class DiscordClient extends Client {
       console.error(description);
     }
 
-    if (process.env.DEBUG) {
+    if (config.DEBUG) {
       console.warn("(Suppressing alerts due to debug mode)");
       return;
     }
@@ -184,8 +186,10 @@ export const createEmbed = () =>
     iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
   });
 
+export const blankEmbed = (description: string) => createEmbed().setDescription(description);
+
 export const discordClient = new DiscordClient(
-  process.env.CLIENT_ID || "",
-  process.env.DISCORD_TOKEN || "",
-  process.env.ALERTS_CHANNEL_ID || "",
+  config.CLIENT_ID,
+  config.DISCORD_TOKEN,
+  config.ALERTS_CHANNEL_ID,
 );

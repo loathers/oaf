@@ -1,6 +1,5 @@
 import {
   ChatInputCommandInteraction,
-  EmbedBuilder,
   Events,
   Message,
   SlashCommandBuilder,
@@ -8,8 +7,8 @@ import {
   userMention,
 } from "discord.js";
 
-import { discordClient } from "../../clients/discord.js";
-import { WikiDownError, wikiClient } from "../../clients/wiki.js";
+import { blankEmbed, discordClient } from "../../clients/discord.js";
+import { WikiSearchError, wikiClient } from "../../clients/wiki.js";
 import { lf } from "../../utils.js";
 
 const ITEMMATCHER = /\[\[([^[\]]*)\]\]/g;
@@ -21,8 +20,6 @@ export const data = new SlashCommandBuilder()
     option.setName("term").setDescription("The term to search for in the wiki.").setRequired(true),
   );
 
-const blankEmbed = (description: string) => new EmbedBuilder().setDescription(description);
-
 async function getWikiReply(item: string) {
   try {
     const embed = await wikiClient.getEmbed(item);
@@ -32,10 +29,18 @@ async function getWikiReply(item: string) {
 
     return embed;
   } catch (error) {
-    if (error instanceof WikiDownError) {
+    if (!(error instanceof WikiSearchError)) throw error;
+
+    if (error.axiosError.code?.toLowerCase() === "enotfound") {
       return blankEmbed(`The wiki seems to be down. Hopefully temporarily`);
     }
-    return blankEmbed("Something went wrong");
+
+    await discordClient.alert(
+      `Wiki search query failed unexpectedly on step "${error.step}"`,
+      undefined,
+      error.axiosError,
+    );
+    return blankEmbed("Something is wrong with wiki searching but maintainers have been alerted");
   }
 }
 

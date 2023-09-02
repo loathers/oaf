@@ -8,6 +8,7 @@ import {
 import ms from "pretty-ms";
 
 import { createEmbed, discordClient } from "../../clients/discord.js";
+import { config } from "../../config.js";
 
 let START_TIME = 0;
 
@@ -16,7 +17,8 @@ export const data = new SlashCommandBuilder()
   .setDescription("Get information on the current version of oaf");
 
 function getVersionEmbed() {
-  const commit = process.env.HEROKU_SLUG_COMMIT || "";
+  const commit = config.HEROKU_SLUG_COMMIT;
+
   return createEmbed()
     .setTitle(`${inlineCode("oaf")} Status`)
     .addFields(
@@ -30,11 +32,13 @@ function getVersionEmbed() {
       },
       {
         name: "Build Commit",
-        value: hyperlink(commit, `https://github.com/loathers/oaf/commit/${commit}`),
+        value: commit
+          ? hyperlink(commit, `https://github.com/loathers/oaf/commit/${commit}`)
+          : "Unknown",
       },
       {
         name: "Build Date",
-        value: process.env.HEROKU_RELEASE_CREATED_AT || "unknown",
+        value: config.HEROKU_RELEASE_CREATED_AT || "Unknown",
       },
     );
 }

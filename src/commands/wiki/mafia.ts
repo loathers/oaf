@@ -1,10 +1,13 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   codeBlock,
 } from "discord.js";
+
+import { blankEmbed, discordClient } from "../../clients/discord.js";
+import { config } from "../../config.js";
 
 type SearchResponse = {
   items: [{ link: string }];
@@ -60,43 +63,68 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     case "wiki": {
       const item = interaction.options.getString("term", true);
 
-      const googleSearchResponse = await axios.get<SearchResponse>(
-        `https://www.googleapis.com/customsearch/v1`,
-        {
-          params: {
-            key: process.env.GOOGLE_API_KEY || "",
-            cx: process.env.MAFIA_CUSTOM_SEARCH || "",
-            q: item,
+      try {
+        const googleSearchResponse = await axios.get<SearchResponse>(
+          `https://www.googleapis.com/customsearch/v1`,
+          {
+            params: {
+              key: config.GOOGLE_API_KEY,
+              cx: config.MAFIA_CUSTOM_SEARCH,
+              q: item,
+            },
           },
-        },
-      );
+        );
 
-      if (!googleSearchResponse.data.items?.length) {
-        return interaction.editReply({
-          content: `"${item}" wasn't found. Please refine your search.`,
+        if (!googleSearchResponse.data.items?.length) {
+          return interaction.editReply({
+            content: `"${item}" wasn't found. Please refine your search.`,
+            allowedMentions: {
+              parse: [],
+            },
+          });
+        }
+
+        return await interaction.editReply({
+          content: googleSearchResponse.data.items[0].link,
+          embeds: [],
           allowedMentions: {
             parse: [],
           },
         });
-      }
+      } catch (error) {
+        if (error instanceof AxiosError && error.response?.status !== 404) {
+          await discordClient.alert(
+            `Mafia wiki search query failed unexpectedly`,
+            undefined,
+            error,
+          );
 
-      return interaction.editReply({
-        content: googleSearchResponse.data.items[0].link,
-        embeds: [],
-        allowedMentions: {
-          parse: [],
-        },
-      });
+          return await interaction.editReply({
+            content: null,
+            embeds: [
+              blankEmbed(
+                "Something is wrong with wiki searching but maintainers have been alerted",
+              ),
+            ],
+            allowedMentions: { parse: [], repliedUser: false },
+          });
+        }
+
+        throw error;
+      }
     }
     case "js": {
       const func = interaction.options.getString("function", true);
       JS_FUNCTION_CACHE = await getJsRef();
       if (!JS_FUNCTION_CACHE.has(func)) {
         return interaction.editReply({
-          content: `A function called "${func}" wasn't found in the latest mafia standard library.`,
-          allowedMentions: {
-            parse: [],
-          },
+          content: null,
+          embeds: [
+            blankEmbed(
+              `A function called "${func}" wasn't found in the latest mafia standard library.`,
+            ),
+          ],
+          allowedMentions: { parse: [], repliedUser: false },
         });
       }
 
