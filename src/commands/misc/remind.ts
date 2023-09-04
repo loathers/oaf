@@ -1,4 +1,4 @@
-import { Duration, add, intervalToDuration, milliseconds, sub } from "date-fns";
+import { Duration, add, endOfDay, intervalToDuration, milliseconds, sub } from "date-fns";
 import {
   ChatInputCommandInteraction,
   Events,
@@ -14,13 +14,13 @@ import { discordClient } from "../../clients/discord.js";
 const CHECK_DURATION: Duration = { seconds: 30 };
 
 const OAF_DURATION_PATTERN =
-  /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
+  /^(?:(?<weeks>\d+)w)?(?:(?<days>\d+)d)?(?:(?<hours>\d+)h)?(?:(?<minutes>\d+)m)?(?:(?<seconds>\d+)s)?$/;
 
 function parseDuration(input: string): Duration | null {
   if (input === "rollover") {
     return intervalToDuration({
       start: new Date(),
-      end: new Date().setHours(3, 40),
+      end: add(endOfDay(new Date()), { hours: 3, minutes: 40 }),
     });
   }
 
