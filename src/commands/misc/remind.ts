@@ -92,7 +92,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const reply = await interaction.reply({
-    content: `Okay, I'll remind you in ${time(reminderDate, TimestampStyles.RelativeTime)}.`,
+    content: `Okay, I'll remind you ${time(reminderDate, TimestampStyles.RelativeTime)}.`,
     fetchReply: true,
   });
 
