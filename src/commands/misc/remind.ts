@@ -11,7 +11,7 @@ import {
 import { prisma } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 
-const CHECK_DURATION: Duration = { seconds: 30 };
+const CHECK_DURATION: Duration = { seconds: 10 };
 
 const OAF_DURATION_PATTERN =
   /^(?:(?<weeks>\d+)w)?(?:(?<days>\d+)d)?(?:(?<hours>\d+)h)?(?:(?<minutes>\d+)m)?(?:(?<seconds>\d+)s)?$/;
