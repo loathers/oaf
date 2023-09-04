@@ -1,4 +1,4 @@
-import { Duration, add, endOfDay, intervalToDuration, milliseconds, sub } from "date-fns";
+import { Duration, add, endOfDay, intervalToDuration, milliseconds, set, sub } from "date-fns";
 import {
   ChatInputCommandInteraction,
   Events,
@@ -16,11 +16,23 @@ const CHECK_DURATION: Duration = { seconds: 30 };
 const OAF_DURATION_PATTERN =
   /^(?:(?<weeks>\d+)w)?(?:(?<days>\d+)d)?(?:(?<hours>\d+)h)?(?:(?<minutes>\d+)m)?(?:(?<seconds>\d+)s)?$/;
 
-function parseDuration(input: string): Duration | null {
+function getNextRollover(date = new Date()) {
+  const rolloverThisCalendarDay = set(date, { hours: 3, minutes: 40 });
+
+  // If you happen to ask at exactly rollover, you will get next rollover
+  if (date < rolloverThisCalendarDay) {
+    return rolloverThisCalendarDay;
+  }
+
+  return add(endOfDay(new Date()), { hours: 3, minutes: 40, seconds: 1 });
+}
+
+export function parseDuration(input: string): Duration | null {
   if (input === "rollover") {
+    const now = new Date();
     return intervalToDuration({
-      start: new Date(),
-      end: add(endOfDay(new Date()), { hours: 3, minutes: 40 }),
+      start: now,
+      end: getNextRollover(now),
     });
   }
 
