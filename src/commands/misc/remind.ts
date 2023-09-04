@@ -1,3 +1,4 @@
+import { Duration, add, intervalToDuration, milliseconds, sub } from "date-fns";
 import {
   ChatInputCommandInteraction,
   Events,
@@ -10,8 +11,30 @@ import {
 import { prisma } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 
-const timeMatcher =
+const CHECK_DURATION: Duration = { seconds: 30 };
+
+const OAF_DURATION_PATTERN =
   /^(?<weeks>\d+w)?(?<days>\d+d)?(?<hours>\d+h)?(?<minutes>\d+m)?(?<seconds>\d+s)?$/;
+
+function parseDuration(input: string): Duration | null {
+  if (input === "rollover") {
+    return intervalToDuration({
+      start: new Date(),
+      end: new Date().setHours(3, 40),
+    });
+  }
+
+  const match = OAF_DURATION_PATTERN.exec(input);
+  if (!match?.groups) return null;
+
+  return {
+    weeks: Number(match.groups.weeks || 0),
+    days: Number(match.groups.days || 0),
+    hours: Number(match.groups.hours || 0),
+    minutes: Number(match.groups.minutes || 0),
+    seconds: Number(match.groups.seconds || 0),
+  };
+}
 
 export const data = new SlashCommandBuilder()
   .setName("remind")
@@ -30,14 +53,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const when = interaction.options.getString("when", true);
   const reminderText = interaction.options.getString("reminder") || "Time's up!";
 
-  if (!timeMatcher.test(when) && when.toLowerCase() !== "rollover") {
-    interaction.reply({
-      content: 'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".',
-      ephemeral: true,
-    });
-    return;
-  }
-
   if (reminderText.length > 127) {
     interaction.reply({
       content: "Maximum reminder length is 128 characters.",
@@ -46,93 +61,66 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  let timeToWait = 0;
-  let reminderTime = 0;
-  if (timeMatcher.test(when)) {
-    const timeMatch = timeMatcher.exec(when);
-    timeToWait =
-      7 * 24 * 60 * 60 * 1000 * parseInt(timeMatch?.groups?.weeks || "0") +
-      24 * 60 * 60 * 1000 * parseInt(timeMatch?.groups?.days || "0") +
-      60 * 60 * 1000 * parseInt(timeMatch?.groups?.hours || "0") +
-      60 * 1000 * parseInt(timeMatch?.groups?.minutes || "0") +
-      1000 * parseInt(timeMatch?.groups?.seconds || "0");
-    reminderTime = Date.now() + timeToWait;
-    await interaction.reply(
-      `Okay, I'll remind you in ${time(
-        Math.round(reminderTime / 1000),
-        TimestampStyles.RelativeTime,
-      )}.`,
-    );
-  } else {
-    reminderTime = new Date(Date.now()).setHours(3, 40);
-    if (reminderTime < Date.now()) {
-      reminderTime += 24 * 60 * 60 * 1000;
-    }
-    timeToWait = reminderTime - Date.now();
-    await interaction.reply(`Okay, I'll remind you after rollover.`);
+  const duration = parseDuration(when);
+
+  if (!duration) {
+    return void (await interaction.reply({
+      content: 'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".',
+      ephemeral: true,
+    }));
   }
 
-  const replyId = (await interaction.fetchReply()).id;
+  const reminderDate = add(new Date(), duration);
 
-  if (timeToWait >= 7 * 24 * 60 * 60 * 1000) return;
+  if (interaction.channel && !interaction.channel.send) {
+    return void (await interaction.reply({
+      content: "It doesn't look possible for oaf to respond to this request when the time comes",
+      ephemeral: true,
+    }));
+  }
 
-  const channel = interaction.channel || (await interaction.user.createDM());
-
-  if (!("send" in channel)) return;
-
-  setTimeout(async () => {
-    try {
-      channel.send({
-        content: userMention(interaction.user.id),
-        embeds: [{ title: "⏰⏰⏰", description: reminderText }],
-        reply: { messageReference: replyId },
-        allowedMentions: {
-          users: [interaction.user.id],
-        },
-      });
-    } catch (error) {
-      await discordClient.alert("Error sending reminder", interaction, error);
-    }
-  }, timeToWait);
+  const reply = await interaction.reply({
+    content: `Okay, I'll remind you in ${time(reminderDate, TimestampStyles.RelativeTime)}.`,
+    fetchReply: true,
+  });
 
   await prisma.reminder.create({
     data: {
       guildId: interaction.guildId,
       channelId: interaction.channelId,
       userId: interaction.user.id,
-      interactionReplyId: replyId,
+      interactionReplyId: reply.id,
       messageContents: reminderText,
-      reminderTime,
+      reminderDate,
     },
   });
 }
 
-const RECHECK_TIME = 7 * 24 * 60 * 60 * 1000;
-
-async function loadRemindersFromDatabase() {
-  const now = BigInt(Date.now());
-
-  const deleted = await prisma.reminder.deleteMany({ where: { reminderTime: { lt: now } } });
+async function clearOldReminders() {
+  const deleted = await prisma.reminder.deleteMany({
+    where: { reminderSent: true, reminderDate: { lt: sub(new Date(), { days: 30 }) } },
+  });
   if (deleted.count > 0) {
-    console.log(`Deleted ${deleted.count} old reminder(s)`);
+    await discordClient.alert(`Cleared ${deleted.count} old sent reminder(s)`);
   }
+}
 
-  const reminders = await prisma.reminder.findMany({});
+async function checkReminders() {
+  const reminders = await prisma.reminder.findMany({
+    where: { reminderDate: { lte: new Date() }, reminderSent: false },
+  });
 
   for (const reminder of reminders) {
-    // We can safely cast the difference between reminder and now to an int
-    const timeLeft = Number(reminder.reminderTime - now);
-    if (timeLeft >= RECHECK_TIME) continue;
-
     const user = await discordClient.users.fetch(reminder.userId);
     const channel = reminder.guildId
       ? await discordClient.channels.fetch(reminder.channelId)
       : await user.createDM();
 
     if (!channel || !("send" in channel)) {
-      console.log(
-        "Skipping reminder due to unknown channel or cannot be posted in",
-        reminder.channelId,
+      await discordClient.alert(
+        `Skipping reminder #${reminder.id} for ${userMention(
+          user.id,
+        )} due to unknown channel or cannot be posted in ${reminder.channelId}`,
       );
       continue;
     }
@@ -141,27 +129,23 @@ async function loadRemindersFromDatabase() {
       ? { messageReference: reminder.interactionReplyId }
       : undefined;
 
-    setTimeout(async () => {
-      try {
-        channel.send({
-          content: userMention(reminder.userId),
-          embeds: [{ title: "⏰⏰⏰", description: reminder.messageContents }],
-          allowedMentions: {
-            users: [reminder.userId],
-          },
-          reply,
-        });
-      } catch (error) {
-        await discordClient.alert("Error sending reminder", undefined, error);
-      }
-    }, timeLeft);
-  }
+    await channel.send({
+      content: userMention(reminder.userId),
+      embeds: [{ title: "⏰⏰⏰", description: reminder.messageContents }],
+      allowedMentions: {
+        users: [reminder.userId],
+      },
+      reply,
+    });
 
-  setTimeout(async () => {
-    await loadRemindersFromDatabase();
-  }, RECHECK_TIME);
+    await prisma.reminder.update({ where: { id: reminder.id }, data: { reminderSent: true } });
+  }
 }
 
 export async function init() {
-  discordClient.on(Events.ClientReady, loadRemindersFromDatabase);
+  await clearOldReminders();
+  discordClient.on(
+    Events.ClientReady,
+    () => void setInterval(checkReminders, milliseconds(CHECK_DURATION)),
+  );
 }
