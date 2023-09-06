@@ -141,7 +141,6 @@ async function downloadMafiaData(fileName: string) {
 }
 
 export class WikiClient {
-  private _nameMap: Map<string, FoundName> = new Map();
   private _thingMap: Map<string, Thing> = new Map();
   private knownItemIds = new Set<number>();
   private _searchApiKey: string;
@@ -422,94 +421,69 @@ export class WikiClient {
     return embed;
   }
 
-  async findName(searchTerm: string): Promise<FoundName | undefined> {
-    if (!searchTerm.length) return undefined;
-    if (this._nameMap.has(searchTerm.toLowerCase()))
-      return this._nameMap.get(searchTerm.toLowerCase());
-    const cleanedSearchTerm = emoteNamesFromEmotes(searchTerm).replace(/\u2019/g, "'");
-    const wikiName = encodeURIComponent(cleanedSearchTerm).replace(/\s/g, "_");
-    const wikiSearchName = encodeURIComponent(cleanedSearchTerm).replace(/%20/g, "+");
-    const wikiSearchNameCrushed = cleanedSearchTerm
+  private async tryWiki(url: string, stage: string) {
+    try {
+      const response = await axios(url);
+      const responseUrl = String(response.request.res.responseUrl);
+      if (!responseUrl.includes("index.php?search=")) {
+        const name = nameFromWikiPage(responseUrl, response.data);
+        const image = imageFromWikiPage(responseUrl, response.data);
+        return { name: name, url: responseUrl, image };
+      }
+    } catch (error) {
+      if (!(error instanceof AxiosError)) throw error;
+      if (error.response?.status !== 404) {
+        throw new WikiSearchError(`kolwiki ${stage}`, error);
+      }
+    }
+    return undefined;
+  }
+
+  private async tryPreciseWikiPage(searchTerm: string) {
+    const wikiName = encodeURIComponent(searchTerm).replace(/\s/g, "_");
+    return await this.tryWiki(
+      `https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`,
+      "precise",
+    );
+  }
+
+  private async tryWikiSearch(searchTerm: string) {
+    const wikiSearchName = encodeURIComponent(searchTerm).replace(/%20/g, "+");
+    return await this.tryWiki(
+      `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`,
+      "search",
+    );
+  }
+
+  private async tryStrippedWikiSearch(searchTerm: string) {
+    const wikiSearchNameCrushed = searchTerm
       .replace(/[^A-Za-z0-9\s]/g, "")
       .toLowerCase()
       .replace(/\s/g, "+");
 
-    // Trying precise wiki page
-    try {
-      const url = `https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`;
-      const directWikiResponse = await axios(url);
-      const directResponseUrl = String(directWikiResponse.request.res.responseUrl);
-      if (directResponseUrl.indexOf("index.php?search=") < 0) {
-        const name = nameFromWikiPage(directResponseUrl, directWikiResponse.data);
-        const image = imageFromWikiPage(directResponseUrl, directWikiResponse.data);
-        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: directResponseUrl, image });
-        return this._nameMap.get(searchTerm.toLowerCase());
-      }
-    } catch (error) {
-      if (!(error instanceof AxiosError)) throw error;
-      if (error.response?.status !== 404) {
-        throw new WikiSearchError("kolwiki precise", error);
-      }
-    }
+    return await this.tryWiki(
+      `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchNameCrushed}`,
+      "crushed",
+    );
+  }
 
-    // Not found as precise wiki page, trying wiki search
-    try {
-      const url = `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`;
-      const wikiSearchResponse = await axios(url);
-      const searchResponseUrl = String(wikiSearchResponse.request.res.responseUrl);
-      if (searchResponseUrl.indexOf("index.php?search=") < 0) {
-        const name = nameFromWikiPage(searchResponseUrl, wikiSearchResponse.data);
-        const image = imageFromWikiPage(searchResponseUrl, wikiSearchResponse.data);
-        this._nameMap.set(searchTerm.toLowerCase(), { name: name, url: searchResponseUrl, image });
-        return this._nameMap.get(searchTerm.toLowerCase());
-      }
-    } catch (error) {
-      if (!(error instanceof AxiosError)) throw error;
-      if (error.response?.status !== 404) {
-        throw new WikiSearchError("kolwiki search", error);
-      }
-    }
-
-    // Not found in wiki search, trying stripped wiki search
-    try {
-      const url = `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchNameCrushed}`;
-      const crushedWikiSearchResponse = await axios(url);
-      const crushedSearchResponseUrl = String(crushedWikiSearchResponse.request.res.responseUrl);
-      if (crushedSearchResponseUrl.indexOf("index.php?search=") < 0) {
-        const name = nameFromWikiPage(crushedSearchResponseUrl, crushedWikiSearchResponse.data);
-        const image = imageFromWikiPage(crushedSearchResponseUrl, crushedWikiSearchResponse.data);
-        this._nameMap.set(searchTerm.toLowerCase(), {
-          name: name,
-          url: crushedSearchResponseUrl,
-          image,
-        });
-        return this._nameMap.get(searchTerm.toLowerCase());
-      }
-    } catch (error) {
-      if (!(error instanceof AxiosError)) throw error;
-      if (error.response?.status !== 404) {
-        throw new WikiSearchError("kolwiki search crushed", error);
-      }
-    }
-
-    // Not found in stripped wiki search, trying google search
+  private async tryGoogleSearch(searchTerm: string) {
     try {
       const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
         params: {
           key: this._searchApiKey,
           cx: this._customSearch,
-          q: cleanedSearchTerm,
+          q: searchTerm,
         },
       });
       const googledPage = await axios(googleSearchResponse.data.items[0].link);
       const name = nameFromWikiPage(googleSearchResponse.data.items[0].link, googledPage.data);
       const image = imageFromWikiPage(googleSearchResponse.data.items[0].link, googledPage.data);
-      this._nameMap.set(searchTerm.toLowerCase(), {
+      return {
         name: name,
         url: googleSearchResponse.data.items[0].link,
         image,
-      });
-      return this._nameMap.get(searchTerm.toLowerCase());
+      };
     } catch (error) {
       if (!(error instanceof AxiosError)) throw error;
       if (error.response?.status !== 404) {
@@ -517,8 +491,19 @@ export class WikiClient {
       }
     }
 
-    // Google search stumped, I give up
     return undefined;
+  }
+
+  @Memoize()
+  async findName(searchTerm: string): Promise<FoundName | undefined> {
+    if (!searchTerm.length) return undefined;
+    const clean = emoteNamesFromEmotes(searchTerm).replace(/\u2019/g, "'");
+    return (
+      (await this.tryPreciseWikiPage(clean)) ||
+      (await this.tryWikiSearch(clean)) ||
+      (await this.tryStrippedWikiSearch(clean)) ||
+      (await this.tryGoogleSearch(clean))
+    );
   }
 
   @Memoize({ tags: ["things"] })
