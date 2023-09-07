@@ -141,40 +141,40 @@ async function downloadMafiaData(fileName: string) {
 }
 
 export class WikiClient {
-  private _thingMap: Map<string, Thing> = new Map();
+  private thingMap: Map<string, Thing> = new Map();
   private knownItemIds = new Set<number>();
-  private _searchApiKey: string;
-  private _customSearch: string;
-  private _finalItemId = -1;
-  private _finalFamiliarId = -1;
-  private _finalSkillIds: { [block: number]: number } = {};
-  private _lastDownloadTime = -1;
+  private googleApiKey?: string;
+  private googleCustomSearch?: string;
+  #lastItem = -1;
+  #lastFamiliar = -1;
+  #lastSkills: { [block: number]: number } = {};
+  private lastDownloadTime = -1;
 
-  constructor(googleApiKey = "", customSearch = "") {
-    this._searchApiKey = googleApiKey;
-    this._customSearch = customSearch;
+  constructor(googleApiKey?: string, googleCustomSearch?: string) {
+    this.googleApiKey = googleApiKey;
+    this.googleCustomSearch = googleCustomSearch;
   }
 
-  get lastItem(): number {
-    return this._finalItemId;
+  get lastItem() {
+    return this.#lastItem;
   }
 
-  get lastFamiliar(): number {
-    return this._finalFamiliarId;
+  get lastFamiliar() {
+    return this.#lastFamiliar;
   }
 
-  get lastSkills(): { [block: number]: number } {
-    return this._finalSkillIds;
+  get lastSkills() {
+    return this.#lastSkills;
   }
 
   retrieve(name: string): Thing | null {
     const formattedName = cleanString(name.toLowerCase().trim());
-    return this._thingMap.get(formattedName) ?? null;
+    return this.thingMap.get(formattedName) ?? null;
   }
 
   register(thing: Thing): void {
     const formattedName = cleanString(thing.name.toLowerCase().trim());
-    this._thingMap.set(formattedName, thing);
+    this.thingMap.set(formattedName, thing);
   }
 
   async loadItemTypes(itemTypes: Map<string, string[]>) {
@@ -199,8 +199,8 @@ export class WikiClient {
       try {
         const skill = Skill.from(line);
         const block = skill.block();
-        if (skill.id > (this._finalSkillIds[block] || 0)) {
-          this._finalSkillIds[block] = skill.id;
+        if (skill.id > (this.#lastSkills[block] || 0)) {
+          this.#lastSkills[block] = skill.id;
         }
         if (skill.name) {
           this.register(skill);
@@ -217,7 +217,7 @@ export class WikiClient {
       if (!line.length || line.startsWith("#")) continue;
       try {
         const item = Item.from(line, itemInfoForUse);
-        if (item.id > this._finalItemId) this._finalItemId = item.id;
+        if (item.id > this.#lastItem) this.#lastItem = item.id;
         this.knownItemIds.add(item.id);
         if (item.name) {
           this.register(item);
@@ -308,7 +308,7 @@ export class WikiClient {
       try {
         const familiar = Familiar.from(line);
 
-        if (this._finalFamiliarId < familiar.id) this._finalFamiliarId = familiar.id;
+        if (this.#lastFamiliar < familiar.id) this.#lastFamiliar = familiar.id;
 
         if (familiar) {
           const hatchling = this.retrieve(familiar.larva);
@@ -365,13 +365,13 @@ export class WikiClient {
     console.log("Loading effects...");
     await this.loadEffects(avatarPotions);
 
-    pizzaTree.build(this._thingMap);
-    this._lastDownloadTime = Date.now();
+    pizzaTree.build(this.thingMap);
+    this.lastDownloadTime = Date.now();
   }
 
   async reloadMafiaData(): Promise<boolean> {
-    if (this._lastDownloadTime < Date.now() - 3600000) {
-      this._thingMap.clear();
+    if (this.lastDownloadTime < Date.now() - 3600000) {
+      this.thingMap.clear();
       clear(["things"]);
       await this.loadMafiaData();
       return true;
@@ -381,31 +381,31 @@ export class WikiClient {
 
   @Memoize({ tags: ["things"] })
   get items(): Item[] {
-    return [...this._thingMap.values()].filter(Item.is);
+    return [...this.thingMap.values()].filter(Item.is);
   }
 
   @Memoize({ tags: ["things"] })
   get monsters(): Monster[] {
-    return [...this._thingMap.values()].filter(Monster.is);
+    return [...this.thingMap.values()].filter(Monster.is);
   }
 
   @Memoize({ tags: ["things"] })
   get skills(): Skill[] {
-    return [...this._thingMap.values()].filter(Skill.is);
+    return [...this.thingMap.values()].filter(Skill.is);
   }
 
   @Memoize({ tags: ["things"] })
   get effects(): Effect[] {
-    return [...this._thingMap.values()].filter(Effect.is);
+    return [...this.thingMap.values()].filter(Effect.is);
   }
 
   isItemIdKnown(id: number) {
     return this.knownItemIds.has(id);
   }
 
-  async getEmbed(item: string): Promise<EmbedBuilder | undefined> {
+  async getEmbed(item: string): Promise<EmbedBuilder | null> {
     const foundName = await this.findName(item);
-    if (!foundName) return undefined;
+    if (!foundName) return null;
 
     const embed = createEmbed().setTitle(foundName.name).setURL(foundName.url);
 
@@ -426,9 +426,7 @@ export class WikiClient {
       const response = await axios(url);
       const responseUrl = String(response.request.res.responseUrl);
       if (!responseUrl.includes("index.php?search=")) {
-        const name = nameFromWikiPage(responseUrl, response.data);
-        const image = imageFromWikiPage(responseUrl, response.data);
-        return { name: name, url: responseUrl, image };
+        return await parseFoundName(responseUrl, response.data);
       }
     } catch (error) {
       if (!(error instanceof AxiosError)) throw error;
@@ -436,7 +434,7 @@ export class WikiClient {
         throw new WikiSearchError(`kolwiki ${stage}`, error);
       }
     }
-    return undefined;
+    return null;
   }
 
   private async tryPreciseWikiPage(searchTerm: string) {
@@ -468,22 +466,16 @@ export class WikiClient {
   }
 
   private async tryGoogleSearch(searchTerm: string) {
+    if (!this.googleApiKey || !this.googleCustomSearch) return null;
     try {
-      const googleSearchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
+      const searchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
         params: {
-          key: this._searchApiKey,
-          cx: this._customSearch,
+          key: this.googleApiKey,
+          cx: this.googleCustomSearch,
           q: searchTerm,
         },
       });
-      const googledPage = await axios(googleSearchResponse.data.items[0].link);
-      const name = nameFromWikiPage(googleSearchResponse.data.items[0].link, googledPage.data);
-      const image = imageFromWikiPage(googleSearchResponse.data.items[0].link, googledPage.data);
-      return {
-        name: name,
-        url: googleSearchResponse.data.items[0].link,
-        image,
-      };
+      return parseFoundName(searchResponse.data.items[0].link);
     } catch (error) {
       if (!(error instanceof AxiosError)) throw error;
       if (error.response?.status !== 404) {
@@ -491,12 +483,12 @@ export class WikiClient {
       }
     }
 
-    return undefined;
+    return null;
   }
 
   @Memoize()
-  async findName(searchTerm: string): Promise<FoundName | undefined> {
-    if (!searchTerm.length) return undefined;
+  async findName(searchTerm: string): Promise<FoundName | null> {
+    if (!searchTerm.length) return null;
     const clean = emoteNamesFromEmotes(searchTerm).replace(/\u2019/g, "'");
     return (
       (await this.tryPreciseWikiPage(clean)) ||
@@ -534,6 +526,13 @@ export class WikiClient {
       return null;
     }
   }
+}
+
+async function parseFoundName(url: string, contents?: string) {
+  if (!contents) contents = (await axios(url)) || "";
+  const name = nameFromWikiPage(url, contents);
+  const image = imageFromWikiPage(url, contents);
+  return { name, url, image };
 }
 
 function nameFromWikiPage(url: string, data: string): string {
