@@ -173,6 +173,135 @@ export class Item extends Thing {
       : parseInt(adventures);
   }
 
+  getConsumableDescription(data: string[]) {
+    const consumableType = this.types.find((t): t is ConsumableType =>
+      CONSUMABLE_TYPES.includes(t as ConsumableType),
+    );
+
+    if (!consumableType) return null;
+
+    const description = [];
+    const [consumableName, consumableUnit] = (() => {
+      switch (consumableType) {
+        case "food":
+          return ["food", "fullness"];
+        case "booze":
+          return ["booze", "inebriety"];
+        case "spleen":
+          return ["spleen item", "spleen"];
+      }
+    })();
+
+    const [, sizeString, level, quality, adventures] = data;
+    const size = parseInt(sizeString);
+
+    const name = [];
+    if (consumableType !== "spleen") name.push(this.mapQuality(quality));
+    name.push(consumableName);
+
+    const requirements = [`Size ${size}`];
+    if (level !== "1") requirements.push(`requires level ${level}`);
+
+    const stats = `${bold(name.join(" "))} (${requirements.join(", ")})`;
+    description.push(stats);
+
+    if (adventures !== "0") {
+      description.push(this.describeAdventures(adventures, size, consumableUnit));
+    }
+
+    return description;
+  }
+
+  getEquipmentDescription(data: string[]) {
+    const equipmentType = this.types.find((t): t is EquipmentType =>
+      EQUIPMENT_TYPES.includes(t as EquipmentType),
+    );
+
+    if (!equipmentType) return null;
+
+    const description = [];
+    const [, powerString, requirementString, subtype] = data;
+
+    const power = parseInt(powerString);
+
+    const requirement = (() => {
+      if (!requirementString || requirementString === "none") return null;
+      const parts = requirementString.split(": ");
+      return `requires ${parts[1]} ${this.mapStat(parts[0])}`;
+    })();
+
+    const equipInfo: string[] = [];
+
+    if (requirement) equipInfo.push(requirement);
+
+    switch (equipmentType) {
+      case "weapon": {
+        const damage = power / 10;
+        description.push(bold(subtype));
+
+        equipInfo.unshift(`${Math.round(damage)}-${Math.round(damage * 2)} damage`);
+        break;
+      }
+      case "offhand": {
+        const shield = subtype === "shield";
+        description.push(bold(`Offhand ${shield ? "Shield" : "Item"}`));
+
+        equipInfo.unshift(`${power} power`);
+        if (shield) equipInfo.push(`Damage Reduction: ${Number((power / 15 - 1).toFixed(2))}`);
+        break;
+      }
+      case "familiar": {
+        description.push(bold("Familiar Equipment"));
+        break;
+      }
+      default: {
+        const equipmentName =
+          equipmentType === "container" ? "Back Item" : titleCase(equipmentType);
+        description.push(bold(equipmentName));
+
+        equipInfo.unshift(`${power} power`);
+        break;
+      }
+    }
+
+    description.push(equipInfo.join(", "));
+
+    return description;
+  }
+
+  getOtherDescription() {
+    const otherType = this.types.find((t): t is OtherType => OTHER_TYPES.includes(t as OtherType));
+
+    if (!otherType) return null;
+
+    const alsoCombat = this.types.includes("combat");
+
+    const title = (() => {
+      switch (otherType) {
+        case "potion":
+          return "Potion";
+        case "reusable":
+          return "Reusable item";
+        case "multiple":
+        case "usable":
+          return "Usable item";
+        case "combat":
+          return "Combat item";
+        case "combat reusable":
+          return "Reusable combat item";
+        case "grow":
+          return "Familiar hatchling";
+      }
+    })();
+
+    const typeDescription: string[] = [bold(title)];
+
+    if (!otherType.startsWith("combat") && alsoCombat)
+      typeDescription.push("(also usable in combat)");
+
+    return [typeDescription.join(" ")];
+  }
+
   getShortDescription(itemInfoForUse: Map<string, string[]>): string {
     const itemRules: string[] = [];
     if (this.quest) itemRules.push("Quest Item");
@@ -188,125 +317,13 @@ export class Item extends Thing {
 
     const description = [`(Item ${this.id})`];
 
-    const consumableType = this.types.find((t): t is ConsumableType =>
-      CONSUMABLE_TYPES.includes(t as ConsumableType),
-    );
-    if (consumableType) {
-      const [consumableName, consumableUnit] = (() => {
-        switch (consumableType) {
-          case "food":
-            return ["food", "fullness"];
-          case "booze":
-            return ["booze", "inebriety"];
-          case "spleen":
-            return ["spleen item", "spleen"];
-        }
-      })();
-
-      const [, sizeString, level, quality, adventures] = data;
-      const size = parseInt(sizeString);
-
-      description.push(
-        `${bold(`${this.mapQuality(quality)} ${consumableName}`)} (Size ${size}${
-          level !== "1" ? `, requires level ${level}` : ""
-        })`,
-      );
-
-      if (adventures !== "0") {
-        description.push(this.describeAdventures(adventures, size, consumableUnit));
-      }
-
-      return description.concat(itemRules).join("\n");
-    }
-
-    const equipmentType = this.types.find((t): t is EquipmentType =>
-      EQUIPMENT_TYPES.includes(t as EquipmentType),
-    );
-    if (equipmentType) {
-      const [, powerString, requirementString, subtype] = data;
-
-      const power = parseInt(powerString);
-
-      const requirement = (() => {
-        if (!requirementString || requirementString === "none") return null;
-        const parts = requirementString.split(": ");
-        return `requires ${parts[1]} ${this.mapStat(parts[0])}`;
-      })();
-
-      const equipInfo: string[] = [];
-
-      if (requirement) equipInfo.push(requirement);
-
-      switch (equipmentType) {
-        case "weapon": {
-          const damage = power / 10;
-          description.push(bold(subtype));
-
-          equipInfo.unshift(`${Math.round(damage)}-${Math.round(damage * 2)} damage`);
-          break;
-        }
-        case "offhand": {
-          const shield = subtype === "shield";
-          description.push(bold(`Offhand ${shield ? "Shield" : "Item"}`));
-
-          equipInfo.unshift(`${power} power`);
-          if (shield) equipInfo.push(`Damage Reduction: ${Number((power / 15 - 1).toFixed(2))}`);
-          break;
-        }
-        case "familiar": {
-          description.push(bold("Familiar Equipment"));
-          break;
-        }
-        default: {
-          const equipmentName =
-            equipmentType === "container" ? "Back Item" : titleCase(equipmentType);
-          description.push(bold(equipmentName));
-
-          equipInfo.unshift(`${power} power`);
-          break;
-        }
-      }
-
-      description.push(equipInfo.join(", "));
-
-      return description.concat(itemRules).join("\n");
-    }
-
-    const otherType = this.types.find((t): t is OtherType => OTHER_TYPES.includes(t as OtherType));
-
-    if (otherType) {
-      const alsoCombat = this.types.includes("combat");
-
-      const title = (() => {
-        switch (otherType) {
-          case "potion":
-            return "Potion";
-          case "reusable":
-            return "Reusable item";
-          case "multiple":
-          case "usable":
-            return "Usable item";
-          case "combat":
-            return "Combat item";
-          case "combat reusable":
-            return "Reusable combat item";
-          case "grow":
-            return "Familiar hatchling";
-          case undefined:
-            return "Miscellaneous Item";
-        }
-      })();
-
-      const typeDescription: string[] = [bold(title)];
-      if (!otherType?.startsWith("combat") && alsoCombat)
-        typeDescription.push("(also usable in combat)");
-
-      description.push(typeDescription.join(" "));
-      description.push(...itemRules);
-      return description.join("\n");
-    }
-
-    return ["Miscellaneous Item"].concat(itemRules).join("\n");
+    return [
+      ...description,
+      ...(this.getConsumableDescription(data) ||
+        this.getEquipmentDescription(data) ||
+        this.getOtherDescription() || ["Miscellaneous Item"]),
+      ...itemRules,
+    ].join("\n");
   }
 
   addGrowingFamiliar(familiar: Familiar): void {
