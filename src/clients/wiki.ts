@@ -407,9 +407,13 @@ export class WikiClient {
     const foundName = await this.findName(item);
     if (!foundName) return null;
 
-    const embed = createEmbed().setTitle(foundName.name).setURL(foundName.url);
-
     const thing = this.retrieve(foundName.name);
+
+    // Title should be canonical name, else whatever the title of the wiki page is.
+    const title = thing?.name ?? foundName.name;
+
+    const embed = createEmbed().setTitle(title).setURL(foundName.url);
+
     if (thing) {
       await thing.addToEmbed(embed);
     } else if (foundName.image) {
