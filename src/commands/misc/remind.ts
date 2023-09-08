@@ -1,12 +1,14 @@
 import { Duration, add, endOfDay, intervalToDuration, milliseconds, set, sub } from "date-fns";
 import {
   ChatInputCommandInteraction,
+  DiscordAPIError,
   Events,
   SlashCommandBuilder,
   TimestampStyles,
   time,
   userMention,
 } from "discord.js";
+import { dedent } from "ts-dedent";
 
 import { prisma } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
@@ -141,14 +143,27 @@ async function checkReminders() {
       ? { messageReference: reminder.interactionReplyId }
       : undefined;
 
-    await channel.send({
-      content: userMention(reminder.userId),
-      embeds: [{ title: "⏰⏰⏰", description: reminder.messageContents }],
-      allowedMentions: {
-        users: [reminder.userId],
-      },
-      reply,
-    });
+    try {
+      await channel.send({
+        content: userMention(reminder.userId),
+        embeds: [{ title: "⏰⏰⏰", description: reminder.messageContents }],
+        allowedMentions: {
+          users: [reminder.userId],
+        },
+        reply,
+      });
+    } catch (error) {
+      if (!(error instanceof DiscordAPIError)) throw error;
+      await discordClient.alert(
+        dedent`
+          Could not action reminder #${reminder.id}.
+          It will be marked as sent so that we don't keep retrying.
+          Maybe fix and unmark it as sent so that it gets sent before it's cleaned up?
+        `,
+        undefined,
+        error,
+      );
+    }
 
     await prisma.reminder.update({ where: { id: reminder.id }, data: { reminderSent: true } });
   }
