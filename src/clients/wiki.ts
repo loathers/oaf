@@ -480,7 +480,7 @@ export class WikiClient {
         },
       });
       // No results found
-      if (response.data.item) return null;
+      if (!response.data.items) return null;
       return parseFoundName(response.data.items[0].link);
     } catch (error) {
       if (!(error instanceof AxiosError)) throw error;
