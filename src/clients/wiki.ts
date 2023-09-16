@@ -1,4 +1,4 @@
-import axios, { Axios, AxiosError, HttpStatusCode } from "axios";
+import axios, { AxiosError, HttpStatusCode } from "axios";
 import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
 
@@ -9,10 +9,12 @@ import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 
 export class WikiSearchError extends Error {
+  url: string;
   step: string;
   axiosError: AxiosError;
-  constructor(step: string, error: AxiosError) {
+  constructor(url: string, step: string, error: AxiosError) {
     super("Wiki search error");
+    this.url = url;
     this.step = step;
     this.axiosError = error;
     Object.setPrototypeOf(this, new.target.prototype);
@@ -435,7 +437,7 @@ export class WikiClient {
     } catch (error) {
       if (!(error instanceof AxiosError)) throw error;
       if (error.response?.status !== HttpStatusCode.NotFound) {
-        throw new WikiSearchError(`kolwiki ${stage}`, error);
+        throw new WikiSearchError(url, `kolwiki ${stage}`, error);
       }
     }
     return null;
@@ -481,6 +483,7 @@ export class WikiClient {
       });
       if (!response.data.items) {
         throw new WikiSearchError(
+          response.config.url || searchTerm,
           "google",
           new AxiosError(`Unexpected response from Google search: ${JSON.stringify(response)}`),
         );
@@ -489,7 +492,7 @@ export class WikiClient {
     } catch (error) {
       if (!(error instanceof AxiosError)) throw error;
       if (error.response?.status !== HttpStatusCode.NotFound) {
-        throw new WikiSearchError("google", error);
+        throw new WikiSearchError(error.response?.config.url || searchTerm, "google", error);
       }
     }
 
