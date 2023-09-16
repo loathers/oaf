@@ -16,10 +16,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^5.2.0",
+    "@prisma/client": "^5.3.1",
     "@tinyhttp/app": "^2.1.4",
     "@tinyhttp/cors": "^2.0.0",
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.6.2",
     "@types/serialize-error": "^4.0.1",
     "@xmldom/xmldom": "^0.8.10",
     "async-mutex": "^0.4.0",
@@ -42,14 +42,14 @@
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.2.0",
-    "@typescript-eslint/eslint-plugin": "^6.5.0",
-    "@typescript-eslint/parser": "^6.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
     "@vitest/coverage-v8": "^0.34.3",
     "eslint": "^8.48.0",
     "husky": ">=6",
     "lint-staged": ">=14.0.1",
     "prettier": "^3.0.3",
-    "prisma": "^5.2.0",
+    "prisma": "^5.3.1",
     "vitest": "^0.34.3"
   },
   "engines": {
