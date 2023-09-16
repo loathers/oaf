@@ -36,7 +36,7 @@ async function getWikiReply(item: string) {
     }
 
     await discordClient.alert(
-      `Wiki search query failed unexpectedly on step "${error.step}" (${error.url})`,
+      `Wiki search query failed unexpectedly on step "${error.step}" (${error.axiosError.request.config.url})`,
       undefined,
       error.axiosError,
     );
