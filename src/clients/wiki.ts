@@ -479,17 +479,12 @@ export class WikiClient {
           q: searchTerm,
         },
       });
-      if (!response.data.items)
+      if (!response.data.items) {
         throw new WikiSearchError(
           "google",
-          new AxiosError(
-            "Unexpected response from Google Search",
-            undefined,
-            response.config,
-            response.request,
-            response,
-          ),
+          new AxiosError(`Unexpected response from Google search: ${JSON.stringify(response)}`),
         );
+      }
       return parseFoundName(response.data.items[0].link);
     } catch (error) {
       if (!(error instanceof AxiosError)) throw error;
