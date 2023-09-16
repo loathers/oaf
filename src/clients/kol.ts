@@ -1,6 +1,6 @@
 import { DOMParser } from "@xmldom/xmldom";
 import { Mutex } from "async-mutex";
-import axios from "axios";
+import axios, { HttpStatusCode } from "axios";
 import { parse } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
@@ -198,9 +198,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
           what: "status",
           for: `${this.loginParameters.get("loginname")} Chatbot`,
         },
-        validateStatus: (status) => status === 302 || status === 200,
+        validateStatus: (status) => status === HttpStatusCode.Found || status === HttpStatusCode.Ok,
       });
-      return apiResponse.status === 200;
+      return apiResponse.status === HttpStatusCode.Ok;
     } catch {
       console.warn("Login check failed, returning false to be safe.");
       return false;
@@ -217,7 +217,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
           method: "POST",
           data: this.loginParameters,
           maxRedirects: 0,
-          validateStatus: (status) => status === 302,
+          validateStatus: (status) => status === HttpStatusCode.Found,
         });
         const sessionCookies = (loginResponse.headers["set-cookie"] || [])
           .map((cookie: string) => cookie.split(";")[0])

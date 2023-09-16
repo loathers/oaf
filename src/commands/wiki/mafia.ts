@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, HttpStatusCode } from "axios";
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
@@ -92,7 +92,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           },
         });
       } catch (error) {
-        if (error instanceof AxiosError && error.response?.status !== 404) {
+        if (error instanceof AxiosError && error.response?.status !== HttpStatusCode.NotFound) {
           await discordClient.alert(
             `Mafia wiki search query failed unexpectedly`,
             undefined,

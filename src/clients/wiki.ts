@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { Axios, AxiosError, HttpStatusCode } from "axios";
 import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
 
@@ -434,7 +434,7 @@ export class WikiClient {
       }
     } catch (error) {
       if (!(error instanceof AxiosError)) throw error;
-      if (error.response?.status !== 404) {
+      if (error.response?.status !== HttpStatusCode.NotFound) {
         throw new WikiSearchError(`kolwiki ${stage}`, error);
       }
     }
@@ -472,17 +472,28 @@ export class WikiClient {
   private async tryGoogleSearch(searchTerm: string) {
     if (!this.googleApiKey || !this.googleCustomSearch) return null;
     try {
-      const searchResponse = await axios(`https://www.googleapis.com/customsearch/v1`, {
+      const response = await axios(`https://www.googleapis.com/customsearch/v1`, {
         params: {
           key: this.googleApiKey,
           cx: this.googleCustomSearch,
           q: searchTerm,
         },
       });
-      return parseFoundName(searchResponse.data.items[0].link);
+      if (!response.data.items)
+        throw new WikiSearchError(
+          "google",
+          new AxiosError(
+            "Unexpected response from Google Search",
+            undefined,
+            response.config,
+            response.request,
+            response,
+          ),
+        );
+      return parseFoundName(response.data.items[0].link);
     } catch (error) {
       if (!(error instanceof AxiosError)) throw error;
-      if (error.response?.status !== 404) {
+      if (error.response?.status !== HttpStatusCode.NotFound) {
         throw new WikiSearchError("google", error);
       }
     }
