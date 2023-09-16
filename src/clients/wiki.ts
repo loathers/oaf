@@ -485,7 +485,9 @@ export class WikiClient {
         throw new WikiSearchError(
           response.config.url || searchTerm,
           "google",
-          new AxiosError(`Unexpected response from Google search: ${JSON.stringify(response)}`),
+          new AxiosError(
+            `Unexpected response from Google search: ${JSON.stringify(response.data)}`,
+          ),
         );
       }
       return parseFoundName(response.data.items[0].link);
