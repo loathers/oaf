@@ -2,6 +2,7 @@ import {
   ChatInputCommandInteraction,
   Events,
   Message,
+  MessageType,
   SlashCommandBuilder,
   inlineCode,
   userMention,
@@ -66,7 +67,11 @@ async function onMessage(message: Message) {
   const queries = matches.map((m) => m[1]).filter((m) => m.length > 0);
 
   let slashNote = "";
-  if (matches.length > 0 && matches[0][0] === message.content.trim()) {
+  if (
+    matches.length > 0 &&
+    matches[0][0] === message.content.trim() &&
+    message.type !== MessageType.Reply
+  ) {
     try {
       await message.react("<:kol_mad:516763545657016320>");
     } catch (error) {
