@@ -123,21 +123,34 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     value: player.hasDisplayCase ? hyperlink("Browse", toMuseumLink(player.id)) : italic("none"),
   });
 
-  const snapshot = await snapshotClient.getInfo(player.name);
-
-  fields.push({
-    name: "Snapshot",
-    value: snapshot
-      ? `${hyperlink(`Browse`, snapshot.link)} (updated ${time(snapshot.date, "R")})`
-      : italic("none"),
-  });
-
   // Save a database hit if we got here by tracking a claimed Discord account in the first place
   if (knownPlayer === null) {
     knownPlayer = await prisma.player.findFirst({
       where: { playerId: player.id },
     });
   }
+
+  // Show different greenboxen services
+  const greenboxes = [];
+  if (knownPlayer?.greenboxLastUpdate) {
+    greenboxes.push(
+      `${hyperlink(`Greenbox`, `https://greenbox.loathers.net/?u=${player.id}`)} (updated ${time(
+        knownPlayer.greenboxLastUpdate,
+        "R",
+      )})`,
+    );
+  }
+  const snapshot = await snapshotClient.getInfo(player.name);
+  if (snapshot) {
+    greenboxes.push(
+      `${hyperlink(`Snapshot`, snapshot.link)} (updated ${time(snapshot.date, "R")})`,
+    );
+  }
+
+  fields.push({
+    name: "Greenboxes",
+    value: greenboxes.join(" / ") || italic("none"),
+  });
 
   // Use this opportunity to update player names either from name changes or capitalization changes
   if (knownPlayer && knownPlayer.playerName !== player.name) {
