@@ -2,6 +2,8 @@ import { Events } from "discord.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
+// This is necessary in case the server uses worker threads
+import "sharp";
 
 import {
   CommandHandler,
