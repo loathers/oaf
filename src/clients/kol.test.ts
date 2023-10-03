@@ -9,7 +9,7 @@ import {
   vi,
 } from "vitest";
 
-import { loadFixture, respondWithFixture } from "../testUtils.js";
+import { respondWithFixture } from "../testUtils.js";
 import { kolClient, resolveKoLImage } from "./kol.js";
 
 vi.mock("axios");
@@ -60,7 +60,7 @@ describe("Profile parsing", () => {
     });
 
     expectNotNull(player);
-    expect(player.avatar).toBe("/images/otherimages/classav31_f.gif");
+    expect(player.avatar).toMatch(/^data:image\/png/);
   });
 
   test("Can parse a profile picture on dependence day", async () => {
@@ -76,7 +76,7 @@ describe("Profile parsing", () => {
     });
 
     expectNotNull(player);
-    expect(player.avatar).toBe("/images/otherimages/classav1a.gif");
+    expect(player.avatar).toMatch(/^data:image\/png/);
   });
 
   test("Can parse an avatar when the player has been painted gold", async () => {
@@ -92,7 +92,7 @@ describe("Profile parsing", () => {
     });
 
     expectNotNull(player);
-    expect(player.avatar).toBe("/iii/otherimages/classav31_f.gif");
+    expect(player.avatar).toMatch(/^data:image\/png/);
   });
 
   test("Can resolve KoL images", () => {
@@ -109,13 +109,5 @@ describe("Profile parsing", () => {
     ).toBe(
       "https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif",
     );
-  });
-});
-
-describe("Decorated avatar parsing", () => {
-  test("Can be tested by gausie", async () => {
-    const profile = await loadFixture(__dirname, "showplayer_golden_gun.html");
-    const parsed = await kolClient.parseDecoratedAvatar(profile);
-    expectNotNull(parsed);
   });
 });

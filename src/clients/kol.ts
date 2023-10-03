@@ -134,7 +134,7 @@ export function resolveKoLImage(path: string) {
   if (!/^https?:\/\//i.test(path))
     return (
       "https://s3.amazonaws.com/images.kingdomofloathing.com" +
-      path.replace(/^\/iii/, "")
+      path.replace(/^\/(iii|images)/, "")
     );
   return path;
 }
@@ -724,7 +724,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     return match?.[1] ?? null;
   }
 
-  async parseDecoratedAvatar(profile: string) {
+  async getAvatarAsSvg(profile: string) {
     const header = profile.match(
       /<center><table><tr><td><center>.*?(<div.*?>.*?<\/div>).*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
     );
@@ -736,28 +736,61 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
     if (!block) return null;
 
+    const ocrsColours = {
+      gold: "filter: invert(73%) sepia(52%) saturate(6979%) hue-rotate(23deg) brightness(92%) contrast(102%);",
+    };
+
+    const ocrsColour = Object.keys(ocrsColours).find((k) =>
+      block.classList.contains(k),
+    ) as keyof typeof ocrsColours | undefined;
+
     const images = [];
 
     for (const imgElement of block.querySelectorAll("img")) {
       const src = imgElement.getAttribute("src");
       if (!src) continue;
-      const url = resolveKoLImage(src);
-      const input = await fetch(url)
-        .then((r) => r.arrayBuffer())
-        .then((b) => Buffer.from(b));
+
+      const result = await fetch(resolveKoLImage(src));
+      let sharpImage = sharp(Buffer.from(await result.arrayBuffer())).png();
+
+      if (ocrsColour) sharpImage = sharpImage.unflatten();
+
+      const metadata = await sharpImage.metadata();
+      const buffer = await sharpImage.toBuffer();
+
+      const href = `data:image/png;base64,${buffer.toString("base64")}`;
 
       const style = imgElement.getAttribute("style");
+
       const top = Number(style?.match(/top: ?(-?\d+)px/i)?.[1] || "0");
       const left = Number(style?.match(/left: ?(-?\d+)px/i)?.[1] || "0");
-      images.push({ input, top, left });
+
+      images.push({
+        href,
+        top,
+        left,
+        width: metadata.width ?? 0,
+        height: metadata.height ?? 0,
+      });
     }
 
-    return await sharp({
-      create: { width: 100, height: 100, channels: 3, background: "#fff" },
-    })
-      .composite(images)
-      .png()
-      .toBuffer();
+    const width = Math.max(...images.map((i) => i.left + i.width));
+
+    const svg = `
+      <svg width="${width}" height="100" xmlns="http://www.w3.org/2000/svg" style="${
+        ocrsColour ? ocrsColours[ocrsColour] : ""
+      }">
+        ${images
+          .map(
+            (i) =>
+              `<image href="${i.href}" width="${i.width}" height="${i.height}" x="${i.left}" y="${i.top}" />`,
+          )
+          .join("\n")}
+      </svg>
+    `;
+
+    const finalBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
+    return `data:image/png;base64,${finalBuffer.toString("base64")}`;
   }
 
   async getPlayerInformation(
@@ -772,7 +805,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       );
       if (!header) return null;
 
-      this.parseDecoratedAvatar(profile);
+      const avatar = (await this.getAvatarAsSvg(profile)) || header[1];
 
       let ascensionsString = profile.match(
         />Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/,
@@ -807,7 +840,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
       return {
         ...playerToLookup,
-        avatar: header[1],
+        avatar,
         ascensions,
         trophies,
         tattoos,
