@@ -2,7 +2,7 @@ import axios from "axios";
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 
 import { respondWithFixture } from "../testUtils.js";
-import { kolClient } from "./kol.js";
+import { kolClient, resolveKoLImage } from "./kol.js";
 
 vi.mock("axios");
 
@@ -69,5 +69,33 @@ describe("Profile parsing", () => {
 
     expectNotNull(player);
     expect(player.avatar).toBe("/images/otherimages/classav1a.gif");
+  });
+
+  test("Can parse an avatar when the player has been painted gold", async () => {
+    vi.mocked(axios).mockResolvedValueOnce(
+      await respondWithFixture(__dirname, "showplayer_golden_gun.html"),
+    );
+
+    const player = await kolClient.getPlayerInformation({
+      id: 1197090,
+      name: "gAUSIE",
+      level: 15,
+      class: "Sauceror",
+    });
+
+    expectNotNull(player);
+    expect(player.avatar).toBe("/iii/otherimages/classav31_f.gif");
+  });
+
+  test("Can resolve KoL images", () => {
+    expect(resolveKoLImage("/iii/otherimages/classav31_f.gif")).toBe(
+      "https://s3.amazonaws.com/images.kingdomofloathing.com/otherimages/classav31_f.gif",
+    );
+    expect(resolveKoLImage("/itemimages/oaf.gif")).toBe(
+      "https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif",
+    );
+    expect(
+      resolveKoLImage("https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif"),
+    ).toBe("https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif");
   });
 });

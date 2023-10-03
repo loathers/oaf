@@ -23,6 +23,7 @@ import {
 import { isErrorLike, serializeError } from "serialize-error";
 
 import { config } from "../config.js";
+import { resolveKoLImage } from "./kol.js";
 
 export type ModalHandler = {
   customId: string;
@@ -180,10 +181,12 @@ export class DiscordClient extends Client {
   }
 }
 
+const OAF_ICON = resolveKoLImage("/itemimages/oaf.gif");
+
 export const createEmbed = () =>
   new EmbedBuilder().setFooter({
     text: "Problems? Message DocRostov#7004 on discord.",
-    iconURL: "http://images.kingdomofloathing.com/itemimages/oaf.gif",
+    iconURL: OAF_ICON,
   });
 
 export const blankEmbed = (description: string) => createEmbed().setDescription(description);

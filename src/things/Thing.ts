@@ -1,5 +1,7 @@
 import { EmbedBuilder } from "discord.js";
 
+import { resolveKoLImage } from "../clients/kol.js";
+
 export class Thing {
   readonly id: number;
   readonly name: string;
@@ -24,7 +26,7 @@ export class Thing {
   }
 
   addImageToEmbed(embed: EmbedBuilder) {
-    embed.setThumbnail(`http://images.kingdomofloathing.com${this.getImagePath()}`);
+    embed.setThumbnail(resolveKoLImage(this.getImagePath()));
   }
 
   async addToEmbed(embed: EmbedBuilder): Promise<void> {

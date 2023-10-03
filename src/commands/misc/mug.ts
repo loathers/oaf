@@ -3,6 +3,8 @@ import * as path from "node:path";
 import * as url from "node:url";
 import sharp from "sharp";
 
+import { resolveKoLImage } from "../../clients/kol.js";
+
 export const data = new SlashCommandBuilder()
   .setName("mug")
   .setDescription("MUGGO IS LIT")
@@ -55,7 +57,7 @@ async function getLetters() {
     _letters = await Promise.all(
       CHARACTER_IMAGES.map((p) =>
         p
-          ? fetch(`http://images.kingdomofloathing.com/otherimages/${p}.gif`)
+          ? fetch(resolveKoLImage(`/otherimages/${p}.gif`))
               .then((r) => r.arrayBuffer())
               .then((b) => Buffer.from(b))
           : undefined,

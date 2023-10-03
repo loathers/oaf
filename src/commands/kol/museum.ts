@@ -7,6 +7,7 @@ import {
 } from "discord.js";
 
 import { createEmbed } from "../../clients/discord.js";
+import { resolveKoLImage } from "../../clients/kol.js";
 import { wikiClient } from "../../clients/wiki.js";
 import { groupToMap } from "../../utils.js";
 
@@ -89,9 +90,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       name: `Top 10 "${data.name}" Collections`,
       value: leaderboard.join("\n") || "Couldn't find any collections",
     })
-    .setThumbnail(
-      `https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/${data.picture}.gif`,
-    );
+    .setThumbnail(resolveKoLImage(`/itemimages/${data.picture}.gif`));
 
   await interaction.editReply({
     content: `${hyperlink(

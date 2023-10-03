@@ -12,7 +12,7 @@ import {
 
 import { prisma } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
-import { kolClient } from "../../clients/kol.js";
+import { kolClient, resolveKoLImage } from "../../clients/kol.js";
 import { snapshotClient } from "../../clients/snapshot.js";
 import { toKoldbLink, toMuseumLink } from "../../utils.js";
 
@@ -169,7 +169,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const playerEmbed = createEmbed()
     .setTitle(`${bold(player.name)} (#${player.id})${isOnline ? " 📶" : ""}`)
-    .setThumbnail(player.avatar)
+    .setThumbnail(resolveKoLImage(player.avatar))
     .addFields(fields);
 
   try {

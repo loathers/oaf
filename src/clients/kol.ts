@@ -128,6 +128,12 @@ function sanitiseBlueText(blueText: string | undefined): string {
   ).trim();
 }
 
+export function resolveKoLImage(path: string) {
+  if (!/^https?:\/\//i.test(path))
+    return "https://s3.amazonaws.com/images.kingdomofloathing.com" + path.replace(/^\/iii/, "");
+  return path;
+}
+
 export type KoLMessage = {
   who: KoLUser;
   msg: string;
