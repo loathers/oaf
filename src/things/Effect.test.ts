@@ -1,6 +1,14 @@
 import axios from "axios";
 import { dedent } from "ts-dedent";
-import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  test,
+  vi,
+} from "vitest";
 
 import { kolClient } from "../clients/kol.js";
 import { respondWithFixture } from "../testUtils.js";
@@ -47,7 +55,10 @@ describe("Effect descriptions", () => {
 
   test("Can describe an avatar effect", async () => {
     vi.mocked(axios).mockResolvedValueOnce(
-      await respondWithFixture(__dirname, "desc_effect_the_visible_adventurer.html"),
+      await respondWithFixture(
+        __dirname,
+        "desc_effect_the_visible_adventurer.html",
+      ),
     );
 
     const effect = Effect.from(

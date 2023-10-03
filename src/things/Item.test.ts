@@ -1,6 +1,14 @@
 import axios from "axios";
 import { dedent } from "ts-dedent";
-import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  test,
+  vi,
+} from "vitest";
 
 import { kolClient } from "../clients/kol.js";
 import { respondWithFixture } from "../testUtils.js";
@@ -23,9 +31,14 @@ afterEach(() => {
 describe("Food", () => {
   test("Can describe a food with a range of adventures", async () => {
     vi.mocked(axios)
-      .mockResolvedValueOnce(await respondWithFixture(__dirname, "desc_item_tofurkey_leg.html"))
       .mockResolvedValueOnce(
-        await respondWithFixture(__dirname, "backoffice_prices_tofurkey_leg.html"),
+        await respondWithFixture(__dirname, "desc_item_tofurkey_leg.html"),
+      )
+      .mockResolvedValueOnce(
+        await respondWithFixture(
+          __dirname,
+          "backoffice_prices_tofurkey_leg.html",
+        ),
       );
 
     const item = Item.from(
@@ -49,15 +62,25 @@ describe("Food", () => {
 
   test("Can describe a food with a set number of adventures", async () => {
     vi.mocked(axios)
-      .mockResolvedValueOnce(await respondWithFixture(__dirname, "desc_item_alien_meat.html"))
       .mockResolvedValueOnce(
-        await respondWithFixture(__dirname, "backoffice_prices_alien_meat.html"),
+        await respondWithFixture(__dirname, "desc_item_alien_meat.html"),
+      )
+      .mockResolvedValueOnce(
+        await respondWithFixture(
+          __dirname,
+          "backoffice_prices_alien_meat.html",
+        ),
       );
 
     const item = Item.from(
       "9423	alien meat	672000286	alienmeat.gif	food, cook	t,d	8	pieces of alien meat",
       new Map([
-        ["alien meat", "alien meat	1	1	good	3	0	0	0	gain 5 turns of a random positive effect".split("	")],
+        [
+          "alien meat",
+          "alien meat	1	1	good	3	0	0	0	gain 5 turns of a random positive effect".split(
+            "	",
+          ),
+        ],
       ]),
     );
 
@@ -80,9 +103,14 @@ describe("Food", () => {
 describe("Equipment", () => {
   test("Can describe a shield", async () => {
     vi.mocked(axios)
-      .mockResolvedValueOnce(await respondWithFixture(__dirname, "desc_item_lov_elephant.html"))
       .mockResolvedValueOnce(
-        await respondWithFixture(__dirname, "backoffice_prices_lov_elephant.html"),
+        await respondWithFixture(__dirname, "desc_item_lov_elephant.html"),
+      )
+      .mockResolvedValueOnce(
+        await respondWithFixture(
+          __dirname,
+          "backoffice_prices_lov_elephant.html",
+        ),
       );
 
     const item = Item.from(
@@ -111,13 +139,21 @@ describe("Other", () => {
   test("Can describe a potion that is multiple use and combat usable", async () => {
     vi.mocked(axios)
       .mockResolvedValueOnce(
-        await respondWithFixture(__dirname, "desc_item_magical_mystery_juice.html"),
+        await respondWithFixture(
+          __dirname,
+          "desc_item_magical_mystery_juice.html",
+        ),
       )
       .mockResolvedValueOnce(
-        await respondWithFixture(__dirname, "backoffice_prices_magical_mystery_juice.html"),
+        await respondWithFixture(
+          __dirname,
+          "backoffice_prices_magical_mystery_juice.html",
+        ),
       );
 
-    const item = Item.from("518	magical mystery juice	400545756	potion4.gif	multiple, combat	d	50");
+    const item = Item.from(
+      "518	magical mystery juice	400545756	potion4.gif	multiple, combat	d	50",
+    );
 
     const description = await item.getDescription();
 
@@ -141,16 +177,28 @@ describe("Foldable", () => {
         await respondWithFixture(__dirname, "desc_item_turtle_wax_shield.html"),
       )
       .mockResolvedValueOnce(
-        await respondWithFixture(__dirname, "backoffice_prices_turtle_wax_shield.html"),
+        await respondWithFixture(
+          __dirname,
+          "backoffice_prices_turtle_wax_shield.html",
+        ),
       )
       .mockResolvedValueOnce(
-        await respondWithFixture(__dirname, "backoffice_prices_turtle_wax_shield.html"),
+        await respondWithFixture(
+          __dirname,
+          "backoffice_prices_turtle_wax_shield.html",
+        ),
       )
       .mockResolvedValueOnce(
-        await respondWithFixture(__dirname, "backoffice_prices_turtle_wax_helmet.html"),
+        await respondWithFixture(
+          __dirname,
+          "backoffice_prices_turtle_wax_helmet.html",
+        ),
       )
       .mockResolvedValueOnce(
-        await respondWithFixture(__dirname, "backoffice_prices_turtle_wax_greaves.html"),
+        await respondWithFixture(
+          __dirname,
+          "backoffice_prices_turtle_wax_greaves.html",
+        ),
       );
 
     const itemMeta = new Map([
@@ -166,7 +214,10 @@ describe("Foldable", () => {
 
     const group = [
       item,
-      Item.from("3916	turtle wax helmet	760962787	waxhat.gif	hat, usable	t,d	7", itemMeta),
+      Item.from(
+        "3916	turtle wax helmet	760962787	waxhat.gif	hat, usable	t,d	7",
+        itemMeta,
+      ),
       Item.from(
         "3917	turtle wax greaves	649657203	waxgreaves.gif	pants, usable	t,d	7	pairs of turtle wax greaves",
         itemMeta,

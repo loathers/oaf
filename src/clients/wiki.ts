@@ -3,7 +3,14 @@ import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
 
 import { config } from "../config.js";
-import { Effect, Familiar, Item, Monster, Skill, Thing } from "../things/index.js";
+import {
+  Effect,
+  Familiar,
+  Item,
+  Monster,
+  Skill,
+  Thing,
+} from "../things/index.js";
 import { cleanString } from "../utils.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
@@ -60,7 +67,10 @@ const PACKAGES = new Map([
   ["bag of iunion stones", "iunion crown"],
   ["packaged spinmaster™ lathe", "spinmaster™ lathe"],
   ["bagged cargo cultist shorts", "cargo cultist shorts"],
-  ["packaged knock-off retro superhero cape", "unwrapped knock-off retro superhero cape"],
+  [
+    "packaged knock-off retro superhero cape",
+    "unwrapped knock-off retro superhero cape",
+  ],
   ["box o' ghosts", "greedy ghostling"],
   ["packaged miniature crystal ball", "miniature crystal ball"],
   ["emotion chip", "spinal-fluid-covered emotion chip"],
@@ -178,13 +188,19 @@ export class WikiClient {
   }
 
   async loadItemTypes(itemTypes: Map<string, string[]>) {
-    for (const fileName of ["equipment", "spleenhit", "fullness", "inebriety"]) {
+    for (const fileName of [
+      "equipment",
+      "spleenhit",
+      "fullness",
+      "inebriety",
+    ]) {
       const file = await downloadMafiaData(fileName);
       for (const line of file.data.split(/\n/)) {
         if (!line.length || line.startsWith("#")) continue;
         try {
           const item = line.split("\t");
-          if (item.length > 1) itemTypes.set(cleanString(item[0]).toLowerCase(), item);
+          if (item.length > 1)
+            itemTypes.set(cleanString(item[0]).toLowerCase(), item);
         } catch {
           continue;
         }
@@ -211,7 +227,10 @@ export class WikiClient {
     }
   }
 
-  async loadItems(itemInfoForUse: Map<string, string[]>, avatarPotions: Set<string>) {
+  async loadItems(
+    itemInfoForUse: Map<string, string[]>,
+    avatarPotions: Set<string>,
+  ) {
     const file = await downloadMafiaData("items");
     for (const line of file.data.split(/\n/)) {
       if (!line.length || line.startsWith("#")) continue;
@@ -472,13 +491,16 @@ export class WikiClient {
   private async tryGoogleSearch(searchTerm: string) {
     if (!this.googleApiKey || !this.googleCustomSearch) return null;
     try {
-      const response = await axios(`https://www.googleapis.com/customsearch/v1`, {
-        params: {
-          key: this.googleApiKey,
-          cx: this.googleCustomSearch,
-          q: searchTerm,
+      const response = await axios(
+        `https://www.googleapis.com/customsearch/v1`,
+        {
+          params: {
+            key: this.googleApiKey,
+            cx: this.googleCustomSearch,
+            q: searchTerm,
+          },
         },
-      });
+      );
       // No results found
       if (!response.data.items) return null;
       return parseFoundName(response.data.items[0].link);
@@ -512,13 +534,16 @@ export class WikiClient {
 
     let url = `https://kol.coldfront.net/thekolwiki/index.php/${type}s_by_number`;
     if (type !== "Skill") {
-      const blockDescription = block < 0 ? "negative" : `${Math.max(1, block)}-${block + 99}`;
+      const blockDescription =
+        block < 0 ? "negative" : `${Math.max(1, block)}-${block + 99}`;
       url += `_(${blockDescription})`;
     }
 
     const pattern =
       type === "Skill"
-        ? new RegExp(`${thing.id.toString().padStart(4, "0")} <a href="([^"]+)"`)
+        ? new RegExp(
+            `${thing.id.toString().padStart(4, "0")} <a href="([^"]+)"`,
+          )
         : new RegExp(`${thing.id}\\. <a href="([^"]+)"`);
 
     try {
@@ -549,11 +574,13 @@ function nameFromWikiPage(url: string, data: string): string {
   let result = "";
   if (titleMatch?.groups && titleMatch.groups.pageTitle) {
     result = titleMatch.groups.pageTitle;
-  } else result = decodeURIComponent(url.split("/index.php/")[1]).replace(/_/g, " ");
+  } else
+    result = decodeURIComponent(url.split("/index.php/")[1]).replace(/_/g, " ");
   if (result.endsWith(" (item)")) result = result.replace(" (item)", "");
   if (result.endsWith(" (skill)")) result = result.replace(" (skill)", "");
   if (result.endsWith(" (effect)")) result = result.replace(" (effect)", "");
-  if (result.endsWith(" (familiar)")) result = result.replace(" (familiar)", "");
+  if (result.endsWith(" (familiar)"))
+    result = result.replace(" (familiar)", "");
   switch (result.toLowerCase()) {
     case "glitch season reward name":
       return "[glitch season reward name]";
@@ -579,4 +606,7 @@ function emoteNamesFromEmotes(emoteString: string) {
   });
 }
 
-export const wikiClient = new WikiClient(config.GOOGLE_API_KEY, config.CUSTOM_SEARCH);
+export const wikiClient = new WikiClient(
+  config.GOOGLE_API_KEY,
+  config.CUSTOM_SEARCH,
+);

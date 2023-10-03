@@ -1,5 +1,10 @@
 import { Player, PrismaPromise } from "@prisma/client";
-import { ChatInputCommandInteraction, SlashCommandBuilder, bold, underscore } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  bold,
+  underscore,
+} from "discord.js";
 
 import { prisma } from "../../clients/database.js";
 import { kolClient } from "../../clients/kol.js";
@@ -16,7 +21,9 @@ const BASE_CLASSES = [
 
 export const data = new SlashCommandBuilder()
   .setName("brains")
-  .setDescription("Find players whose brains can be drained for Dreadsylvania skills.");
+  .setDescription(
+    "Find players whose brains can be drained for Dreadsylvania skills.",
+  );
 
 /**
  * @param players List of players to format
@@ -41,7 +48,9 @@ function formatPlayerList(players: Player[]) {
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  const classToPlayers = Object.fromEntries(BASE_CLASSES.map((c) => [c, [] as Player[]]));
+  const classToPlayers = Object.fromEntries(
+    BASE_CLASSES.map((c) => [c, [] as Player[]]),
+  );
 
   const players = await prisma.player.findMany({
     where: { OR: [{ brainiac: true }, { skills: { gt: 0 } }] },

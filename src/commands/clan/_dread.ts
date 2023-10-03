@@ -79,7 +79,9 @@ const MONSTER_PAIRS = [
   [Monster.Vampire, Monster.Skeleton],
 ] as const;
 
-type KillsAndBanishes = { [key in MonsterType]: { kills: number; banishes: number } };
+type KillsAndBanishes = {
+  [key in MonsterType]: { kills: number; banishes: number };
+};
 
 function parseKillsAndBanishes(raidLog: string) {
   return Object.values(Monster).reduce((acc, m) => {
@@ -151,7 +153,9 @@ function extractDreadForest(raidLog: string): DreadForestStatus {
     watchtower: raidLog.includes("unlocked the fire watchtower"),
     auditor: raidLog.includes("got a Dreadsylvanian auditor's badge"),
     musicbox: raidLog.includes("made the forest less spooky"),
-    kiwi: raidLog.includes("knocked some fruit loose") || raidLog.includes("wasted some fruit"),
+    kiwi:
+      raidLog.includes("knocked some fruit loose") ||
+      raidLog.includes("wasted some fruit"),
     amber: raidLog.includes("acquired a chunk of moon-amber"),
   };
 }
@@ -173,12 +177,16 @@ function extractDreadCastle(raidLog: string): DreadCastleStatus {
   };
 }
 
-export async function getDreadStatusOverview(clanId: number): Promise<DreadStatus> {
+export async function getDreadStatusOverview(
+  clanId: number,
+): Promise<DreadStatus> {
   const raidLog = await getRaidLog(clanId);
   return extractDreadOverview(raidLog);
 }
 
-export async function getDetailedDreadStatus(clanId: number): Promise<DetailedDreadStatus> {
+export async function getDetailedDreadStatus(
+  clanId: number,
+): Promise<DetailedDreadStatus> {
   const raidLog = await getRaidLog(clanId);
 
   return {
@@ -189,14 +197,20 @@ export async function getDetailedDreadStatus(clanId: number): Promise<DetailedDr
   };
 }
 
-export async function getMissingRaidLogs(clanId: number, parsedRaids: number[]): Promise<number[]> {
+export async function getMissingRaidLogs(
+  clanId: number,
+  parsedRaids: number[],
+): Promise<number[]> {
   return await kolClient.actionMutex.runExclusive(async () => {
     if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
     let raidLogs = await kolClient.visitUrl("clan_oldraidlogs.php", {});
     const raidIds: number[] = [];
     let row = 0;
     let done = false;
-    while (!raidLogs.includes("No previous Clan Dungeon records found") && !done) {
+    while (
+      !raidLogs.includes("No previous Clan Dungeon records found") &&
+      !done
+    ) {
       const matches =
         raidLogs.match(
           /kisses<\/td><td class=tiny>\[<a href="clan_viewraidlog\.php\?viewlog=(?<id>\d+)/g,
@@ -211,7 +225,9 @@ export async function getMissingRaidLogs(clanId: number, parsedRaids: number[]):
       }
       if (!done) {
         row += 10;
-        raidLogs = await kolClient.visitUrl("clan_oldraidlogs.php", { startrow: row });
+        raidLogs = await kolClient.visitUrl("clan_oldraidlogs.php", {
+          startrow: row,
+        });
       }
     }
     return raidIds;

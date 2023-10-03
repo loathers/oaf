@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, bold } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  bold,
+} from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 import { pluralize } from "../../utils.js";
@@ -44,4 +48,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 export const data = new SlashCommandBuilder()
   .setName("status")
-  .setDescription("Get the current status of all monitored Dreadsylvania instances.");
+  .setDescription(
+    "Get the current status of all monitored Dreadsylvania instances.",
+  );

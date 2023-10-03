@@ -43,7 +43,9 @@ export const data = new SlashCommandBuilder()
 let JS_FUNCTION_CACHE = new Map<string, string[]>();
 
 async function getJsRef() {
-  const { data } = await axios.get<string>("https://unpkg.com/kolmafia@latest/index.d.ts");
+  const { data } = await axios.get<string>(
+    "https://unpkg.com/kolmafia@latest/index.d.ts",
+  );
   const matches = data.matchAll(/export (function (.*?)\(.*)?$/gm);
 
   const functions = new Map<string, string[]>();
@@ -92,7 +94,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           },
         });
       } catch (error) {
-        if (error instanceof AxiosError && error.response?.status !== HttpStatusCode.NotFound) {
+        if (
+          error instanceof AxiosError &&
+          error.response?.status !== HttpStatusCode.NotFound
+        ) {
           await discordClient.alert(
             `Mafia wiki search query failed unexpectedly`,
             undefined,

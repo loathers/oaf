@@ -36,7 +36,9 @@ const DREAD_BOSS_MAPPINGS = new Map([
 
 export const data = new SlashCommandBuilder()
   .setName("clan")
-  .setDescription("Get a detailed current status of the specified Dreadsylvania instance.")
+  .setDescription(
+    "Get a detailed current status of the specified Dreadsylvania instance.",
+  )
   .addStringOption((option) =>
     option
       .setName("clan")
@@ -55,12 +57,16 @@ function getForestSummary(status: DetailedDreadStatus) {
 
   if (!status.forest.attic) summary.push(bold("Cabin attic needs unlocking."));
 
-  if (status.forest.watchtower) summary.push("Watchtower open, you can grab freddies if you like.");
+  if (status.forest.watchtower)
+    summary.push("Watchtower open, you can grab freddies if you like.");
 
   if (status.forest.auditor) {
     summary.push(strikethrough("Auditor's badge claimed."));
   } else {
-    summary.push("Auditor's badge available.", sidenote("Cabin", "Basement", "Lockbox"));
+    summary.push(
+      "Auditor's badge available.",
+      sidenote("Cabin", "Basement", "Lockbox"),
+    );
   }
 
   if (status.forest.musicbox) {
@@ -148,7 +154,10 @@ function parseCastleStatus(status: DetailedDreadStatus) {
   if (status.castle.roast) {
     summary.push(strikethrough("Dreadful roast claimed."));
   } else {
-    summary.push("Dreadful roast available.", sidenote("Great Hall", "Dining Room", "Grab roast"));
+    summary.push(
+      "Dreadful roast available.",
+      sidenote("Great Hall", "Dining Room", "Grab roast"),
+    );
   }
 
   if (status.castle.banana) {
@@ -177,7 +186,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const clanName = interaction.options.getString("clan", true).toLowerCase();
 
   const clan = DREAD_CLANS.find(
-    (clan) => clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName),
+    (clan) =>
+      clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName),
   );
 
   if (!clan) {
@@ -225,8 +235,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     if (error instanceof RaidLogMissingError) {
-      await discordClient.alert("Unable to check raid logs", interaction, error);
-      await interaction.editReply("I couldn't see raid logs in that clan for some reason");
+      await discordClient.alert(
+        "Unable to check raid logs",
+        interaction,
+        error,
+      );
+      await interaction.editReply(
+        "I couldn't see raid logs in that clan for some reason",
+      );
       return;
     }
 

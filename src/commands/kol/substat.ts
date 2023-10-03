@@ -3,7 +3,8 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { fromLevel } from "./level.js";
 import { fromMainstat } from "./stat.js";
 
-const fromSubstat = (substat: number) => fromMainstat(Math.floor(Math.sqrt(Math.max(0, substat))));
+const fromSubstat = (substat: number) =>
+  fromMainstat(Math.floor(Math.sqrt(Math.max(0, substat))));
 
 export const data = new SlashCommandBuilder()
   .setName("substat")
@@ -28,7 +29,9 @@ export function execute(interaction: ChatInputCommandInteraction) {
   if (level < 255) {
     const next = fromLevel(level + 1);
 
-    reply += ` An additional ${(next.substat - substat).toLocaleString()} total substat${
+    reply += ` An additional ${(
+      next.substat - substat
+    ).toLocaleString()} total substat${
       next.substat - substat > 1 ? "s are" : " is"
     } required to reach level ${next.level}.`;
   }

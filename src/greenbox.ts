@@ -11,7 +11,11 @@ export async function handleGreenboxKmail(message: KoLMessage) {
   return await update(message.who.id, message.who.name, text);
 }
 
-async function update(playerId: number, playerName: string, greenboxString: string) {
+async function update(
+  playerId: number,
+  playerName: string,
+  greenboxString: string,
+) {
   const greenboxLastUpdate = new Date();
 
   try {
@@ -26,7 +30,10 @@ async function update(playerId: number, playerName: string, greenboxString: stri
       },
     });
   } catch (error) {
-    await kolClient.kmail(playerId, "There was an error processing your greenbox submission");
+    await kolClient.kmail(
+      playerId,
+      "There was an error processing your greenbox submission",
+    );
   }
 }
 

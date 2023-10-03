@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, inlineCode } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  inlineCode,
+} from "discord.js";
 
 import { kolClient } from "../../clients/kol.js";
 import { wikiClient } from "../../clients/wiki.js";
@@ -31,7 +35,8 @@ const ITEM_SPADING_CALLS = [
         whichitem: id,
       },
     ],
-    visitMatch: /You can't equip an off-hand item while wielding a 2-handed weapon/,
+    visitMatch:
+      /You can't equip an off-hand item while wielding a 2-handed weapon/,
     type: ItemType.Offhand,
   },
   {
@@ -83,7 +88,9 @@ const ITEM_SPADING_CALLS = [
 
 export const data = new SlashCommandBuilder()
   .setName("spade")
-  .setDescription("Spade the existence and tradeability of as yet unreleased stuff.")
+  .setDescription(
+    "Spade the existence and tradeability of as yet unreleased stuff.",
+  )
   .addSubcommand((subcommand) =>
     subcommand
       .setName("items")
@@ -111,7 +118,10 @@ export const data = new SlashCommandBuilder()
       .setName("skills")
       .setDescription("Spade unreleased skills")
       .addIntegerOption((option) =>
-        option.setName("classid").setDescription("class ID to spade skills for").setRequired(false),
+        option
+          .setName("classid")
+          .setDescription("class ID to spade skills for")
+          .setRequired(false),
       ),
   );
 
@@ -174,17 +184,21 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
       {
         title: "Spaded items",
         description: `Searched items with ids starting with ${start}:`,
-        fields: data.map(({ id, exists, tradeable, itemtype, additionalInfo }) => ({
-          name: `Item ${id}`,
-          value: exists
-            ? `${tradeable ? "Tradeable" : "Untradeable"}\n${itemtype}${
-                additionalInfo ? `\n${additionalInfo}` : ""
-              }`
-            : "Does not exist",
-          inline: true,
-        })),
+        fields: data.map(
+          ({ id, exists, tradeable, itemtype, additionalInfo }) => ({
+            name: `Item ${id}`,
+            value: exists
+              ? `${tradeable ? "Tradeable" : "Untradeable"}\n${itemtype}${
+                  additionalInfo ? `\n${additionalInfo}` : ""
+                }`
+              : "Does not exist",
+            inline: true,
+          }),
+        ),
         footer: {
-          text: `${inlineCode("oaf")} can detect the following item types: ${Object.values(ItemType)
+          text: `${inlineCode(
+            "oaf",
+          )} can detect the following item types: ${Object.values(ItemType)
             .filter((type) => type)
             .join(", ")}. If no type is shown, the item is none of these.`,
         },
@@ -205,7 +219,13 @@ async function spadeItem(itemId: number) {
   let itemtype = ItemType.Unknown as ItemType;
 
   if (!exists) {
-    return { id: itemId, exists, tradeable: false, itemtype, additionalInfo: "" };
+    return {
+      id: itemId,
+      exists,
+      tradeable: false,
+      itemtype,
+      additionalInfo: "",
+    };
   }
 
   const tradeable = !/That item cannot be sold or transferred/.test(
@@ -264,7 +284,9 @@ async function spadeFamiliar(famId: number) {
 
   if (page.includes("No familiar was found.")) return "none";
 
-  const name = /<font face=Arial,Helvetica><center><b>([^<]+)<\/b>/.exec(page)?.[1];
+  const name = /<font face=Arial,Helvetica><center><b>([^<]+)<\/b>/.exec(
+    page,
+  )?.[1];
   return name ?? "none";
 }
 

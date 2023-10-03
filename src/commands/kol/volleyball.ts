@@ -2,7 +2,9 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
   .setName("volleyball")
-  .setDescription("Find the +stat gain supplied by a volleyball of a given weight.")
+  .setDescription(
+    "Find the +stat gain supplied by a volleyball of a given weight.",
+  )
   .addIntegerOption((option) =>
     option
       .setName("weight")
@@ -14,5 +16,9 @@ export const data = new SlashCommandBuilder()
 export function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
 
-  interaction.reply(`A ${weight}lb volleyball provides +${2 + 0.2 * weight} substats per combat.`);
+  interaction.reply(
+    `A ${weight}lb volleyball provides +${
+      2 + 0.2 * weight
+    } substats per combat.`,
+  );
 }

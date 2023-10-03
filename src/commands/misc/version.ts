@@ -33,7 +33,10 @@ function getVersionEmbed() {
       {
         name: "Build Commit",
         value: commit
-          ? hyperlink(commit, `https://github.com/loathers/oaf/commit/${commit}`)
+          ? hyperlink(
+              commit,
+              `https://github.com/loathers/oaf/commit/${commit}`,
+            )
           : "Unknown",
       },
       {
@@ -57,6 +60,8 @@ export async function init() {
   });
 
   process.on("SIGTERM", () => {
-    discordClient.alert(`${inlineCode("oaf")} shutting down`).then(() => process.exit(0));
+    discordClient
+      .alert(`${inlineCode("oaf")} shutting down`)
+      .then(() => process.exit(0));
   });
 }

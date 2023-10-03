@@ -17,7 +17,9 @@ export type Drop = {
 };
 
 export function convertToDrop(drop: string): Drop | null {
-  const dropMatch = drop.match(/^(?<item>.+) \((?<attributes>[a-z]*)(?<droprate>[\d]+)\)$/);
+  const dropMatch = drop.match(
+    /^(?<item>.+) \((?<attributes>[a-z]*)(?<droprate>[\d]+)\)$/,
+  );
   if (!dropMatch?.groups) return null;
 
   const { item, attributes, droprate } = dropMatch.groups;
@@ -62,7 +64,13 @@ export class Monster extends Thing {
   readonly parameters: string;
   readonly drops: Drop[];
 
-  constructor(name: string, id: number, imageUrl: string, parameters: string, drops: Drop[]) {
+  constructor(
+    name: string,
+    id: number,
+    imageUrl: string,
+    parameters: string,
+    drops: Drop[],
+  ) {
     super(id, name, imageUrl);
     this.parameters = parameters;
     this.drops = drops;
@@ -95,12 +103,14 @@ export class Monster extends Thing {
         if (drop.attributes.pickpocketOnly) dropDetails.push("pickpocket only");
         if (drop.attributes.noPickpocket) dropDetails.push("can't be stolen");
         if (drop.attributes.conditional) dropDetails.push("conditional");
-        if (drop.attributes.fixedRate) dropDetails.push("unaffected by item drop modifiers");
+        if (drop.attributes.fixedRate)
+          dropDetails.push("unaffected by item drop modifiers");
       }
 
-      const dropDescription = `${hyperlink(drop.item, toWikiLink(drop.item))} (${dropDetails.join(
-        ", ",
-      )})`;
+      const dropDescription = `${hyperlink(
+        drop.item,
+        toWikiLink(drop.item),
+      )} (${dropDetails.join(", ")})`;
 
       drops.set(dropDescription, (drops.get(dropDescription) || 0) + 1);
     }
@@ -108,7 +118,9 @@ export class Monster extends Thing {
     description.push(
       ...[...drops.entries()]
         .slice(0, 10)
-        .map(([drop, quantity]) => `${quantity > 1 ? `${quantity}x ` : ""}${drop}`),
+        .map(
+          ([drop, quantity]) => `${quantity > 1 ? `${quantity}x ` : ""}${drop}`,
+        ),
     );
 
     if (drops.size > 10) description.push("...and more.");
@@ -123,7 +135,9 @@ export class Monster extends Thing {
     const atk = this.parameters.match(/Atk: (?<atk>-?[\d]+)/);
     const def = this.parameters.match(/Def: (?<def>-?[\d]+)/);
     const hp = this.parameters.match(/HP: (?<hp>-?[\d]+)/);
-    const scaleMatcher = this.parameters.match(/Scale: (?<scale>(-?[\d]|\[.*?\])+)/);
+    const scaleMatcher = this.parameters.match(
+      /Scale: (?<scale>(-?[\d]|\[.*?\])+)/,
+    );
 
     if (atk && def && hp) {
       description.push(`Attack: ${atk[1]} | Defense: ${def[1]} | HP: ${hp[1]}`);
@@ -135,7 +149,11 @@ export class Monster extends Thing {
       if (Number.isNaN(scale)) {
         scaleDetails.push("something weird");
       } else {
-        scaleDetails.push("your stats", scale >= 0 ? "plus" : "minus", Math.abs(scale).toString());
+        scaleDetails.push(
+          "your stats",
+          scale >= 0 ? "plus" : "minus",
+          Math.abs(scale).toString(),
+        );
       }
 
       const scaleBounds: string[] = [];
@@ -146,10 +164,13 @@ export class Monster extends Thing {
       const cap = this.parameters.match(/Cap: (?<cap>[\d]+)/);
       if (cap) scaleBounds.push(`max ${cap[1]}`);
 
-      if (scaleBounds.length > 0) scaleDetails.push(`(${scaleBounds.join(", ")})`);
+      if (scaleBounds.length > 0)
+        scaleDetails.push(`(${scaleBounds.join(", ")})`);
 
       description.push(
-        `Scales to ${scaleDetails.join(" ")} | HP: ${hp ? hp[1] : "75% of defense"}.`,
+        `Scales to ${scaleDetails.join(" ")} | HP: ${
+          hp ? hp[1] : "75% of defense"
+        }.`,
       );
     } else {
       description.push("Scales unusually.");
@@ -161,12 +182,17 @@ export class Monster extends Thing {
     const element = this.parameters.match(/E: (?<element>[a-z]+)/);
     if (element) description.push(`Element: ${element[1]}`);
 
-    if (this.parameters.includes("Init: 10000")) description.push("Always wins initiative.");
-    if (this.parameters.includes("Init: -10000")) description.push("Always loses initiative.");
-    if (this.parameters.includes("FREE")) description.push("Doesn't cost a turn to fight.");
-    if (this.parameters.includes("NOCOPY")) description.push("Can't be copied.");
+    if (this.parameters.includes("Init: 10000"))
+      description.push("Always wins initiative.");
+    if (this.parameters.includes("Init: -10000"))
+      description.push("Always loses initiative.");
+    if (this.parameters.includes("FREE"))
+      description.push("Doesn't cost a turn to fight.");
+    if (this.parameters.includes("NOCOPY"))
+      description.push("Can't be copied.");
     if (this.parameters.includes("BOSS")) description.push("Instakill immune.");
-    if (this.parameters.includes("ULTRARARE")) description.push("Ultra-rare encounter.");
+    if (this.parameters.includes("ULTRARARE"))
+      description.push("Ultra-rare encounter.");
 
     const drops = this.getDropsDescription();
     if (drops) {

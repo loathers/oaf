@@ -1,10 +1,13 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-const sombreroSubstats = (weight: number, ml: number) => (ml / 4) * (0.1 + 0.005 * weight);
+const sombreroSubstats = (weight: number, ml: number) =>
+  (ml / 4) * (0.1 + 0.005 * weight);
 
 export const data = new SlashCommandBuilder()
   .setName("sombrero")
-  .setDescription("Find the +stat gain supplied by a sombrero of a given weight and ML.")
+  .setDescription(
+    "Find the +stat gain supplied by a sombrero of a given weight and ML.",
+  )
   .addIntegerOption((option) =>
     option
       .setName("weight")
@@ -13,7 +16,10 @@ export const data = new SlashCommandBuilder()
       .setMinValue(1),
   )
   .addIntegerOption((option) =>
-    option.setName("ml").setDescription("Monster Level modifier").setRequired(true),
+    option
+      .setName("ml")
+      .setDescription("Monster Level modifier")
+      .setRequired(true),
   );
 
 export function execute(interaction: ChatInputCommandInteraction) {

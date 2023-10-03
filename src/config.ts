@@ -64,7 +64,9 @@ export const schema = {
 
   // /tag
   EXTENDED_TEAM_ROLE_ID: SNOWFLAKE_PATTERN,
-  WHITELIST_ROLE_IDS: new RegExp(`${SNOWFLAKE_PATTERN.source}(,${SNOWFLAKE_PATTERN.source})*`),
+  WHITELIST_ROLE_IDS: new RegExp(
+    `${SNOWFLAKE_PATTERN.source}(,${SNOWFLAKE_PATTERN.source})*`,
+  ),
 };
 
 export type Env = EnvType<typeof schema>;

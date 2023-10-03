@@ -65,7 +65,8 @@ export class Effect extends Thing {
     if (!this.pizza)
       return "Pizza: If you are reading this, Captain 'Jalen' Scotch has hecked something up. Please ping him.";
 
-    const options = this.pizza.options === 1 ? "Uncontested" : `1 in ${this.pizza.options}`;
+    const options =
+      this.pizza.options === 1 ? "Uncontested" : `1 in ${this.pizza.options}`;
     return `Pizza: ${this.pizza.letters.padEnd(4, "✱")} (${options})`;
   }
 

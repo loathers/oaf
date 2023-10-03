@@ -1,4 +1,8 @@
-import { AttachmentBuilder, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  AttachmentBuilder,
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 import sharp from "sharp";
 
 export const data = new SlashCommandBuilder()
@@ -7,7 +11,10 @@ export const data = new SlashCommandBuilder()
     "Let someone know their actions caused you to lose faith in humanity a little bit",
   )
   .addStringOption((option) =>
-    option.setName("name").setDescription("the person who ruined your day").setRequired(true),
+    option
+      .setName("name")
+      .setDescription("the person who ruined your day")
+      .setRequired(true),
   );
 
 const superhero = (text: string) => {
@@ -28,7 +35,9 @@ const superhero = (text: string) => {
   const height = Math.ceil(width * Math.tan(skew)); // cool maths
   // temporarily swapping out impact, the right font, for verdana to see what happens
   return `
-      <svg viewBox="0 0 ${width + 5} ${height * 1.1}" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 ${width + 5} ${
+        height * 1.1
+      }" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="superhero" x1="0" x2="0" y1="0" y2="100%">
             <stop stop-color="#fdea00" offset="0%" />

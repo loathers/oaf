@@ -36,7 +36,9 @@ export const data = new SlashCommandBuilder()
   .addNumberOption((option) =>
     option
       .setName("item")
-      .setDescription("Select an item from the autocomplete or supply an item id")
+      .setDescription(
+        "Select an item from the autocomplete or supply an item id",
+      )
       .setAutocomplete(true)
       .setRequired(true),
   );
@@ -63,12 +65,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   );
 
   if (status !== 200) {
-    await interaction.editReply(`Item id ${id} wasn't found on https://museum.loathers.net`);
+    await interaction.editReply(
+      `Item id ${id} wasn't found on https://museum.loathers.net`,
+    );
     return;
   }
 
   if (data.collection.length === 0) {
-    await interaction.editReply(`That item exists but no-one has one in their display case!`);
+    await interaction.editReply(
+      `That item exists but no-one has one in their display case!`,
+    );
     return;
   }
 
@@ -79,9 +85,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const collection = grouped.get(r)!;
     const players = collection.map((c) => c.player.name);
     const playersString = (
-      players.length > 4 ? players.slice(0, 3).concat("and many more...") : players
+      players.length > 4
+        ? players.slice(0, 3).concat("and many more...")
+        : players
     ).join(", ");
-    return `${getRankSymbol(r)} - ${playersString} - ${collection[0].quantity.toLocaleString()}`;
+    return `${getRankSymbol(
+      r,
+    )} - ${playersString} - ${collection[0].quantity.toLocaleString()}`;
   });
 
   const embed = createEmbed()
@@ -106,7 +116,9 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
 
   const filtered = wikiClient.items
     .map(({ name, id }) => ({ name, value: id }))
-    .filter(({ name }) => name.toLowerCase().includes(focusedValue.toLowerCase()))
+    .filter(({ name }) =>
+      name.toLowerCase().includes(focusedValue.toLowerCase()),
+    )
     .slice(0, 25);
   await interaction.respond(filtered);
 }

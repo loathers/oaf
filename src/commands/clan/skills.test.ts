@@ -6,7 +6,9 @@ import { Participation, getParticipationFromRaidLog } from "./skills.js";
 let participation: Participation = new Map();
 
 beforeAll(async () => {
-  participation = getParticipationFromRaidLog(await loadFixture(__dirname, "raidlog.html"));
+  participation = getParticipationFromRaidLog(
+    await loadFixture(__dirname, "raidlog.html"),
+  );
 });
 
 const LAGGYCAT = 3137318;
@@ -26,7 +28,10 @@ test("Can parse raid log kills", () => {
   expect(participation.get(SWAGGERFORTUNE)).toHaveProperty("kills", 346);
   expect(participation.get(LAGGYCAT)).toHaveProperty("kills", 0);
 
-  const totalKills = [...participation.values()].reduce((sum, { kills }) => sum + kills, 0);
+  const totalKills = [...participation.values()].reduce(
+    (sum, { kills }) => sum + kills,
+    0,
+  );
 
   expect(totalKills).toEqual(3677);
 });

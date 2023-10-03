@@ -20,12 +20,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const channel = interaction.channel;
 
   if (!channel) {
-    await interaction.editReply("You have to perform this action from within a Channel.");
+    await interaction.editReply(
+      "You have to perform this action from within a Channel.",
+    );
     return;
   }
 
   if (!("messages" in channel)) {
-    await interaction.editReply("The channel type supplied does not support purging.");
+    await interaction.editReply(
+      "The channel type supplied does not support purging.",
+    );
     return;
   }
 

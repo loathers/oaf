@@ -1,4 +1,9 @@
-import { ChatInputCommandInteraction, Events, SlashCommandBuilder, inlineCode } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  Events,
+  SlashCommandBuilder,
+  inlineCode,
+} from "discord.js";
 import { Client } from "discord.js";
 import { totp } from "otplib";
 
@@ -18,13 +23,18 @@ const oauf = Object.assign(
   { options: { ...totp.options, step: 2 * 60 } },
   {
     generatePlayer: (playerId: number) =>
-      Number(`${playerId}${oauf.generate(playerSecret(playerId))}`).toString(16),
+      Number(`${playerId}${oauf.generate(playerSecret(playerId))}`).toString(
+        16,
+      ),
     checkPlayer: (token: string) => {
       const decoded = parseInt(token, 16);
       const [playerId, totpToken] = intDiv(decoded, 1e6);
       return [
         playerId,
-        oauf.check(totpToken.toString().padStart(6, "0"), playerSecret(playerId)),
+        oauf.check(
+          totpToken.toString().padStart(6, "0"),
+          playerSecret(playerId),
+        ),
       ] as [playerId: number, valid: boolean];
     },
   },
@@ -34,7 +44,10 @@ export const data = new SlashCommandBuilder()
   .setName("claim")
   .setDescription("Claim a KoL player account.")
   .addStringOption((option) =>
-    option.setName("token").setDescription("The token that I sent you").setRequired(false),
+    option
+      .setName("token")
+      .setDescription("The token that I sent you")
+      .setRequired(false),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -91,7 +104,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     },
   });
 
-  const guild = interaction.guild || (await discordClient.guilds.fetch(config.GUILD_ID));
+  const guild =
+    interaction.guild || (await discordClient.guilds.fetch(config.GUILD_ID));
   const role = await guild.roles.fetch(config.VERIFIED_ROLE_ID);
 
   if (role) {
@@ -99,7 +113,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await member.roles.add(role);
   }
 
-  const previous = previouslyClaimed.count > 0 ? " Any previous link will have been removed." : "";
+  const previous =
+    previouslyClaimed.count > 0
+      ? " Any previous link will have been removed."
+      : "";
 
   await interaction.editReply(
     `Your Discord account has been successfully linked with ${inlineCode(
@@ -114,7 +131,9 @@ async function synchroniseRoles(client: Client) {
   const role = await guild.roles.fetch(config.VERIFIED_ROLE_ID);
 
   if (!role) {
-    await discordClient.alert(`Verified role (${config.VERIFIED_ROLE_ID}) cannot be found`);
+    await discordClient.alert(
+      `Verified role (${config.VERIFIED_ROLE_ID}) cannot be found`,
+    );
     return;
   }
 

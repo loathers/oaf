@@ -1,4 +1,12 @@
-import { Duration, add, endOfDay, intervalToDuration, milliseconds, set, sub } from "date-fns";
+import {
+  Duration,
+  add,
+  endOfDay,
+  intervalToDuration,
+  milliseconds,
+  set,
+  sub,
+} from "date-fns";
 import {
   ChatInputCommandInteraction,
   DiscordAPIError,
@@ -56,16 +64,22 @@ export const data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option
       .setName("when")
-      .setDescription('When to remind you (In either the form "1w2d3h4m5s" or "rollover")')
+      .setDescription(
+        'When to remind you (In either the form "1w2d3h4m5s" or "rollover")',
+      )
       .setRequired(true),
   )
   .addStringOption((option) =>
-    option.setName("reminder").setDescription("What to remind you").setRequired(false),
+    option
+      .setName("reminder")
+      .setDescription("What to remind you")
+      .setRequired(false),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const when = interaction.options.getString("when", true);
-  const reminderText = interaction.options.getString("reminder") || "Time's up!";
+  const reminderText =
+    interaction.options.getString("reminder") || "Time's up!";
 
   if (reminderText.length > 127) {
     interaction.reply({
@@ -79,7 +93,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!duration) {
     return void (await interaction.reply({
-      content: 'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".',
+      content:
+        'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".',
       ephemeral: true,
     }));
   }
@@ -88,13 +103,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (interaction.channel && !interaction.channel.send) {
     return void (await interaction.reply({
-      content: "It doesn't look possible for oaf to respond to this request when the time comes",
+      content:
+        "It doesn't look possible for oaf to respond to this request when the time comes",
       ephemeral: true,
     }));
   }
 
   const reply = await interaction.reply({
-    content: `Okay, I'll remind you ${time(reminderDate, TimestampStyles.RelativeTime)}.`,
+    content: `Okay, I'll remind you ${time(
+      reminderDate,
+      TimestampStyles.RelativeTime,
+    )}.`,
     fetchReply: true,
   });
 
@@ -112,7 +131,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 async function clearOldReminders() {
   const deleted = await prisma.reminder.deleteMany({
-    where: { reminderSent: true, reminderDate: { lt: sub(new Date(), { days: 30 }) } },
+    where: {
+      reminderSent: true,
+      reminderDate: { lt: sub(new Date(), { days: 30 }) },
+    },
   });
   if (deleted.count > 0) {
     await discordClient.alert(`Cleared ${deleted.count} old sent reminder(s)`);
@@ -165,7 +187,10 @@ async function checkReminders() {
       );
     }
 
-    await prisma.reminder.update({ where: { id: reminder.id }, data: { reminderSent: true } });
+    await prisma.reminder.update({
+      where: { id: reminder.id },
+      data: { reminderSent: true },
+    });
   }
 }
 

@@ -3,7 +3,11 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
 
-import { CommandHandler, ModalHandler, discordClient } from "./clients/discord.js";
+import {
+  CommandHandler,
+  ModalHandler,
+  discordClient,
+} from "./clients/discord.js";
 import { kolClient } from "./clients/kol.js";
 import { wikiClient } from "./clients/wiki.js";
 import { handleGreenboxKmail } from "./greenbox.js";
@@ -20,7 +24,9 @@ async function* walk(dir: string): AsyncGenerator<string> {
 }
 
 async function loadSlashCommands() {
-  const commandsPath = url.fileURLToPath(new URL("./commands", import.meta.url));
+  const commandsPath = url.fileURLToPath(
+    new URL("./commands", import.meta.url),
+  );
   for await (const filePath of walk(commandsPath)) {
     if (!/\/[^_][^/]*(?<!\.test)\.(ts|js)$/.test(filePath)) continue;
     let handled = false;
@@ -40,11 +46,15 @@ async function loadSlashCommands() {
     }
 
     if (!handled) {
-      await discordClient.alert(`Unusable file found in command directory ${filePath}`);
+      await discordClient.alert(
+        `Unusable file found in command directory ${filePath}`,
+      );
     }
   }
 
-  const commands = [...discordClient.commands.values()].map((c) => c.data.toJSON());
+  const commands = [...discordClient.commands.values()].map((c) =>
+    c.data.toJSON(),
+  );
   await discordClient.registerApplicationCommands(commands);
   console.log(`Loaded ${commands.length} commands`);
 }

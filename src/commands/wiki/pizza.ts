@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, hyperlink } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  hyperlink,
+} from "discord.js";
 
 import { createEmbed } from "../../clients/discord.js";
 import { pizzaTree } from "../../clients/pizza.js";
@@ -6,11 +10,15 @@ import { wikiClient } from "../../clients/wiki.js";
 
 export const data = new SlashCommandBuilder()
   .setName("pizza")
-  .setDescription("Find what effects a diabolic pizza with the given letters can grant you.")
+  .setDescription(
+    "Find what effects a diabolic pizza with the given letters can grant you.",
+  )
   .addStringOption((option) =>
     option
       .setName("letters")
-      .setDescription("The first letters of the items you want to bake into a pizza.")
+      .setDescription(
+        "The first letters of the items you want to bake into a pizza.",
+      )
       .setRequired(true)
       .setMinLength(1)
       .setMaxLength(4),
@@ -21,10 +29,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  const [options, functionalLetters] = pizzaTree.findPizzas(letters.toLowerCase());
+  const [options, functionalLetters] = pizzaTree.findPizzas(
+    letters.toLowerCase(),
+  );
 
   const pizzaName = letters.toUpperCase().padEnd(4, "✱");
-  const functionalName = letters.slice(0, functionalLetters).toUpperCase().padEnd(4, "✱");
+  const functionalName = letters
+    .slice(0, functionalLetters)
+    .toUpperCase()
+    .padEnd(4, "✱");
   const article = letters.match(/^[aeiouAEIOU]/) ? "An" : "A";
 
   if (options.length === 1) {
@@ -44,14 +57,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (options.length > 11) {
     embed.setDescription(
       `${article} ${pizzaName}${
-        functionalLetters < letters.length ? ` (functionally ${functionalName})` : ""
+        functionalLetters < letters.length
+          ? ` (functionally ${functionalName})`
+          : ""
       } pizza has too many possible effects to list.`,
     );
   } else {
     const description: string[] = await Promise.all(
       options.map(async (effect) => {
         const foundName = await wikiClient.findName(effect.name);
-        return hyperlink(foundName?.name ?? "", encodeURI(foundName?.url || ""));
+        return hyperlink(
+          foundName?.name ?? "",
+          encodeURI(foundName?.url || ""),
+        );
       }),
     );
 

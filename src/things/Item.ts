@@ -68,7 +68,10 @@ export class Item extends Thing {
     return !!thing && thing instanceof Item;
   }
 
-  static from(line: string, itemInfoForUse = new Map<string, string[]>()): Item {
+  static from(
+    line: string,
+    itemInfoForUse = new Map<string, string[]>(),
+  ): Item {
     const parts = line.split(/\t/);
     if (parts.length < 7) throw "Invalid data";
 
@@ -156,7 +159,9 @@ export class Item extends Thing {
     }
 
     if (size > 1) {
-      extra.push(`${Number((average / size).toFixed(2))} per ${consumableUnit}`);
+      extra.push(
+        `${Number((average / size).toFixed(2))} per ${consumableUnit}`,
+      );
     }
 
     if (extra.length > 0) {
@@ -206,7 +211,9 @@ export class Item extends Thing {
     description.push(stats);
 
     if (adventures !== "0") {
-      description.push(this.describeAdventures(adventures, size, consumableUnit));
+      description.push(
+        this.describeAdventures(adventures, size, consumableUnit),
+      );
     }
 
     return description;
@@ -239,7 +246,9 @@ export class Item extends Thing {
         const damage = power / 10;
         description.push(bold(subtype));
 
-        equipInfo.unshift(`${Math.round(damage)}-${Math.round(damage * 2)} damage`);
+        equipInfo.unshift(
+          `${Math.round(damage)}-${Math.round(damage * 2)} damage`,
+        );
         break;
       }
       case "offhand": {
@@ -247,7 +256,10 @@ export class Item extends Thing {
         description.push(bold(`Offhand ${shield ? "Shield" : "Item"}`));
 
         equipInfo.unshift(`${power} power`);
-        if (shield) equipInfo.push(`Damage Reduction: ${Number((power / 15 - 1).toFixed(2))}`);
+        if (shield)
+          equipInfo.push(
+            `Damage Reduction: ${Number((power / 15 - 1).toFixed(2))}`,
+          );
         break;
       }
       case "familiar": {
@@ -256,7 +268,9 @@ export class Item extends Thing {
       }
       default: {
         const equipmentName =
-          equipmentType === "container" ? "Back Item" : titleCase(equipmentType);
+          equipmentType === "container"
+            ? "Back Item"
+            : titleCase(equipmentType);
         description.push(bold(equipmentName));
 
         equipInfo.unshift(`${power} power`);
@@ -270,7 +284,9 @@ export class Item extends Thing {
   }
 
   getOtherDescription() {
-    const otherType = this.types.find((t): t is OtherType => OTHER_TYPES.includes(t as OtherType));
+    const otherType = this.types.find((t): t is OtherType =>
+      OTHER_TYPES.includes(t as OtherType),
+    );
 
     if (!otherType) return null;
 
@@ -311,7 +327,8 @@ export class Item extends Thing {
     if (!this.tradeable) tradeability.push("traded");
     if (!this.discardable) tradeability.push("discarded");
 
-    if (tradeability.length > 0) itemRules.push(`Cannot be ${tradeability.join(" or ")}.`);
+    if (tradeability.length > 0)
+      itemRules.push(`Cannot be ${tradeability.join(" or ")}.`);
 
     const data = itemInfoForUse.get(this.name.toLowerCase()) || [];
 
@@ -333,19 +350,29 @@ export class Item extends Thing {
   }
 
   addEquppingFamiliar(familiar: Familiar): void {
-    this._addlDescription = `Familiar: ${hyperlink(familiar.name, toWikiLink(familiar.name))}\n`;
+    this._addlDescription = `Familiar: ${hyperlink(
+      familiar.name,
+      toWikiLink(familiar.name),
+    )}\n`;
   }
 
   async getMallPrice() {
     if (!this.tradeable) return "";
 
-    const { mallPrice, limitedMallPrice, formattedMallPrice, formattedLimitedMallPrice } =
-      await kolClient.getMallPrice(this.id);
+    const {
+      mallPrice,
+      limitedMallPrice,
+      formattedMallPrice,
+      formattedLimitedMallPrice,
+    } = await kolClient.getMallPrice(this.id);
 
     const url = `https://api.aventuristo.net/itemgraph?itemid=${this.id}&timespan=1&noanim=0`;
 
     if (mallPrice) {
-      let output = `Mall Price: ${hyperlink(`${formattedMallPrice} meat`, url)}`;
+      let output = `Mall Price: ${hyperlink(
+        `${formattedMallPrice} meat`,
+        url,
+      )}`;
       if (limitedMallPrice && limitedMallPrice < mallPrice) {
         output += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
       }
@@ -371,7 +398,9 @@ export class Item extends Thing {
       .join(", ");
 
     output.push(
-      `${titleCase(groupType)}s into: ${turnsInto}${group.length > 8 ? " ...and more." : ""}`,
+      `${titleCase(groupType)}s into: ${turnsInto}${
+        group.length > 8 ? " ...and more." : ""
+      }`,
     );
 
     const tradeables = (
@@ -434,14 +463,18 @@ export class Item extends Thing {
 
     if (withAddl && this.container) {
       description.push(
-        `Enclosed in: ${bold(hyperlink(this.container.name, toWikiLink(this.container.name)))}`,
+        `Enclosed in: ${bold(
+          hyperlink(this.container.name, toWikiLink(this.container.name)),
+        )}`,
         await this.container?.getDescription(false),
       );
     }
 
     if (withAddl && this.contents) {
       description.push(
-        `Encloses: ${bold(hyperlink(this.contents.name, toWikiLink(this.contents.name)))}`,
+        `Encloses: ${bold(
+          hyperlink(this.contents.name, toWikiLink(this.contents.name)),
+        )}`,
       );
       description.push(await this.contents?.getDescription(false));
     }

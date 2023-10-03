@@ -204,7 +204,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       embeds: [
         createEmbed()
           .setTitle(leaderboard.name || "...")
-          .setDescription("I wasn't able to understand this leaderboard, sorry."),
+          .setDescription(
+            "I wasn't able to understand this leaderboard, sorry.",
+          ),
       ],
     });
     return;

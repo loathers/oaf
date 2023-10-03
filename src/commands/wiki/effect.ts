@@ -50,7 +50,9 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
 
   const filtered = wikiClient.effects
     .map(({ name, id }) => ({ name, value: id }))
-    .filter(({ name }) => name.toLowerCase().includes(focusedValue.toLowerCase()))
+    .filter(({ name }) =>
+      name.toLowerCase().includes(focusedValue.toLowerCase()),
+    )
     .slice(0, 25);
   await interaction.respond(filtered);
 }

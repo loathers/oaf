@@ -50,7 +50,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Check if this is a mention first of all
   if (input.match(/^<@\d+>$/)) {
-    knownPlayer = await prisma.player.findFirst({ where: { discordId: input.slice(2, -1) } });
+    knownPlayer = await prisma.player.findFirst({
+      where: { discordId: input.slice(2, -1) },
+    });
 
     if (knownPlayer === null) {
       await interaction.editReply(`That user hasn't claimed a KoL account.`);
@@ -62,7 +64,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     playerIdentifier = input;
   }
 
-  if (typeof playerIdentifier === "string" && !validPlayerIdentifier(playerIdentifier)) {
+  if (
+    typeof playerIdentifier === "string" &&
+    !validPlayerIdentifier(playerIdentifier)
+  ) {
     await interaction.editReply(
       "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔",
     );
@@ -84,7 +89,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!player) {
     await interaction.editReply(
-      `While player ${bold(partialPlayer.name)} exists, this command didn't work. Weird.`,
+      `While player ${bold(
+        partialPlayer.name,
+      )} exists, this command didn't work. Weird.`,
     );
     return;
   }
@@ -94,12 +101,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     { name: "Level", value: player.level.toString() },
     {
       name: "Ascensions",
-      value: hyperlink(player.ascensions.toLocaleString(), toKoldbLink(player.name)),
+      value: hyperlink(
+        player.ascensions.toLocaleString(),
+        toKoldbLink(player.name),
+      ),
     },
   ];
 
-  if (player.favoriteFood) fields.push({ name: "Favorite Food", value: player.favoriteFood });
-  if (player.favoriteBooze) fields.push({ name: "Favorite Booze", value: player.favoriteBooze });
+  if (player.favoriteFood)
+    fields.push({ name: "Favorite Food", value: player.favoriteFood });
+  if (player.favoriteBooze)
+    fields.push({ name: "Favorite Booze", value: player.favoriteBooze });
 
   const isOnline = await kolClient.isOnline(player.id);
   const lastLogin = (() => {
@@ -108,7 +120,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // We don't want to get more specific than days, but the Discord relative time formatter will say silly things
     // Like "8 hours ago" even if that player is logged in right now
     if (player.lastLogin.getDay() === new Date().getDay()) return "Today";
-    if (Date.now() - player.lastLogin.getTime() < 1000 * 60 * 60 * 24) return "Yesterday";
+    if (Date.now() - player.lastLogin.getTime() < 1000 * 60 * 60 * 24)
+      return "Yesterday";
     return time(player.lastLogin, "R");
   })();
   if (lastLogin) {
@@ -116,11 +129,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   if (player.createdDate)
-    fields.push({ name: "Account Created", value: time(player.createdDate, "R") });
+    fields.push({
+      name: "Account Created",
+      value: time(player.createdDate, "R"),
+    });
 
   fields.push({
     name: "Display Case",
-    value: player.hasDisplayCase ? hyperlink("Browse", toMuseumLink(player.id)) : italic("none"),
+    value: player.hasDisplayCase
+      ? hyperlink("Browse", toMuseumLink(player.id))
+      : italic("none"),
   });
 
   // Save a database hit if we got here by tracking a claimed Discord account in the first place
@@ -134,16 +152,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const greenboxes = [];
   if (knownPlayer?.greenboxLastUpdate) {
     greenboxes.push(
-      `${hyperlink(`Greenbox`, `https://greenbox.loathers.net/?u=${player.id}`)} (updated ${time(
-        knownPlayer.greenboxLastUpdate,
-        "R",
-      )})`,
+      `${hyperlink(
+        `Greenbox`,
+        `https://greenbox.loathers.net/?u=${player.id}`,
+      )} (updated ${time(knownPlayer.greenboxLastUpdate, "R")})`,
     );
   }
   const snapshot = await snapshotClient.getInfo(player.name);
   if (snapshot) {
     greenboxes.push(
-      `${hyperlink(`Snapshot`, snapshot.link)} (updated ${time(snapshot.date, "R")})`,
+      `${hyperlink(`Snapshot`, snapshot.link)} (updated ${time(
+        snapshot.date,
+        "R",
+      )})`,
     );
   }
 

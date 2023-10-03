@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, italic } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  italic,
+} from "discord.js";
 
 import { prisma } from "../../clients/database.js";
 import { kolClient } from "../../clients/kol.js";
@@ -9,7 +13,9 @@ export const data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option
       .setName("player")
-      .setDescription("The player to set as always available for brain draining.")
+      .setDescription(
+        "The player to set as always available for brain draining.",
+      )
       .setRequired(true),
   )
   .addBooleanOption((option) =>
@@ -38,12 +44,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const player = await kolClient.getPartialPlayerFromName(playerName);
 
     if (!player) {
-      await interaction.editReply(`User ${italic(playerName)} could not be found`);
+      await interaction.editReply(
+        `User ${italic(playerName)} could not be found`,
+      );
       return;
     }
 
     await prisma.player.create({
-      data: { playerId: player.id, playerName: player.name, brainiac: available },
+      data: {
+        playerId: player.id,
+        playerName: player.name,
+        brainiac: available,
+      },
     });
   } else {
     await prisma.player.update({

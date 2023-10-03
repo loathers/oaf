@@ -14,7 +14,8 @@ export async function rollSubs() {
     throw new Error("Something is configured wrong");
   }
 
-  const subRollEmoji = guild.emojis.cache.find((e) => e.name === "subsRolling") ?? "";
+  const subRollEmoji =
+    guild.emojis.cache.find((e) => e.name === "subsRolling") ?? "";
 
   await iotmChannel.send({
     content: `🚨${subRollEmoji} Attention ${roleMention(

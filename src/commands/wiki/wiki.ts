@@ -18,7 +18,10 @@ export const data = new SlashCommandBuilder()
   .setName("wiki")
   .setDescription("Search the KoL wiki for the given term.")
   .addStringOption((option) =>
-    option.setName("term").setDescription("The term to search for in the wiki.").setRequired(true),
+    option
+      .setName("term")
+      .setDescription("The term to search for in the wiki.")
+      .setRequired(true),
   );
 
 async function getWikiReply(item: string) {
@@ -41,7 +44,9 @@ async function getWikiReply(item: string) {
       undefined,
       error.axiosError,
     );
-    return blankEmbed("Something is wrong with wiki searching but maintainers have been alerted");
+    return blankEmbed(
+      "Something is wrong with wiki searching but maintainers have been alerted",
+    );
   }
 }
 
@@ -94,13 +99,15 @@ async function onMessage(message: Message) {
   }
 
   const searchingMessage = await message.reply({
-    content: `${slashNote}${userMention(member.id)} is searching for ${lf.format(
-      considered.map((q) => `"${q}"`),
-    )}...`,
+    content: `${slashNote}${userMention(
+      member.id,
+    )} is searching for ${lf.format(considered.map((q) => `"${q}"`))}...`,
     allowedMentions: { parse: [], repliedUser: false },
   });
 
-  const embeds = await Promise.all(considered.map((query) => getWikiReply(query)));
+  const embeds = await Promise.all(
+    considered.map((query) => getWikiReply(query)),
+  );
 
   await searchingMessage.edit({
     content: `${slashNote}${userMention(member.id)} searched for...`,

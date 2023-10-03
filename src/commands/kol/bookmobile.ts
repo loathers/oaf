@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, hyperlink } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  hyperlink,
+} from "discord.js";
 
 import { createEmbed } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
@@ -11,7 +15,9 @@ export const data = new SlashCommandBuilder()
 async function visitBookMobile(): Promise<string> {
   const page = await kolClient.actionMutex.runExclusive(async () => {
     await kolClient.visitUrl("town.php");
-    const p = await kolClient.visitUrl("place.php?whichplace=town_market&action=town_bookmobile");
+    const p = await kolClient.visitUrl(
+      "place.php?whichplace=town_market&action=town_bookmobile",
+    );
     if (p.includes("name=whichchoice")) {
       await kolClient.visitUrl(
         "choice.php",
@@ -47,7 +53,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const page = await visitBookMobile();
 
   if (!page.includes("name=whichchoice"))
-    return void (await interaction.editReply("The Bookmobile doesn't seem to be in town!"));
+    return void (await interaction.editReply(
+      "The Bookmobile doesn't seem to be in town!",
+    ));
 
   const info = parseBookMobile(page);
 

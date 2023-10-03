@@ -19,7 +19,9 @@ export function cleanString(input: string | undefined): string {
 }
 
 export function toWikiLink(input: string): string {
-  return `https://kol.coldfront.net/thekolwiki/index.php/${encodeURI(input.replace(/\s/g, "_"))
+  return `https://kol.coldfront.net/thekolwiki/index.php/${encodeURI(
+    input.replace(/\s/g, "_"),
+  )
     .replace(/\(/g, "%28")
     .replace(/\)/g, "%29")}`;
 }
@@ -50,7 +52,9 @@ export const toWeight = (modifier: number, power = 1) =>
 export const lf = new Intl.ListFormat("en");
 
 export const pluralize = (count: number, singular: string, plural?: string) =>
-  count.toLocaleString() + " " + (count === 1 ? singular : plural || singular + "s");
+  count.toLocaleString() +
+  " " +
+  (count === 1 ? singular : plural || singular + "s");
 
 export function groupToMap<K, V>(
   array: V[],
@@ -76,7 +80,10 @@ export function columns<T extends { toString: () => string }>(
       value:
         "\u200b" +
         data
-          .slice(Math.ceil(i * (data.length / 3)), Math.ceil((i + 1) * (data.length / 3)))
+          .slice(
+            Math.ceil(i * (data.length / 3)),
+            Math.ceil((i + 1) * (data.length / 3)),
+          )
           .join("\n"),
       inline: true,
     }));

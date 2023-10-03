@@ -15,14 +15,18 @@ app
     const playerId = Number(req.params.playerId);
 
     if (Number.isNaN(playerId) || playerId < 1)
-      return res.status(StatusCodes.BAD_REQUEST).json({ error: "playerId is invalid" });
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "playerId is invalid" });
 
     const player = await prisma.player.findUnique({ where: { playerId } });
 
     const { greenboxString, greenboxLastUpdate } = player ?? {};
 
     if (!greenboxString || !greenboxLastUpdate)
-      return res.status(StatusCodes.NOT_FOUND).json({ error: "No greenbox data found" });
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ error: "No greenbox data found" });
 
     return res.status(StatusCodes.OK).json({
       greenboxString,
@@ -32,7 +36,8 @@ app
   .get("/webhooks/subsrolling", async (req, res) => {
     const token = req.query.token;
 
-    if (!token) return res.status(StatusCodes.UNAUTHORIZED).json({ error: "No token" });
+    if (!token)
+      return res.status(StatusCodes.UNAUTHORIZED).json({ error: "No token" });
     if (token !== config.SUBS_ROLLING_TOKEN)
       return res.status(StatusCodes.FORBIDDEN).json({ error: "Invalid token" });
 
@@ -41,7 +46,9 @@ app
       return res.status(StatusCodes.OK).json({ status: "Thanks Chris!" });
     } catch (e) {
       if (e instanceof Error) {
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: e.message });
+        return res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ error: e.message });
       }
 
       throw e;

@@ -3,7 +3,12 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import { columnsByMaxLength, formatPlayer, notNull, pluralize } from "../../utils.js";
+import {
+  columnsByMaxLength,
+  formatPlayer,
+  notNull,
+  pluralize,
+} from "../../utils.js";
 import { DREAD_CLANS } from "./_clans.js";
 import {
   JoinClanError,
@@ -13,11 +18,14 @@ import {
   getRaidLog,
 } from "./_dread.js";
 
-const SKILL_KILL_MATCHER = /([A-Za-z0-9\-_ ]+)\s+\(#(\d+)\)\s+(defeated\D+(\d+)|used the machine)/i;
+const SKILL_KILL_MATCHER =
+  /([A-Za-z0-9\-_ ]+)\s+\(#(\d+)\)\s+(defeated\D+(\d+)|used the machine)/i;
 
 export const data = new SlashCommandBuilder()
   .setName("skills")
-  .setDescription("Get a list of everyone currently elgible for Dreadsylvania skills.");
+  .setDescription(
+    "Get a list of everyone currently elgible for Dreadsylvania skills.",
+  );
 
 type ParticipationData = { skills: number; kills: number };
 export type Participation = Map<number, ParticipationData>;
@@ -45,7 +53,9 @@ function mergeParticipation(a: Participation, b: Participation) {
 }
 
 async function getParticipationFromCurrentRaid() {
-  const raidLogs = await Promise.all(DREAD_CLANS.map((clan) => getRaidLog(clan.id)));
+  const raidLogs = await Promise.all(
+    DREAD_CLANS.map((clan) => getRaidLog(clan.id)),
+  );
 
   return raidLogs.reduce(
     (p, log) => mergeParticipation(p, getParticipationFromRaidLog(log)),
@@ -77,11 +87,15 @@ export function getParticipationFromRaidLog(raidLog: string) {
 }
 
 async function parseOldLogs() {
-  const parsedRaids = (await prisma.raid.findMany({ select: { id: true } })).map(({ id }) => id);
+  const parsedRaids = (
+    await prisma.raid.findMany({ select: { id: true } })
+  ).map(({ id }) => id);
 
   // Determine all the raid ids that are yet to be passed
   const raidsToParse = (
-    await Promise.all(DREAD_CLANS.map((clan) => getMissingRaidLogs(clan.id, parsedRaids)))
+    await Promise.all(
+      DREAD_CLANS.map((clan) => getMissingRaidLogs(clan.id, parsedRaids)),
+    )
   )
     .flat()
     .filter((id) => !parsedRaids.includes(id));
@@ -91,7 +105,10 @@ async function parseOldLogs() {
   // Parse each raid and extract the player participation
   for (const raidId of raidsToParse) {
     const raidLog = await getFinishedRaidLog(raidId);
-    participation = mergeParticipation(participation, getParticipationFromRaidLog(raidLog));
+    participation = mergeParticipation(
+      participation,
+      getParticipationFromRaidLog(raidLog),
+    );
   }
 
   await prisma.$transaction(async () => {
@@ -142,7 +159,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       (await prisma.player.findMany({})).map((p) => [p.playerId, p] as const),
     );
 
-    const participation = mergeParticipation(players, await getParticipationFromCurrentRaid());
+    const participation = mergeParticipation(
+      players,
+      await getParticipationFromCurrentRaid(),
+    );
 
     const skillsOwed = [...participation.entries()]
       .filter(([playerId]) => players.get(playerId)?.doneWithSkills !== true)
@@ -154,7 +174,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .sort(([, a], [, b]) => b - a)
       .map(
         ([playerId, owed]) =>
-          `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(owed, "skill")}.`,
+          `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(
+            owed,
+            "skill",
+          )}.`,
       );
 
     await interaction.editReply({
@@ -175,8 +198,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     if (error instanceof RaidLogMissingError) {
-      await discordClient.alert("Unable to check raid logs", interaction, error);
-      await interaction.editReply("I couldn't see raid logs in that clan for some reason");
+      await discordClient.alert(
+        "Unable to check raid logs",
+        interaction,
+        error,
+      );
+      await interaction.editReply(
+        "I couldn't see raid logs in that clan for some reason",
+      );
       return;
     }
 

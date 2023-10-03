@@ -56,6 +56,8 @@ describe("Wiki links", () => {
     expect(axios.get).toHaveBeenCalledWith(
       "https://kol.coldfront.net/thekolwiki/index.php/Skills_by_number",
     );
-    expect(link).toBe("https://kol.coldfront.net/thekolwiki/index.php/Impetuous_Sauciness");
+    expect(link).toBe(
+      "https://kol.coldfront.net/thekolwiki/index.php/Impetuous_Sauciness",
+    );
   });
 });

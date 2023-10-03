@@ -1,5 +1,13 @@
 import axios from "axios";
-import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  test,
+  vi,
+} from "vitest";
 
 import { respondWithFixture } from "../testUtils.js";
 import { kolClient, resolveKoLImage } from "./kol.js";
@@ -95,7 +103,11 @@ describe("Profile parsing", () => {
       "https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif",
     );
     expect(
-      resolveKoLImage("https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif"),
-    ).toBe("https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif");
+      resolveKoLImage(
+        "https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif",
+      ),
+    ).toBe(
+      "https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif",
+    );
   });
 });

@@ -1,4 +1,8 @@
-import { AttachmentBuilder, ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  AttachmentBuilder,
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 import * as path from "node:path";
 import * as url from "node:url";
 import sharp from "sharp";
@@ -9,13 +13,22 @@ export const data = new SlashCommandBuilder()
   .setName("mug")
   .setDescription("MUGGO IS LIT")
   .addStringOption((option) =>
-    option.setName("first").setDescription("Contents of the first line").setMaxLength(6),
+    option
+      .setName("first")
+      .setDescription("Contents of the first line")
+      .setMaxLength(6),
   )
   .addStringOption((option) =>
-    option.setName("second").setDescription("Contents of the second line").setMaxLength(6),
+    option
+      .setName("second")
+      .setDescription("Contents of the second line")
+      .setMaxLength(6),
   )
   .addStringOption((option) =>
-    option.setName("third").setDescription("Contents of the third line").setMaxLength(6),
+    option
+      .setName("third")
+      .setDescription("Contents of the third line")
+      .setMaxLength(6),
   );
 
 const CHARACTER_IMAGES = [
@@ -41,7 +54,15 @@ const CHARACTER_IMAGES = [
       .fill("")
       .map((_, i) => String.fromCharCode(i + 48)),
   )
-  .concat(["colon", "semicolon", "lessthan", "equals", "greaterthan", "question", "atsign"])
+  .concat([
+    "colon",
+    "semicolon",
+    "lessthan",
+    "equals",
+    "greaterthan",
+    "question",
+    "atsign",
+  ])
   .concat(
     Array(26)
       .fill("")
@@ -101,8 +122,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }));
   }
 
-  const png = await sharp(path.join(__dirname, "cup.png")).composite(images).png().toBuffer();
+  const png = await sharp(path.join(__dirname, "cup.png"))
+    .composite(images)
+    .png()
+    .toBuffer();
 
-  const attachment = new AttachmentBuilder(png).setName(`${[first, second, third].join(" ")}.png`);
+  const attachment = new AttachmentBuilder(png).setName(
+    `${[first, second, third].join(" ")}.png`,
+  );
   interaction.reply({ files: [attachment] });
 }

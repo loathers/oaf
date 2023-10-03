@@ -60,7 +60,9 @@ export class DiscordClient extends Client {
     this.clientId = clientId;
     this.token = token;
 
-    this.on(Events.InteractionCreate, async (interaction) => this.handleInteraction(interaction));
+    this.on(Events.InteractionCreate, async (interaction) =>
+      this.handleInteraction(interaction),
+    );
 
     this.on(Events.ClientReady, async (client) => {
       const channel = await client.channels.fetch(alertsChannelId);
@@ -69,7 +71,9 @@ export class DiscordClient extends Client {
     });
   }
 
-  async registerApplicationCommands(commands: RESTPostAPIApplicationCommandsJSONBody[]) {
+  async registerApplicationCommands(
+    commands: RESTPostAPIApplicationCommandsJSONBody[],
+  ) {
     const rest = new REST({ version: "10" }).setToken(this.token || "");
     await rest.put(Routes.applicationCommands(this.clientId), {
       body: commands,
@@ -81,14 +85,22 @@ export class DiscordClient extends Client {
       const command = this.commands.get(interaction.commandName);
 
       if (!command) {
-        await this.alert(`No command matching ${interaction.commandName} found`, interaction);
+        await this.alert(
+          `No command matching ${interaction.commandName} found`,
+          interaction,
+        );
         if (interaction.isRepliable()) {
-          await interaction.reply(`Command not recognised. Something has gone wrong here.`);
+          await interaction.reply(
+            `Command not recognised. Something has gone wrong here.`,
+          );
         }
         return;
       }
 
-      if (interaction.isChatInputCommand() || interaction.isContextMenuCommand()) {
+      if (
+        interaction.isChatInputCommand() ||
+        interaction.isContextMenuCommand()
+      ) {
         try {
           await command.execute(interaction);
         } catch (error) {
@@ -110,7 +122,11 @@ export class DiscordClient extends Client {
         try {
           await command.autocomplete?.(interaction);
         } catch (error) {
-          await this.alert("Encountered error during autocomplete", interaction, error);
+          await this.alert(
+            "Encountered error during autocomplete",
+            interaction,
+            error,
+          );
         }
         return;
       }
@@ -128,7 +144,11 @@ export class DiscordClient extends Client {
     }
   }
 
-  async alert(description: string, interaction?: Interaction, error?: Error | unknown) {
+  async alert(
+    description: string,
+    interaction?: Interaction,
+    error?: Error | unknown,
+  ) {
     if (!interaction) {
       console.warn(description);
     } else if (error) {
@@ -189,7 +209,8 @@ export const createEmbed = () =>
     iconURL: OAF_ICON,
   });
 
-export const blankEmbed = (description: string) => createEmbed().setDescription(description);
+export const blankEmbed = (description: string) =>
+  createEmbed().setDescription(description);
 
 export const discordClient = new DiscordClient(
   config.CLIENT_ID,

@@ -130,7 +130,10 @@ function sanitiseBlueText(blueText: string | undefined): string {
 
 export function resolveKoLImage(path: string) {
   if (!/^https?:\/\//i.test(path))
-    return "https://s3.amazonaws.com/images.kingdomofloathing.com" + path.replace(/^\/iii/, "");
+    return (
+      "https://s3.amazonaws.com/images.kingdomofloathing.com" +
+      path.replace(/^\/iii/, "")
+    );
   return path;
 }
 
@@ -194,18 +197,22 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     if (this.mockLoggedIn) return true;
     if (!this.credentials) return false;
     try {
-      const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
-        maxRedirects: 0,
-        withCredentials: true,
-        headers: {
-          cookie: this.credentials?.sessionCookies || "",
+      const apiResponse = await axios(
+        "https://www.kingdomofloathing.com/api.php",
+        {
+          maxRedirects: 0,
+          withCredentials: true,
+          headers: {
+            cookie: this.credentials?.sessionCookies || "",
+          },
+          params: {
+            what: "status",
+            for: `${this.loginParameters.get("loginname")} Chatbot`,
+          },
+          validateStatus: (status) =>
+            status === HttpStatusCode.Found || status === HttpStatusCode.Ok,
         },
-        params: {
-          what: "status",
-          for: `${this.loginParameters.get("loginname")} Chatbot`,
-        },
-        validateStatus: (status) => status === HttpStatusCode.Found || status === HttpStatusCode.Ok,
-      });
+      );
       return apiResponse.status === HttpStatusCode.Ok;
     } catch {
       console.warn("Login check failed, returning false to be safe.");
@@ -217,27 +224,35 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     return KoLClient.loginMutex.runExclusive(async () => {
       if (await this.loggedIn()) return true;
       if (this.isRollover) return false;
-      console.log(`Not logged in. Logging in as ${this.loginParameters.get("loginname")}`);
+      console.log(
+        `Not logged in. Logging in as ${this.loginParameters.get("loginname")}`,
+      );
       try {
-        const loginResponse = await axios("https://www.kingdomofloathing.com/login.php", {
-          method: "POST",
-          data: this.loginParameters,
-          maxRedirects: 0,
-          validateStatus: (status) => status === HttpStatusCode.Found,
-        });
+        const loginResponse = await axios(
+          "https://www.kingdomofloathing.com/login.php",
+          {
+            method: "POST",
+            data: this.loginParameters,
+            maxRedirects: 0,
+            validateStatus: (status) => status === HttpStatusCode.Found,
+          },
+        );
         const sessionCookies = (loginResponse.headers["set-cookie"] || [])
           .map((cookie: string) => cookie.split(";")[0])
           .join("; ");
-        const apiResponse = await axios("https://www.kingdomofloathing.com/api.php", {
-          withCredentials: true,
-          headers: {
-            cookie: sessionCookies,
+        const apiResponse = await axios(
+          "https://www.kingdomofloathing.com/api.php",
+          {
+            withCredentials: true,
+            headers: {
+              cookie: sessionCookies,
+            },
+            params: {
+              what: "status",
+              for: `${this.loginParameters.get("loginname")} Chatbot`,
+            },
           },
-          params: {
-            what: "status",
-            for: `${this.loginParameters.get("loginname")} Chatbot`,
-          },
-        });
+        );
         this.credentials = {
           sessionCookies: sessionCookies,
           pwdhash: apiResponse.data.pwd,
@@ -272,15 +287,16 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   private lastFetchedWhispers = "0";
 
   async checkWhispers() {
-    const newChatMessagesResponse = await this.visitApi<{ last: string; msgs: KoLChatMessage[] }>(
-      "newchatmessages.php",
-      {
-        j: 1,
-        lasttime: this.lastFetchedWhispers,
-      },
-    );
+    const newChatMessagesResponse = await this.visitApi<{
+      last: string;
+      msgs: KoLChatMessage[];
+    }>("newchatmessages.php", {
+      j: 1,
+      lasttime: this.lastFetchedWhispers,
+    });
 
-    if (!newChatMessagesResponse || typeof newChatMessagesResponse !== "object") return;
+    if (!newChatMessagesResponse || typeof newChatMessagesResponse !== "object")
+      return;
 
     this.lastFetchedWhispers = newChatMessagesResponse["last"];
 
@@ -303,7 +319,8 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       for: `${this.loginParameters.get("loginname")} Chatbot`,
     });
 
-    if (!Array.isArray(newKmailsResponse) || newKmailsResponse.length === 0) return;
+    if (!Array.isArray(newKmailsResponse) || newKmailsResponse.length === 0)
+      return;
 
     const newKmails = newKmailsResponse.map((msg: KoLKmail) => ({
       who: {
@@ -318,7 +335,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       the_action: "delete",
       pwd: this.credentials?.pwdhash,
       box: "Inbox",
-      ...Object.fromEntries(newKmailsResponse.map(({ id }) => [`sel${id}`, "on"])),
+      ...Object.fromEntries(
+        newKmailsResponse.map(({ id }) => [`sel${id}`, "on"]),
+      ),
     };
 
     await this.visitUrl("messages.php", {}, data);
@@ -327,10 +346,13 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async useChatMacro(macro: string) {
-    return await this.visitApi<{ output: string; msgs: string[] }>("submitnewchat.php", {
-      graf: `/clan ${macro}`,
-      j: 1,
-    });
+    return await this.visitApi<{ output: string; msgs: string[] }>(
+      "submitnewchat.php",
+      {
+        graf: `/clan ${macro}`,
+        j: 1,
+      },
+    );
   }
 
   async isOnline(playerIdentifier: string | number) {
@@ -356,15 +378,18 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async rolloverCheck() {
-    const isRollover = /The system is currently down for nightly maintenance/.test(
-      (await axios("https://www.kingdomofloathing.com/")).data,
-    );
+    const isRollover =
+      /The system is currently down for nightly maintenance/.test(
+        (await axios("https://www.kingdomofloathing.com/")).data,
+      );
     if (this.isRollover && !isRollover) {
       this.postRolloverLatch = true;
     }
     this.isRollover = isRollover;
     if (this.isRollover) {
-      console.log("Rollover appears to be in progress. Checking again in one minute.");
+      console.log(
+        "Rollover appears to be in progress. Checking again in one minute.",
+      );
       setTimeout(() => this.rolloverCheck(), 60000);
     }
   }
@@ -409,7 +434,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
             }
           : {}),
       });
-      if (config.DEBUG && ["api.php", "newchatmessages.php"].every((s) => !url.startsWith(s))) {
+      if (
+        config.DEBUG &&
+        ["api.php", "newchatmessages.php"].every((s) => !url.startsWith(s))
+      ) {
         console.log(url, parameters);
         console.log(page.data);
       }
@@ -425,10 +453,18 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       ajax: 1,
       iid: itemId,
     });
-    const unlimitedMatch = prices.match(/<td>unlimited:<\/td><td><b>(?<unlimitedPrice>[\d,]+)/);
-    const limitedMatch = prices.match(/<td>limited:<\/td><td><b>(?<limitedPrice>[\d,]+)/);
-    const unlimitedPrice = unlimitedMatch ? parseInt(unlimitedMatch[1].replace(/,/g, "")) : 0;
-    const limitedPrice = limitedMatch ? parseInt(limitedMatch[1].replace(/,/g, "")) : 0;
+    const unlimitedMatch = prices.match(
+      /<td>unlimited:<\/td><td><b>(?<unlimitedPrice>[\d,]+)/,
+    );
+    const limitedMatch = prices.match(
+      /<td>limited:<\/td><td><b>(?<limitedPrice>[\d,]+)/,
+    );
+    const unlimitedPrice = unlimitedMatch
+      ? parseInt(unlimitedMatch[1].replace(/,/g, ""))
+      : 0;
+    const limitedPrice = limitedMatch
+      ? parseInt(limitedMatch[1].replace(/,/g, ""))
+      : 0;
     let minPrice = limitedMatch ? limitedPrice : null;
     minPrice = unlimitedMatch
       ? !minPrice || unlimitedPrice < minPrice
@@ -436,7 +472,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         : minPrice
       : minPrice;
     const formattedMinPrice = minPrice
-      ? (minPrice === unlimitedPrice ? unlimitedMatch?.[1] : limitedMatch?.[1]) ?? ""
+      ? (minPrice === unlimitedPrice
+          ? unlimitedMatch?.[1]
+          : limitedMatch?.[1]) ?? ""
       : "";
     return {
       mallPrice: unlimitedPrice,
@@ -464,8 +502,12 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     const effect = description.match(
       /Effect: \s?<b>\s?<a[^>]+href="desc_effect\.php\?whicheffect=(?<descid>[^"]+)[^>]+>(?<effect>[\s\S]+)<\/a>[^(]+\((?<duration>[\d]+)/,
     );
-    const melting = description.match(/This item will disappear at the end of the day\./);
-    const singleEquip = description.match(/ You may not equip more than one of these at a time\./);
+    const melting = description.match(
+      /This item will disappear at the end of the day\./,
+    );
+    const singleEquip = description.match(
+      / You may not equip more than one of these at a time\./,
+    );
 
     const output: string[] = [];
 
@@ -525,7 +567,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       action: "joinclan",
       confirm: "on",
     });
-    return result.includes("clanhalltop.gif") || result.includes("a clan you're already in");
+    return (
+      result.includes("clanhalltop.gif") ||
+      result.includes("a clan you're already in")
+    );
   }
 
   async addToWhitelist(playerId: number, clanId: number): Promise<boolean> {
@@ -541,7 +586,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     });
   }
 
-  async getLeaderboard(leaderboardId: number): Promise<LeaderboardInfo | undefined> {
+  async getLeaderboard(
+    leaderboardId: number,
+  ): Promise<LeaderboardInfo | undefined> {
     try {
       const leaderboard = await this.visitUrl("museum.php", {
         floor: 1,
@@ -569,7 +616,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
           .map((subboard) => {
             const rows = selectMulti("./tr", subboard);
             return {
-              name: (selectMulti(".//text()", rows[0])[0]?.nodeValue || "").trim(),
+              name: (
+                selectMulti(".//text()", rows[0])[0]?.nodeValue || ""
+              ).trim(),
               runs: selectMulti("./td//tr", rows[1])
                 .slice(2)
                 .map((node) => {
@@ -583,7 +632,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
                       .join("")
                       .trim()
                       .toString(),
-                    days: hasTwoNumbers ? rowText[rowText.length - 2].toString() || "0" : "",
+                    days: hasTwoNumbers
+                      ? rowText[rowText.length - 2].toString() || "0"
+                      : "",
                     turns: rowText[rowText.length - 1].toString() || "0",
                   };
                 }),
@@ -663,38 +714,56 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       whichitem: itemId,
     });
 
-    const match = /Only a specific familiar type \(([^)]*)\) can equip this item/.exec(
-      responseText,
-    );
+    const match =
+      /Only a specific familiar type \(([^)]*)\) can equip this item/.exec(
+        responseText,
+      );
 
     return match?.[1] ?? null;
   }
 
-  async getPlayerInformation(playerToLookup: PartialPlayer): Promise<FullPlayer | null> {
+  async getPlayerInformation(
+    playerToLookup: PartialPlayer,
+  ): Promise<FullPlayer | null> {
     try {
-      const profile = await this.visitUrl("showplayer.php", { who: playerToLookup.id });
+      const profile = await this.visitUrl("showplayer.php", {
+        who: playerToLookup.id,
+      });
       const header = profile.match(
         /<center><table><tr><td><center>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
       );
       if (!header) return null;
 
-      let ascensionsString = profile.match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
+      let ascensionsString = profile.match(
+        />Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/,
+      )?.[1];
       if (ascensionsString) {
         ascensionsString = ascensionsString.replace(/,/g, "");
       }
       const ascensions = Number(ascensionsString) || 0;
 
       const trophies = Number(
-        profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0,
+        profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
+          0,
       );
       const tattoos = Number(
-        profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0,
+        profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
+          0,
       );
-      const favoriteFood = profile.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
-      const favoriteBooze = profile.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
-      const createdDate = profile.match(/>Account Created:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
-      const lastLogin = profile.match(/>Last Login:<\/b><\/td><td>(.*?)<\/td>/)?.[1];
-      const hasDisplayCase = profile.match(/Display Case<\/b><\/a> in the Museum<\/td>/) !== null;
+      const favoriteFood = profile.match(
+        />Favorite Food:<\/b><\/td><td>(.*?)<\/td>/,
+      )?.[1];
+      const favoriteBooze = profile.match(
+        />Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/,
+      )?.[1];
+      const createdDate = profile.match(
+        />Account Created:<\/b><\/td><td>(.*?)<\/td>/,
+      )?.[1];
+      const lastLogin = profile.match(
+        />Last Login:<\/b><\/td><td>(.*?)<\/td>/,
+      )?.[1];
+      const hasDisplayCase =
+        profile.match(/Display Case<\/b><\/a> in the Museum<\/td>/) !== null;
 
       return {
         ...playerToLookup,

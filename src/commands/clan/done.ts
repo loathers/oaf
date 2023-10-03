@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, italic } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  italic,
+} from "discord.js";
 
 import { prisma } from "../../clients/database.js";
 import { kolClient } from "../../clients/kol.js";
@@ -38,7 +42,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const player = await kolClient.getPartialPlayerFromName(playerName);
 
     if (!player) {
-      await interaction.editReply(`User ${italic(playerName)} could not be found`);
+      await interaction.editReply(
+        `User ${italic(playerName)} could not be found`,
+      );
       return;
     }
 

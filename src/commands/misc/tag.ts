@@ -15,7 +15,9 @@ export const data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option
       .setName("tag")
-      .setDescription("The unique tag for the message to which you'd like to link")
+      .setDescription(
+        "The unique tag for the message to which you'd like to link",
+      )
       .setAutocomplete(true)
       .setRequired(true),
   );
@@ -58,5 +60,7 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
       ? TAG_CACHE
       : TAG_CACHE.filter((tag) => tag.toLowerCase().includes(focusedValue));
 
-  await interaction.respond(filtered.map((tag) => ({ name: tag, value: tag })).slice(0, 25));
+  await interaction.respond(
+    filtered.map((tag) => ({ name: tag, value: tag })).slice(0, 25),
+  );
 }

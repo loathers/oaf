@@ -10,7 +10,9 @@ export class SnapshotClient {
     const link = SnapshotClient.toLink(playerName);
     const { data, status } = await axios.get<string>(link);
     if (status !== 200 || !data) return null;
-    const dateString = data.match(/taken (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC/)?.[1];
+    const dateString = data.match(
+      /taken (\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC/,
+    )?.[1];
     if (!dateString) return null;
     const date = parse(dateString, "yyyy-MM-dd HH:mm:ss", new Date());
     return { date, link };
