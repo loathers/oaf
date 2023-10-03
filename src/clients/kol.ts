@@ -1,11 +1,13 @@
 import { DOMParser } from "@xmldom/xmldom";
 import { Mutex } from "async-mutex";
 import axios, { HttpStatusCode } from "axios";
-import { parse } from "date-fns";
+import { parse as parseDate } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
+import { parse as parseHtml } from "node-html-parser";
 import { EventEmitter } from "node:events";
 import { stringify } from "querystring";
+import sharp from "sharp";
 import TypedEventEmitter, { EventMap } from "typed-emitter";
 import { select } from "xpath";
 
@@ -34,7 +36,7 @@ const parser = new DOMParser({
 
 function parsePlayerDate(input?: string) {
   if (!input) return undefined;
-  return parse(input, "MMMM dd, yyyy", new Date());
+  return parseDate(input, "MMMM dd, yyyy", new Date());
 }
 
 type MallPrice = {
@@ -104,7 +106,7 @@ type PartialPlayer = {
 };
 
 interface FullPlayer extends PartialPlayer {
-  avatar: string;
+  avatar: string | Buffer;
   ascensions: number;
   trophies: number;
   tattoos: number;
@@ -132,7 +134,7 @@ export function resolveKoLImage(path: string) {
   if (!/^https?:\/\//i.test(path))
     return (
       "https://s3.amazonaws.com/images.kingdomofloathing.com" +
-      path.replace(/^\/iii/, "")
+      path.replace(/^\/(iii|images)/, "")
     );
   return path;
 }
@@ -722,6 +724,74 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     return match?.[1] ?? null;
   }
 
+  async getAvatarAsSvg(profile: string) {
+    const header = profile.match(
+      /<center><table><tr><td><center>.*?(<div.*?>.*?<\/div>).*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
+    );
+    const blockHtml = header?.[1];
+
+    if (!blockHtml) return null;
+
+    const block = parseHtml(blockHtml).querySelector("div");
+
+    if (!block) return null;
+
+    const ocrsColours = {
+      gold: "filter: invert(73%) sepia(52%) saturate(6979%) hue-rotate(23deg) brightness(92%) contrast(102%);",
+    };
+
+    const ocrsColour = Object.keys(ocrsColours).find((k) =>
+      block.classList.contains(k),
+    ) as keyof typeof ocrsColours | undefined;
+
+    const images = [];
+
+    for (const imgElement of block.querySelectorAll("img")) {
+      const src = imgElement.getAttribute("src");
+      if (!src) continue;
+
+      const result = await fetch(resolveKoLImage(src));
+      let sharpImage = sharp(Buffer.from(await result.arrayBuffer())).png();
+
+      if (ocrsColour) sharpImage = sharpImage.unflatten();
+
+      const metadata = await sharpImage.metadata();
+      const buffer = await sharpImage.toBuffer();
+
+      const href = `data:image/png;base64,${buffer.toString("base64")}`;
+
+      const style = imgElement.getAttribute("style");
+
+      const top = Number(style?.match(/top: ?(-?\d+)px/i)?.[1] || "0");
+      const left = Number(style?.match(/left: ?(-?\d+)px/i)?.[1] || "0");
+
+      images.push({
+        href,
+        top,
+        left,
+        width: metadata.width ?? 0,
+        height: metadata.height ?? 0,
+      });
+    }
+
+    const width = Math.max(...images.map((i) => i.left + i.width));
+
+    const svg = `
+      <svg width="${width}" height="100" xmlns="http://www.w3.org/2000/svg" style="${
+        ocrsColour ? ocrsColours[ocrsColour] : ""
+      }">
+        ${images
+          .map(
+            (i) =>
+              `<image href="${i.href}" width="${i.width}" height="${i.height}" x="${i.left}" y="${i.top}" />`,
+          )
+          .join("\n")}
+      </svg>
+    `;
+
+    return sharp(Buffer.from(svg)).png().toBuffer();
+  }
+
   async getPlayerInformation(
     playerToLookup: PartialPlayer,
   ): Promise<FullPlayer | null> {
@@ -733,6 +803,8 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         /<center><table><tr><td><center>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
       );
       if (!header) return null;
+
+      const avatar = (await this.getAvatarAsSvg(profile)) || header[1];
 
       let ascensionsString = profile.match(
         />Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/,
@@ -767,7 +839,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
       return {
         ...playerToLookup,
-        avatar: header[1],
+        avatar,
         ascensions,
         trophies,
         tattoos,

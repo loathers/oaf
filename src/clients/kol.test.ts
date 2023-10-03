@@ -60,7 +60,7 @@ describe("Profile parsing", () => {
     });
 
     expectNotNull(player);
-    expect(player.avatar).toBe("/images/otherimages/classav31_f.gif");
+    expect(player.avatar).toBeInstanceOf(Buffer);
   });
 
   test("Can parse a profile picture on dependence day", async () => {
@@ -76,7 +76,7 @@ describe("Profile parsing", () => {
     });
 
     expectNotNull(player);
-    expect(player.avatar).toBe("/images/otherimages/classav1a.gif");
+    expect(player.avatar).toBeInstanceOf(Buffer);
   });
 
   test("Can parse an avatar when the player has been painted gold", async () => {
@@ -92,7 +92,7 @@ describe("Profile parsing", () => {
     });
 
     expectNotNull(player);
-    expect(player.avatar).toBe("/iii/otherimages/classav31_f.gif");
+    expect(player.avatar).toBeInstanceOf(Buffer);
   });
 
   test("Can resolve KoL images", () => {
