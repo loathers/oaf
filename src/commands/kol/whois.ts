@@ -1,6 +1,7 @@
 import type { Player } from "@prisma/client";
 import {
   APIEmbedField,
+  AttachmentBuilder,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   bold,
@@ -188,9 +189,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
   }
 
+  // Avatars can come through as a PNG buffer or a URL, react accordingly
+  let avatar = player.avatar;
+  const files = [];
+  if (avatar instanceof Buffer) {
+    files.push(new AttachmentBuilder(avatar).setName("avatar.png"));
+    avatar = "attachment://avatar.png";
+  }
+
   const playerEmbed = createEmbed()
     .setTitle(`${bold(player.name)} (#${player.id})${isOnline ? " 📶" : ""}`)
-    .setThumbnail(player.avatar)
+    .setThumbnail(avatar)
     .addFields(fields);
 
   try {
@@ -198,6 +207,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       content: null,
       embeds: [playerEmbed],
       allowedMentions: { users: [] },
+      files,
     });
   } catch (error) {
     await discordClient.alert("Unknown error", interaction, error);

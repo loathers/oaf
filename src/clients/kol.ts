@@ -106,7 +106,7 @@ type PartialPlayer = {
 };
 
 interface FullPlayer extends PartialPlayer {
-  avatar: string;
+  avatar: string | Buffer;
   ascensions: number;
   trophies: number;
   tattoos: number;
@@ -789,8 +789,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       </svg>
     `;
 
-    const finalBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
-    return `data:image/png;base64,${finalBuffer.toString("base64")}`;
+    return sharp(Buffer.from(svg)).png().toBuffer();
   }
 
   async getPlayerInformation(
