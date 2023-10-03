@@ -1,11 +1,13 @@
 import { DOMParser } from "@xmldom/xmldom";
 import { Mutex } from "async-mutex";
 import axios, { HttpStatusCode } from "axios";
-import { parse } from "date-fns";
+import { parse as parseDate } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
+import { parse as parseHtml } from "node-html-parser";
 import { EventEmitter } from "node:events";
 import { stringify } from "querystring";
+import sharp from "sharp";
 import TypedEventEmitter, { EventMap } from "typed-emitter";
 import { select } from "xpath";
 
@@ -34,7 +36,7 @@ const parser = new DOMParser({
 
 function parsePlayerDate(input?: string) {
   if (!input) return undefined;
-  return parse(input, "MMMM dd, yyyy", new Date());
+  return parseDate(input, "MMMM dd, yyyy", new Date());
 }
 
 type MallPrice = {
@@ -722,6 +724,42 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     return match?.[1] ?? null;
   }
 
+  async parseDecoratedAvatar(profile: string) {
+    const header = profile.match(
+      /<center><table><tr><td><center>.*?(<div.*?>.*?<\/div>).*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
+    );
+    const blockHtml = header?.[1];
+
+    if (!blockHtml) return null;
+
+    const block = parseHtml(blockHtml).querySelector("div");
+
+    if (!block) return null;
+
+    const images = [];
+
+    for (const imgElement of block.querySelectorAll("img")) {
+      const src = imgElement.getAttribute("src");
+      if (!src) continue;
+      const url = resolveKoLImage(src);
+      const input = await fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then((b) => Buffer.from(b));
+
+      const style = imgElement.getAttribute("style");
+      const top = Number(style?.match(/top: ?(-?\d+)px/i)?.[1] || "0");
+      const left = Number(style?.match(/left: ?(-?\d+)px/i)?.[1] || "0");
+      images.push({ input, top, left });
+    }
+
+    return await sharp({
+      create: { width: 100, height: 100, channels: 3, background: "#fff" },
+    })
+      .composite(images)
+      .png()
+      .toBuffer();
+  }
+
   async getPlayerInformation(
     playerToLookup: PartialPlayer,
   ): Promise<FullPlayer | null> {
@@ -733,6 +771,8 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         /<center><table><tr><td><center>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
       );
       if (!header) return null;
+
+      this.parseDecoratedAvatar(profile);
 
       let ascensionsString = profile.match(
         />Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/,

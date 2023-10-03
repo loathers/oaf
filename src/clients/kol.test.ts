@@ -9,7 +9,7 @@ import {
   vi,
 } from "vitest";
 
-import { respondWithFixture } from "../testUtils.js";
+import { loadFixture, respondWithFixture } from "../testUtils.js";
 import { kolClient, resolveKoLImage } from "./kol.js";
 
 vi.mock("axios");
@@ -109,5 +109,13 @@ describe("Profile parsing", () => {
     ).toBe(
       "https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif",
     );
+  });
+});
+
+describe("Decorated avatar parsing", () => {
+  test("Can be tested by gausie", async () => {
+    const profile = await loadFixture(__dirname, "showplayer_golden_gun.html");
+    const parsed = await kolClient.parseDecoratedAvatar(profile);
+    expectNotNull(parsed);
   });
 });
