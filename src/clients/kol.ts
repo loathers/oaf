@@ -8,6 +8,7 @@ import { parse as parseHtml } from "node-html-parser";
 import { EventEmitter } from "node:events";
 import { stringify } from "querystring";
 import sharp from "sharp";
+import { dedent } from "ts-dedent";
 import TypedEventEmitter, { EventMap } from "typed-emitter";
 import { select } from "xpath";
 
@@ -724,7 +725,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     return match?.[1] ?? null;
   }
 
-  async getAvatarAsSvg(profile: string) {
+  async getAvatarAsPng(profile: string) {
     const header = profile.match(
       /<center><table><tr><td><center>.*?(<div.*?>.*?<\/div>).*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
     );
@@ -776,14 +777,22 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
     const width = Math.max(...images.map((i) => i.left + i.width));
 
-    const svg = `
+    const svg = dedent`
       <svg width="${width}" height="100" xmlns="http://www.w3.org/2000/svg" style="${
         ocrsColour ? ocrsColours[ocrsColour] : ""
       }">
         ${images
           .map(
             (i) =>
-              `<image href="${i.href}" width="${i.width}" height="${i.height}" x="${i.left}" y="${i.top}" />`,
+              dedent`
+                <image
+                  href="${i.href}"
+                  width="${i.width}"
+                  height="${i.height}"
+                  x="${i.left}"
+                  y="${i.top}"
+                />
+              `,
           )
           .join("\n")}
       </svg>
@@ -804,7 +813,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       );
       if (!header) return null;
 
-      const avatar = (await this.getAvatarAsSvg(profile)) || header[1];
+      const avatar = (await this.getAvatarAsPng(profile)) || header[1];
 
       let ascensionsString = profile.match(
         />Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/,
