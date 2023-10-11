@@ -12,7 +12,7 @@ async function onMessage(message: Message) {
 
   if (message.content.match(ITOM_MATCHER)) {
     try {
-      await message.react(":newspaper2:");
+      await message.react("<:thinkle:792507030459777105>");
     } catch (error) {
       discordClient.alert("Please give me permissions to react to messages!");
     }
