@@ -12,7 +12,7 @@ async function onMessage(message: Message) {
 
   if (message.content.match(ITOM_MATCHER)) {
     try {
-      await message.react("<:thinkle:792507030459777105>");
+      await message.react("<:minusone:748016030357520464>");
     } catch (error) {
       discordClient.alert("Please give me permissions to react to messages!");
     }
