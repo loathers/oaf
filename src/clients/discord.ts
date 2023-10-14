@@ -31,14 +31,14 @@ export type ModalHandler = {
 };
 
 export type InteractionHandler = {
-  init?: () => Promise<void>;
+  init: () => Promise<void>;
 };
 
 export type CommandHandler = {
   data: SlashCommandBuilder;
   execute: (interaction: CommandInteraction) => Promise<void>;
   autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
-} & InteractionHandler;
+} & Partial<InteractionHandler>;
 
 export class DiscordClient extends Client {
   private clientId: string;
