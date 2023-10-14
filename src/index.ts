@@ -46,8 +46,8 @@ async function loadSlashCommands() {
       handled = true;
     }
 
-    if ("init" in command) {
-      await command.init?.();
+    if ("init" in command && command.init) {
+      await command.init();
       handled = true;
     }
 
