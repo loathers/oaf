@@ -5,6 +5,7 @@ import * as url from "node:url";
 
 import {
   CommandHandler,
+  InteractionHandler,
   ModalHandler,
   discordClient,
 } from "./clients/discord.js";
@@ -30,18 +31,23 @@ async function loadSlashCommands() {
   for await (const filePath of walk(commandsPath)) {
     if (!/\/[^_][^/]*(?<!\.test)\.(ts|js)$/.test(filePath)) continue;
     let handled = false;
-    const command: CommandHandler | ModalHandler = await import(filePath);
+    const command: CommandHandler | ModalHandler | InteractionHandler =
+      await import(filePath);
 
     if ("data" in command) {
       if ("execute" in command) {
         discordClient.commands.set(command.data.name, command);
       }
-      await command.init?.();
       handled = true;
     }
 
     if ("customId" in command) {
       discordClient.modals.set(command.customId, command);
+      handled = true;
+    }
+
+    if ("init" in command && command.init) {
+      await command.init();
       handled = true;
     }
 

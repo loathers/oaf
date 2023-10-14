@@ -30,12 +30,15 @@ export type ModalHandler = {
   handle: (interaction: ModalSubmitInteraction) => Promise<void>;
 };
 
+export type InteractionHandler = {
+  init: () => Promise<void>;
+};
+
 export type CommandHandler = {
   data: SlashCommandBuilder;
   execute: (interaction: CommandInteraction) => Promise<void>;
   autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
-  init?: () => Promise<void>;
-};
+} & Partial<InteractionHandler>;
 
 export class DiscordClient extends Client {
   private clientId: string;
