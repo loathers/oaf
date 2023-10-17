@@ -51,6 +51,7 @@ export class DiscordClient extends Client {
     super({
       partials: [Partials.Message, Partials.Reaction, Partials.User],
       intents: [
+        GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
