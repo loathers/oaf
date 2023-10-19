@@ -68,10 +68,14 @@ type KoLChatMessage = {
   time: string;
 };
 
-const isPrivateWhisper = (
+const isValidMessage = (
   msg: KoLChatMessage,
-): msg is { type: "private"; who: KoLUser; msg: string; time: string } =>
-  msg.type === "private" && !!msg.who && !!msg.msg;
+): msg is {
+  type: "private" | "system";
+  who: KoLUser;
+  msg: string;
+  time: string;
+} => !!msg.who && !!msg.msg;
 
 type KoLKmail = {
   id: string;
@@ -149,6 +153,7 @@ export type KoLMessage = {
 type Events = {
   kmail: (message: KoLMessage) => void;
   whisper: (message: KoLMessage) => void;
+  system: (message: KoLMessage) => void;
   rollover: () => void;
 };
 
@@ -282,30 +287,31 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   private async loopChatBot() {
-    await Promise.all([this.checkWhispers(), this.checkKmails()]);
+    await Promise.all([this.checkMessages(), this.checkKmails()]);
     await wait(3000);
     await this.loopChatBot();
   }
 
-  private lastFetchedWhispers = "0";
+  private lastFetchedMessages = "0";
 
-  async checkWhispers() {
+  async checkMessages() {
     const newChatMessagesResponse = await this.visitApi<{
       last: string;
       msgs: KoLChatMessage[];
     }>("newchatmessages.php", {
       j: 1,
-      lasttime: this.lastFetchedWhispers,
+      lasttime: this.lastFetchedMessages,
     });
 
     if (!newChatMessagesResponse || typeof newChatMessagesResponse !== "object")
       return;
 
-    this.lastFetchedWhispers = newChatMessagesResponse["last"];
+    this.lastFetchedMessages = newChatMessagesResponse["last"];
 
     newChatMessagesResponse["msgs"]
-      .filter(isPrivateWhisper)
+      .filter(isValidMessage)
       .map((msg) => ({
+        type: msg.type,
         who: {
           id: Number(msg.who.id),
           name: msg.who.name,
@@ -313,7 +319,14 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         msg: msg.msg,
         time: new Date(Number(msg.time) * 1000),
       }))
-      .forEach((whisper) => this.emit("whisper", whisper));
+      .forEach((message) => {
+        switch (message.type) {
+          case "private":
+            return this.emit("whisper", message);
+          case "system":
+            return this.emit("system", message);
+        }
+      });
   }
 
   async checkKmails() {
