@@ -1,4 +1,4 @@
-import { Events, GuildMember } from "discord.js";
+import { Client, Events, GuildMember } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 import { config } from "../../config.js";
@@ -16,8 +16,8 @@ async function onJoinServer(member: GuildMember) {
   await member.roles.add(role, "Member added upon joining server");
 }
 
-async function sync() {
-  const guild = await discordClient.guilds.fetch(config.GUILD_ID);
+async function synchroniseRoles(client: Client) {
+  const guild = await client.guilds.fetch(config.GUILD_ID);
 
   const role = await guild.roles.fetch(config.LISTENER_ROLE_ID);
 
@@ -42,5 +42,5 @@ async function sync() {
 export async function init() {
   discordClient.on(Events.GuildMemberAdd, onJoinServer);
 
-  await sync();
+  discordClient.on(Events.ClientReady, synchroniseRoles);
 }
