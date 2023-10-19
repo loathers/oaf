@@ -44,10 +44,18 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
     throw "This can only be done in guild";
   }
 
+  const roleToCompare = await interaction.guild.roles.fetch(
+    config.EXTENDED_TEAM_ROLE_ID,
+  );
+
+  if (!roleToCompare) {
+    throw "Comparison role does not exist for tagging permissions";
+  }
+
   const highestRole = interaction.member.roles.highest;
   const canPost = interaction.guild.roles.comparePositions(
     highestRole,
-    config.EXTENDED_TEAM_ROLE_ID,
+    roleToCompare,
   );
 
   if (canPost < 0) {
