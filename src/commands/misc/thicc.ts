@@ -55,7 +55,7 @@ const ABOUT_EMBED = new EmbedBuilder().setTitle("THICC 2023")
 
         The plan is as follows:
 
-        1. Enter by the ${time(
+        1. Enter by ${time(
           ENTRY_DEADLINE,
         )} (note: your Discord account must be linked to your KoL account, run ${inlineCode(
           "/claim",
