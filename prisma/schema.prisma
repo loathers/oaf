@@ -17,17 +17,21 @@ model Player {
   discordId          String?
   greenboxString     String?
   greenboxLastUpdate DateTime?
+  thiccEntered       Boolean   @default(false)
+  thiccGifteeId       Int @unique
+  thiccGiftee        Player? @relation("ThiccGiftee", fields: [thiccGifteeId], references: [playerId])
+  thiccGifter        Player? @relation("ThiccGiftee")
 }
 
 model Reminder {
-  id                 Int     @id @default(autoincrement())
+  id                 Int      @id @default(autoincrement())
   guildId            String?
   channelId          String
   userId             String
   messageContents    String
   reminderDate       DateTime
   interactionReplyId String?
-  reminderSent       Boolean @default(false)
+  reminderSent       Boolean  @default(false)
 }
 
 model Raid {
@@ -48,6 +52,6 @@ model Tag {
 }
 
 model Setting {
-  key String  @id
+  key   String @id
   value Json
 }
