@@ -18,7 +18,7 @@ model Player {
   greenboxString     String?
   greenboxLastUpdate DateTime?
   thiccEntered       Boolean   @default(false)
-  thiccGifteeId       Int @unique
+  thiccGifteeId      Int? @unique
   thiccGiftee        Player? @relation("ThiccGiftee", fields: [thiccGifteeId], references: [playerId])
   thiccGifter        Player? @relation("ThiccGiftee")
 }
