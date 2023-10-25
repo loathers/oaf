@@ -44,7 +44,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 }
 
-const ENTRY_DEADLINE = new Date(2023, 11, 5);
+const ENTRY_DEADLINE = new Date(2023, 10, 5);
 const GAUSIE = userMention("263438077865754644");
 const ABOUT_EMBED = new EmbedBuilder().setTitle("THICC 2023")
   .setDescription(dedent`
