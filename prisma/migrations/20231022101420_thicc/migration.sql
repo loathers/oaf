@@ -7,10 +7,10 @@
 */
 -- AlterTable
 ALTER TABLE "Player" ADD COLUMN     "thiccEntered" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "thiccGifteeId" INTEGER NOT NULL;
+ADD COLUMN     "thiccGifteeId" INTEGER ;
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Player_thiccGifteeId_key" ON "Player"("thiccGifteeId");
 
 -- AddForeignKey
-ALTER TABLE "Player" ADD CONSTRAINT "Player_thiccGifteeId_fkey" FOREIGN KEY ("thiccGifteeId") REFERENCES "Player"("playerId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Player" ADD CONSTRAINT "Player_thiccGifteeId_fkey" FOREIGN KEY ("thiccGifteeId") REFERENCES "Player"("playerId") ON DELETE SET NULL ON UPDATE CASCADE;
