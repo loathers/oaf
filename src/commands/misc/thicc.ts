@@ -60,7 +60,7 @@ const ABOUT_EMBED = new EmbedBuilder().setTitle("THICC 2023")
         )} (note: your Discord account must be linked to your KoL account, run ${inlineCode(
           "/claim",
         )} to do so)
-        2. OAF will draw the lots to see who is sending a gift to whom. If there is anyone you would not like to be paired with, please let ${GAUSIE} know and he can try to accomodate within reason.
+        2. OAF will draw the lots to see who is sending a gift to whom. If there is anyone you would not like to be paired with, please let ${GAUSIE} know and he can try to accommodate within reason.
         3. OAF will then ask you for your postal address, which will be sent directly to the necessary person, without being stored in our database.
         4. You will in turn receive your giftee's Discord username, IGN and address.
         5. Go out and get or make your gift, and send it so that it arrives before Crimbo!
