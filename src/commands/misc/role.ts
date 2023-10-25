@@ -7,24 +7,6 @@ export const data = new SlashCommandBuilder()
   .setDescription("Self-serve certain roles on the server")
   .addSubcommand((subcommand) =>
     subcommand
-      .setName("pronouns")
-      .setDescription("Please indicate your preferred pronouns")
-      .addStringOption((option) =>
-        option
-          .setName("pronoun")
-          .setDescription(
-            "Toggle a preferred pronoun. You can come back to set multiple",
-          )
-          .addChoices(
-            { name: "they/them", value: config.THEY_THEM_ROLE_ID },
-            { name: "he/him", value: config.HE_HIM_ROLE_ID },
-            { name: "she/her", value: config.SHE_HER_ROLE_ID },
-          )
-          .setRequired(true),
-      ),
-  )
-  .addSubcommand((subcommand) =>
-    subcommand
       .setName("alerts")
       .setDescription(
         "Toggle whether you receive listener alerts on the server",
