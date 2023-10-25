@@ -72,7 +72,7 @@ const ABOUT_EMBED = new EmbedBuilder().setTitle("THICC 2023")
         )} Everyone has their own acceptable risk level. ${hyperlink(
           "Huge secret santa events",
           "https://www.reddit.com/r/secretsanta/",
-        )} take place every year between total strangers, without any issue. If you really want to enter but cannot share your shipping address, a temporary PO Box can be surprisingly cheap depending on your location. If it isn't for you this year, hopefully you'll feel more comfortable in future years! Note, this is not an official ASS event and, more broadly, none of the organisers are accepting liability for anything. This is a self-organised fun activity between friends.
+        )} take place every year between total strangers, without any issue. If you really want to enter but cannot share your shipping address you could use your mailroom at work or school. If that doesn't work, a temporary PO Box can be surprisingly cheap depending on your location. If it isn't for you this year, hopefully you'll feel more comfortable in future years! Note, this is not an official ASS event and, more broadly, none of the organisers are accepting liability for anything. This is a self-organised fun activity between friends.
         * ${italic(
           "How much should I spend?",
         )} Obviously you may be as generous as you like but the target is $50 or less including shipping.
