@@ -282,6 +282,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
   async startChatBot() {
     if (this.chatBotStarted) return;
+    await this.useChatMacro("/listen newbie");
     this.loopChatBot();
     this.chatBotStarted = true;
   }
@@ -320,6 +321,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         time: new Date(Number(msg.time) * 1000),
       }))
       .forEach((message) => {
+        // This is just for testing until we get this sorted out
+        if (message.msg.includes("maintenance")) {
+          return this.emit("system", message);
+        }
         switch (message.type) {
           case "private":
             return this.emit("whisper", message);
@@ -361,14 +366,18 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     newKmails.forEach((m) => this.emit("kmail", m));
   }
 
-  async useChatMacro(macro: string) {
+  async sendChat(message: string) {
     return await this.visitApi<{ output: string; msgs: string[] }>(
       "submitnewchat.php",
       {
-        graf: `/clan ${macro}`,
+        graf: message,
         j: 1,
       },
     );
+  }
+
+  async useChatMacro(macro: string) {
+    return await this.sendChat(`/clan ${macro}`);
   }
 
   async isOnline(playerIdentifier: string | number) {
