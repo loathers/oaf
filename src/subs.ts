@@ -3,6 +3,36 @@ import { ThreadAutoArchiveDuration, roleMention } from "discord.js";
 import { discordClient } from "./clients/discord.js";
 import { config } from "./config.js";
 
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+function determineIotmMonthYear() {
+  const today = new Date();
+  const daysInMonth = new Date(
+    today.getFullYear(),
+    1 + (today.getMonth() % 12),
+    0,
+  ).getDate();
+
+  const useNextMonth = today.getDate() / daysInMonth > 0.5;
+  const isNextYear = today.getMonth() === 11 && useNextMonth;
+
+  return `${MONTHS[(today.getMonth() + Number(useNextMonth)) % 12]} ${(
+    today.getFullYear() + Number(isNextYear)
+  ).toFixed(0)}`;
+}
+
 export async function rollSubs() {
   const guild = await discordClient.guilds.fetch(config.GUILD_ID);
   const iotmChannel = guild?.channels.cache.get(config.IOTM_CHANNEL_ID);
@@ -29,9 +59,8 @@ Feel free to discuss spading and speed strats here in the main channel; speculat
   });
 
   await message.startThread({
-    name: `Farming Discussion for new IotM: ${new Date().toDateString()}`,
+    name: `Farming Discussion for ${determineIotmMonthYear()} IotM`,
     autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
-    reason:
-      "to discuss & speculate about farming strategy for the upcoming IotM",
+    reason: `to discuss & speculate about farming strategy for the ${determineIotmMonthYear()} IotM`,
   });
 }
