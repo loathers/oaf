@@ -12,7 +12,7 @@ function determineIotmMonthYear() {
       add(today, { months: 1 }).setDate(1),
       add(today, { months: -1 }).setDate(1),
     ]) ?? today,
-    "LLLL y",
+    "MMMM y",
   );
 }
 
