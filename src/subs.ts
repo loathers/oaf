@@ -1,4 +1,4 @@
-import { channelMention, roleMention } from "discord.js";
+import { ThreadAutoArchiveDuration, roleMention } from "discord.js";
 
 import { discordClient } from "./clients/discord.js";
 import { config } from "./config.js";
@@ -17,16 +17,21 @@ export async function rollSubs() {
   const subRollEmoji =
     guild.emojis.cache.find((e) => e.name === "subsRolling") ?? "";
 
-  await iotmChannel.send({
+  const message = await iotmChannel.send({
     content: `🚨${subRollEmoji} Attention ${roleMention(
       config.SUBSCRIBER_ROLE_ID,
     )}! This is an automated message to let you know that subscriptions are now rolling ${subRollEmoji}🚨
     
-    Discuss spading and speed strats here in ${channelMention(
-      config.IOTM_CHANNEL_ID,
-    )}; discuss farming over in ${channelMention(config.FARMING_CHANNEL_ID)}.`,
+Feel free to discuss spading and speed strats here in the main channel; speculation about farming strategy should be done in the thread.`,
     allowedMentions: {
       roles: [config.SUBSCRIBER_ROLE_ID],
     },
+  });
+
+  await message.startThread({
+    name: `Farming Discussion for new IotM: ${new Date().toDateString()}`,
+    autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+    reason:
+      "to discuss & speculate about farming strategy for the upcoming IotM",
   });
 }
