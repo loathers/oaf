@@ -4,13 +4,13 @@ import { ThreadAutoArchiveDuration, roleMention } from "discord.js";
 import { discordClient } from "./clients/discord.js";
 import { config } from "./config.js";
 
-function determineIotmMonthYear(): string {
+export function determineIotmMonthYear(): string {
   const today = new Date();
 
   return format(
     closestTo(today, [
       add(today, { months: 1 }).setDate(1),
-      add(today, { months: -1 }).setDate(1),
+      new Date(today).setDate(1),
     ]) ?? today,
     "MMMM y",
   );
