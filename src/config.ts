@@ -48,6 +48,7 @@ export const schema = {
 
   // Subsrolling webhook
   IOTM_CHANNEL_ID: SNOWFLAKE_PATTERN,
+  FARMING_CHANNEL_ID: SNOWFLAKE_PATTERN,
   SUBS_ROLLING_TOKEN: String,
 
   // /claim
