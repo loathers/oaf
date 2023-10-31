@@ -1,22 +1,9 @@
+import { format } from "date-fns";
 import { ThreadAutoArchiveDuration, roleMention } from "discord.js";
 
 import { discordClient } from "./clients/discord.js";
 import { config } from "./config.js";
 
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 function determineIotmMonthYear() {
   const today = new Date();
   const daysInMonth = new Date(
@@ -26,11 +13,11 @@ function determineIotmMonthYear() {
   ).getDate();
 
   const useNextMonth = today.getDate() / daysInMonth > 0.5;
-  const isNextYear = today.getMonth() === 11 && useNextMonth;
 
-  return `${MONTHS[(today.getMonth() + Number(useNextMonth)) % 12]} ${(
-    today.getFullYear() + Number(isNextYear)
-  ).toFixed(0)}`;
+  format(
+    new Date(today.getFullYear(), today.getMonth() + Number(useNextMonth)),
+    "LLLL y",
+  );
 }
 
 export async function rollSubs() {
