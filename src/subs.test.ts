@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach } from "node:test";
+import { describe, expect, test, vi } from "vitest";
 
 import { determineIotmMonthYear } from "./subs.js";
 
