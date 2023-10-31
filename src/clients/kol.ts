@@ -403,19 +403,23 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   }
 
   async rolloverCheck() {
-    const isRollover =
-      /The system is currently down for nightly maintenance/.test(
-        (await axios("https://www.kingdomofloathing.com/")).data,
-      );
-    if (this.isRollover && !isRollover) {
-      this.postRolloverLatch = true;
-    }
-    this.isRollover = isRollover;
-    if (this.isRollover) {
-      console.log(
-        "Rollover appears to be in progress. Checking again in one minute.",
-      );
-      setTimeout(() => this.rolloverCheck(), 60000);
+    try {
+      const isRollover =
+        /The system is currently down for nightly maintenance/.test(
+          (await axios("https://www.kingdomofloathing.com/")).data,
+        );
+      if (this.isRollover && !isRollover) {
+        this.postRolloverLatch = true;
+      }
+      this.isRollover = isRollover;
+      if (this.isRollover) {
+        console.log(
+          "Rollover appears to be in progress. Checking again in one minute.",
+        );
+        setTimeout(() => this.rolloverCheck(), 60000);
+      }
+    } catch (error) {
+      if (error) console.log(error.toString(), " error during rollover check");
     }
   }
 
