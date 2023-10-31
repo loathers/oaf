@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { add, closestTo, format } from "date-fns";
 import { ThreadAutoArchiveDuration, roleMention } from "discord.js";
 
 import { discordClient } from "./clients/discord.js";
@@ -6,16 +6,12 @@ import { config } from "./config.js";
 
 function determineIotmMonthYear() {
   const today = new Date();
-  const daysInMonth = new Date(
-    today.getFullYear(),
-    1 + (today.getMonth() % 12),
-    0,
-  ).getDate();
-
-  const useNextMonth = today.getDate() / daysInMonth > 0.5;
 
   format(
-    new Date(today.getFullYear(), today.getMonth() + Number(useNextMonth)),
+    closestTo(today, [
+      add(today, { months: 1 }).setDate(1),
+      add(today, { months: -1 }).setDate(1),
+    ]) ?? today,
     "LLLL y",
   );
 }
