@@ -768,6 +768,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
     const ocrsColours = {
       gold: "filter: invert(73%) sepia(52%) saturate(6979%) hue-rotate(23deg) brightness(92%) contrast(102%);",
+      red: "filter: invert(13%) sepia(100%) saturate(7407%) hue-rotate(4deg) brightness(97%) contrast(117%);",
     };
 
     const ocrsColour = Object.keys(ocrsColours).find((k) =>
