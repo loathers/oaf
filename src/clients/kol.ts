@@ -68,14 +68,15 @@ type KoLChatMessage = {
   time: string;
 };
 
+type KoLMessageType = "private" | "system" | "public" | "kmail";
+
 const isValidMessage = (
   msg: KoLChatMessage,
-): msg is {
-  type: "private" | "system";
+): msg is KoLChatMessage & {
+  type: KoLMessageType;
   who: KoLUser;
   msg: string;
-  time: string;
-} => !!msg.who && !!msg.msg;
+} => msg.who !== undefined && msg.msg !== undefined;
 
 type KoLKmail = {
   id: string;
@@ -145,15 +146,18 @@ export function resolveKoLImage(path: string) {
 }
 
 export type KoLMessage = {
+  type: KoLMessageType;
   who: KoLUser;
   msg: string;
   time: Date;
+  channel?: string;
 };
 
 type Events = {
   kmail: (message: KoLMessage) => void;
   whisper: (message: KoLMessage) => void;
   system: (message: KoLMessage) => void;
+  public: (message: KoLMessage) => void;
   rollover: () => void;
 };
 
@@ -282,7 +286,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
   async startChatBot() {
     if (this.chatBotStarted) return;
-    await this.useChatMacro("/listen newbie");
+    await this.useChatMacro("/join talkie");
     this.loopChatBot();
     this.chatBotStarted = true;
   }
@@ -321,15 +325,13 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         time: new Date(Number(msg.time) * 1000),
       }))
       .forEach((message) => {
-        // This is just for testing until we get this sorted out
-        if (message.msg.includes("maintenance")) {
-          return this.emit("system", message);
-        }
         switch (message.type) {
+          case "public":
+            return void this.emit("public", message);
           case "private":
-            return this.emit("whisper", message);
+            return void this.emit("whisper", message);
           case "system":
-            return this.emit("system", message);
+            return void this.emit("system", message);
         }
       });
   }
@@ -344,6 +346,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       return;
 
     const newKmails = newKmailsResponse.map((msg: KoLKmail) => ({
+      type: "kmail" as const,
       who: {
         id: Number(msg.fromid),
         name: msg.fromname,

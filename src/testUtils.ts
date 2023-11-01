@@ -6,12 +6,18 @@ export async function loadFixture(dirname: string, name: string) {
   return await fs.readFile(file, { encoding: "utf-8" });
 }
 
-export async function respondWithFixture(dirname: string, name: string) {
+export async function respondWith<T extends string | Record<string, unknown>>(
+  data: T,
+) {
   return {
     status: 200,
     statusText: "SUCCESS",
     config: {},
     headers: {},
-    data: await loadFixture(dirname, name),
+    data,
   };
+}
+
+export async function respondWithFixture(dirname: string, name: string) {
+  return respondWith(await loadFixture(dirname, name));
 }

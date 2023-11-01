@@ -9,7 +9,7 @@ import {
   vi,
 } from "vitest";
 
-import { respondWithFixture } from "../testUtils.js";
+import { respondWith, respondWithFixture } from "../testUtils.js";
 import { kolClient, resolveKoLImage } from "./kol.js";
 
 vi.mock("axios");
@@ -109,5 +109,104 @@ describe("Profile parsing", () => {
     ).toBe(
       "https://s3.amazonaws.com/images.kingdomofloathing.com/itemimages/oaf.gif",
     );
+  });
+});
+
+describe("LoathingChat", () => {
+  test("Can parse a regular message", async () => {
+    vi.mocked(axios).mockResolvedValueOnce(
+      await respondWith({
+        msgs: [
+          {
+            msg: "testing",
+            type: "public",
+            mid: "1538072797",
+            who: { name: "gAUSIE", id: "1197090", color: "black" },
+            format: "0",
+            channel: "talkie",
+            channelcolor: "green",
+            time: "1698787642",
+          },
+        ],
+      }),
+    );
+
+    const messageSpy = vi.fn();
+
+    kolClient.on("public", messageSpy);
+
+    await kolClient.checkMessages();
+
+    expect(messageSpy).toHaveBeenCalledOnce();
+    expect(messageSpy).toHaveBeenCalledWith({
+      type: "public",
+      who: { id: 1197090, name: "gAUSIE" },
+      msg: "testing",
+      time: new Date(1698787642000),
+    });
+  });
+
+  test("Can parse a system message for rollover in 5 minutes", async () => {
+    vi.mocked(axios).mockResolvedValueOnce(
+      await respondWith({
+        msgs: [
+          {
+            msg: "The system will go down for nightly maintenance in 5 minutes.",
+            type: "system",
+            mid: "1538084998",
+            who: { name: "System Message", id: "-1", color: "" },
+            format: "2",
+            channelcolor: "green",
+            time: "1698809101",
+          },
+        ],
+      }),
+    );
+
+    const messageSpy = vi.fn();
+
+    kolClient.on("system", messageSpy);
+
+    await kolClient.checkMessages();
+
+    expect(messageSpy).toHaveBeenCalledOnce();
+    expect(messageSpy).toHaveBeenCalledWith({
+      type: "system",
+      who: { id: -1, name: "System Message" },
+      msg: "The system will go down for nightly maintenance in 5 minutes.",
+      time: new Date(1698809101000),
+    });
+  });
+
+  test("Can parse a system message for rollover complete", async () => {
+    vi.mocked(axios).mockResolvedValueOnce(
+      await respondWith({
+        msgs: [
+          {
+            msg: "Rollover is over.",
+            type: "system",
+            mid: "1538085619",
+            who: { name: "System Message", id: "-1", color: "" },
+            format: "2",
+            channelcolor: "green",
+            time: "1698809633",
+          },
+        ],
+      }),
+    );
+
+    const messageSpy = vi.fn();
+
+    kolClient.on("system", messageSpy);
+
+    await kolClient.checkMessages();
+
+    expect(messageSpy).toHaveBeenCalledOnce();
+    expect(messageSpy).toHaveBeenCalledWith({
+      type: "system",
+      who: { id: -1, name: "System Message" },
+      msg: "Rollover is over.",
+      time: new Date(1698809633000),
+    });
   });
 });

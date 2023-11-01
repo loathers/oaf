@@ -12,7 +12,7 @@ export const data = new SlashCommandBuilder()
       .setMaxValue(99.9),
   );
 
-export function execute(interaction: ChatInputCommandInteraction): void {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const drop = interaction.options.getNumber("droprate", true);
 
   interaction.reply(
