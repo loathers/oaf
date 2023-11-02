@@ -6,7 +6,7 @@ import { KoLMessage, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 
 function isAnnouncement(message: KoLMessage) {
-  return !/^(The system will go down for nightly maintenance in \d+ minutes|Rollover is over).$/.test(
+  return !/^(The system will go down for nightly maintenance in \d+ minutes?|Rollover is over).$/.test(
     message.msg,
   );
 }

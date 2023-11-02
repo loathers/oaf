@@ -178,6 +178,38 @@ describe("LoathingChat", () => {
     });
   });
 
+  test("Can parse a system message for rollover in one minute", async () => {
+    vi.mocked(axios).mockResolvedValueOnce(
+      await respondWith({
+        msgs: [
+          {
+            msg: "The system will go down for nightly maintenance in 1 minute.",
+            type: "system",
+            mid: "1538084998",
+            who: { name: "System Message", id: "-1", color: "" },
+            format: "2",
+            channelcolor: "green",
+            time: "1698809101",
+          },
+        ],
+      }),
+    );
+
+    const messageSpy = vi.fn();
+
+    kolClient.on("system", messageSpy);
+
+    await kolClient.checkMessages();
+
+    expect(messageSpy).toHaveBeenCalledOnce();
+    expect(messageSpy).toHaveBeenCalledWith({
+      type: "system",
+      who: { id: -1, name: "System Message" },
+      msg: "The system will go down for nightly maintenance in 1 minute.",
+      time: new Date(1698809101000),
+    });
+  });
+
   test("Can parse a system message for rollover complete", async () => {
     vi.mocked(axios).mockResolvedValueOnce(
       await respondWith({
