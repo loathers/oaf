@@ -7,6 +7,10 @@ import { kolClient, resolveKoLImage } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import { englishJoin, notNull } from "../../utils.js";
 
+Array.prototype.toSorted = function (compareFn) {
+  return [...this].sort(compareFn);
+};
+
 async function createBirthdayEmbed() {
   const birthdays = await prisma.$queryRaw<
     Player[]
@@ -37,7 +41,7 @@ async function createBirthdayEmbed() {
 
   return createEmbed()
     .setTitle("In-Game Birthdays")
-    .setImage(resolveKoLImage("/itemimages/cake3.gif"))
+    .setThumbnail(resolveKoLImage("/itemimages/cake3.gif"))
     .setDescription(content);
 }
 
