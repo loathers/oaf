@@ -75,15 +75,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply({ ephemeral: true });
 
-  const player = await kolClient.getPartialPlayerFromId(playerId);
+  const partialPlayer = await kolClient.getPartialPlayerFromId(playerId);
 
-  if (!player) {
+  if (!partialPlayer) {
     await interaction.editReply({
       content:
         "Hmm we can't see that user. But it's a valid token, so this is our fault or something very bad has happened",
     });
     return;
   }
+
+  const player = await kolClient.getPlayerInformation(partialPlayer);
+
+  if (!player) return;
 
   const discordId = interaction.user.id;
 
@@ -101,6 +105,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       playerName,
       discordId: interaction.user.id,
       playerId,
+      accountCreationDate: player.createdDate,
     },
   });
 

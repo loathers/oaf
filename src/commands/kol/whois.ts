@@ -174,13 +174,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     value: greenboxes.join(" / ") || italic("none"),
   });
 
-  // Use this opportunity to update player names either from name changes or capitalization changes
-  if (knownPlayer && knownPlayer.playerName !== player.name) {
-    await prisma.player.update({
-      where: { playerId: player.id },
-      data: { playerName: player.name },
-    });
-  }
+  // Use this opportunity to either
+  // a) learn about a new player for our database, or
+  // b) update player names either from name changes or capitalization changes
+  await prisma.player.upsert({
+    where: { playerId: player.id },
+    update: {
+      playerName: player.name,
+      accountCreationDate: player.createdDate,
+    },
+    create: {
+      playerId: player.id,
+      playerName: player.name,
+      accountCreationDate: player.createdDate,
+    },
+  });
 
   if (knownPlayer?.discordId) {
     fields.push({
