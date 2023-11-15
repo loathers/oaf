@@ -14,7 +14,7 @@ Array.prototype.toSorted = function (compareFn) {
 async function createBirthdayEmbed() {
   const birthdays = await prisma.$queryRaw<
     Player[]
-  >`SELECT * FROM "Player" WHERE "discordId" NOT NULL AND EXTRACT(MONTH FROM "accountCreationDate") = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM "accountCreationDate") = EXTRACT(DAY FROM CURRENT_DATE)`;
+  >`SELECT * FROM "Player" WHERE "discordId" IS NOT NULL AND EXTRACT(MONTH FROM "accountCreationDate") = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM "accountCreationDate") = EXTRACT(DAY FROM CURRENT_DATE)`;
 
   if (birthdays.length === 0) return null;
 
