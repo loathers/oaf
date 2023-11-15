@@ -137,3 +137,9 @@ export function formatPlayer(player: Player | undefined, backupId?: number) {
 export function ensureArray<T>(v: T | T[]) {
   return Array.isArray(v) ? v : [v];
 }
+
+export function englishJoin<T>(v: T[]) {
+  return `${v.length > 1 ? `${v.slice(0, -1).join(", ")} and ` : ""}${v.slice(
+    -1,
+  )}`;
+}

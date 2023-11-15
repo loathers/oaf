@@ -5,7 +5,7 @@
     "declaration": false,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ES2022"],
+    "lib": ["ES2023"],
     "module": "NodeNext",
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
