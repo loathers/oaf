@@ -2,6 +2,8 @@ import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
+  TimestampStyles,
+  time,
 } from "discord.js";
 
 import { createEmbed } from "../../clients/discord.js";
@@ -168,6 +170,16 @@ const formatSubboard = (subboard: SubboardInfo) => {
   if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
   if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
   if (runs.length) runs.splice(0, 0, "🥇 Gold Star 🥇");
+
+  if (subboard.updated) {
+    runs.splice(
+      0,
+      0,
+      `Last updated ${time(subboard.updated, TimestampStyles.RelativeTime)}`,
+      "",
+    );
+  }
+
   return {
     title: subboard.name || "...",
     name: subboard.name || "...",

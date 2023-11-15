@@ -10,7 +10,7 @@ import { stringify } from "querystring";
 import sharp from "sharp";
 import { dedent } from "ts-dedent";
 import TypedEventEmitter, { EventMap } from "typed-emitter";
-import { select } from "xpath";
+import xpath, { select } from "xpath";
 
 import { config } from "../config.js";
 import { cleanString, indent, toWikiLink } from "../utils.js";
@@ -96,6 +96,7 @@ export type LeaderboardInfo = {
 export type SubboardInfo = {
   name: string;
   runs: RunInfo[];
+  updated: Date | null;
 };
 
 type RunInfo = {
@@ -647,6 +648,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
           )
           .map((subboard) => {
             const rows = selectMulti("./tr", subboard);
+
             return {
               name: (
                 selectMulti(".//text()", rows[0])[0]?.nodeValue || ""
@@ -670,10 +672,14 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
                     turns: rowText[rowText.length - 1].toString() || "0",
                   };
                 }),
+              updated: xpath.isComment(subboard.nextSibling)
+                ? new Date(subboard.nextSibling.data.slice(9, -1))
+                : null,
             };
           }),
       };
     } catch (error) {
+      console.log(error);
       return undefined;
     }
   }
