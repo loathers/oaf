@@ -96,13 +96,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     data: { discordId: null },
   });
 
-  const playerName = player.name;
-
   await prisma.player.upsert({
     where: { playerId },
-    update: { discordId, playerName },
+    update: {
+      discordId,
+      playerName: player.name,
+      accountCreationDate: player.createdDate,
+    },
     create: {
-      playerName,
+      playerName: player.name,
       discordId: interaction.user.id,
       playerId,
       accountCreationDate: player.createdDate,
