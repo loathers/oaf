@@ -20,7 +20,6 @@ async function onMessage(message: Message) {
           `Tried to :minusone: a message containing the forbidden string by ${message.author}; received error ${error}.`,
         ));
       }
-      await message.member?.kick("You mess with the oaf, you get the boot");
     }
   }
 }
