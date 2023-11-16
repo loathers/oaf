@@ -14,7 +14,10 @@ async function onMessage(message: Message) {
     try {
       await message.react("<:minusone:748016030357520464>");
     } catch (error) {
-      discordClient.alert("Please give me permissions to react to messages!");
+      discordClient.alert(
+        `Tried to :minusone: a message containing the forbidden string by ${message.author}; received error ${error}.`,
+      );
+      await message.member?.kick("You mess with the oaf, you get the boot");
     }
   }
 }
