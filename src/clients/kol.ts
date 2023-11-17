@@ -4,16 +4,15 @@ import axios, { HttpStatusCode } from "axios";
 import { parse as parseDate } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
+import { imageSize } from "image-size";
 import { parse as parseHtml } from "node-html-parser";
 import { EventEmitter } from "node:events";
 import { stringify } from "querystring";
-import sharp from "sharp";
 import { dedent } from "ts-dedent";
 import TypedEventEmitter, { EventMap } from "typed-emitter";
 import xpath, { select } from "xpath";
 
 import { config } from "../config.js";
-import { renderSvg } from "../svgConverter.js";
 import { cleanString, indent, toWikiLink } from "../utils.js";
 
 const selectMulti = (expression: string, node: Node) => {
@@ -114,7 +113,7 @@ type PartialPlayer = {
 };
 
 interface FullPlayer extends PartialPlayer {
-  avatar: string | Buffer;
+  avatar: string;
   ascensions: number;
   trophies: number;
   tattoos: number;
@@ -761,7 +760,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     return match?.[1] ?? null;
   }
 
-  async getAvatarAsPng(profile: string) {
+  async getAvatarAsSvg(profile: string) {
     const header = profile.match(
       /<center><table><tr><td><center>.*?(<div.*?>.*?<\/div>).*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
     );
@@ -789,12 +788,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       if (!src) continue;
 
       const result = await fetch(resolveKoLImage(src));
-      let sharpImage = sharp(Buffer.from(await result.arrayBuffer())).png();
+      const buffer = Buffer.from(await result.arrayBuffer());
 
-      if (ocrsColour) sharpImage = sharpImage.unflatten();
-
-      const metadata = await sharpImage.metadata();
-      const buffer = await sharpImage.toBuffer();
+      const { width = 0, height = 0 } = imageSize(buffer);
 
       const href = `data:image/png;base64,${buffer.toString("base64")}`;
 
@@ -809,14 +805,14 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         top,
         left,
         rotate,
-        width: metadata.width ?? 0,
-        height: metadata.height ?? 0,
+        width,
+        height,
       });
     }
 
     const width = Math.max(...images.map((i) => i.left + i.width));
 
-    const svg = dedent`
+    return dedent`
       <svg width="${width}" height="100" xmlns="http://www.w3.org/2000/svg" style="${
         ocrsColour ? ocrsColours[ocrsColour] : ""
       }">
@@ -839,8 +835,6 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
           .join("\n")}
       </svg>
     `;
-
-    return await renderSvg(svg);
   }
 
   async getPlayerInformation(
@@ -855,7 +849,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       );
       if (!header) return null;
 
-      const avatar = (await this.getAvatarAsPng(profile)) || header[1];
+      const avatar = (await this.getAvatarAsSvg(profile)) || header[1];
 
       let ascensionsString = profile.match(
         />Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/,

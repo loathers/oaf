@@ -142,3 +142,7 @@ export function englishJoin<T>(v: T[]) {
     -1,
   )}`;
 }
+
+export function bufferToDataUri(buffer: Buffer) {
+  return `data:image/png;base64,${buffer.toString("base64")}`;
+}

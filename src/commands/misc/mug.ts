@@ -3,11 +3,14 @@ import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from "discord.js";
+import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import * as url from "node:url";
-import sharp from "sharp";
+import { dedent } from "ts-dedent";
 
 import { resolveKoLImage } from "../../clients/kol.js";
+import { renderSvg } from "../../svgConverter.js";
+import { bufferToDataUri } from "../../utils.js";
 
 export const data = new SlashCommandBuilder()
   .setName("mug")
@@ -89,9 +92,14 @@ async function getLetters() {
   return _letters;
 }
 
-const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+const MUG = bufferToDataUri(
+  readFileSync(
+    path.join(url.fileURLToPath(new URL(".", import.meta.url)), "cup.png"),
+  ),
+);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  await interaction.deferReply();
   const first = interaction.options.getString("first", false) || "";
   const second = interaction.options.getString("second", false) || "";
   const third = interaction.options.getString("third", false) || "";
@@ -108,7 +116,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const top = 50 + lineNumber * 30;
       const left = 67 - Math.floor((line.length * 20) / 2);
       return line.map((char, charNumber) => ({
-        input: char,
+        href: bufferToDataUri(char),
         top,
         left: left + charNumber * 20,
       }));
@@ -122,13 +130,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }));
   }
 
-  const png = await sharp(path.join(__dirname, "cup.png"))
-    .composite(images)
-    .png()
-    .toBuffer();
+  const svg = dedent`
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="200" height="180">
+      <image href="${MUG}"/>
+      ${images.map(
+        (i) => `<image href="${i.href}" x="${i.left}" y=${i.top} />`,
+      )}
+    </svg>
+  `;
 
-  const attachment = new AttachmentBuilder(png).setName(
+  const image = await renderSvg(svg);
+
+  const attachment = new AttachmentBuilder(image).setName(
     `${[first, second, third].join(" ")}.png`,
   );
-  interaction.reply({ files: [attachment] });
+
+  await interaction.editReply({ files: [attachment] });
 }

@@ -19,6 +19,7 @@ declare module "convert-svg-to-png" {
       options?: Partial<Omit<Options, "puppeteer">>,
     ): Promise<Buffer>;
     destroy(): void;
+    destroyed: boolean;
   }
 
   function convert(
