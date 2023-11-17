@@ -68,18 +68,78 @@ export class LoathingDate {
     return (this.getMonth() * 8 + (this.getDate() - 1)) % 16;
   }
 
+  getPhaseDescription(phase: number) {
+    switch (phase) {
+      case 0:
+        return "new";
+      case 1:
+        return "waxing crescent";
+      case 2:
+        return "first quarter";
+      case 3:
+        return "waxing gibbous";
+      case 4:
+        return "full";
+      case 5:
+        return "waning gibbous";
+      case 6:
+        return "last quarter";
+      case 7:
+        return "waning crescent";
+      default:
+        return "missing";
+    }
+  }
+
   getRonaldPhase() {
     return this.getPhase() % 8;
+  }
+
+  getRonaldPhaseDescription() {
+    return this.getPhaseDescription(this.getRonaldPhase());
   }
 
   getGrimacePhase() {
     return Math.floor(this.getPhase() / 2);
   }
 
+  getGrimacePhaseDescription() {
+    return this.getPhaseDescription(this.getGrimacePhase());
+  }
+
   getHamburglarPhase() {
     const cycle = this.getDaysSinceEpoch() - LoathingDate.COLLISION;
     if (cycle < 0) return null;
     return (cycle * 2) % 11;
+  }
+
+  getHamburglarPhaseDescription() {
+    switch (this.getHamburglarPhase()) {
+      case 0:
+        return "in front of Grimace's left side";
+      case 1:
+        return "in front of Grimace's right side";
+      case 2:
+        return "heading behind Grimace";
+      case 3:
+        return "hidden behind Grimace";
+      case 4:
+        return "appering from behind Grimace";
+      case 5:
+        return "disppering behind Ronald";
+      case 6:
+        return "hidden behind Ronald";
+      case 7:
+        return "returning from behind Ronald";
+      case 8:
+        return "in front of Ronald's left side";
+      case 9:
+        return "in front of Ronald's right side";
+      case 10:
+        return "front and center";
+      default:
+        return "in an unknown location";
+    }
   }
 
   getHamburglarLight() {
@@ -107,6 +167,10 @@ export class LoathingDate {
       default:
         return 0;
     }
+  }
+
+  getMoonDescription() {
+    return `Ronald is ${this.getRonaldPhaseDescription()}, Grimace is ${this.getGrimacePhaseDescription()}, and Hamburglar is ${this.getHamburglarPhaseDescription()}`;
   }
 
   getMoonsAsSvg() {
@@ -150,5 +214,12 @@ export class LoathingDate {
 
   toString() {
     return `${this.getMonthName()} ${this.getDate()} Year ${this.getYear()}`;
+  }
+
+  toShortString() {
+    return `${this.getYear()}-${this.getMonthName().slice(
+      0,
+      3,
+    )}-${this.getDate()}`.toUpperCase();
   }
 }

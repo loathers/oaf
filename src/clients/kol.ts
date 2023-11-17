@@ -1,6 +1,7 @@
 import { DOMParser } from "@xmldom/xmldom";
 import { Mutex } from "async-mutex";
 import axios, { HttpStatusCode } from "axios";
+import svgToPng from "convert-svg-to-png";
 import { parse as parseDate } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
@@ -801,11 +802,13 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
       const top = Number(style?.match(/top: ?(-?\d+)px/i)?.[1] || "0");
       const left = Number(style?.match(/left: ?(-?\d+)px/i)?.[1] || "0");
+      const rotate = Number(style?.match(/rotate\((-?\d+)deg\)/)?.[1] || "0");
 
       images.push({
         href,
         top,
         left,
+        rotate,
         width: metadata.width ?? 0,
         height: metadata.height ?? 0,
       });
@@ -827,6 +830,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
                   height="${i.height}"
                   x="${i.left}"
                   y="${i.top}"
+                  transform="rotate(${i.rotate},${i.width / 2 + i.left},${
+                    i.height / 2 + i.top
+                  })"
                 />
               `,
           )
@@ -834,7 +840,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       </svg>
     `;
 
-    return sharp(Buffer.from(svg)).png().toBuffer();
+    return await svgToPng.convert(Buffer.from(svg));
   }
 
   async getPlayerInformation(

@@ -99,7 +99,6 @@ export function columnsByMaxLength<T extends { toString: () => string }>(
   for (const datum of data) {
     const str = datum.toString();
     if (column.length + str.length >= maxLength) {
-      console.log(column.length, str, str.length);
       columns.push(column.slice(0, -1));
       column = "";
     }
