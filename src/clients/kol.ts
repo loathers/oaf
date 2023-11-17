@@ -772,14 +772,8 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
     if (!block) return null;
 
-    const ocrsColours = {
-      gold: "filter: invert(73%) sepia(52%) saturate(6979%) hue-rotate(23deg) brightness(92%) contrast(102%);",
-      red: "filter: invert(13%) sepia(100%) saturate(7407%) hue-rotate(4deg) brightness(97%) contrast(117%);",
-    };
-
-    const ocrsColour = Object.keys(ocrsColours).find((k) =>
-      block.classList.contains(k),
-    ) as keyof typeof ocrsColours | undefined;
+    const ocrsColour =
+      ["gold", "red"].find((k) => block.classList.contains(k)) ?? "black";
 
     const images = [];
 
@@ -813,14 +807,29 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     const width = Math.max(...images.map((i) => i.left + i.width));
 
     return dedent`
-      <svg width="${width}" height="100" xmlns="http://www.w3.org/2000/svg" style="${
-        ocrsColour ? ocrsColours[ocrsColour] : ""
-      }">
+      <svg width="${width}" height="100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="colorMask">
+            <feComponentTransfer in="SourceGraphic" out="f1">
+              <feFuncR type="discrete" tableValues="1 0"/>
+              <feFuncG type="discrete" tableValues="1 0"/>
+              <feFuncB type="discrete" tableValues="1 0"/>
+            </feComponentTransfer>
+            <feColorMatrix type="matrix" values="1 0 0 0 0
+                                                0 1 0 0 0
+                                                0 0 1 0 0
+                                                1 1 1 1 -3" result="selectedColor"/>
+            <feFlood flood-color="${ocrsColour}"/>
+            <feComposite operator="in" in2="selectedColor"/>
+            <feComposite operator="over" in2="SourceGraphic"/>
+          </filter>
+        </defs>
         ${images
           .map(
             (i) =>
               dedent`
                 <image
+                  filter="url(#colorMask)"
                   href="${i.href}"
                   width="${i.width}"
                   height="${i.height}"
