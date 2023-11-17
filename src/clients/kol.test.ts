@@ -60,7 +60,7 @@ describe("Profile parsing", () => {
     });
 
     expectNotNull(player);
-    expect(player.avatar).toBeInstanceOf(Buffer);
+    expect(player.avatar).toContain("<svg");
   });
 
   test("Can parse a profile picture on dependence day", async () => {
@@ -76,7 +76,7 @@ describe("Profile parsing", () => {
     });
 
     expectNotNull(player);
-    expect(player.avatar).toBeInstanceOf(Buffer);
+    expect(player.avatar).toContain("<svg");
   });
 
   test("Can parse an avatar when the player has been painted gold", async () => {
@@ -92,7 +92,7 @@ describe("Profile parsing", () => {
     });
 
     expectNotNull(player);
-    expect(player.avatar).toBeInstanceOf(Buffer);
+    expect(player.avatar).toContain("<svg");
   });
 
   test("Can resolve KoL images", () => {
