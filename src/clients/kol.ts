@@ -1,7 +1,6 @@
 import { DOMParser } from "@xmldom/xmldom";
 import { Mutex } from "async-mutex";
 import axios, { HttpStatusCode } from "axios";
-import svgToPng from "convert-svg-to-png";
 import { parse as parseDate } from "date-fns";
 import { bold, hyperlink } from "discord.js";
 import { decode } from "html-entities";
@@ -14,6 +13,7 @@ import TypedEventEmitter, { EventMap } from "typed-emitter";
 import xpath, { select } from "xpath";
 
 import { config } from "../config.js";
+import { renderSvg } from "../svgConverter.js";
 import { cleanString, indent, toWikiLink } from "../utils.js";
 
 const selectMulti = (expression: string, node: Node) => {
@@ -840,9 +840,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       </svg>
     `;
 
-    return await svgToPng.convert(Buffer.from(svg), {
-      puppeteer: { args: ["--no-sandbox"] },
-    });
+    return await renderSvg(svg);
   }
 
   async getPlayerInformation(

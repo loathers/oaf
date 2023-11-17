@@ -1,4 +1,3 @@
-import svgToPng from "convert-svg-to-png";
 import {
   AttachmentBuilder,
   ChatInputCommandInteraction,
@@ -8,6 +7,7 @@ import {
 import { dedent } from "ts-dedent";
 
 import { LoathingDate } from "../../clients/LoathingDate.js";
+import { renderSvg } from "../../svgConverter.js";
 
 export const data = new SlashCommandBuilder()
   .setName("date")
@@ -18,9 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const date = new LoathingDate();
 
-  const file = await svgToPng.convert(date.getMoonsAsSvg(), {
-    puppeteer: { args: ["--no-sandbox"] },
-  });
+  const file = await renderSvg(date.getMoonsAsSvg());
 
   const attachment = new AttachmentBuilder(file).setName(
     `moons-${date.toShortString()}.png`,

@@ -13,12 +13,23 @@ declare module "convert-svg-to-png" {
     width: number | string;
   };
 
+  export class Converter {
+    convert(
+      input: Buffer | string,
+      options?: Partial<Omit<Options, "puppeteer">>,
+    ): Promise<Buffer>;
+    destroy(): void;
+  }
+
   function convert(
     input: Buffer | string,
     options?: Partial<Options>,
   ): Promise<Buffer>;
 
+  function createConverter(options: Pick<Options, "puppeteer">): Converter;
+
   export = {
     convert,
+    createConverter,
   };
 }

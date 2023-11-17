@@ -1,10 +1,11 @@
-import svgToPng from "convert-svg-to-png";
 import {
   AttachmentBuilder,
   ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from "discord.js";
 import { dedent } from "ts-dedent";
+
+import { renderSvg } from "../../svgConverter.js";
 
 export const data = new SlashCommandBuilder()
   .setName("messiah")
@@ -62,9 +63,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   const name = interaction.options.getString("name", true);
   const svg = superhero(`jesus christ ${name}`);
-  const image = await svgToPng.convert(svg, {
-    puppeteer: { args: ["--no-sandbox"] },
-  });
+  const image = await renderSvg(svg);
   const attachment = new AttachmentBuilder(image).setName("jesuschrist.png");
   await interaction.editReply({ files: [attachment] });
 }
