@@ -6,7 +6,9 @@ let converter: Converter | null = null;
 
 export async function renderSvg(svg: string) {
   if (converter === null) {
-    converter = svgToPng.createConverter({ puppeteer: { args: [] } });
+    converter = svgToPng.createConverter({
+      puppeteer: { args: ["--no-sandbox"] },
+    });
 
     if (timeout !== null) clearTimeout(timeout);
     timeout = setTimeout(() => {
