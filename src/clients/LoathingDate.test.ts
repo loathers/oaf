@@ -45,9 +45,9 @@ describe("SVG", () => {
     expect(d.getMoonsAsSvg()).toBe(dedent`
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="110" height="30" style="dominant-baseline: hanging;">
-    <text x="10" y="2" font-size="30">🌘</text>
-    <text x="70" y="2" font-size="30">🌕</text>
-    <text x="87" y="11" font-size="10">🌑</text>
+      <text x="10" y="2" font-size="30">🌘</text>
+      <text x="70" y="2" font-size="30">🌕</text>
+      <text x="87" y="11" font-size="10">🌑</text>
     </svg>
     `);
   });
