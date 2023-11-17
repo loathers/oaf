@@ -173,7 +173,7 @@ export class LoathingDate {
     return `Ronald is ${this.getRonaldPhaseDescription()}, Grimace is ${this.getGrimacePhaseDescription()}, and Hamburglar is ${this.getHamburglarPhaseDescription()}`;
   }
 
-  getMoonsAsSvg() {
+  getMoonsAsSvg(font?: string) {
     const moonIcons = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
 
     const hamburglarPositions = [
@@ -195,18 +195,20 @@ export class LoathingDate {
       : null;
     const hamburglarIcon = this.getHamburglarLight() > 0 ? "🌕" : "🌑";
 
+    const fontFamily = font ? ` font-family="${font}"` : "";
+
     return dedent`
       <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="110" height="30" style="dominant-baseline: hanging;">
-        <text x="10" y="2" font-size="30" font-family="Noto Color Emoji">${
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="110" height="40" style="dominant-baseline: hanging;">
+        <text x="10" y="7" font-size="30"${fontFamily}>${
           moonIcons[this.getRonaldPhase()]
         }</text>
-        <text x="70" y="2" font-size="30" font-family="Noto Color Emoji">${
+        <text x="70" y="7" font-size="30"${fontFamily}>${
           moonIcons[this.getGrimacePhase()]
         }</text>
         ${
           hamburglarX !== null &&
-          `<text x="${hamburglarX}" y="11" font-size="10" font-family="Noto Color Emoji">${hamburglarIcon}</text>`
+          `<text x="${hamburglarX}" y="16" font-size="10"${fontFamily}>${hamburglarIcon}</text>`
         }
       </svg>
     `;

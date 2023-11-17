@@ -18,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const date = new LoathingDate();
 
-  const file = await renderSvg(date.getMoonsAsSvg());
+  const file = await renderSvg(date.getMoonsAsSvg("Noto Color Emoji"));
 
   const attachment = new AttachmentBuilder(file).setName(
     `moons-${date.toShortString()}.png`,
