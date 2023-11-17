@@ -1,5 +1,5 @@
 declare module "convert-svg-to-png" {
-  import { LaunchOptions } from "puppeteer";
+  import { LaunchOptions, BrowserLaunchArgumentOptions } from "puppeteer";
 
   type Options = {
     allowDeprecatedAttributes: boolean;
@@ -7,7 +7,7 @@ declare module "convert-svg-to-png" {
     baseFile: string;
     baseUrl: string;
     height: number | string;
-    puppeteer: LaunchOptions;
+    puppeteer: LaunchOptions & BrowserLaunchArgumentOptions;
     rounding: "ceil" | "floor" | "round";
     scale: number;
     width: number | string;

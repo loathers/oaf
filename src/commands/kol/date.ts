@@ -18,7 +18,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const date = new LoathingDate();
 
-  const file = await svgToPng.convert(date.getMoonsAsSvg());
+  const file = await svgToPng.convert(date.getMoonsAsSvg(), {
+    puppeteer: { args: ["--no-sandbox"] },
+  });
 
   const attachment = new AttachmentBuilder(file).setName(
     `moons-${date.toShortString()}.png`,

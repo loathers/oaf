@@ -840,7 +840,9 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
       </svg>
     `;
 
-    return await svgToPng.convert(Buffer.from(svg));
+    return await svgToPng.convert(Buffer.from(svg), {
+      puppeteer: { args: ["--no-sandbox"] },
+    });
   }
 
   async getPlayerInformation(

@@ -62,7 +62,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   const name = interaction.options.getString("name", true);
   const svg = superhero(`jesus christ ${name}`);
-  const image = await svgToPng.convert(svg);
+  const image = await svgToPng.convert(svg, {
+    puppeteer: { args: ["--no-sandbox"] },
+  });
   const attachment = new AttachmentBuilder(image).setName("jesuschrist.png");
   await interaction.editReply({ files: [attachment] });
 }
