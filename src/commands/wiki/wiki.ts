@@ -61,6 +61,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 }
 
+const trim = (message) =>
+  message.replace(/^[*_\s]+/, "").replace(/[*_\s]+$/, "");
+
 async function onMessage(message: Message) {
   if (message.author.bot) return;
   if (!("send" in message.channel)) return;
@@ -74,7 +77,7 @@ async function onMessage(message: Message) {
   let slashNote = "";
   if (
     matches.length > 0 &&
-    matches[0][0] === message.content.trim() &&
+    matches[0][0] === trim(message.content) &&
     message.type !== MessageType.Reply
   ) {
     try {
