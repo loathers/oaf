@@ -61,7 +61,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 }
 
-const trim = (message) =>
+const trim = (message: string) =>
   message.replace(/^[*_\s]+/, "").replace(/[*_\s]+$/, "");
 
 async function onMessage(message: Message) {
@@ -80,6 +80,10 @@ async function onMessage(message: Message) {
     matches[0][0] === trim(message.content) &&
     message.type !== MessageType.Reply
   ) {
+    // Ignore smartasses
+    if (matches[0][0] !== trim(message.content)) {
+      return;
+    }
     try {
       await message.react("<:kol_mad:516763545657016320>");
     } catch (error) {
