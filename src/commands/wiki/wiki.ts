@@ -88,6 +88,9 @@ async function onMessage(message: Message) {
       await message.react("<:kol_mad:516763545657016320>");
     } catch (error) {
       discordClient.alert("Please give me permissions to react to messages!");
+      return await message.reply(
+        "You blocked me <:kol_mad:516763545657016320>",
+      );
     }
     const slashCommand = inlineCode(`/wiki ${matches[0][1]}`);
     slashNote = `Remember, for this query you could have just run ${slashCommand}\n\n`;
