@@ -75,6 +75,8 @@ async function onMessage(message: Message) {
 
   const queries = matches.map((m) => m[1]).filter((m) => m.length > 0);
 
+  if (queries.length === 0) return;
+
   let slashNote = "";
   let reaction;
   if (
@@ -109,8 +111,6 @@ async function onMessage(message: Message) {
       "You blocked me <:kol_mad:516763545657016320>",
     ));
   }
-
-  if (queries.length === 0) return;
 
   const considered = queries.slice(0, 3);
 
