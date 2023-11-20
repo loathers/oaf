@@ -85,7 +85,7 @@ async function onMessage(message: Message) {
     message.type !== MessageType.Reply
   ) {
     // Ignore smartasses
-    if (matches[0][0] !== trim(message.content)) {
+    if (message.content.trim() !== trim(message.content)) {
       return;
     }
 
