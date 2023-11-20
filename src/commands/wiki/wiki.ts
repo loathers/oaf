@@ -76,6 +76,7 @@ async function onMessage(message: Message) {
   const queries = matches.map((m) => m[1]).filter((m) => m.length > 0);
 
   let slashNote = "";
+  let reaction;
   if (
     matches.length > 0 &&
     matches[0][0] === trim(message.content) &&
@@ -85,22 +86,28 @@ async function onMessage(message: Message) {
     if (matches[0][0] !== trim(message.content)) {
       return;
     }
-    try {
-      await message.react("<:kol_mad:516763545657016320>");
-    } catch (error) {
-      if (!(error instanceof DiscordAPIError)) throw error;
-      if (error.code !== 90001) {
-        return void (await discordClient.alert(
-          `Tried to :kol_mad: a poorly-formatted wiki search by ${message.author}; received error ${error}.`,
-        ));
-      }
 
-      return void (await message.reply(
-        "You blocked me <:kol_mad:516763545657016320>",
+    reaction = "<:kol_mad:516763545657016320>";
+    slashNote = `Remember, for this query you could have just run ${inlineCode(
+      `/wiki ${matches[0][1]}`,
+    )}\n\n`;
+  } else {
+    reaction = "🔎";
+  }
+
+  try {
+    await message.react(reaction);
+  } catch (error) {
+    if (!(error instanceof DiscordAPIError)) throw error;
+    if (error.code !== 90001) {
+      return void (await discordClient.alert(
+        `Tried to react to an old-style wiki search by ${message.author}; received error ${error}.`,
       ));
     }
-    const slashCommand = inlineCode(`/wiki ${matches[0][1]}`);
-    slashNote = `Remember, for this query you could have just run ${slashCommand}\n\n`;
+
+    return void (await message.reply(
+      "You blocked me <:kol_mad:516763545657016320>",
+    ));
   }
 
   if (queries.length === 0) return;
