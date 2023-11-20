@@ -1,5 +1,6 @@
 import {
   ChatInputCommandInteraction,
+  DiscordAPIError,
   Events,
   Message,
   MessageType,
@@ -87,10 +88,16 @@ async function onMessage(message: Message) {
     try {
       await message.react("<:kol_mad:516763545657016320>");
     } catch (error) {
-      discordClient.alert("Please give me permissions to react to messages!");
-      return await message.reply(
+      if (!(error instanceof DiscordAPIError)) throw error;
+      if (error.code !== 90001) {
+        return void (await discordClient.alert(
+          `Tried to :kol_mad: a poorly-formatted wiki search by ${message.author}; received error ${error}.`,
+        ));
+      }
+
+      return void (await message.reply(
         "You blocked me <:kol_mad:516763545657016320>",
-      );
+      ));
     }
     const slashCommand = inlineCode(`/wiki ${matches[0][1]}`);
     slashNote = `Remember, for this query you could have just run ${slashCommand}\n\n`;
