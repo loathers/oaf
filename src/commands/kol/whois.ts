@@ -152,12 +152,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Show different greenboxen services
   const greenboxes = [];
-  if (knownPlayer?.greenboxLastUpdate) {
+  const latestGreenbox = await prisma.greenbox.findFirst({
+    where: { playerId: player.id },
+    orderBy: { id: "desc" },
+    select: { time: true },
+  });
+  if (latestGreenbox) {
     greenboxes.push(
       `${hyperlink(
         `Greenbox`,
         `https://greenbox.loathers.net/?u=${player.id}`,
-      )} (updated ${time(knownPlayer.greenboxLastUpdate, "R")})`,
+      )} (updated ${time(latestGreenbox.time, "R")})`,
     );
   }
   const snapshot = await snapshotClient.getInfo(player.name);
