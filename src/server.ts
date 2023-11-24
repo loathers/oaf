@@ -19,18 +19,24 @@ app
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: "playerId is invalid" });
 
-    const player = await prisma.player.findUnique({ where: { playerId } });
+    const latestGreenbox = await prisma.greenbox.findFirst({
+      where: { playerId },
+      orderBy: { id: "desc" },
+      select: {
+        player: true,
+        data: true,
+        time: true,
+      },
+    });
 
-    const { greenboxString, greenboxLastUpdate } = player ?? {};
-
-    if (!greenboxString || !greenboxLastUpdate)
+    if (!latestGreenbox)
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ error: "No greenbox data found" });
 
     return res.status(StatusCodes.OK).json({
-      greenboxString,
-      greenboxLastUpdate,
+      greenboxString: latestGreenbox.data,
+      greenboxLastUpdate: latestGreenbox.time,
     });
   })
   .get("/webhooks/subsrolling", async (req, res) => {
