@@ -39,6 +39,41 @@ app
       greenboxLastUpdate: latestGreenbox.time,
     });
   })
+  .get("/api/greenboxhistory/:playerId/:greenboxNumber", async (req, res) => {
+    const playerId = Number(req.params.playerId);
+    const greenboxNumber = Number(req.params.greenboxNumber);
+
+    if (Number.isNaN(playerId) || playerId < 1)
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "playerId is invalid" });
+
+    if (Number.isNaN(greenboxNumber) || greenboxNumber < 1)
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "greenboxNumber is invalid" });
+
+    const greenboxEntry = await prisma.greenbox.findFirst({
+      where: { playerId },
+      orderBy: { id: "asc" },
+      skip: greenboxNumber - 1,
+      select: {
+        player: true,
+        data: true,
+        time: true,
+      },
+    });
+
+    if (!greenboxEntry)
+      return res.status(StatusCodes.NOT_FOUND).json({
+        error: `Player has either no greenbox data, or less than ${greenboxNumber} updates`,
+      });
+
+    return res.status(StatusCodes.OK).json({
+      greenboxString: greenboxEntry.data,
+      greenboxLastUpdate: greenboxEntry.time,
+    });
+  })
   .get("/webhooks/subsrolling", async (req, res) => {
     const token = req.query.token;
 
