@@ -19,16 +19,33 @@ async function update(
   const greenboxLastUpdate = new Date();
 
   try {
-    await prisma.player.upsert({
+    // if the player isn't already in the database, add them
+    const existingPlayer = await prisma.player.findUnique({
       where: { playerId },
-      update: { greenboxString, greenboxLastUpdate },
-      create: {
-        playerId,
-        playerName,
-        greenboxString,
-        greenboxLastUpdate,
-      },
     });
+    if (!existingPlayer) {
+      await prisma.player.create({
+        data: {
+          playerId,
+          playerName,
+        },
+      });
+    }
+    // don't add a new entry if nothing has changed
+    const existingGreenbox = await prisma.greenbox.findFirst({
+      where: { playerId },
+      orderBy: { id: "desc" },
+      select: { data: true },
+    });
+    if (existingGreenbox?.data !== greenboxString) {
+      await prisma.greenbox.create({
+        data: {
+          playerId,
+          data: greenboxString,
+          time: greenboxLastUpdate,
+        },
+      });
+    }
   } catch (error) {
     await kolClient.kmail(
       playerId,
@@ -42,6 +59,9 @@ async function wipe(playerId: number) {
     await prisma.player.update({
       where: { playerId },
       data: { greenboxString: null, greenboxLastUpdate: null },
+    });
+    await prisma.greenbox.deleteMany({
+      where: { playerId },
     });
   } catch (error) {
     if (!isRecordNotFoundError(error)) {
