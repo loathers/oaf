@@ -10,3 +10,8 @@ CREATE TABLE "Greenbox" (
 
 -- AddForeignKey
 ALTER TABLE "Greenbox" ADD CONSTRAINT "Greenbox_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Player"("playerId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+INSERT INTO "Greenbox" ("playerId", "data", "time")
+SELECT "playerId", "greenboxString" as "data", "greenboxLastUpdate" as "time"
+FROM "Player"
+WHERE "greenboxString" IS NOT NULL AND "greenboxLastUpdate" IS NOT NULL;
