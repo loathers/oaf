@@ -41,7 +41,7 @@ const formatWinner = (predicate: boolean, text: string) =>
   predicate ? bold(text) : text;
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  interaction.deferReply();
+  await interaction.deferReply();
 
   const page = await visitTTT();
 
@@ -76,5 +76,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     },
   ]);
 
-  interaction.editReply({ content: null, embeds: [embed] });
+  await interaction.editReply({ content: null, embeds: [embed] });
 }
