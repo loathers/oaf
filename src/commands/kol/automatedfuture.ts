@@ -13,6 +13,7 @@ export const data = new SlashCommandBuilder()
 
 async function visitTTT(): Promise<string> {
   return await kolClient.actionMutex.runExclusive(async () => {
+    await kolClient.visitUrl("town.php");
     return kolClient.visitUrl("place.php?whichplace=twitch");
   });
 }
