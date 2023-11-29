@@ -19,7 +19,7 @@ async function visitTTT(): Promise<string> {
 }
 
 export function parseScores(page: string) {
-  const pattern = /title='(\d+)' href=adventure.php\?snarfblat=(581|582)/gs;
+  const pattern = /title='(-?\d+)' href=adventure.php\?snarfblat=(581|582)/gs;
   const matches = [...page.matchAll(pattern)];
 
   if (matches.length != 2) return null;
