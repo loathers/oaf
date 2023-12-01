@@ -39,7 +39,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const name = interaction.options.getString("name", true);
-  const oaf = discordClient.user;
+  const oaf = discordClient.guilds.cache
+    .get(config.GUILD_ID)
+    ?.members.cache.get(discordClient.user?.id ?? "");
 
   if (!oaf) {
     return void (await discordClient.alert(
@@ -47,9 +49,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  await oaf.setUsername(name);
+  await oaf.setNickname(name);
 
-  if (oaf.username !== name) {
+  if (oaf.nickname !== name) {
     discordClient.alert(
       `${interaction.user.username} tried to change O.A.F.'s name to ${name}, but failed!`,
     );
