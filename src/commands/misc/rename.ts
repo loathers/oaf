@@ -39,14 +39,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const name = interaction.options.getString("name", true);
-  await discordClient.user?.setUsername(name);
+  const oaf = discordClient.user;
 
-  if (discordClient.user?.username === name) {
-    return void (await interaction.reply({
-      content: `Done! My name is now ${name}`,
-      ephemeral: true,
-    }));
-  } else {
+  if (!oaf) {
+    return void (await discordClient.alert(
+      "Unfortunately, O.A.F. does not exist.",
+    ));
+  }
+
+  await oaf.setUsername(name);
+
+  if (oaf.username !== name) {
     discordClient.alert(
       `${interaction.user.username} tried to change O.A.F.'s name to ${name}, but failed!`,
     );
@@ -55,4 +58,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ephemeral: true,
     }));
   }
+
+  return void (await interaction.reply({
+    content: `Done! My name is now ${name}`,
+    ephemeral: true,
+  }));
 }
