@@ -19,25 +19,16 @@ async function update(
   const greenboxLastUpdate = new Date();
 
   try {
-    // if the player isn't already in the database, add them
-    const existingPlayer = await prisma.player.findUnique({
+    // If the player isn't already in the database, add them
+    const player = await prisma.player.upsert({
       where: { playerId },
+      update: {},
+      create: { playerId, playerName },
+      include: { greenbox: { orderBy: { id: "desc" } } },
     });
-    if (!existingPlayer) {
-      await prisma.player.create({
-        data: {
-          playerId,
-          playerName,
-        },
-      });
-    }
-    // don't add a new entry if nothing has changed
-    const existingGreenbox = await prisma.greenbox.findFirst({
-      where: { playerId },
-      orderBy: { id: "desc" },
-      select: { data: true },
-    });
-    if (existingGreenbox?.data !== greenboxString) {
+
+    // Only add a new entry if something has changed
+    if (player.greenbox.at(0)?.data !== greenboxString) {
       await prisma.greenbox.create({
         data: {
           playerId,
@@ -58,10 +49,11 @@ async function wipe(playerId: number) {
   try {
     await prisma.player.update({
       where: { playerId },
-      data: { greenboxString: null, greenboxLastUpdate: null },
-    });
-    await prisma.greenbox.deleteMany({
-      where: { playerId },
+      data: {
+        greenboxString: null,
+        greenboxLastUpdate: null,
+        greenbox: { deleteMany: {} },
+      },
     });
   } catch (error) {
     if (!isRecordNotFoundError(error)) {

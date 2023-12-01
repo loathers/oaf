@@ -58,40 +58,39 @@ app
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: "greenboxNumber is invalid" });
 
-    const greenboxEntryCount = await prisma.greenbox.count({
+    const player = await prisma.player.findFirst({
       where: { playerId },
-    });
-
-    if (greenboxEntryCount === 0)
-      return res.status(StatusCodes.NOT_FOUND).json({
-        error: `asked for greenbox number ${greenboxNumber}, but player ${playerId} has no greenbox data`,
-      });
-
-    if (greenboxEntryCount < greenboxNumber)
-      return res.status(StatusCodes.NOT_FOUND).json({
-        error: `asked for greenbox number ${greenboxNumber}, but player ${playerId} only has ${greenboxEntryCount} greenbox updates`,
-      });
-
-    const greenboxEntry = await prisma.greenbox.findFirst({
-      where: { playerId },
-      orderBy: { id: "asc" },
-      skip: greenboxNumber - 1,
-      select: {
-        player: true,
-        data: true,
-        time: true,
+      include: {
+        greenbox: {
+          orderBy: { id: "asc" },
+          skip: greenboxNumber - 1,
+          take: 1,
+        },
+        _count: {
+          select: {
+            greenbox: true,
+          },
+        },
       },
     });
 
-    if (!greenboxEntry)
+    if (!player)
       return res.status(StatusCodes.NOT_FOUND).json({
-        error: `Player has either no greenbox data, or less than ${greenboxNumber} updates`,
+        error: `We don't know about that player`,
       });
+
+    const greenboxEntry = player.greenbox.at(0);
+
+    if (!greenboxEntry) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        error: `That greenbox entry doesn't exist`,
+      });
+    }
 
     return res.status(StatusCodes.OK).json({
       greenboxString: greenboxEntry.data,
       greenboxLastUpdate: greenboxEntry.time,
-      greenboxEntryCount,
+      greenboxEntryCount: player._count,
     });
   })
   .get("/webhooks/subsrolling", async (req, res) => {
