@@ -13,16 +13,6 @@ export const schema = {
     default: 8080,
   },
 
-  // Heroku
-  HEROKU_SLUG_COMMIT: {
-    type: String,
-    optional: true,
-  },
-  HEROKU_RELEASE_CREATED_AT: {
-    type: String,
-    optional: true,
-  },
-
   // Credentials
   DATABASE_URL: String,
   DISCORD_TOKEN: String,
