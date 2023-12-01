@@ -5,6 +5,7 @@ const PROJECT_ALIASES = new Map<string, string>([
   ["freecandy", "freecandydotexe"],
   ["garfjalen", "kol-scripting-resources"],
   ["mafia", "kolmafia"],
+  ["chrono", "chrono-collector"],
 ]);
 
 const PROJECT_CAPITALISATIONS = new Map<string, string>([
