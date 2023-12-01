@@ -50,9 +50,7 @@ export class DiscordClient extends Client {
   modals = new Collection<string, ModalHandler>();
 
   get guild(): Guild | null {
-    const ASS = this.guilds.cache.get(config.GUILD_ID);
-    if (!ASS) this.alert(`Failed to identify guild with ID ${config.GUILD_ID}`);
-    return ASS ?? null;
+    return this.guilds.cache.get(config.GUILD_ID) ?? null;
   }
 
   get member(): GuildMember | null {
