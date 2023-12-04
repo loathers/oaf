@@ -2,6 +2,7 @@ import { App } from "@tinyhttp/app";
 import { cors } from "@tinyhttp/cors";
 import { StatusCodes } from "http-status-codes";
 
+import astrayDarnedContestRole from "./astraydarned.js";
 import { prisma } from "./clients/database.js";
 import { config } from "./config.js";
 import { rollSubs } from "./subs.js";
@@ -51,6 +52,25 @@ app
           .json({ error: e.message });
       }
 
+      throw e;
+    }
+  })
+  .get("/webhooks/astraydarned/:discordName", async (req, res) => {
+    const token = req.query.token;
+
+    if (!token)
+      return res.status(StatusCodes.UNAUTHORIZED).json({ error: "No token" });
+    if (token !== config.ASTRAY_DARNED_TOKEN)
+      return res.status(StatusCodes.FORBIDDEN).json({ error: "Invalid token" });
+
+    try {
+      await astrayDarnedContestRole(req.params.discordName);
+      return res.status(StatusCodes.OK).json({ status: "Thanks Cap" });
+    } catch (e) {
+      if (e instanceof Error)
+        res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ error: e.message });
       throw e;
     }
   });

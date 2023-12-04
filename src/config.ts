@@ -41,6 +41,10 @@ export const schema = {
   IOTM_CHANNEL_ID: SNOWFLAKE_PATTERN,
   SUBS_ROLLING_TOKEN: String,
 
+  // astraydarned webhook
+  ASTRAY_DARNED_TOKEN: String,
+  ASTRAY_DARNED_ROLE_ID: SNOWFLAKE_PATTERN,
+
   // /claim
   VERIFIED_ROLE_ID: SNOWFLAKE_PATTERN,
   SALT: String,
