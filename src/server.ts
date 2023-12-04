@@ -25,7 +25,7 @@ app
       select: {
         player: true,
         data: true,
-        time: true,
+        createdAt: true,
       },
     });
 
@@ -34,17 +34,17 @@ app
         .status(StatusCodes.NOT_FOUND)
         .json({ error: "No greenbox data found" });
 
-    const greenboxEntryCount = await prisma.greenbox.count({
+    const count = await prisma.greenbox.count({
       where: { playerId },
     });
 
     return res.status(StatusCodes.OK).json({
-      greenboxString: latestGreenbox.data,
-      greenboxLastUpdate: latestGreenbox.time,
-      greenboxEntryCount,
+      data: latestGreenbox.data,
+      createdAt: latestGreenbox.createdAt,
+      count,
     });
   })
-  .get("/api/greenboxhistory/:playerId/:greenboxNumber", async (req, res) => {
+  .get("/api/greenbox/:playerId/:greenboxNumber", async (req, res) => {
     const playerId = Number(req.params.playerId);
     const greenboxNumber = Number(req.params.greenboxNumber);
 
@@ -79,17 +79,17 @@ app
         error: `We don't know about that player`,
       });
 
-    const greenboxEntry = player.greenbox.at(0);
+    const greenbox = player.greenbox.at(0);
 
-    if (!greenboxEntry) {
+    if (!greenbox) {
       return res.status(StatusCodes.NOT_FOUND).json({
         error: `That greenbox entry doesn't exist`,
       });
     }
 
     return res.status(StatusCodes.OK).json({
-      greenboxString: greenboxEntry.data,
-      greenboxLastUpdate: greenboxEntry.time,
+      data: greenbox.data,
+      createdAt: greenbox.createdAt,
       greenboxEntryCount: player._count,
     });
   })

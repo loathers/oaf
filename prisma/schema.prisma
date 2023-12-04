@@ -8,29 +8,29 @@ datasource db {
 }
 
 model Greenbox {
-  id       Int      @id @default(autoincrement())
-  playerId Int
-  player   Player   @relation(fields: [playerId], references: [playerId])
-  data     String
-  time     DateTime
+  id        Int      @id @default(autoincrement())
+  playerId  Int
+  player    Player   @relation(fields: [playerId], references: [playerId])
+  data      String
+  createdAt DateTime @default(now())
 }
 
 model Player {
-  playerId            Int       @id
+  playerId            Int        @id
   playerName          String
   accountCreationDate DateTime?
-  kills               Int       @default(0)
-  skills              Int       @default(0)
-  doneWithSkills      Boolean   @default(false)
-  brainiac            Boolean   @default(false)
+  kills               Int        @default(0)
+  skills              Int        @default(0)
+  doneWithSkills      Boolean    @default(false)
+  brainiac            Boolean    @default(false)
   discordId           String?
   greenbox            Greenbox[]
   greenboxString      String?
   greenboxLastUpdate  DateTime?
-  thiccEntered        Boolean   @default(false)
-  thiccGifteeId       Int?      @unique
-  thiccGiftee         Player?   @relation("ThiccGiftee", fields: [thiccGifteeId], references: [playerId])
-  thiccGifter         Player?   @relation("ThiccGiftee")
+  thiccEntered        Boolean    @default(false)
+  thiccGifteeId       Int?       @unique
+  thiccGiftee         Player?    @relation("ThiccGiftee", fields: [thiccGifteeId], references: [playerId])
+  thiccGifter         Player?    @relation("ThiccGiftee")
 }
 
 model Reminder {

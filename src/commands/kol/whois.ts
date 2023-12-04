@@ -161,7 +161,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `${hyperlink(
         `Greenbox`,
         `https://greenbox.loathers.net/?u=${player.id}`,
-      )} (updated ${time(knownPlayer.greenbox.time, "R")})`,
+      )} (updated ${time(knownPlayer.greenbox.createdAt, "R")})`,
     );
   }
   const snapshot = await snapshotClient.getInfo(player.name);

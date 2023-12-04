@@ -16,15 +16,13 @@ async function update(
   playerName: string,
   greenboxString: string,
 ) {
-  const greenboxLastUpdate = new Date();
-
   try {
     // If the player isn't already in the database, add them
     const player = await prisma.player.upsert({
       where: { playerId },
       update: {},
       create: { playerId, playerName },
-      include: { greenbox: { orderBy: { id: "desc" } } },
+      include: { greenbox: { orderBy: { id: "desc" }, take: 1 } },
     });
 
     // Only add a new entry if something has changed
@@ -33,7 +31,6 @@ async function update(
         data: {
           playerId,
           data: greenboxString,
-          time: greenboxLastUpdate,
         },
       });
     }
