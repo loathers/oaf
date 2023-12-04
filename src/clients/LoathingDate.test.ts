@@ -45,9 +45,9 @@ describe("SVG", () => {
     expect(d.getMoonsAsSvg()).toBe(dedent`
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="110" height="40" style="dominant-baseline: hanging;">
-      <text x="10" y="7" font-size="30">🌘</text>
-      <text x="70" y="7" font-size="30">🌕</text>
-      <text x="87" y="16" font-size="10">🌑</text>
+      <text id="ronald" x="10" y="7" font-size="30">🌘</text>
+      <text id="grimace" x="70" y="7" font-size="30">🌕</text>
+      <text id="hamburglar" x="87" y="16" font-size="10">🌑</text>
     </svg>
     `);
   });
@@ -57,9 +57,9 @@ describe("SVG", () => {
     expect(d.getMoonsAsSvg("Noto Color Emoji")).toBe(dedent`
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="110" height="40" style="dominant-baseline: hanging;">
-      <text x="10" y="7" font-size="30" font-family="Noto Color Emoji">🌑</text>
-      <text x="70" y="7" font-size="30" font-family="Noto Color Emoji">🌕</text>
-      <text x="50" y="16" font-size="10" font-family="Noto Color Emoji">🌕</text>
+      <text id="ronald" x="10" y="7" font-size="30" font-family="Noto Color Emoji">🌑</text>
+      <text id="grimace" x="70" y="7" font-size="30" font-family="Noto Color Emoji">🌕</text>
+      <text id="hamburglar" x="50" y="16" font-size="10" font-family="Noto Color Emoji">🌕</text>
     </svg>
     `);
   });

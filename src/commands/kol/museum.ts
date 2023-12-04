@@ -16,7 +16,7 @@ interface MuseumResponse {
   picture: string;
   plural: string | null;
   description: string;
-  collection: Collection[];
+  collections: Collection[];
 }
 
 interface Collection {
@@ -71,14 +71,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  if (data.collection.length === 0) {
+  if (data.collections.length === 0) {
     await interaction.editReply(
       `That item exists but no-one has one in their display case!`,
     );
     return;
   }
 
-  const grouped = groupToMap(data.collection, (d) => d.rank);
+  const grouped = groupToMap(data.collections, (d) => d.rank);
   const ranks = [...grouped.keys()].sort((a, b) => a - b);
 
   const leaderboard = ranks.map((r) => {
