@@ -34,14 +34,14 @@ app
         .status(StatusCodes.NOT_FOUND)
         .json({ error: "No greenbox data found" });
 
-    const count = await prisma.greenbox.count({
+    const total = await prisma.greenbox.count({
       where: { playerId },
     });
 
     return res.status(StatusCodes.OK).json({
       data: latestGreenbox.data,
       createdAt: latestGreenbox.createdAt,
-      count,
+      total,
     });
   })
   .get("/api/greenbox/:playerId/:greenboxNumber", async (req, res) => {
@@ -90,7 +90,7 @@ app
     return res.status(StatusCodes.OK).json({
       data: greenbox.data,
       createdAt: greenbox.createdAt,
-      greenboxEntryCount: player._count,
+      total: player._count,
     });
   })
   .get("/webhooks/subsrolling", async (req, res) => {
