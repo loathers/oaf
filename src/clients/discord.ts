@@ -7,6 +7,8 @@ import {
   EmbedBuilder,
   Events,
   GatewayIntentBits,
+  Guild,
+  GuildMember,
   Interaction,
   JSONEncodable,
   MessageCreateOptions,
@@ -46,6 +48,14 @@ export class DiscordClient extends Client {
   private alertsChannel: TextBasedChannel | null = null;
   commands = new Collection<string, CommandHandler>();
   modals = new Collection<string, ModalHandler>();
+
+  get guild(): Guild | null {
+    return this.guilds.cache.get(config.GUILD_ID) ?? null;
+  }
+
+  get member(): GuildMember | null {
+    return this.guild?.members.cache.get(this.user?.id ?? "") ?? null;
+  }
 
   constructor(clientId: string, token: string, alertsChannelId: string) {
     super({

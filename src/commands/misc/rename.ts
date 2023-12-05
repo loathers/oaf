@@ -39,9 +39,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const name = interaction.options.getString("name", true);
-  const oaf = discordClient.guilds.cache
-    .get(config.GUILD_ID)
-    ?.members.cache.get(discordClient.user?.id ?? "");
+  const oaf = discordClient.member;
 
   if (!oaf) {
     return void (await discordClient.alert(
