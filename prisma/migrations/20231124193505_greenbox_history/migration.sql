@@ -12,7 +12,7 @@ CREATE TABLE "Greenbox" (
 ALTER TABLE "Greenbox" ADD CONSTRAINT "Greenbox_playerId_fkey" FOREIGN KEY ("playerId") REFERENCES "Player"("playerId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- Migrate existing data
-INSERT INTO "Greenbox" ("playerId", "data", "time")
-SELECT "playerId", "greenboxString" as "data", "greenboxLastUpdate" as "time"
+INSERT INTO "Greenbox" ("playerId", "data", "createdAt")
+SELECT "playerId", "greenboxString" as "data", "greenboxLastUpdate" as "createdAt"
 FROM "Player"
 WHERE "greenboxString" IS NOT NULL AND "greenboxLastUpdate" IS NOT NULL;
