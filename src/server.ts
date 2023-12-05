@@ -19,18 +19,78 @@ app
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: "playerId is invalid" });
 
-    const player = await prisma.player.findUnique({ where: { playerId } });
+    const latestGreenbox = await prisma.greenbox.findFirst({
+      where: { playerId },
+      orderBy: { id: "desc" },
+      select: {
+        player: true,
+        data: true,
+        createdAt: true,
+      },
+    });
 
-    const { greenboxString, greenboxLastUpdate } = player ?? {};
-
-    if (!greenboxString || !greenboxLastUpdate)
+    if (!latestGreenbox)
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ error: "No greenbox data found" });
 
+    const total = await prisma.greenbox.count({
+      where: { playerId },
+    });
+
     return res.status(StatusCodes.OK).json({
-      greenboxString,
-      greenboxLastUpdate,
+      data: latestGreenbox.data,
+      createdAt: latestGreenbox.createdAt,
+      total,
+    });
+  })
+  .get("/api/greenbox/:playerId/:greenboxNumber", async (req, res) => {
+    const playerId = Number(req.params.playerId);
+    const greenboxNumber = Number(req.params.greenboxNumber);
+
+    if (Number.isNaN(playerId) || playerId < 1)
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "playerId is invalid" });
+
+    if (Number.isNaN(greenboxNumber) || greenboxNumber < 1)
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "greenboxNumber is invalid" });
+
+    const player = await prisma.player.findFirst({
+      where: { playerId },
+      include: {
+        greenbox: {
+          orderBy: { id: "asc" },
+          skip: greenboxNumber - 1,
+          take: 1,
+        },
+        _count: {
+          select: {
+            greenbox: true,
+          },
+        },
+      },
+    });
+
+    if (!player)
+      return res.status(StatusCodes.NOT_FOUND).json({
+        error: `We don't know about that player`,
+      });
+
+    const greenbox = player.greenbox.at(0);
+
+    if (!greenbox) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        error: `That greenbox entry doesn't exist`,
+      });
+    }
+
+    return res.status(StatusCodes.OK).json({
+      data: greenbox.data,
+      createdAt: greenbox.createdAt,
+      total: player._count,
     });
   })
   .get("/webhooks/subsrolling", async (req, res) => {

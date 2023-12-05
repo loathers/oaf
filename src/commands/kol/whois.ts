@@ -1,4 +1,4 @@
-import type { Player } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import {
   APIEmbedField,
   AttachmentBuilder,
@@ -37,6 +37,15 @@ export function validPlayerIdentifier(identifier: string) {
   return /^([a-zA-Z][a-zA-Z0-9_ ]{2,29})|[0-9]+$/.test(identifier);
 }
 
+async function findPlayer(where: Prisma.PlayerWhereInput) {
+  const player = await prisma.player.findFirst({
+    where,
+    include: { greenbox: { orderBy: { id: "desc" }, take: 1 } },
+  });
+  if (!player) return null;
+  return { ...player, greenbox: player.greenbox.at(0) ?? null };
+}
+
 export async function execute(interaction: ChatInputCommandInteraction) {
   const input = interaction.options.getString("player", true);
 
@@ -48,13 +57,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   // Whatever happens we'll try to ascertain whether this is a known player. Because we either do so at the start or
   // at the end, declare a null variable here.
-  let knownPlayer: Player | null = null;
+  let knownPlayer: Awaited<ReturnType<typeof findPlayer>> = null;
 
   // Check if this is a mention first of all
   if (input.match(/^<@\d+>$/)) {
-    knownPlayer = await prisma.player.findFirst({
-      where: { discordId: input.slice(2, -1) },
-    });
+    knownPlayer = await findPlayer({ discordId: input.slice(2, -1) });
 
     if (knownPlayer === null) {
       await interaction.editReply(`That user hasn't claimed a KoL account.`);
@@ -144,20 +151,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 
   // Save a database hit if we got here by tracking a claimed Discord account in the first place
-  if (knownPlayer === null) {
-    knownPlayer = await prisma.player.findFirst({
-      where: { playerId: player.id },
-    });
-  }
+  if (knownPlayer === null)
+    knownPlayer = await findPlayer({ playerId: player.id });
 
   // Show different greenboxen services
   const greenboxes = [];
-  if (knownPlayer?.greenboxLastUpdate) {
+  if (knownPlayer?.greenbox) {
     greenboxes.push(
       `${hyperlink(
         `Greenbox`,
         `https://greenbox.loathers.net/?u=${player.id}`,
-      )} (updated ${time(knownPlayer.greenboxLastUpdate, "R")})`,
+      )} (updated ${time(knownPlayer.greenbox.createdAt, "R")})`,
     );
   }
   const snapshot = await snapshotClient.getInfo(player.name);
