@@ -90,7 +90,7 @@ app
     return res.status(StatusCodes.OK).json({
       data: greenbox.data,
       createdAt: greenbox.createdAt,
-      total: player._count,
+      total: player._count.greenbox,
     });
   })
   .get("/webhooks/subsrolling", async (req, res) => {
