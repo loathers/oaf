@@ -22,7 +22,7 @@ export function parseScores(page: string) {
   const pattern = /title='(-?\d+)' href=adventure.php\?snarfblat=(581|582)/gs;
   const matches = [...page.matchAll(pattern)];
 
-  if (matches.length != 2) return null;
+  if (matches.length !== 2) return null;
 
   const scores = matches.reduce(
     (acc, m) => ({ ...acc, [m[2]]: Number(m[1]) }),

@@ -179,9 +179,12 @@ export class DiscordClient extends Client {
     const embeds: JSONEncodable<APIEmbed>[] = [];
 
     if (interaction) {
+      let commandRun = interaction.toString();
+      if (commandRun === "[object Object]")
+        commandRun = JSON.stringify(interaction);
       embeds.push(
         new EmbedBuilder().setTitle("Circumstances").addFields([
-          { name: "Command run", value: interaction.toString() },
+          { name: "Command run", value: commandRun },
           { name: "User", value: userMention(interaction.user.id) },
         ]),
       );
