@@ -11,7 +11,10 @@ export const data = new SlashCommandBuilder()
 
 async function visitCrimbo() {
   return await kolClient.actionMutex.runExclusive(
-    async () => await kolClient.visitUrl("place.php?whichplace=crimbo23"),
+    async () =>
+      await kolClient.visitUrl("place.php", {
+        whichplace: "crimbo23",
+      }),
   );
 }
 
