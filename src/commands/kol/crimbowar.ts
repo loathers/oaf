@@ -1,7 +1,8 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { createEmbed } from "../../clients/discord.js";
+import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
+import { config } from "../../config.js";
 
 export const data = new SlashCommandBuilder()
   .setName("crimbowar")
@@ -33,6 +34,19 @@ function parseCrimbo(page: string): CrimboStatus {
   ) as CrimboStatus;
 }
 
+function buildEmbed(status: CrimboStatus, title: string) {
+  const embed = createEmbed().setTitle(title);
+
+  embed.addFields(
+    Object.entries(status).map(([state, zones]) => ({
+      name: `${state} zones`,
+      value: zones.join(", ") || "none!",
+    })),
+  );
+
+  return embed;
+}
+
 export async function execute(interaction: ChatInputCommandInteraction) {
   interaction.deferReply();
 
@@ -52,14 +66,48 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const status = parseCrimbo(page);
 
-  const embed = createEmbed().setTitle("Crimbo '23");
+  interaction.editReply({
+    content: null,
+    embeds: [buildEmbed(status, "Crimbo '23")],
+  });
+}
 
-  embed.addFields(
-    Object.entries(status).map(([state, zones]) => ({
-      name: `${state} zones`,
-      value: zones.join(", ") || "none!",
-    })),
-  );
+export async function init() {
+  kolClient.on("public", async ({ channel, time, who, msg }) => {
+    if (
+      channel === "crimbo" &&
+      time.getMinutes() === 11 &&
+      who.name === "CBC Radio" &&
+      msg.includes("is now a war zone")
+    ) {
+      const crimboChannel = discordClient.guild?.channels.cache.get(
+        config.CRIMBO_CHANNEL_ID,
+      );
+      if (!crimboChannel?.isTextBased()) {
+        return void discordClient.alert(
+          "The guild or crimbo channel are incorrectly configured",
+        );
+      }
 
-  interaction.editReply({ content: null, embeds: [embed] });
+      const page = await visitCrimbo();
+
+      if (page.includes("has faded into the mists")) {
+        return void (await discordClient.alert(
+          "We thought Crimbo rolled over, but it's faded into the mists!",
+        ));
+      }
+
+      if (!page) {
+        return void (await discordClient.alert(
+          "We thought Crimbo rolled over, but it's rollover probably!",
+        ));
+      }
+
+      const status = parseCrimbo(page);
+
+      return void (await crimboChannel.send({
+        embeds: [buildEmbed(status, "CHANGE PLACES!")],
+      }));
+    }
+  });
 }
