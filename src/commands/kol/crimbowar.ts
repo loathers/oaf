@@ -78,6 +78,7 @@ export async function init() {
       channel === "crimbo" &&
       time.getMinutes() === 11 &&
       who.name === "CBC Radio" &&
+      who.id < 0 &&
       msg.includes("is now a war zone")
     ) {
       const crimboChannel = discordClient.guild?.channels.cache.get(
