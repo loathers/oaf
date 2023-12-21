@@ -10,12 +10,12 @@ export const data = new SlashCommandBuilder()
   );
 
 async function visitCrimbo() {
-  return await kolClient.actionMutex.runExclusive(
-    async () =>
-      await kolClient.visitUrl("place.php", {
-        whichplace: "crimbo23",
-      }),
-  );
+  return await kolClient.actionMutex.runExclusive(async () => {
+    await kolClient.visitUrl("main.php");
+    return await kolClient.visitUrl("place.php", {
+      whichplace: "crimbo23",
+    });
+  });
 }
 
 const ZONES = ["armory", "bar", "cafe", "abuela", "factory"] as const;
