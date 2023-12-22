@@ -78,7 +78,8 @@ export async function init() {
       channel === "crimbo" &&
       time.getMinutes() === 11 &&
       who.id === -111 &&
-      msg.includes("is now a war zone")
+      !msg.includes("%") &&
+      ZONES.some((zone) => msg.includes(zone))
     ) {
       const crimboChannel = discordClient.guild?.channels.cache.get(
         config.CRIMBO_CHANNEL_ID,
