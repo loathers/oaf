@@ -73,12 +73,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export async function init() {
-  kolClient.on("public", async ({ channel, time, who, msg }) => {
+  kolClient.on("public", async ({ channel, who, msg }) => {
     if (
       channel === "crimbo" &&
-      time.getMinutes() === 11 &&
       who.id === -111 &&
       !msg.includes("%") &&
+      !msg.includes("plan, ensuring maximum") &&
       ZONES.some((zone) => msg.includes(zone))
     ) {
       const crimboChannel = discordClient.guild?.channels.cache.get(
