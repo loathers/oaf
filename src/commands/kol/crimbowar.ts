@@ -77,9 +77,7 @@ export async function init() {
     if (
       channel === "crimbo" &&
       who.id === -111 &&
-      !msg.includes("%") &&
-      !msg.includes("plan, ensuring maximum") &&
-      ZONES.some((zone) => msg.includes(zone))
+      !msg.match(/%|(?:plan, ensuring maximum)|(?:no longer yielding)/)
     ) {
       const crimboChannel = discordClient.guild?.channels.cache.get(
         config.CRIMBO_CHANNEL_ID,
