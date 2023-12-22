@@ -288,6 +288,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   async startChatBot() {
     if (this.chatBotStarted) return;
     await this.useChatMacro("/join talkie");
+    await this.useChatMacro("/listen crimbo");
     this.loopChatBot();
     this.chatBotStarted = true;
   }
