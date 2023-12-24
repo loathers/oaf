@@ -73,6 +73,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export async function init() {
+  await kolClient.ensureListening("crimbo");
   kolClient.on("public", async ({ channel, who, msg }) => {
     if (
       channel === "crimbo" &&

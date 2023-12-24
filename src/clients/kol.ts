@@ -175,6 +175,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   private loginParameters: URLSearchParams;
   private credentials: KoLCredentials = {};
   private postRolloverLatch = false;
+  private activeChannels: string[] = [];
 
   constructor(username: string, password: string) {
     super();
@@ -285,8 +286,27 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
 
   private chatBotStarted = false;
 
+  private async checkChatChannels() {
+    const page = await this.visitUrl("mchat.php");
+    const HANDLE_MESSAGE_PATTERN = /handleMessage\((\{[^}]*\})\)/g;
+    this.activeChannels = [...page.matchAll(HANDLE_MESSAGE_PATTERN)]
+      .map(
+        ([, group]) => JSON.parse(group) as { type: string; channel: string },
+      )
+      .filter(({ type }) => type === "public")
+      .map(({ channel }) => channel);
+  }
+
+  async ensureListening(channel: string) {
+    if (this.activeChannels.includes(channel)) return;
+    await this.checkChatChannels();
+    if (this.activeChannels.includes(channel)) return;
+    await this.useChatMacro(`/listen ${channel}`);
+  }
+
   async startChatBot() {
     if (this.chatBotStarted) return;
+    await this.checkChatChannels();
     await this.useChatMacro("/join talkie");
     this.loopChatBot();
     this.chatBotStarted = true;
