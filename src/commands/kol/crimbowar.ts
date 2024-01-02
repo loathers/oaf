@@ -1,8 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { createEmbed, discordClient } from "../../clients/discord.js";
+import { createEmbed } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import { config } from "../../config.js";
 
 export const data = new SlashCommandBuilder()
   .setName("crimbowar")
@@ -69,44 +68,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   interaction.editReply({
     content: null,
     embeds: [buildEmbed(status, "Crimbo '23")],
-  });
-}
-
-export async function init() {
-  kolClient.on("public", async ({ channel, who, msg }) => {
-    if (
-      channel === "crimbo" &&
-      who.id === -111 &&
-      !msg.match(/%|(?:plan, ensuring maximum)|(?:no longer yielding)/)
-    ) {
-      const crimboChannel = discordClient.guild?.channels.cache.get(
-        config.CRIMBO_CHANNEL_ID,
-      );
-      if (!crimboChannel?.isTextBased()) {
-        return void discordClient.alert(
-          "The guild or crimbo channel are incorrectly configured",
-        );
-      }
-
-      const page = await visitCrimbo();
-
-      if (page.includes("has faded into the mists")) {
-        return void (await discordClient.alert(
-          "We thought Crimbo rolled over, but it's faded into the mists!",
-        ));
-      }
-
-      if (!page) {
-        return void (await discordClient.alert(
-          "We thought Crimbo rolled over, but it's rollover probably!",
-        ));
-      }
-
-      const status = parseCrimbo(page);
-
-      return void (await crimboChannel.send({
-        embeds: [buildEmbed(status, "CHANGE PLACES!")],
-      }));
-    }
   });
 }
