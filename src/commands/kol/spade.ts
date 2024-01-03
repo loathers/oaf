@@ -324,7 +324,13 @@ async function spadeSkills(interaction: ChatInputCommandInteraction) {
   await interaction.editReply(data.join("\n"));
 }
 
+// Some skill ids have existed on the dev server for some time and are assumed to be the
+// the skill equivalent of [reuse me].
+const KNOWN_UNUSED = [223, 224];
+
 async function spadeSkill(skillId: number) {
+  if (KNOWN_UNUSED.includes(skillId)) return false;
+
   const page = await kolClient.visitUrl("runskillz.php", {
     action: "Skillz",
     whichskill: skillId,
