@@ -1,2 +1,1 @@
-release: npx prisma migrate deploy
-web: yarn start
+web: npx prisma migrate deploy && yarn start
