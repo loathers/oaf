@@ -100,6 +100,8 @@ const PACKAGES = new Map([
   ["shrink-wrapped 2002 mr. store catalog", "2002 mr. store catalog"],
   ["boxed august scepter", "august scepter"],
   ["book of facts", "book of facts (dog-eared)"],
+  ["wrapped candy cane sword cane", "candy cane sword cane"],
+  ["in-the-box spring shoes", "spring shoes"],
   ["black and white apron enrollment form", "black and white apron meal kit"],
 ]);
 
@@ -134,9 +136,6 @@ const foldables: [string, string][] = [
   ["stinky cheese wheel", "stinky cheese ball"],
   ["stinky cheese eye", "stinky cheese ball"],
   ["staff of queso escusado", "stinky cheese ball"],
-  ["wrapped candy cane sword cane", "candy cane sword cane"],
-  ["in-the-box spring shoes", "spring shoes"],
-  ["black and white apron enrollment form", "black and white apron meal kit"],
 ];
 
 const reversed: [string, string][] = Array.from(PACKAGES.keys()).map((key) => [
