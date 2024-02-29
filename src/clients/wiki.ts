@@ -96,6 +96,11 @@ const PACKAGES = new Map([
   ["s.i.t. course voucher", "s.i.t. course completion certificate"],
   ["closed-circuit phone system", "closed-circuit pay phone"],
   ["cursed monkey glove", "cursed monkey's paw"],
+  ["shrink-wrapped cincho de mayo", "cincho de mayo"],
+  ["shrink-wrapped 2002 mr. store catalog", "2002 mr. store catalog"],
+  ["boxed august scepter", "august scepter"],
+  ["book of facts", "book of facts (dog-eared)"],
+  ["black and white apron enrollment form", "black and white apron meal kit"],
 ]);
 
 const ghostlings: [string, string][] = [
@@ -129,6 +134,9 @@ const foldables: [string, string][] = [
   ["stinky cheese wheel", "stinky cheese ball"],
   ["stinky cheese eye", "stinky cheese ball"],
   ["staff of queso escusado", "stinky cheese ball"],
+  ["wrapped candy cane sword cane", "candy cane sword cane"],
+  ["in-the-box spring shoes", "spring shoes"],
+  ["black and white apron enrollment form", "black and white apron meal kit"],
 ];
 
 const reversed: [string, string][] = Array.from(PACKAGES.keys()).map((key) => [
