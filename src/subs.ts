@@ -20,6 +20,11 @@ export async function rollSubs() {
   const guild = await discordClient.guilds.fetch(config.GUILD_ID);
   const iotmChannel = guild?.channels.cache.get(config.IOTM_CHANNEL_ID);
 
+  const today = new Date();
+  if (today.getMonth() === 3 && today.getDate() === 1) {
+    discordClient.parka = today;
+  }
+
   if (!iotmChannel?.isTextBased()) {
     await discordClient.alert(
       "Someone has tried to hit a subs rolling webhook but the guild or iotm channel are incorrectly configured",

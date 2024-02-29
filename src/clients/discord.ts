@@ -46,6 +46,8 @@ export class DiscordClient extends Client {
   private clientId: string;
   private alertsQueue: MessageCreateOptions[] = [];
   private alertsChannel: TextBasedChannel | null = null;
+  parka: Date | null = null;
+
   commands = new Collection<string, CommandHandler>();
   modals = new Collection<string, ModalHandler>();
 
