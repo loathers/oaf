@@ -21,7 +21,7 @@ async function announceParka() {
     content: dedent`
       New announcement posted to KoL chat!
       ${blockQuote(
-        "Welcome to the Jurassic Parka, which is April's Item-of-the-Month and now available in Mr. Store.",
+        "A new announcement has been posted: Welcome to the Jurassic Parka, which is April's Item-of-the-Month and now available in Mr. Store.",
       )}
     `,
   }));
