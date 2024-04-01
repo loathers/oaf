@@ -1,5 +1,5 @@
 import { differenceInMinutes, milliseconds } from "date-fns";
-import { Events, blockQuote } from "discord.js";
+import { Events, ThreadAutoArchiveDuration, blockQuote } from "discord.js";
 import { dedent } from "ts-dedent";
 
 import { discordClient } from "../../clients/discord.js";
@@ -17,13 +17,18 @@ async function announceParka() {
     return;
   }
 
-  return void (await announcementChannel.send({
+  const message = await announcementChannel.send({
     content: dedent`
       New announcement posted to KoL chat!
       ${blockQuote(
         "A new announcement has been posted: Welcome to the Jurassic Parka, which is April's Item-of-the-Month and now available in Mr. Store.",
       )}
     `,
+  });
+
+  return void (await message.startThread({
+    name: `Discussion for announcement`,
+    autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
   }));
 }
 
