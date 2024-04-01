@@ -8,7 +8,12 @@ async function startTyping(): Promise<void> {
   const today = new Date();
   if (today.getMonth() === 3 && today.getDate() === 1) {
     discordClient.channels.cache.each(
-      (channel) => channel instanceof TextChannel && channel.sendTyping(),
+      (channel) =>
+        channel instanceof TextChannel &&
+        channel
+          .permissionsFor(discordClient.member ?? "")
+          ?.has("SendMessages") &&
+        channel.sendTyping(),
     );
   }
 }
