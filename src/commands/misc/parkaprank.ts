@@ -33,7 +33,9 @@ async function announceParka() {
   }));
 }
 
-export const data = new SlashCommandBuilder().setName("backdoorparka");
+export const data = new SlashCommandBuilder()
+  .setName("backdoorparka")
+  .setDescription("Don't worry about it");
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const member = interaction.member;
