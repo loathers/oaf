@@ -1,11 +1,5 @@
 import { differenceInMinutes, milliseconds } from "date-fns";
-import {
-  ChatInputCommandInteraction,
-  Events,
-  GuildMemberRoleManager,
-  SlashCommandBuilder,
-  blockQuote,
-} from "discord.js";
+import { Events, blockQuote } from "discord.js";
 import { dedent } from "ts-dedent";
 
 import { discordClient } from "../../clients/discord.js";
@@ -33,33 +27,6 @@ async function announceParka() {
   }));
 }
 
-export const data = new SlashCommandBuilder()
-  .setName("backdoorparka")
-  .setDescription("Don't worry about it");
-
-export async function execute(interaction: ChatInputCommandInteraction) {
-  const member = interaction.member;
-
-  if (!member) {
-    interaction.reply({
-      content: "You have to perform this action from within a Guild.",
-      ephemeral: true,
-    });
-    return;
-  }
-
-  const roleManager = member.roles as GuildMemberRoleManager;
-
-  if (!roleManager.cache.has(config.EXTENDED_TEAM_ROLE_ID)) {
-    interaction.reply({
-      content: "You are not permitted to do secret things.",
-      ephemeral: true,
-    });
-    return;
-  }
-
-  return await announceParka();
-}
 async function checkAnnounceParka() {
   if (!discordClient.parka) return;
   if (differenceInMinutes(new Date(), discordClient.parka) >= 30) {
