@@ -31,7 +31,7 @@ model Player {
   thiccGifteeId       Int?            @unique
   thiccGiftee         Player?         @relation("ThiccGiftee", fields: [thiccGifteeId], references: [playerId])
   thiccGifter         Player?         @relation("ThiccGiftee")
-  standinfOffers      StandingOffer[]
+  standingOffers      StandingOffer[]
 }
 
 model StandingOffer {
