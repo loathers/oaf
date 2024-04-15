@@ -171,7 +171,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   static loginMutex = new Mutex();
   mockLoggedIn = false;
 
-  private isRollover = false;
+  #isRollover = false;
   private loginParameters: URLSearchParams;
   private credentials: KoLCredentials = {};
   private postRolloverLatch = false;
@@ -206,6 +206,10 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     });
   }
 
+  isRollover() {
+    return this.#isRollover;
+  }
+
   async loggedIn(): Promise<boolean> {
     if (this.mockLoggedIn) return true;
     if (!this.credentials) return false;
@@ -236,7 +240,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
   async logIn(): Promise<boolean> {
     return KoLClient.loginMutex.runExclusive(async () => {
       if (await this.loggedIn()) return true;
-      if (this.isRollover) return false;
+      if (this.#isRollover) return false;
       console.log(
         `Not logged in. Logging in as ${this.loginParameters.get("loginname")}`,
       );
@@ -412,11 +416,11 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
         /The system is currently down for nightly maintenance/.test(
           (await axios("https://www.kingdomofloathing.com/")).data,
         );
-      if (this.isRollover && !isRollover) {
+      if (this.#isRollover && !isRollover) {
         this.postRolloverLatch = true;
       }
-      this.isRollover = isRollover;
-      if (this.isRollover) {
+      this.#isRollover = isRollover;
+      if (this.#isRollover) {
         console.log(
           "Rollover appears to be in progress. Checking again in one minute.",
         );
@@ -449,7 +453,7 @@ export class KoLClient extends (EventEmitter as new () => TypedEmitter<Events>) 
     pwd = true,
     fallback = "",
   ): Promise<string> {
-    if (this.isRollover || !(await this.logIn())) return fallback;
+    if (this.#isRollover || !(await this.logIn())) return fallback;
     try {
       const page = await axios(`https://www.kingdomofloathing.com/${url}`, {
         method: "POST",
