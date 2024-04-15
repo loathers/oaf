@@ -368,7 +368,9 @@ export class Item extends Thing {
 
     const url = `https://api.aventuristo.net/itemgraph?itemid=${this.id}&timespan=1&noanim=0`;
 
-    if (mallPrice) {
+    if (kolClient.isRollover()) {
+      return `Mall Price: ${hyperlink("Can't check, rollover", url)}`;
+    } else if (mallPrice) {
       let output = `Mall Price: ${hyperlink(
         `${formattedMallPrice} meat`,
         url,
