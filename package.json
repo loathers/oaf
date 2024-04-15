@@ -6,7 +6,7 @@
   "main": "./src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "node --loader ts-node/esm/transpile-only ./src/index.ts",
+    "start": "node --loader tsm ./src/index.ts",
     "format": "prettier --write .",
     "prisma": "prisma",
     "test": "vitest",
@@ -16,7 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^5.5.2",
+    "@prisma/client": "^5.12.1",
     "@tinyhttp/app": "^2.2.1",
     "@tinyhttp/cors": "^2.0.0",
     "@types/node": "^20.8.10",
@@ -37,7 +37,7 @@
     "serialize-error": "^11.0.2",
     "ts-dedent": "^2.2.0",
     "ts-dotenv": "^0.9.1",
-    "ts-node": "^10.9.1",
+    "tsm": "^2.3.0",
     "typed-emitter": "^2.1.0",
     "typescript": "^5.2.2",
     "typescript-memoize": "^1.1.1",
@@ -52,7 +52,7 @@
     "husky": ">=6",
     "lint-staged": ">=15.0.2",
     "prettier": "^3.0.3",
-    "prisma": "^5.5.2",
+    "prisma": "^5.12.1",
     "vitest": "^0.34.6"
   },
   "engines": {

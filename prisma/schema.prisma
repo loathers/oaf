@@ -16,21 +16,33 @@ model Greenbox {
 }
 
 model Player {
-  playerId            Int        @id
+  playerId            Int             @id
   playerName          String
   accountCreationDate DateTime?
-  kills               Int        @default(0)
-  skills              Int        @default(0)
-  doneWithSkills      Boolean    @default(false)
-  brainiac            Boolean    @default(false)
+  kills               Int             @default(0)
+  skills              Int             @default(0)
+  doneWithSkills      Boolean         @default(false)
+  brainiac            Boolean         @default(false)
   discordId           String?
   greenbox            Greenbox[]
   greenboxString      String?
   greenboxLastUpdate  DateTime?
-  thiccEntered        Boolean    @default(false)
-  thiccGifteeId       Int?       @unique
-  thiccGiftee         Player?    @relation("ThiccGiftee", fields: [thiccGifteeId], references: [playerId])
-  thiccGifter         Player?    @relation("ThiccGiftee")
+  thiccEntered        Boolean         @default(false)
+  thiccGifteeId       Int?            @unique
+  thiccGiftee         Player?         @relation("ThiccGiftee", fields: [thiccGifteeId], references: [playerId])
+  thiccGifter         Player?         @relation("ThiccGiftee")
+  standingOffers      StandingOffer[]
+}
+
+model StandingOffer {
+  itemId   Int
+  price    Int
+  buyerId  Int
+  offeredAt DateTime @default(now())
+  buyer    Player @relation(fields: [buyerId], references: [playerId])
+
+
+  @@unique([buyerId, itemId])
 }
 
 model Reminder {

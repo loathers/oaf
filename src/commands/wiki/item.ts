@@ -6,20 +6,15 @@ import {
 
 import { createEmbed } from "../../clients/discord.js";
 import { wikiClient } from "../../clients/wiki.js";
+import { itemAutocomplete, itemOption } from "../_options.js";
 
 export const data = new SlashCommandBuilder()
   .setName("item")
   .setDescription("Get information about the given item.")
-  .addNumberOption((option) =>
-    option
-      .setName("item")
-      .setDescription("The KoL item to query.")
-      .setRequired(true)
-      .setAutocomplete(true),
-  );
+  .addIntegerOption(itemOption());
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const itemId = interaction.options.getNumber("item", true);
+  const itemId = interaction.options.getInteger("item", true);
   await interaction.deferReply();
 
   const item = wikiClient.items.find((i) => i.id === itemId);
@@ -46,13 +41,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export async function autocomplete(interaction: AutocompleteInteraction) {
-  const focusedValue = interaction.options.getFocused();
-
-  const filtered = wikiClient.items
-    .map(({ name, id }) => ({ name, value: id }))
-    .filter(({ name }) =>
-      name.toLowerCase().includes(focusedValue.toLowerCase()),
-    )
-    .slice(0, 25);
-  await interaction.respond(filtered);
+  await interaction.respond(itemAutocomplete(interaction.options.getFocused()));
 }

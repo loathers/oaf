@@ -8,8 +8,8 @@ import {
 
 import { createEmbed } from "../../clients/discord.js";
 import { resolveKoLImage } from "../../clients/kol.js";
-import { wikiClient } from "../../clients/wiki.js";
 import { groupToMap } from "../../utils.js";
+import { itemAutocomplete, itemOption } from "../_options.js";
 
 interface MuseumResponse {
   name: string;
@@ -33,15 +33,7 @@ interface Player {
 export const data = new SlashCommandBuilder()
   .setName("museum")
   .setDescription("See the leaderboard for collectors of an item")
-  .addNumberOption((option) =>
-    option
-      .setName("item")
-      .setDescription(
-        "Select an item from the autocomplete or supply an item id",
-      )
-      .setAutocomplete(true)
-      .setRequired(true),
-  );
+  .addIntegerOption(itemOption());
 
 const getRankSymbol = (rank: number) => {
   switch (rank) {
@@ -57,7 +49,7 @@ const getRankSymbol = (rank: number) => {
 };
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const id = interaction.options.getNumber("item", true);
+  const id = interaction.options.getInteger("item", true);
 
   await interaction.deferReply();
   const { data, status } = await axios.get<MuseumResponse>(
@@ -112,13 +104,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export async function autocomplete(interaction: AutocompleteInteraction) {
-  const focusedValue = interaction.options.getFocused();
-
-  const filtered = wikiClient.items
-    .map(({ name, id }) => ({ name, value: id }))
-    .filter(({ name }) =>
-      name.toLowerCase().includes(focusedValue.toLowerCase()),
-    )
-    .slice(0, 25);
-  await interaction.respond(filtered);
+  await interaction.respond(itemAutocomplete(interaction.options.getFocused()));
 }
