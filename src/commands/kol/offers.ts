@@ -86,7 +86,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 
   if (offers.length === 0) {
     return void (await interaction.editReply(
-      `That item exists but no-one cares.`,
+      `That item exists but no-one cares. (There are no standing offers for ${item.name})`,
     ));
   }
 
