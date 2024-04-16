@@ -224,7 +224,7 @@ const OAF_ICON = resolveKoLImage("/itemimages/oaf.gif");
 
 export const createEmbed = () =>
   new EmbedBuilder().setFooter({
-    text: "Problems? Message DocRostov#7004 on discord.",
+    text: "Check out how I work over at https://github.com/loathers/oaf",
     iconURL: OAF_ICON,
   });
 
