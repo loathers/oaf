@@ -36,7 +36,7 @@ model Player {
 
 model StandingOffer {
   itemId   Int
-  price    Int
+  price    BigInt
   buyerId  Int
   offeredAt DateTime @default(now())
   buyer    Player @relation(fields: [buyerId], references: [playerId])
