@@ -68,6 +68,10 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
     return void (await interaction.editReply(`That item does not exist.`));
   }
 
+  if (!item.tradeable) {
+    return void (await interaction.editReply("That item cannot be traded."));
+  }
+
   const offers = (
     await prisma.standingOffer.findMany({
       where: { itemId: item.id, buyer: { discordId: { not: null } } },
@@ -120,6 +124,10 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
 
   if (!item) {
     return void (await interaction.editReply(`That item does not exist.`));
+  }
+
+  if (!item.tradeable) {
+    return void (await interaction.editReply("That item cannot be traded."));
   }
 
   if (price === 0) {
