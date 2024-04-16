@@ -68,8 +68,10 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
     return void (await interaction.editReply(`That item does not exist.`));
   }
 
-  if (!item.tradeable) {
-    return void (await interaction.editReply("That item cannot be traded."));
+  if (!item.tradeable && !item.gift) {
+    return void (await interaction.editReply(
+      `${item.pluralName} cannot be traded.`,
+    ));
   }
 
   const offers = (
@@ -126,8 +128,10 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
     return void (await interaction.editReply(`That item does not exist.`));
   }
 
-  if (!item.tradeable) {
-    return void (await interaction.editReply("That item cannot be traded."));
+  if (!item.tradeable && !item.gift) {
+    return void (await interaction.editReply(
+      `${item.pluralName} cannot be traded.`,
+    ));
   }
 
   if (price === 0) {
