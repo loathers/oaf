@@ -1,8 +1,8 @@
 import { add, closestTo, format } from "date-fns";
 import { ThreadAutoArchiveDuration, roleMention } from "discord.js";
 
-import { discordClient } from "./clients/discord.js";
-import { config } from "./config.js";
+import { discordClient } from "../clients/discord.js";
+import { config } from "../config.js";
 
 export function determineIotmMonthYear(): string {
   const today = new Date();

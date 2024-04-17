@@ -1,16 +1,37 @@
-import { App } from "@tinyhttp/app";
-import { cors } from "@tinyhttp/cors";
+/// <reference types="../../remix.env.d.ts" />
+import { createRequestHandler } from "@remix-run/express";
+import cors from "cors";
+import express from "express";
 import { StatusCodes } from "http-status-codes";
+import path from "node:path";
 
-import { prisma } from "./clients/database.js";
-import { config } from "./config.js";
+import { prisma } from "../clients/database.js";
+import { discordClient } from "../clients/discord.js";
+import { wikiClient } from "../clients/wiki.js";
+import { config } from "../config.js";
 import { rollSubs } from "./subs.js";
 
-const app = new App();
+const viteDevServer =
+  process.env.NODE_ENV === "production"
+    ? null
+    : await import("vite").then((vite) =>
+        vite.createServer({
+          server: { middlewareMode: true },
+        }),
+      );
+
+const build = viteDevServer
+  ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
+  : await import(path.resolve("build/server/index.js"));
+
+const app = express();
 
 app
   .use(cors())
-  .get("/", (req, res) => void res.send("oafin time"))
+  .use(
+    viteDevServer ? viteDevServer.middlewares : express.static("build/client"),
+  )
+  .get("/favicon.ico", (req, res) => void res.send())
   .get("/api/greenbox/:playerId", async (req, res) => {
     const playerId = Number(req.params.playerId);
 
@@ -113,6 +134,16 @@ app
 
       throw e;
     }
-  });
+  })
+  .all(
+    "*",
+    createRequestHandler({
+      build,
+      getLoadContext: () => ({ discordClient, wikiClient }),
+    }),
+  );
 
-export const startApiServer = () => app.listen(config.PORT);
+export const startApiServer = () =>
+  app.listen(config.PORT, () =>
+    console.log(`Server listening on ${config.PORT}`),
+  );

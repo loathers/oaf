@@ -12,7 +12,7 @@ import {
 import { kolClient } from "./clients/kol.js";
 import { wikiClient } from "./clients/wiki.js";
 import { handleGreenboxKmail } from "./greenbox.js";
-import { startApiServer } from "./server.js";
+import { startApiServer } from "./server/index.js";
 
 export {};
 
