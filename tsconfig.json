@@ -11,12 +11,13 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "pretty": true,
-    "rootDir": "src",
     "skipLibCheck": true,
     "strict": true,
     "moduleResolution": "NodeNext",
-    "target": "ESNext"
+    "target": "ESNext",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "vite.config.ts", "remix.env.d.ts"],
   "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 }
