@@ -15,9 +15,10 @@ import {
   LoaderFunctionArgs,
   json,
 } from "@remix-run/server-runtime";
-import { authenticator } from "../auth.server";
-import React, { useEffect, useRef } from "react";
 import { messageLink } from "discord.js";
+import React, { useEffect, useRef } from "react";
+
+import { authenticator } from "../auth.server";
 
 export async function loader({ context }: LoaderFunctionArgs) {
   const { discordClient } = context;
@@ -34,7 +35,9 @@ export async function loader({ context }: LoaderFunctionArgs) {
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
-  const user = await authenticator.isAuthenticated(request, { failureRedirect: "/" });
+  const user = await authenticator.isAuthenticated(request, {
+    failureRedirect: "/",
+  });
   const formData = await request.formData();
   const channelId = formData.get("channelId");
   const content = formData.get("content");
@@ -54,7 +57,9 @@ export async function action({ request, context }: ActionFunctionArgs) {
   if (!channel || !channel.isTextBased()) return json({ success: false });
 
   const message = await channel.send(content);
-  await discordClient.alert(`${user.name} made me say ${messageLink(message.channelId, message.id)}`)
+  await discordClient.alert(
+    `${user.name} made me say ${messageLink(message.channelId, message.id)}`,
+  );
 
   return json({ success: true });
 }
