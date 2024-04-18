@@ -46,6 +46,9 @@ export default function Admin() {
             <MenuItem as={Link} to="./offers">
               Standing Offers
             </MenuItem>
+            <MenuItem as={Link} to="./pilot">
+              Pilot
+            </MenuItem>
             <MenuItem as={Link} to="./tags">
               Tags
             </MenuItem>
