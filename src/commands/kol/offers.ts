@@ -173,7 +173,16 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
     },
   });
 
-  await interaction.editReply("Offer posted successfully!");
+  const betterOffers = await prisma.standingOffer.count({
+    where: {
+      itemId,
+      price: { gt: price },
+    },
+  });
+
+  await interaction.editReply(
+    `Offer posted successfully (currently beaten by ${betterOffers.toLocaleString()} offer(s))`,
+  );
 }
 
 export async function autocomplete(interaction: AutocompleteInteraction) {
