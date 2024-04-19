@@ -1,4 +1,4 @@
-import { Effect, Thing } from "../things/index.js";
+import { Effect } from "../things/index.js";
 
 export class PizzaNode {
   children: Map<string, PizzaNode> = new Map();
@@ -71,13 +71,12 @@ export class PizzaTree {
     _calc(this.root);
   }
 
-  build(things: Map<string, Thing>) {
+  build(effects: Map<string, Effect>) {
     this.reset();
 
-    for (const thing of things.values()) {
-      if (!(thing instanceof Effect)) continue;
-      if (thing.hookah) {
-        this.addEffect(thing.name.toLowerCase(), thing);
+    for (const effect of effects.values()) {
+      if (effect.hookah) {
+        this.addEffect(effect.name.toLowerCase(), effect);
       }
     }
     this.precalculate();
