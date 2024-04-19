@@ -7,6 +7,7 @@ import {
   FormLabel,
   HStack,
   Image,
+  Input,
   Menu,
   MenuButton,
   MenuItem,
@@ -21,7 +22,7 @@ import {
   LoaderFunctionArgs,
   json,
 } from "@remix-run/server-runtime";
-import { messageLink } from "discord.js";
+import { Message, messageLink } from "discord.js";
 import React, { useEffect, useRef } from "react";
 
 import { DiscordClient } from "../../../clients/discord";
@@ -41,7 +42,7 @@ async function fetchEmoji(discordClient: DiscordClient) {
   return [...discordClient.guild.emojis.cache.values()].map((e) => ({
     name: e.name,
     id: e.id,
-    url: e.url,
+    url: e.imageURL(),
   }));
 }
 
@@ -60,6 +61,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const formData = await request.formData();
   const channelId = formData.get("channelId");
   const content = formData.get("content");
+  const reply = formData.get("reply");
 
   if (
     !channelId ||
@@ -71,11 +73,30 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
   const { discordClient } = context;
 
-  const channel = await discordClient.channels.fetch(channelId);
+  let message: Message;
 
-  if (!channel || !channel.isTextBased()) return json({ success: false });
+  if (reply && typeof reply === "string") {
+    try {
+      const url = new URL(reply);
+      const [, , replyGuildId, replyChannelId, replyMessageId] =
+        url.pathname.split("/");
+      if (replyGuildId !== discordClient.guild?.id)
+        throw new Error("Outside of guild");
+      const channel = await discordClient.channels.fetch(replyChannelId);
+      if (!channel || !channel.isTextBased())
+        throw new Error("Invalid channel");
+      const replyee = await channel.messages.fetch(replyMessageId);
 
-  const message = await channel.send(content);
+      message = await replyee.reply(content);
+    } catch (error) {
+      return json({ success: false });
+    }
+  } else {
+    const channel = await discordClient.channels.fetch(channelId);
+    if (!channel || !channel.isTextBased()) return json({ success: false });
+    message = await channel.send(content);
+  }
+
   await discordClient.alert(
     `${user.name} made me say ${messageLink(message.channelId, message.id)}`,
   );
@@ -110,7 +131,7 @@ export default function Pilot() {
         </Alert>
       )}
       <Stack as={fetcher.Form} method="POST">
-        <FormControl isRequired>
+        <FormControl>
           <FormLabel>Channel</FormLabel>
           <Select name="channelId">
             {channels.map((c) => (
@@ -119,6 +140,13 @@ export default function Pilot() {
               </option>
             ))}
           </Select>
+        </FormControl>
+        <FormControl>
+          <FormLabel>Reply to (optional)</FormLabel>
+          <Input
+            name="reply"
+            placeholder="Paste a message link here if you want the bot to send a reply. Ignores any specified channel."
+          />
         </FormControl>
         <FormControl isRequired>
           <FormLabel>Message</FormLabel>
