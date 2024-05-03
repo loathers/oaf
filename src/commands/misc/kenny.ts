@@ -1,4 +1,9 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  TimestampStyles,
+  time,
+} from "discord.js";
 
 import { LibreLinkUpClient } from "../../clients/LibreLinkupClient.js";
 import { config } from "../../config.js";
@@ -27,18 +32,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
 
     await client.login();
-    const current = await client.latest();
+    const latest = await client.latest();
 
-    if (!current) {
+    if (!latest) {
       return void (await interaction.editReply(
         "Kenny is fully functional but contains no Data. Odd and troubling.",
       ));
     }
 
     interaction.editReply(
-      `Kenny's blood glucose is currently ${
-        current.value
-      }mg/dL 🩸. ${makeComment(current)}`,
+      `Kenny's blood glucose 🩸 was ${latest.value}mg/dL ${time(
+        latest.date,
+        TimestampStyles.RelativeTime,
+      )}. ${makeComment(latest)}`,
     );
   } catch (error) {
     return void (await interaction.editReply(
