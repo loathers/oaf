@@ -55,6 +55,15 @@ export const schema = {
   WHITELIST_ROLE_IDS: new RegExp(
     `${SNOWFLAKE_PATTERN.source}(,${SNOWFLAKE_PATTERN.source})*`,
   ),
+
+  KENNY_MONITOR_EMAIL: {
+    type: String,
+    optional: true,
+  },
+  KENNY_MONITOR_PASSWORD: {
+    type: String,
+    optional: true,
+  },
 };
 
 export type Env = EnvType<typeof schema>;
