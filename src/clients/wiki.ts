@@ -11,7 +11,7 @@ import {
   Skill,
   Thing,
 } from "../things/index.js";
-import { cleanString } from "../utils.js";
+import { cleanString, notNull } from "../utils.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 
@@ -158,7 +158,12 @@ async function downloadMafiaData(fileName: string) {
 }
 
 export class WikiClient {
-  private thingMap: Map<string, Thing> = new Map();
+  private itemByName: Map<string, Item> = new Map();
+  private skillByName: Map<string, Skill> = new Map();
+  private effectByName: Map<string, Effect> = new Map();
+  private familiarByName: Map<string, Familiar> = new Map();
+  private monsterByName: Map<string, Monster> = new Map();
+
   private knownItemIds = new Set<number>();
   private googleApiKey?: string;
   private googleCustomSearch?: string;
@@ -184,14 +189,39 @@ export class WikiClient {
     return this.#lastSkills;
   }
 
-  retrieve(name: string): Thing | null {
+  clearMaps() {
+    this.itemByName.clear();
+    this.skillByName.clear();
+    this.effectByName.clear();
+    this.familiarByName.clear();
+    this.monsterByName.clear();
+  }
+
+  getMapForThing(thing: Thing): Map<string, Thing> {
+    if (thing instanceof Item) return this.itemByName;
+    if (thing instanceof Skill) return this.skillByName;
+    if (thing instanceof Effect) return this.effectByName;
+    if (thing instanceof Familiar) return this.familiarByName;
+    if (thing instanceof Monster) return this.monsterByName;
+    return new Map();
+  }
+
+  findThingByName(name: string): Thing | null {
     const formattedName = cleanString(name.toLowerCase().trim());
-    return this.thingMap.get(formattedName) ?? null;
+
+    return (
+      this.skillByName.get(formattedName) ||
+      this.itemByName.get(formattedName) ||
+      this.monsterByName.get(formattedName) ||
+      this.familiarByName.get(formattedName) ||
+      this.effectByName.get(formattedName) ||
+      null
+    );
   }
 
   register(thing: Thing): void {
     const formattedName = cleanString(thing.name.toLowerCase().trim());
-    this.thingMap.set(formattedName, thing);
+    this.getMapForThing(thing).set(formattedName, thing);
   }
 
   async loadItemTypes(itemTypes: Map<string, string[]>) {
@@ -252,16 +282,16 @@ export class WikiClient {
           }
           const unpackagedName = PACKAGES.get(item.name.toLowerCase());
           if (unpackagedName) {
-            const contents = this.retrieve(unpackagedName);
-            if (contents && contents instanceof Item) {
+            const contents = this.itemByName.get(unpackagedName);
+            if (contents) {
               contents.container = item;
               item.contents = contents;
             }
           }
           const packageName = REVERSE_PACKAGES.get(item.name.toLowerCase());
           if (packageName) {
-            const container = this.retrieve(packageName);
-            if (container && container instanceof Item) {
+            const container = this.itemByName.get(packageName);
+            if (container) {
               container.contents = item;
               item.container = container;
             }
@@ -282,8 +312,8 @@ export class WikiClient {
           .replaceAll("\\,", "🍕")
           .split(",")
           .map((itemName) => itemName.replaceAll("🍕", ","))
-          .map((itemName) => this.retrieve(itemName))
-          .filter(Item.is);
+          .map((itemName) => this.itemByName.get(itemName) || null)
+          .filter(notNull);
         for (const item of group) {
           item.zapGroup = group;
         }
@@ -301,8 +331,8 @@ export class WikiClient {
         const group = line
           .split("\t")
           .slice(1)
-          .map((itemName: string) => this.retrieve(itemName))
-          .filter(Item.is);
+          .map((itemName: string) => this.itemByName.get(itemName) || null)
+          .filter(notNull);
         for (const item of group) {
           item.foldGroup = group;
         }
@@ -337,16 +367,16 @@ export class WikiClient {
         if (this.#lastFamiliar < familiar.id) this.#lastFamiliar = familiar.id;
 
         if (familiar) {
-          const hatchling = this.retrieve(familiar.larva);
+          const hatchling = this.itemByName.get(familiar.larva);
 
-          if (hatchling instanceof Item) {
+          if (hatchling) {
             familiar.hatchling = hatchling;
             hatchling.addGrowingFamiliar(familiar);
           }
 
-          const equipment = this.retrieve(familiar.item);
+          const equipment = this.itemByName.get(familiar.item);
 
-          if (equipment instanceof Item) {
+          if (equipment) {
             familiar.equipment = equipment;
             this.register(familiar);
             equipment.addEquppingFamiliar(familiar);
@@ -391,13 +421,13 @@ export class WikiClient {
     console.log("Loading effects...");
     await this.loadEffects(avatarPotions);
 
-    pizzaTree.build(this.thingMap);
+    pizzaTree.build(this.effectByName);
     this.lastDownloadTime = Date.now();
   }
 
   async reloadMafiaData(): Promise<boolean> {
     if (this.lastDownloadTime < Date.now() - 3600000) {
-      this.thingMap.clear();
+      this.clearMaps();
       clear(["things"]);
       await this.loadMafiaData();
       return true;
@@ -407,22 +437,22 @@ export class WikiClient {
 
   @Memoize({ tags: ["things"] })
   get items(): Item[] {
-    return [...this.thingMap.values()].filter(Item.is);
+    return [...this.itemByName.values()];
   }
 
   @Memoize({ tags: ["things"] })
   get monsters(): Monster[] {
-    return [...this.thingMap.values()].filter(Monster.is);
+    return [...this.monsterByName.values()];
   }
 
   @Memoize({ tags: ["things"] })
   get skills(): Skill[] {
-    return [...this.thingMap.values()].filter(Skill.is);
+    return [...this.skillByName.values()];
   }
 
   @Memoize({ tags: ["things"] })
   get effects(): Effect[] {
-    return [...this.thingMap.values()].filter(Effect.is);
+    return [...this.effectByName.values()];
   }
 
   isItemIdKnown(id: number) {
@@ -433,7 +463,7 @@ export class WikiClient {
     const foundName = await this.findName(item);
     if (!foundName) return null;
 
-    const thing = this.retrieve(foundName.name);
+    const thing = this.findThingByName(foundName.name);
 
     // Title should be canonical name, else whatever the title of the wiki page is.
     const title = thing?.name ?? foundName.name;
