@@ -14,6 +14,6 @@ jobs:
       - name: Install modules
         run: yarn
       - name: Run tests
-        run: yarn run test --no-threads
+        run: yarn run test --pool=forks
       - name: Run type check
         run: yarn tsc
