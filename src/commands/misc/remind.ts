@@ -50,11 +50,11 @@ export function parseDuration(input: string): Duration | null {
   if (!match?.groups) return null;
 
   return {
-    weeks: Number(match.groups.weeks || 0),
-    days: Number(match.groups.days || 0),
-    hours: Number(match.groups.hours || 0),
-    minutes: Number(match.groups.minutes || 0),
-    seconds: Number(match.groups.seconds || 0),
+    weeks: Number(match.groups.weeks) || undefined,
+    days: Number(match.groups.days) || undefined,
+    hours: Number(match.groups.hours) || undefined,
+    minutes: Number(match.groups.minutes) || undefined,
+    seconds: Number(match.groups.seconds) || undefined,
   };
 }
 
