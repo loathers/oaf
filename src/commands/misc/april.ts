@@ -1,4 +1,4 @@
-import { milliseconds } from "date-fns";
+import { type Duration, milliseconds } from "date-fns";
 import { Events, TextChannel } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";

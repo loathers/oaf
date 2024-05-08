@@ -1,4 +1,4 @@
-import { differenceInMinutes, milliseconds } from "date-fns";
+import { type Duration, differenceInMinutes, milliseconds } from "date-fns";
 import { Events, ThreadAutoArchiveDuration, blockQuote } from "discord.js";
 import { dedent } from "ts-dedent";
 
