@@ -21,7 +21,7 @@
     "@emotion/react": "^11.11.4",
     "@emotion/server": "^11.11.0",
     "@emotion/styled": "^11.11.5",
-    "@prisma/client": "^5.13.0",
+    "@prisma/client": "^5.14.0",
     "@remix-run/express": "^2.9.1",
     "@remix-run/node": "^2.9.1",
     "@remix-run/react": "^2.9.1",
@@ -69,7 +69,7 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "^3.2.5",
-    "prisma": "^5.13.0",
+    "prisma": "^5.14.0",
     "vite": "^5.2.11",
     "vitest": "^1.6.0"
   },
