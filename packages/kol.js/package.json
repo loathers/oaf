@@ -10,7 +10,8 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "prepack": "yarn run build"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
