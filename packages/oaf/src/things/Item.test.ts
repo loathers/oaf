@@ -15,13 +15,13 @@ const { mallPrice, blueText } = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock("kol.js", async () => ({
-  Client: class {
-    getItemDescription = blueText;
-    getMallPrice = mallPrice;
-    isRollover = () => false;
-  },
-}));
+vi.mock("kol.js", async (importOriginal) => {
+  const koljs = await importOriginal<typeof import("kol.js")>();
+  koljs.Client.prototype.getItemDescription = blueText;
+  koljs.Client.prototype.getMallPrice = mallPrice;
+  koljs.Client.prototype.isRollover = () => false;
+  return koljs;
+});
 
 describe("Food", () => {
   test("Can describe a food with a range of adventures", async () => {

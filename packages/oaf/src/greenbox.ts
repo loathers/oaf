@@ -1,4 +1,4 @@
-import { KoLMessage } from "kol.js";
+import { type KoLMessage } from "kol.js";
 
 import { isRecordNotFoundError, prisma } from "./clients/database.js";
 import { kolClient } from "./clients/kol.js";

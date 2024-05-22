@@ -5,7 +5,7 @@ import {
   TimestampStyles,
   time,
 } from "discord.js";
-import { SubboardInfo } from "kol.js";
+import { type SubboardInfo } from "kol.js";
 
 import { createEmbed } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
