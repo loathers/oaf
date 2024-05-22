@@ -1,1 +1,1 @@
-web: npx prisma migrate deploy && yarn build && yarn start
+web: (cd packages/oaf && npx prisma migrate deploy && yarn run build && yarn run start)
