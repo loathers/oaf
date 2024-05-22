@@ -55,6 +55,7 @@ const BOARD_MAPPINGS = {
   "Avatars of Shadows Over Loathing": 49,
   "Legacy of Loathing": 50,
   "A Shrunken Adventurer am I": 51,
+  WereProfessor: 52,
   Standard: 999,
   "Elf Gratitude": 900,
 } as const;
