@@ -6,9 +6,14 @@ import { Client } from "./Client.js";
 
 const { json, text } = vi.hoisted(() => ({ json: vi.fn(), text: vi.fn() }));
 
-vi.mock("./utils/visit.js", () => ({
-  createSession: vi.fn().mockReturnValue({ json, text }),
-}));
+vi.mock("./Client.js", async (importOriginal) => {
+  const client = await importOriginal<typeof import("./Client.js")>();
+  client.Client.prototype.login = async () => true;
+  client.Client.prototype.checkLoggedIn = async () => true;
+  client.Client.prototype.fetchText = text;
+  client.Client.prototype.fetchJson = json;
+  return client;
+});
 
 const client = new Client("", "");
 
