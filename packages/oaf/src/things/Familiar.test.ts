@@ -6,11 +6,11 @@ import { Item } from "./Item.js";
 
 const blueText = vi.hoisted(() => vi.fn().mockResolvedValue({ blueText: "" }));
 
-vi.mock("kol.js", async () => ({
-  Client: class {
-    getItemDescription = blueText;
-  },
-}));
+vi.mock("kol.js", async (importOriginal) => {
+  const koljs = await importOriginal<typeof import("kol.js")>();
+  koljs.Client.prototype.getItemDescription = blueText;
+  return koljs;
+});
 
 test("Can describe a Familiar", async () => {
   const familiar = Familiar.from(

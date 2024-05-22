@@ -5,12 +5,11 @@ import { Skill } from "./Skill.js";
 
 const blueText = vi.hoisted(() => vi.fn().mockResolvedValue({ blueText: "" }));
 
-vi.mock("kol.js", async () => ({
-  Client: class {
-    getSkillDescription = blueText;
-  },
-}));
-
+vi.mock("kol.js", async (importOriginal) => {
+  const koljs = await importOriginal<typeof import("kol.js")>();
+  koljs.Client.prototype.getSkillDescription = blueText;
+  return koljs;
+});
 test("Can describe a Skill with no bluetext", async () => {
   const skill = Skill.from(
     "7017	Overload Discarded Refrigerator	littlefridge.gif	5	100	0",

@@ -1,5 +1,5 @@
 import { Events, ThreadAutoArchiveDuration, blockQuote } from "discord.js";
-import { KoLMessage } from "kol.js";
+import { type KoLMessage } from "kol.js";
 import { dedent } from "ts-dedent";
 
 import { discordClient } from "../../clients/discord.js";
