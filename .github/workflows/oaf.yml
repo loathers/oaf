@@ -12,7 +12,7 @@ jobs:
       - name: Enable corepack
         run: corepack enable
       - name: Install modules
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
       - name: Generate prisma types
         run: yarn workspace oaf run prisma generate
       - name: Prepack kol.js
