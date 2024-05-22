@@ -73,7 +73,7 @@
     "vitest": "^1.6.0"
   },
   "engines": {
-    "node": ">= 18.x"
+    "node": ">= 20.13.1"
   },
   "lint-staged": {
     "*.ts": "prettier --write"
