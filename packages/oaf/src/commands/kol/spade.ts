@@ -214,15 +214,15 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
 
   let replyTo: Message | undefined;
 
-  for (let i = 0; i < fields.length; i += 25) {
+  for (let i = 0; i < fields.length + 1; i += 25) {
     const payload = {
       content: undefined,
       fetchReply: true,
       embeds: [
         {
-          title: "Spaded items",
+          title: `Spaded items${i > 0 ? " (cont.)" : ""}`,
           description: `Searched items with ids starting with ${start + i}:`,
-          fields: fields.slice(i, 25),
+          fields: fields.slice(i, i + 25),
           footer: {
             text: `${inlineCode(
               "oaf",
