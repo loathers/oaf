@@ -1,8 +1,7 @@
 name: kol.js
 on:
   push:
-    branches:
-      - "!main"
+
 jobs:
   test:
     runs-on: ubuntu-latest
