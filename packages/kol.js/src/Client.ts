@@ -74,7 +74,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
       method: "POST",
       ...options,
     };
-    const qs = formatQuerystring(params);
+    const qs = formatQuerystring({ ...params, pwd: this.#pwd });
     return await this.session(
       `https://www.kingdomofloathing.com/${path}${qs ? `?${qs}` : ""}`,
       {

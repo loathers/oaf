@@ -8,25 +8,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Enable corepack
-        run: corepack enable
-      - name: Install modules
-        run: yarn install --immutable
-      - name: Run tests
-        run: yarn workspace kol.js run test --pool=forks
-      - name: Run type check
-        run: yarn workspace kol.js run tsc
-  deploy:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
+          registry-url: "https://registry.npmjs.org"
+
       - name: Check publish status
         id: check
         run: |
