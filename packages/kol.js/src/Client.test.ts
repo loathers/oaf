@@ -172,3 +172,35 @@ describe("Skill descriptions", () => {
     });
   });
 });
+
+describe("Familiars", () => {
+  test("can fetch all familiars", async () => {
+    text.mockResolvedValueOnce(
+      await loadFixture(__dirname, "familiar_in_standard_run.html"),
+    );
+
+    const familiars = await client.getFamiliars();
+
+    // Current
+    expect(familiars).toContainEqual({
+      id: 294,
+      name: "Jill-of-All-Trades",
+      image: "itemimages/darkjill2f.gif",
+    });
+
+    // Problematic
+    expect(familiars).toContainEqual({
+      id: 278,
+      name: "Left-Hand Man",
+      image: "otherimages/righthandbody.png",
+    });
+    expect(familiars).toContainEqual({
+      id: 279,
+      name: "Melodramedary",
+      image: "otherimages/camelfam_left.gif",
+    });
+
+    // Just to be sure
+    expect(familiars).toHaveLength(206);
+  });
+});

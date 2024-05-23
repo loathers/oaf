@@ -40,6 +40,12 @@ type Events = {
   rollover: () => void;
 };
 
+type Familiar = {
+  id: number;
+  name: string;
+  image: string;
+};
+
 export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
   static loginMutex = new Mutex();
   actionMutex = new Mutex();
@@ -424,12 +430,36 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
     return parseLeaderboard(page);
   }
 
-  async useFamiliar(familiarId: number): Promise<void> {
-    await this.fetchText("familiar.php", {
+  async useFamiliar(familiarId: number): Promise<boolean> {
+    const result = await this.fetchText("familiar.php", {
       params: {
         action: "newfam",
         newfam: familiarId.toFixed(0),
       },
     });
+
+    return result.includes(`var currentfam = ${familiarId};`);
+  }
+
+  async getFamiliars(): Promise<Familiar[]> {
+    const terrarium = await this.fetchText("familiar.php");
+    const matches = terrarium.matchAll(
+      /onClick='fam\((\d+)\)'(?:><img)? src=".*?\/(\w+\/\w+.(?:gif|png))".*?\d+-pound (.*?) \(/g,
+    );
+    const familiars = [...matches].map((m) => ({
+      id: Number(m[1]),
+      image: m[2],
+      name: m[3],
+    }));
+
+    if (terrarium.includes("fam(278)")) {
+      familiars.push({
+        id: 278,
+        image: "otherimages/righthandbody.png",
+        name: "Left-Hand Man",
+      });
+    }
+
+    return familiars;
   }
 }
