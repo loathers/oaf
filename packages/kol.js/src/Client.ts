@@ -47,7 +47,7 @@ type Familiar = {
 };
 
 export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
-  static loginMutex = new Mutex();
+  loginMutex = new Mutex();
   actionMutex = new Mutex();
   session = createSession();
   players = new PlayerCache(this);
@@ -97,7 +97,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
   async login(): Promise<boolean> {
     if (this.#isRollover) return false;
 
-    return Client.loginMutex.runExclusive(async () => {
+    return this.loginMutex.runExclusive(async () => {
       if (await this.checkLoggedIn()) return true;
       if (this.#isRollover) return false;
       try {
