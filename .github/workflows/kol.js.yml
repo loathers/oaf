@@ -17,3 +17,23 @@ jobs:
         run: yarn workspace kol.js run test --pool=forks
       - name: Run type check
         run: yarn workspace kol.js run tsc
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Check publish status
+        id: check
+        run: |
+          NEXT_VERSION=$(jq -r '.version' < packages/kol.js/package.json)
+          STATUS=$(curl --write-out '%{http_code}\n' --head --silent --output /dev/null https://registry.npmjs.org/kol.js/$NEXT_VERSION)
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+
+      - name: Publish if necessary
+        if: ${{ steps.check.outputs.status == '404' }}
+        run: |
+          yarn workspace kol.js install --immutable
+          yarn workspace kol.js build
+          yarn workspace kol.js npm publish
+        env:
+          STATUS: ${{ steps.check.outputs.status }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
