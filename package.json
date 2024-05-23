@@ -5,7 +5,7 @@
   "private": true,
   "packageManager": "yarn@4.2.1",
   "scripts": {
-    "format": "yarn workspaces foreach run format",
-    "test": "yarn workspaces foreach run test"
+    "format": "yarn workspaces foreach -A run format",
+    "test": "yarn workspaces foreach -A run test"
   }
 }

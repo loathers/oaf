@@ -202,6 +202,8 @@ export class Player<IsFull extends boolean = boolean> {
 
   async isOnline() {
     const response = await this.#client.useChatMacro(`/whois ${this.name}`);
-    return response?.output.includes("This player is currently online") ?? false;
+    return (
+      response?.output.includes("This player is currently online") ?? false
+    );
   }
 }

@@ -79,12 +79,12 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
   }
 
   async fetchText(path: string, options: FetchOptions<string> = {}) {
-    if (!await this.login()) return options.fallback ?? "";
+    if (!(await this.login())) return options.fallback ?? "";
     return (await this.#fetch(path, options)).text();
   }
 
   async fetchJson<Result>(path: string, options: FetchOptions<Result> = {}) {
-    if (!await this.login()) return options.fallback ?? null;
+    if (!(await this.login())) return options.fallback ?? null;
     return (await this.#fetch(path, options)).json() as Result;
   }
 

@@ -16,7 +16,7 @@ export class PlayerCache extends Cache<Player<boolean>> {
   async fetch(identifier: string | number): Promise<Player<boolean>>;
   async fetch(identifier: string | number, full = false) {
     const player = await (async () => {
-      const cached = this.cache.find(p => p.matchesIdentifier(identifier));
+      const cached = this.cache.find((p) => p.matchesIdentifier(identifier));
       if (cached) {
         return cached;
       }
