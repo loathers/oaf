@@ -1,4 +1,4 @@
-name: Deploy kol.js
+name: Publish kol.js
 on:
   push:
     paths:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,7 +16,6 @@ jobs:
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
-
       - name: Check publish status
         id: check
         run: |
@@ -27,6 +26,7 @@ jobs:
       - name: Publish if necessary
         if: ${{ steps.check.outputs.status == '404' }}
         run: |
+          corepack enable
           yarn workspace kol.js install --immutable
           yarn workspace kol.js build
           yarn workspace kol.js npm publish
