@@ -1,5 +1,6 @@
 import {
   ChatInputCommandInteraction,
+  Message,
   SlashCommandBuilder,
   inlineCode,
 } from "discord.js";
@@ -199,33 +200,44 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
     }
   }
 
-  interaction.editReply({
-    content: null,
-    embeds: [
-      {
-        title: "Spaded items",
-        description: `Searched items with ids starting with ${start}:`,
-        fields: data.map(
-          ({ id, exists, tradeable, itemtype, additionalInfo }) => ({
-            name: `Item ${id}`,
-            value: exists
-              ? `${tradeable ? "Tradeable" : "Untradeable"}\n${itemtype}${
-                  additionalInfo ? `\n${additionalInfo}` : ""
-                }`
-              : "Does not exist",
-            inline: true,
-          }),
-        ),
-        footer: {
-          text: `${inlineCode(
-            "oaf",
-          )} can detect the following item types: ${Object.values(ItemType)
-            .filter((type) => type)
-            .join(", ")}. If no type is shown, the item is none of these.`,
+  const fields = data.map(
+    ({ id, exists, tradeable, itemtype, additionalInfo }) => ({
+      name: `Item ${id}`,
+      value: exists
+        ? `${tradeable ? "Tradeable" : "Untradeable"}\n${itemtype}${
+            additionalInfo ? `\n${additionalInfo}` : ""
+          }`
+        : "Does not exist",
+      inline: true,
+    }),
+  );
+
+  let replyTo: Message | undefined;
+
+  for (let i = 0; i < fields.length; i += 25) {
+    const payload = {
+      content: undefined,
+      fetchReply: true,
+      embeds: [
+        {
+          title: "Spaded items",
+          description: `Searched items with ids starting with ${start + i}:`,
+          fields: fields.slice(i, 25),
+          footer: {
+            text: `${inlineCode(
+              "oaf",
+            )} can detect the following item types: ${Object.values(ItemType)
+              .filter((type) => type)
+              .join(", ")}. If no type is shown, the item is none of these.`,
+          },
         },
-      },
-    ],
-  });
+      ],
+    };
+
+    replyTo = replyTo
+      ? await replyTo.reply(payload)
+      : await interaction.editReply(payload);
+  }
 }
 
 async function spadeItem(itemId: number) {
