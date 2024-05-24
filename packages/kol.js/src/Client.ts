@@ -4,7 +4,6 @@ import TypedEventEmitter, { EventMap } from "typed-emitter";
 
 import { sanitiseBlueText, wait } from "./utils/utils.js";
 import { Player } from "./Player.js";
-import { createBody, createSession, formatQuerystring } from "./utils/visit.js";
 import { parseLeaderboard } from "./utils/leaderboard.js";
 import {
   KoLChatMessage,
@@ -13,15 +12,10 @@ import {
   isValidMessage,
 } from "./utils/kmail.js";
 import { PlayerCache } from "./Cache.js";
+import { CookieJar } from "tough-cookie";
+import got, { OptionsOfJSONResponseBody, OptionsOfTextResponseBody } from "got";
 
 type TypedEmitter<T extends EventMap> = TypedEventEmitter.default<T>;
-
-type FetchOptions<Result> = {
-  params?: Record<string, string | number>;
-  body?: Record<string, string | number>;
-  method?: "POST" | "GET";
-  fallback?: Result;
-};
 
 type MallPrice = {
   formattedMallPrice: string;
@@ -47,9 +41,22 @@ type Familiar = {
 };
 
 export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
-  loginMutex = new Mutex();
   actionMutex = new Mutex();
-  session = createSession();
+  session = got.extend({
+    cookieJar: new CookieJar(),
+    prefixUrl: "https://www.kingdomofloathing.com",
+    handlers: [
+      (options, next) => {
+        if (options.form?.pwd === true) options.form.pwd = this.#pwd;
+        const searchParams = options.searchParams as URLSearchParams;
+        if (
+          searchParams.has("pwd")
+        )
+          searchParams.set("pwd", this.#pwd);
+        return next(options);
+      },
+    ],
+  });
   players = new PlayerCache(this);
 
   #username: string;
@@ -67,67 +74,86 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
     this.#password = password;
   }
 
-  async #fetch(path: string, options: FetchOptions<any> = {}) {
-    const { params, body, method } = {
-      params: {},
-      body: undefined,
+  get username() {
+    return this.#username;
+  }
+
+  async fetchText(
+    path: string,
+    options: OptionsOfTextResponseBody = {},
+    fallback?: string,
+  ): Promise<string> {
+    // With no pwd, try to log in
+    if (!this.#pwd && !(await this.login())) return fallback ?? "";
+
+    // Make the request
+    const response = await this.session(path, {
       method: "POST",
       ...options,
-    };
-    const qs = formatQuerystring({ ...params, pwd: this.#pwd });
-    return await this.session(
-      `https://www.kingdomofloathing.com/${path}${qs ? `?${qs}` : ""}`,
-      {
-        method,
-        body: body ? createBody({ ...body, pwd: this.#pwd }) : undefined,
-      },
-    );
+      responseType: "text",
+    });
+
+    // If we've been redirected to the login page, clear the pwd and try again
+    if (response.url.includes("/login.php")) {
+      this.#pwd = "";
+      return this.fetchText(path, options);
+    }
+
+    return response.body;
   }
 
-  async fetchText(path: string, options: FetchOptions<string> = {}) {
-    if (!(await this.login())) return options.fallback ?? "";
-    return (await this.#fetch(path, options)).text();
-  }
+  async fetchJson<Result>(
+    path: string,
+    options: OptionsOfJSONResponseBody = {},
+    fallback?: Result,
+  ): Promise<Result | null> {
+    if (!(await this.login())) return fallback ?? null;
 
-  async fetchJson<Result>(path: string, options: FetchOptions<Result> = {}) {
-    if (!(await this.login())) return options.fallback ?? null;
-    return (await this.#fetch(path, options)).json() as Result;
+    // Make the request
+    const response = await this.session(path, {
+      ...options,
+      responseType: "json",
+    });
+
+    // If we've been redirected to the login page, clear the pwd and try again
+    if (response.url.includes("/login.php")) {
+      this.#pwd = "";
+      return this.fetchJson(path, options);
+    }
+
+    return response.body as Result;
   }
 
   async login(): Promise<boolean> {
+    if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
-
-    return this.loginMutex.runExclusive(async () => {
-      if (await this.checkLoggedIn()) return true;
-      if (this.#isRollover) return false;
-      try {
-        const response = await this.#fetch("login.php", {
-          body: {
+    try {
+      await this.session
+        .post("login.php", {
+          form: {
             loggingin: "Yup.",
             loginname: this.#username,
             password: this.#password,
             secure: "0",
             submitbutton: "Log In",
           },
-        });
+        })
+        .text();
 
-        await response.text();
+      if (!(await this.checkLoggedIn())) return false;
 
-        if (!(await this.checkLoggedIn())) return false;
-
-        if (this.postRolloverLatch) {
-          this.postRolloverLatch = false;
-          this.emit("rollover");
-        }
-
-        return true;
-      } catch (error) {
-        console.log("error", error);
-        // Login failed, let's check if it is due to rollover
-        await this.#checkForRollover();
-        return false;
+      if (this.postRolloverLatch) {
+        this.postRolloverLatch = false;
+        this.emit("rollover");
       }
-    });
+
+      return true;
+    } catch (error) {
+      console.log("error", error);
+      // Login failed, let's check if it is due to rollover
+      await this.#checkForRollover();
+      return false;
+    }
   }
 
   isRollover() {
@@ -136,10 +162,11 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
   async checkLoggedIn(): Promise<boolean> {
     try {
-      const response = await this.#fetch("api.php", {
-        params: { what: "status", for: `${this.#username} bot` },
-      });
-      const api = (await response.json()) as { pwd: string };
+      const api = await this.session
+        .get("api.php", {
+          searchParams: { what: "status", for: `${this.#username} bot` },
+        })
+        .json<{ pwd: string }>();
       this.#pwd = api.pwd;
       return true;
     } catch (error) {
@@ -184,7 +211,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
       last: string;
       msgs: KoLChatMessage[];
     }>("newchatmessages.php", {
-      params: {
+      searchParams: {
         j: 1,
         lasttime: this.lastFetchedMessages,
       },
@@ -217,7 +244,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
   async checkKmails() {
     const newKmailsResponse = await this.fetchJson<KoLKmail[]>("api.php", {
-      params: {
+      searchParams: {
         what: "kmail",
         for: `${this.#username} bot`,
       },
@@ -239,9 +266,10 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
       ...Object.fromEntries(
         newKmailsResponse.map(({ id }) => [`sel${id}`, "on"]),
       ),
+      pwd: true,
     };
 
-    await this.fetchText("messages.php", { params: data });
+    await this.fetchText("messages.php", { searchParams: data });
 
     newKmails.forEach((m) => this.emit("kmail", m));
   }
@@ -250,7 +278,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
     return await this.fetchJson<{ output: string; msgs: string[] }>(
       "submitnewchat.php",
       {
-        params: {
+        searchParams: {
           graf: message,
           j: 1,
         },
@@ -268,7 +296,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
   async kmail(recipientId: number, message: string) {
     await this.fetchText("sendmessage.php", {
-      params: {
+      searchParams: {
         action: "send",
         j: 1,
         towho: recipientId,
@@ -283,7 +311,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
   async getMallPrice(itemId: number): Promise<MallPrice> {
     const prices = await this.fetchText("backoffice.php", {
-      params: {
+      searchParams: {
         action: "prices",
         ajax: 1,
         iid: itemId,
@@ -333,7 +361,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
     };
   }> {
     const description = await this.fetchText("desc_item.php", {
-      params: {
+      searchParams: {
         whichitem: descId,
       },
     });
@@ -366,7 +394,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
   async getEffectDescription(descId: string): Promise<{ blueText: string }> {
     const description = await this.fetchText("desc_effect.php", {
-      params: {
+      searchParams: {
         whicheffect: descId,
       },
     });
@@ -378,7 +406,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
   async getSkillDescription(id: number): Promise<{ blueText: string }> {
     const description = await this.fetchText("desc_skill.php", {
-      params: {
+      searchParams: {
         whichskill: String(id),
       },
     });
@@ -391,7 +419,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
   async joinClan(id: number): Promise<boolean> {
     const result = await this.fetchText("showclan.php", {
-      params: {
+      searchParams: {
         whichclan: id,
         action: "joinclan",
         confirm: "on",
@@ -407,7 +435,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
     return await this.actionMutex.runExclusive(async () => {
       if (!(await this.joinClan(clanId))) return false;
       await this.fetchText("clan_whitelist.php", {
-        params: {
+        searchParams: {
           addwho: playerId,
           level: 2,
           title: "",
@@ -420,7 +448,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
   async getLeaderboard(leaderboardId: number) {
     const page = await this.fetchText("museum.php", {
-      params: {
+      searchParams: {
         floor: 1,
         place: "leaderboards",
         whichboard: leaderboardId,
@@ -432,7 +460,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
   async useFamiliar(familiarId: number): Promise<boolean> {
     const result = await this.fetchText("familiar.php", {
-      params: {
+      searchParams: {
         action: "newfam",
         newfam: familiarId.toFixed(0),
       },

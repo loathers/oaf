@@ -226,7 +226,8 @@ export async function getMissingRaidLogs(
       if (!done) {
         row += 10;
         raidLogs = await kolClient.fetchText("clan_oldraidlogs.php", {
-          params: {
+          searchParams: {
+            pwd: true,
             startrow: row,
           },
         });
@@ -238,7 +239,8 @@ export async function getMissingRaidLogs(
 
 export async function getFinishedRaidLog(raidId: number) {
   return await kolClient.fetchText("clan_viewraidlog.php", {
-    params: {
+    searchParams: {
+      pwd: true,
       viewlog: raidId,
       backstart: 0,
     },

@@ -67,7 +67,7 @@ export class Player<IsFull extends boolean = boolean> {
   ): Promise<string | null> {
     try {
       const profile = await client.fetchText("showplayer.php", {
-        params: { who: id },
+        searchParams: { who: id },
       });
       const name = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/)?.[1];
       return name || null;
@@ -84,7 +84,7 @@ export class Player<IsFull extends boolean = boolean> {
       const matcher =
         /href="showplayer.php\?who=(?<playerId>\d+)">(?<playerName>.*?)<\/a>\D+(clan=\d+[^<]+\D+)?\d+\D*(?<level>(\d+)|(inf_large\.gif))\D+valign=top>(?<class>[^<]*)<\/td>/i;
       const search = await client.fetchText("searchplayer.php", {
-        params: {
+        searchParams: {
           searchstring: name.replace(/_/g, "\\_"),
           searching: "Yep.",
           for: "",
@@ -148,7 +148,7 @@ export class Player<IsFull extends boolean = boolean> {
 
     try {
       const profile = await this.#client.fetchText("showplayer.php", {
-        params: {
+        searchParams: {
           who: this.id,
         },
       });

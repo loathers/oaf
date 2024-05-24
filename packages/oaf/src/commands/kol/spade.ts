@@ -32,6 +32,7 @@ const ITEM_SPADING_CALLS = [
       [
         "inv_equip.php",
         {
+          pwd: true,
           action: "equip",
           which: 2,
           whichitem: id,
@@ -46,6 +47,7 @@ const ITEM_SPADING_CALLS = [
       [
         "inv_equip.php",
         {
+          pwd: true,
           action: "equip",
           which: 2,
           whichitem: id,
@@ -59,6 +61,7 @@ const ITEM_SPADING_CALLS = [
       [
         "inv_eat.php",
         {
+          pwd: true,
           which: 1,
           whichitem: id,
         },
@@ -71,6 +74,7 @@ const ITEM_SPADING_CALLS = [
       [
         "inv_booze.php",
         {
+          pwd: true,
           which: 1,
           whichitem: id,
         },
@@ -83,6 +87,7 @@ const ITEM_SPADING_CALLS = [
       [
         "inv_spleen.php",
         {
+          pwd: true,
           which: 1,
           whichitem: id,
         },
@@ -153,7 +158,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 // Items
 async function testEquipmentAgainstCurrentFamiliar(itemId: number) {
   const responseText = await kolClient.fetchText("inv_equip.php", {
-    params: {
+    searchParams: {
+      pwd: true,
       action: "equip",
       which: 2,
       whichitem: itemId,
@@ -243,7 +249,8 @@ async function spadeItems(interaction: ChatInputCommandInteraction) {
 async function spadeItem(itemId: number) {
   const exists = !/Nopers/.test(
     await kolClient.fetchText("inv_equip.php", {
-      params: {
+      searchParams: {
+        pwd: true,
         action: "equip",
         which: 2,
         whichitem: itemId,
@@ -265,7 +272,8 @@ async function spadeItem(itemId: number) {
 
   const tradeable = !/That item cannot be sold or transferred/.test(
     await kolClient.fetchText("town_sellflea.php", {
-      params: {
+      searchParams: {
+        pwd: true,
         whichitem: itemId,
         sellprice: "",
         selling: "Yep.",
@@ -275,8 +283,8 @@ async function spadeItem(itemId: number) {
 
   for (const property of ITEM_SPADING_CALLS) {
     const { urlFor, visitMatch, type } = property;
-    const [url, params] = urlFor(itemId);
-    const page = await kolClient.fetchText(url, { params });
+    const [url, searchParams] = urlFor(itemId);
+    const page = await kolClient.fetchText(url, { searchParams });
 
     const match = visitMatch.test(page);
     if (match) {
@@ -317,7 +325,8 @@ async function spadeFamiliars(interaction: ChatInputCommandInteraction) {
 
 async function spadeFamiliar(famId: number) {
   const page = await kolClient.fetchText("desc_familiar.php", {
-    params: {
+    searchParams: {
+      pwd: true,
       which: famId,
     },
   });
@@ -372,7 +381,8 @@ async function spadeSkill(skillId: number) {
   if (KNOWN_UNUSED.includes(skillId)) return false;
 
   const page = await kolClient.fetchText("runskillz.php", {
-    params: {
+    searchParams: {
+      pwd: true,
       action: "Skillz",
       whichskill: skillId,
       targetplayer: 1,
