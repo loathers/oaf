@@ -49,10 +49,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
       (options, next) => {
         if (options.form?.pwd === true) options.form.pwd = this.#pwd;
         const searchParams = options.searchParams as URLSearchParams;
-        if (
-          searchParams.has("pwd")
-        )
-          searchParams.set("pwd", this.#pwd);
+        if (searchParams.has("pwd")) searchParams.set("pwd", this.#pwd);
         return next(options);
       },
     ],
