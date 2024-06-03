@@ -1,7 +1,7 @@
 import { config } from "../config.js";
 
 type SearchResponse = {
-  items: { link: string }[];
+  items?: { link: string }[];
 };
 
 export async function googleSearch(query: string) {
