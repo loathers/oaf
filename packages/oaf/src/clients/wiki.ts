@@ -538,7 +538,7 @@ export class WikiClient {
     }
 
     // No results found
-    if (results.items.length === 0) return null;
+    if (!results.items?.length) return null;
     return parseFoundName(results.items[0].link);
   }
 
