@@ -79,7 +79,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         });
       }
 
-      if (error || results.items.length === 0) {
+      if (error || !results.items?.length) {
         return interaction.editReply({
           content: `"${item}" wasn't found. Please refine your search.`,
           allowedMentions: {
