@@ -1,14 +1,20 @@
 import { Client } from "kol.js";
 
 export function parseWorkers(environment: Record<string, string | undefined>) {
-  return Object.entries(environment).filter(([k,]) => k.startsWith("WORKER_") && v !== undefined).map(([, v]) => {
-    const [username, password, ...capabilities] = v!.split(",");
+  return Object.entries(environment)
+    .filter(([k, v]) => k.startsWith("WORKER_") && v !== undefined)
+    .map(([, v]) => {
+      const [username, password, ...capabilities] = v!.split(",");
 
-    return new Worker(username, password, capabilities.map((capability) => {
-      const [type, name] = capability.split(":");
-      return { type, name } as Capability;
-    }));
-  });
+      return new Worker(
+        username,
+        password,
+        capabilities.map((capability) => {
+          const [type, name] = capability.split(":");
+          return { type, name } as Capability;
+        }),
+      );
+    });
 }
 
 export type Capability =
