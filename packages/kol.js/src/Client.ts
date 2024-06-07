@@ -6,6 +6,8 @@ import { sanitiseBlueText, wait } from "./utils/utils.js";
 import { Player } from "./Player.js";
 import { parseLeaderboard } from "./utils/leaderboard.js";
 import {
+  ChatMessage,
+  KmailMessage,
   KoLChatMessage,
   KoLKmail,
   KoLMessage,
@@ -221,12 +223,14 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
 
     newChatMessagesResponse["msgs"]
       .filter(isValidMessage)
-      .map((msg) => ({
-        type: msg.type,
-        who: new Player(this, Number(msg.who.id), msg.who.name),
-        msg: msg.msg,
-        time: new Date(Number(msg.time) * 1000),
-      }))
+      .map(
+        (msg): ChatMessage => ({
+          type: msg.type as ChatMessage["type"],
+          who: new Player(this, Number(msg.who.id), msg.who.name),
+          msg: msg.msg,
+          time: new Date(Number(msg.time) * 1000),
+        }),
+      )
       .forEach((message) => {
         switch (message.type) {
           case "public":
@@ -239,36 +243,40 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
       });
   }
 
-  async checkKmails() {
-    const newKmailsResponse = await this.fetchJson<KoLKmail[]>("api.php", {
+  async fetchKmails(): Promise<KmailMessage[]> {
+    const kmails = await this.fetchJson<KoLKmail[]>("api.php", {
       searchParams: {
         what: "kmail",
         for: `${this.#username} bot`,
       },
     });
 
-    if (!Array.isArray(newKmailsResponse) || newKmailsResponse.length === 0)
-      return;
+    if (!Array.isArray(kmails) || kmails.length === 0) return [];
 
-    const newKmails = newKmailsResponse.map((msg: KoLKmail) => ({
+    return kmails.map((msg: KoLKmail) => ({
+      id: Number(msg.id),
       type: "kmail" as const,
       who: new Player(this, Number(msg.fromid), msg.fromname),
       msg: msg.message,
       time: new Date(Number(msg.azunixtime) * 1000),
     }));
+  }
 
-    const data = {
-      the_action: "delete",
-      box: "Inbox",
-      ...Object.fromEntries(
-        newKmailsResponse.map(({ id }) => [`sel${id}`, "on"]),
-      ),
-      pwd: true,
-    };
+  async deleteKmails(ids: number[]) {
+    await this.fetchText("messages.php", {
+      searchParams: {
+        the_action: "delete",
+        box: "Inbox",
+        ...Object.fromEntries(ids.map((id) => [`sel${id}`, "on"])),
+        pwd: true,
+      },
+    });
+  }
 
-    await this.fetchText("messages.php", { searchParams: data });
-
-    newKmails.forEach((m) => this.emit("kmail", m));
+  async checkKmails() {
+    const kmails = await this.fetchKmails();
+    await this.deleteKmails(kmails.map((k) => k.id));
+    kmails.forEach((m) => this.emit("kmail", m));
   }
 
   async sendChat(message: string) {

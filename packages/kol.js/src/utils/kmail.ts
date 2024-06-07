@@ -29,10 +29,20 @@ export type KoLKmail = {
   localtime: string;
 };
 
-export type KoLMessage = {
+export type BaseKoLMessage = {
   type: KoLMessageType;
   who: Player<false>;
   msg: string;
   time: Date;
-  channel?: string;
 };
+
+export interface KmailMessage extends BaseKoLMessage {
+  type: "kmail";
+  id: number;
+}
+
+export interface ChatMessage extends BaseKoLMessage {
+  type: "public" | "private" | "system";
+}
+
+export type KoLMessage = KmailMessage | ChatMessage;
