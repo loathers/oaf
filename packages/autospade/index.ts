@@ -1,19 +1,7 @@
 import { compile } from "./compiler.js";
-import { Capability, Worker } from "./Worker.js";
+import { Capability, parseWorkers, Worker } from "./Worker.js";
 
-const workers = [
-  new Worker("onweb", "beef31beer146", [
-    { type: "familiar", name: "Mosquito" },
-  ]),
-  new Worker("assistant2", "a$$b0T!2", [
-    { type: "familiar", name: "Mosquito" },
-  ]),
-  new Worker("Zorax the Questionable", "aenimus!", [
-    { type: "skill", name: "Double-Fisted Skull Smashing" },
-    { type: "familiar", name: "Ghost of Crimbo Commerce" },
-    { type: "familiar", name: "Mosquito" },
-  ]),
-];
+const workers = parseWorkers(process.env);
 
 const itemFeatures = await compile("./features/items.feature");
 
