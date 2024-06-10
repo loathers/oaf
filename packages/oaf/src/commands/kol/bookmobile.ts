@@ -16,11 +16,11 @@ async function visitBookMobile(): Promise<string> {
   const page = await kolClient.actionMutex.runExclusive(async () => {
     await kolClient.fetchText("town.php");
     const p = await kolClient.fetchText("place.php", {
-      params: { whichplace: "town_market", action: "town_bookmobile" },
+      searchParams: { whichplace: "town_market", action: "town_bookmobile" },
     });
     if (p.includes("name=whichchoice")) {
       await kolClient.fetchText("choice.php", {
-        body: {
+        form: {
           whichchoice: 1200,
           option: 2,
         },

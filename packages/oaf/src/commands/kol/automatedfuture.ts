@@ -15,7 +15,7 @@ async function visitTTT(): Promise<string> {
   return await kolClient.actionMutex.runExclusive(async () => {
     await kolClient.fetchText("town.php");
     return kolClient.fetchText("place.php", {
-      params: { whichplace: "twitch" },
+      searchParams: { whichplace: "twitch" },
     });
   });
 }
