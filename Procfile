@@ -1,1 +1,1 @@
-web: yarn workspace kol.js run prepack && (cd packages/oaf && npx prisma migrate deploy && npx prisma generate && yarn run build && yarn run start)
+web: cd packages/oaf && npx prisma migrate deploy && npx prisma generate && yarn run build && yarn run start

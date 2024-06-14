@@ -15,8 +15,6 @@ jobs:
         run: yarn install --immutable
       - name: Generate prisma types
         run: yarn workspace oaf run prisma generate
-      - name: Prepack kol.js
-        run: yarn workspace kol.js run prepack
       - name: Run tests
         run: yarn workspace oaf run test --pool=forks
       - name: Run type check
