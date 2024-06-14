@@ -49,9 +49,15 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
     prefixUrl: "https://www.kingdomofloathing.com",
     handlers: [
       (options, next) => {
-        if (options.form?.pwd === true) options.form.pwd = this.#pwd;
-        const searchParams = options.searchParams as URLSearchParams;
-        if (searchParams.has("pwd")) searchParams.set("pwd", this.#pwd);
+        if (options.form) {
+          if (options.form.pwd !== false) options.form.pwd = this.#pwd;
+        }
+
+        if (options.searchParams) {
+          const searchParams = options.searchParams as URLSearchParams;
+          if (searchParams.get("pwd") !== "false") searchParams.set("pwd", this.#pwd);
+        }
+
         return next(options);
       },
     ],
@@ -429,6 +435,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
         whichclan: id,
         action: "joinclan",
         confirm: "on",
+        pwd: true,
       },
     });
     return (

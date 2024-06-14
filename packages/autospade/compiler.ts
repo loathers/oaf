@@ -68,7 +68,6 @@ function compileAction({ text }: Step) {
           action,
           which: 2,
           whichitem: itemId || id,
-          pwd: true,
         },
       });
   }
@@ -92,7 +91,6 @@ function compileAction({ text }: Step) {
         searchParams: {
           which: 1,
           whichitem: id,
-          pwd: true,
         },
       });
 
@@ -102,7 +100,6 @@ function compileAction({ text }: Step) {
         searchParams: {
           which: 1,
           whichitem: id,
-          pwd: true,
         },
       });
 
@@ -112,7 +109,6 @@ function compileAction({ text }: Step) {
         searchParams: {
           which: 1,
           whichitem: id,
-          pwd: true,
         },
       });
 
