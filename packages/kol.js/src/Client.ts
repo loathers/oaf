@@ -318,6 +318,7 @@ export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
     const prices = await this.fetchText("backoffice.php", {
       searchParams: {
         action: "prices",
+        pwd: true,
         ajax: 1,
         iid: itemId,
       },
