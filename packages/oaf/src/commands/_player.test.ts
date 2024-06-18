@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { validPlayerIdentifier } from "./whois.js";
+import { validPlayerIdentifier } from "./_player.js";
 
 describe("Player validation", () => {
   test("real queries pass validation", () => {
