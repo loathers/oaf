@@ -6,6 +6,7 @@ import {
 
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
+import { identifyPlayer } from "../_player.js";
 import { ALL_CLANS } from "./_clans.js";
 
 const PERMITTED_ROLE_IDS = config.WHITELIST_ROLE_IDS.split(",");
@@ -41,16 +42,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const playerNameOrId = interaction.options.getString("player", true);
-
   await interaction.deferReply();
 
-  const player = await kolClient.players.fetch(playerNameOrId);
+  const input = interaction.options.getString("player", true);
 
-  if (!player) {
-    interaction.editReply({ content: "Player not found." });
+  const identification = await identifyPlayer(input);
+
+  if (typeof identification === "string") {
+    interaction.editReply(identification);
     return;
   }
+
+  const [player] = identification;
 
   for (const clan of ALL_CLANS) {
     await kolClient.addToWhitelist(player.id, clan.id);
