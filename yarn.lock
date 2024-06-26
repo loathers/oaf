@@ -7491,6 +7491,7 @@ __metadata:
     date-fns: "npm:^3.6.0"
     got: "npm:^14.3.0"
     html-entities: "npm:^2.5.2"
+    image-size: "npm:^1.1.1"
     node-html-parser: "npm:^6.1.13"
     prettier: "npm:^3.2.5"
     querystring: "npm:^0.2.1"
