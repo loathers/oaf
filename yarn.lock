@@ -8910,7 +8910,6 @@ __metadata:
     html-entities: "npm:^2.5.2"
     http-status-codes: "npm:^2.3.0"
     husky: "npm:^9.0.11"
-    image-size: "npm:^1.1.1"
     isbot: "npm:5.1.6"
     jsonwebtoken: "npm:^9.0.2"
     kol.js: "workspace:^"
