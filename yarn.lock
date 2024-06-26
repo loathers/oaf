@@ -7496,6 +7496,7 @@ __metadata:
     prettier: "npm:^3.2.5"
     querystring: "npm:^0.2.1"
     tough-cookie: "npm:^4.1.4"
+    ts-dedent: "npm:^2.2.0"
     typed-emitter: "npm:^2.1.0"
     typescript: "npm:^5.4.5"
     vitest: "npm:^1.6.0"
