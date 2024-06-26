@@ -7490,6 +7490,7 @@ __metadata:
     async-mutex: "npm:^0.5.0"
     date-fns: "npm:^3.6.0"
     got: "npm:^14.3.0"
+    html-entities: "npm:^2.5.2"
     node-html-parser: "npm:^6.1.13"
     prettier: "npm:^3.2.5"
     querystring: "npm:^0.2.1"
