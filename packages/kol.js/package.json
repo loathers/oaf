@@ -13,16 +13,16 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "@types/tough-cookie": "^4",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.5",
+    "@types/tough-cookie": "^4.0.5",
+    "prettier": "^3.3.2",
+    "typescript": "^5.5.3",
     "vitest": "^1.6.0"
   },
   "dependencies": {
     "@xmldom/xmldom": "^0.8.10",
     "async-mutex": "^0.5.0",
     "date-fns": "^3.6.0",
-    "got": "^14.3.0",
+    "got": "^14.4.1",
     "html-entities": "^2.5.2",
     "image-size": "^1.1.1",
     "node-html-parser": "^6.1.13",
