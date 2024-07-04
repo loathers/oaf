@@ -5,13 +5,15 @@ type SearchResponse = {
 };
 
 export async function googleSearch(context: string, query: string) {
-  const response = await fetch(
-    `https://www.googleapis.com/customsearch/v1?${new URLSearchParams({
+  const url = `https://www.googleapis.com/customsearch/v1?${new URLSearchParams(
+    {
       key: config.GOOGLE_API_KEY!,
       cx: context,
       q: query,
-    })}`,
-  );
+    },
+  )}`;
+
+  const response = await fetch(url);
 
   if (!response.ok)
     return {
