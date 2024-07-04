@@ -42,7 +42,7 @@ type Familiar = {
   image: string;
 };
 
-export class Client extends (EventEmitter as new () => TypedEmitter<Events>) {
+export class Client extends (EventEmitter as unknown as new () => TypedEmitter<Events>) {
   actionMutex = new Mutex();
   session = got.extend({
     cookieJar: new CookieJar(),
