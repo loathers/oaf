@@ -168,15 +168,13 @@ export class WikiClient {
   private monsterByName: Map<string, Monster> = new Map();
 
   private knownItemIds = new Set<number>();
-  private googleApiKey?: string;
   private googleCustomSearch?: string;
   #lastItem = -1;
   #lastFamiliar = -1;
   #lastSkills: { [block: number]: number } = {};
   private lastDownloadTime = -1;
 
-  constructor(googleApiKey?: string, googleCustomSearch?: string) {
-    this.googleApiKey = googleApiKey;
+  constructor(googleCustomSearch?: string) {
     this.googleCustomSearch = googleCustomSearch;
   }
 
@@ -529,8 +527,11 @@ export class WikiClient {
   }
 
   private async tryGoogleSearch(searchTerm: string) {
-    if (!this.googleApiKey || !this.googleCustomSearch) return null;
-    const { results, error } = await googleSearch(searchTerm);
+    if (!this.googleCustomSearch) return null;
+    const { results, error } = await googleSearch(
+      this.googleCustomSearch,
+      searchTerm,
+    );
 
     if (error) {
       if (error.status === StatusCodes.NOT_FOUND) return null;
@@ -636,7 +637,4 @@ function emoteNamesFromEmotes(emoteString: string) {
   });
 }
 
-export const wikiClient = new WikiClient(
-  config.GOOGLE_API_KEY,
-  config.CUSTOM_SEARCH,
-);
+export const wikiClient = new WikiClient(config.CUSTOM_SEARCH);

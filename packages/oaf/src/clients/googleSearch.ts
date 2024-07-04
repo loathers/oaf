@@ -4,11 +4,11 @@ type SearchResponse = {
   items?: { link: string }[];
 };
 
-export async function googleSearch(query: string) {
+export async function googleSearch(context: string, query: string) {
   const response = await fetch(
     `https://www.googleapis.com/customsearch/v1?${new URLSearchParams({
       key: config.GOOGLE_API_KEY!,
-      cx: config.MAFIA_CUSTOM_SEARCH!,
+      cx: context,
       q: query,
     })}`,
   );

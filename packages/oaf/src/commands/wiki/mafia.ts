@@ -8,6 +8,7 @@ import { StatusCodes } from "http-status-codes";
 
 import { blankEmbed, discordClient } from "../../clients/discord.js";
 import { googleSearch } from "../../clients/googleSearch.js";
+import { config } from "../../config.js";
 
 export const data = new SlashCommandBuilder()
   .setName("mafia")
@@ -59,7 +60,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   switch (subcommand) {
     case "wiki": {
       const item = interaction.options.getString("term", true);
-      const { error, results } = await googleSearch(item);
+      const { error, results } = await googleSearch(
+        config.MAFIA_CUSTOM_SEARCH!,
+        item,
+      );
 
       if (error && error.status !== StatusCodes.NOT_FOUND) {
         await discordClient.alert(
