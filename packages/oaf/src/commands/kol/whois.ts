@@ -94,79 +94,85 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
+  const astralSpirit = (player.level = 0);
+
   const fields: APIEmbedField[] = [
     { name: "Class", value: player.kolClass || "Unlisted" },
-    { name: "Level", value: player.level.toString() },
-    {
+    { name: "Level", value: astralSpirit ? "∞" : player.level.toString() },
+  ];
+
+  const isOnline = await player.isOnline();
+
+  if (!astralSpirit) {
+    fields.push({
       name: "Ascensions",
       value: hyperlink(
         player.ascensions.toLocaleString(),
         toKoldbLink(player.name),
       ),
-    },
-  ];
-
-  if (player.favoriteFood)
-    fields.push({ name: "Favorite Food", value: player.favoriteFood });
-  if (player.favoriteBooze)
-    fields.push({ name: "Favorite Booze", value: player.favoriteBooze });
-
-  const isOnline = await player.isOnline();
-  const lastLogin = (() => {
-    if (isOnline) return "Currently online";
-    if (!player.lastLogin) return null;
-    // We don't want to get more specific than days, but the Discord relative time formatter will say silly things
-    // Like "8 hours ago" even if that player is logged in right now
-    if (player.lastLogin.getDay() === new Date().getDay()) return "Today";
-    if (Date.now() - player.lastLogin.getTime() < 1000 * 60 * 60 * 24)
-      return "Yesterday";
-    return time(player.lastLogin, "R");
-  })();
-  if (lastLogin) {
-    fields.push({ name: "Last Login", value: lastLogin });
-  }
-
-  if (player.createdDate)
-    fields.push({
-      name: "Account Created",
-      value: time(player.createdDate, "R"),
     });
 
-  fields.push({
-    name: "Display Case",
-    value: player.hasDisplayCase
-      ? hyperlink("Browse", toMuseumLink(player.id))
-      : italic("none"),
-  });
+    if (player.favoriteFood)
+      fields.push({ name: "Favorite Food", value: player.favoriteFood });
+    if (player.favoriteBooze)
+      fields.push({ name: "Favorite Booze", value: player.favoriteBooze });
 
-  // Save a database hit if we got here by tracking a claimed Discord account in the first place
-  if (knownPlayer === null)
-    knownPlayer = await findPlayer({ playerId: player.id });
+    const lastLogin = (() => {
+      if (isOnline) return "Currently online";
+      if (!player.lastLogin) return null;
+      // We don't want to get more specific than days, but the Discord relative time formatter will say silly things
+      // Like "8 hours ago" even if that player is logged in right now
+      if (player.lastLogin.getDay() === new Date().getDay()) return "Today";
+      if (Date.now() - player.lastLogin.getTime() < 1000 * 60 * 60 * 24)
+        return "Yesterday";
+      return time(player.lastLogin, "R");
+    })();
+    if (lastLogin) {
+      fields.push({ name: "Last Login", value: lastLogin });
+    }
 
-  // Show different greenboxen services
-  const greenboxes = [];
-  if (knownPlayer?.greenbox) {
-    greenboxes.push(
-      `${hyperlink(
-        `Greenbox`,
-        `https://greenbox.loathers.net/?u=${player.id}`,
-      )} (updated ${time(knownPlayer.greenbox.createdAt, "R")})`,
-    );
+    if (player.createdDate)
+      fields.push({
+        name: "Account Created",
+        value: time(player.createdDate, "R"),
+      });
+
+    fields.push({
+      name: "Display Case",
+      value: player.hasDisplayCase
+        ? hyperlink("Browse", toMuseumLink(player.id))
+        : italic("none"),
+    });
+
+    // Save a database hit if we got here by tracking a claimed Discord account in the first place
+    if (knownPlayer === null)
+      knownPlayer = await findPlayer({ playerId: player.id });
+
+    // Show different greenboxen services
+    const greenboxes = [];
+    if (knownPlayer?.greenbox) {
+      greenboxes.push(
+        `${hyperlink(
+          `Greenbox`,
+          `https://greenbox.loathers.net/?u=${player.id}`,
+        )} (updated ${time(knownPlayer.greenbox.createdAt, "R")})`,
+      );
+    }
+    const snapshot = await snapshotClient.getInfo(player.name);
+    if (snapshot) {
+      greenboxes.push(
+        `${hyperlink(`Snapshot`, snapshot.link)} (updated ${time(
+          snapshot.date,
+          "R",
+        )})`,
+      );
+    }
+
+    fields.push({
+      name: "Greenboxes",
+      value: greenboxes.join(" / ") || italic("none"),
+    });
   }
-  const snapshot = await snapshotClient.getInfo(player.name);
-  if (snapshot) {
-    greenboxes.push(
-      `${hyperlink(`Snapshot`, snapshot.link)} (updated ${time(
-        snapshot.date,
-        "R",
-      )})`,
-    );
-  }
-
-  fields.push({
-    name: "Greenboxes",
-    value: greenboxes.join(" / ") || italic("none"),
-  });
 
   // Use this opportunity to either
   // a) learn about a new player for our database, or

@@ -47,6 +47,8 @@ describe("Player searching", () => {
     // Learns correct capitalisation
     expect(player.name).toBe("Beldur");
     expect(player.level).toBe(0);
+    // We display Astral Spirit even though the search page says Seal Clubber.
+    expect(player.kolClass).toBe("Astral Spirit");
   });
 });
 

@@ -98,12 +98,14 @@ export class Player<IsFull extends boolean = boolean> {
         return null;
       }
 
+      const clazz = match.level ? match.class : "Astral Spirit";
+
       return new Player(
         client,
         Number(match.playerId),
         match.playerName,
         parseInt(match.level) || 0,
-        match.class,
+        clazz,
       );
     } catch (error) {
       return null;
