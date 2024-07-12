@@ -19,6 +19,7 @@ import {
   Routes,
   SlashCommandBuilder,
   TextBasedChannel,
+  channelLink,
   codeBlock,
   userMention,
 } from "discord.js";
@@ -184,11 +185,19 @@ export class DiscordClient extends Client {
       let commandRun = interaction.toString();
       if (commandRun === "[object Object]")
         commandRun = JSON.stringify(interaction);
+      const fields = [
+        { name: "Command run", value: commandRun },
+        { name: "User", value: userMention(interaction.user.id) },
+      ];
+
+      if (interaction.isCommand())
+        fields.push({
+          name: "Channel",
+          value: channelLink(interaction.channelId),
+        });
+
       embeds.push(
-        new EmbedBuilder().setTitle("Circumstances").addFields([
-          { name: "Command run", value: commandRun },
-          { name: "User", value: userMention(interaction.user.id) },
-        ]),
+        new EmbedBuilder().setTitle("Circumstances").addFields(fields),
       );
     }
 
