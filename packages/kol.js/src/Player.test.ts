@@ -17,18 +17,37 @@ vi.mock("./Client.js", async (importOriginal) => {
 
 const client = new Client("", "");
 
-test("Can search for a player by name", async () => {
-  vi.mocked(text).mockResolvedValueOnce(
-    await loadFixture(__dirname, "searchplayer_mad_carew.html"),
-  );
+describe("Player searching", () => {
+  test("Can search for a player by name", async () => {
+    vi.mocked(text).mockResolvedValueOnce(
+      await loadFixture(__dirname, "searchplayer_mad_carew.html"),
+    );
 
-  const player = await Player.fromName(client, "mad carew");
+    const player = await Player.fromName(client, "mad carew");
 
-  expectNotNull(player);
+    expectNotNull(player);
 
-  expect(player.id).toBe(263717);
-  // Learns correct capitalisation
-  expect(player.name).toBe("Mad Carew");
+    expect(player.id).toBe(263717);
+    // Learns correct capitalisation
+    expect(player.name).toBe("Mad Carew");
+  });
+
+  test("Can search for a player in Valhalla by name ", async () => {
+    vi.mocked(text).mockResolvedValueOnce(
+      await loadFixture(__dirname, "searchplayer_beldur.html"),
+    );
+
+    const player = await Player.fromName(client, "Beldur");
+
+    expectNotNull(player);
+
+    console.log(player);
+
+    expect(player.id).toBe(1046951);
+    // Learns correct capitalisation
+    expect(player.name).toBe("Beldur");
+    expect(player.level).toBe(0);
+  });
 });
 
 describe("Profile parsing", () => {
