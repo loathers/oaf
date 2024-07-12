@@ -1,0 +1,54 @@
+<html><head><title>Search for a player</title>
+  <link rel="stylesheet" type="text/css" href="/images/styles.20230117d.css">
+  <script>
+  var actions = { "sendmessage.php" : { "action" : 1, "title" : "Send Message", "arg" : "toid" }, "town_sendgift.php" : { "action" : 1, "title" : "Send Gift", "arg" : "towho" }, "makeoffer.php" : { "action" : 1, "title" : "Propose Trade", "arg" : "towho" }, "mallstore.php" : { "action" : 1, "title" : "Mall Store", "arg" : "whichstore" }, "/./curse.php" : { "action" : 1, "title" : "Throw TP", "arg" : "whichitem=1923&targetplayer" }, "/msg" : { "action" : 3, "useid" : true, "query" : "Enter message to send to %:" } }
+  var notchat = true;
+  </script>
+  <script language=Javascript src='/images/scripts/rcm.3.js'></script>
+  <script language="Javascript" src="/basics.js"></script><link rel="stylesheet" href="/basics.1.css" /></head>
+  <style type="text/css">
+  <!--
+  BODY, TD, UL {
+  size : 1;
+  }
+  a {
+    text-decoration: none;
+  }
+  .small { font-size: .8em; }
+  -->
+  </style>
+  
+  <script src="/onfocus.1.js"></script></html>
+  <body bgcolor=white text=black link=black alink=black vlink=black>
+  <div id='menu' class=rcm></div>
+  
+  <center><b>Search Results:<br><table align=center><tr><td class=small><b><u>Name</u></b></td><td class=small><b><u>PlayerID</u></b></td><td class=small><b><u>Level</u></b></td><td class=small><b><u>Class</u></b></td></tr><tr><td class=small><b><a target=mainpane href="showplayer.php?who=1046951">Beldur</a></b> </td><td valign=top class=small>1046951</td><td valign=top class=small><img src="https://d2uyhvukfffg5a.cloudfront.net/otherimages/inf_small.gif"></td><td class=small valign=top>Seal Clubber</td></tr><tr><td class=small><b><a target=mainpane href="showplayer.php?who=3498868">Beldur2</a></b> </td><td valign=top class=small>3498868</td><td valign=top class=small>1</td><td class=small valign=top>Sauceror</td></tr></table></center>
+  <form name="search" action="searchplayer.php" method="post">
+  <input type="hidden" name="searching" value="Yep.">
+  <input type="hidden" name="for" value="">
+  <center>
+  <b>Search for names:</b>
+  <input class="text" type="text" name="searchstring" size="30" value="Beldur"><br />
+  <div style="font-weight: normal">
+    starting with <input type="radio" name="startswith" value="1" checked="checked">&nbsp;&nbsp;
+    containing<input type="radio" name="startswith" value="2">&nbsp;&nbsp;
+    ending with <input type="radio" name="startswith" value="3">
+  </div>
+  <table>
+  <tr><td valign="center" align="center">
+  Level: <input class="text" type="text" size=3 name=searchlevel>
+  Fame: <input class="text" type="text" size=3 name=searchranking>
+  </td></tr>
+  <tr><td valign="center"><input type="checkbox" name="pvponly" >PvP players only</td>
+  <td><input type="radio" name="hardcoreonly" value="1">Hardcore only<br>
+  <input type="radio" name="hardcoreonly" value="2">Not in Hardcore<br>
+  <input type="radio" name="hardcoreonly" value="0" checked>Don't Care</td>
+  </tr>
+  </table>
+  <input class="button" type="submit" value="Search">
+  </form>
+  
+  </font>
+  </body>
+  </html>
+  
