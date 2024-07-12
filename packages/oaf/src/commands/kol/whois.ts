@@ -94,7 +94,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const astralSpirit = (player.level === 0);
+  const astralSpirit = player.level === 0;
 
   const fields: APIEmbedField[] = [
     { name: "Class", value: player.kolClass || "Unlisted" },
