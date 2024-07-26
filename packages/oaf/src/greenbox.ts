@@ -1,16 +1,25 @@
 import { type KoLMessage } from "kol.js";
 
 import { isRecordNotFoundError, prisma } from "./clients/database.js";
+import { discordClient } from "./clients/discord.js";
 import { kolClient } from "./clients/kol.js";
 
 export async function handleGreenboxKmail(message: KoLMessage) {
+  if (message.type !== "kmail") return;
+
   // Remove spaces - KoL adds weird spaces to long messages.
   const text = message.msg.replace(/ /g, "").slice(9);
 
-  if (text === "WIPE") return await wipe(message.who.id);
+  switch (text) {
+    case "WIPE":
+      await wipe(message.who.id);
+      break;
+    default:
+      await update(message.who.id, message.who.name, text);
+      break;
+  }
 
-  // If we don't recognise a command, this is a submission
-  return await update(message.who.id, message.who.name, text);
+  await kolClient.deleteKmails([message.id]);
 }
 
 async function update(
@@ -37,6 +46,11 @@ async function update(
       });
     }
   } catch (error) {
+    await discordClient.alert(
+      "Error processing greenbox submission",
+      undefined,
+      error,
+    );
     await kolClient.kmail(
       playerId,
       "There was an error processing your greenbox submission",
@@ -56,6 +70,11 @@ async function wipe(playerId: number) {
     });
   } catch (error) {
     if (!isRecordNotFoundError(error)) {
+      await discordClient.alert(
+        "Error processing greenbox submission",
+        undefined,
+        error,
+      );
       return await kolClient.kmail(
         playerId,
         "There was an error wiping your public greenbox profile",
