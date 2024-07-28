@@ -270,14 +270,17 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
   }
 
   async deleteKmails(ids: number[]) {
+    if (ids.length === 0) return true;
+
     const response = await this.fetchText("messages.php", {
-      searchParams: {
+      form: {
         the_action: "delete",
         box: "Inbox",
         ...Object.fromEntries(ids.map((id) => [`sel${id}`, "on"])),
         pwd: true,
       },
     });
+
     return response.includes(
       `<td>${ids.length} message${ids.length === 1 ? "" : "s"} deleted.</td>`,
     );

@@ -7,15 +7,6 @@ import { kolClient } from "./clients/kol.js";
 export async function handleGreenboxKmail(message: KoLMessage) {
   if (message.type !== "kmail") return;
 
-  const deleted = await kolClient.deleteKmails([message.id]);
-
-  if (!deleted) {
-    await discordClient.alert(
-      `Could not delete greenbox message ahead of action ${message.msg}`,
-    );
-    return;
-  }
-
   // Remove spaces - KoL adds weird spaces to long messages.
   const text = message.msg.replace(/ /g, "").slice(9);
 
