@@ -270,7 +270,7 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
   }
 
   async deleteKmails(ids: number[]) {
-    await this.fetchText("messages.php", {
+    const response = await this.fetchText("messages.php", {
       searchParams: {
         the_action: "delete",
         box: "Inbox",
@@ -278,6 +278,9 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
         pwd: true,
       },
     });
+    return response.includes(
+      `<td>${ids.length} message${ids.length === 1 ? "" : "s"} deleted.</td>`,
+    );
   }
 
   async checkKmails() {
