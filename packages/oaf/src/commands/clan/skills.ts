@@ -111,19 +111,19 @@ async function parseOldLogs() {
     );
   }
 
-  await prisma.$transaction(async () => {
-    await prisma.raid.createMany({
+  await prisma.$transaction(async (tx) => {
+    await tx.raid.createMany({
       data: raidsToParse.map((r) => ({ id: r })),
       skipDuplicates: true,
     });
 
     for (const [playerId, { kills, skills }] of participation.entries()) {
-      const player = await prisma.player.findUnique({ where: { playerId } });
+      const player = await tx.player.findUnique({ where: { playerId } });
 
       if (!player) {
         const playerName = (await kolClient.players.fetch(playerId))?.name;
         if (!playerName) return;
-        prisma.player.create({
+        tx.player.create({
           data: {
             playerId,
             playerName,
@@ -134,7 +134,7 @@ async function parseOldLogs() {
         return;
       }
 
-      prisma.player.update({
+      tx.player.update({
         where: { playerId },
         data: {
           kills: {
