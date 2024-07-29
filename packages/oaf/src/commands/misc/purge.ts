@@ -26,7 +26,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  if (!("messages" in channel)) {
+  if (!("messages" in channel) || channel.isDMBased()) {
     await interaction.editReply(
       "The channel type supplied does not support purging.",
     );
@@ -35,15 +35,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const quantity = interaction.options.getInteger("count", false) || 1;
 
-  let purged = 0;
+  const toDelete = [];
 
   for (const message of (await channel.messages.fetch()) ?? []) {
-    if (purged >= quantity) break;
+    if (toDelete.length >= quantity) break;
     if (message[1].author.id === getOwnUserId()) {
-      await message[1].delete();
-      purged++;
+      toDelete.push(message[0]);
     }
   }
+
+  await channel.bulkDelete(toDelete);
 
   await interaction.editReply("Purge complete");
 }
