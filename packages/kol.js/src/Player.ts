@@ -208,4 +208,8 @@ export class Player<IsFull extends boolean = boolean> {
       response?.output.includes("This player is currently online") ?? false
     );
   }
+
+  toString() {
+    return `${this.name} (#${this.id})`;
+  }
 }

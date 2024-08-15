@@ -13,25 +13,28 @@ export const data = new SlashCommandBuilder()
   .setDescription("Get information about the given item.")
   .addIntegerOption(itemOption());
 
+export async function embedForItem(id: number) {
+  const item = wikiClient.items.find((i) => i.id === id);
+  if (!item) return null;
+  const embed = createEmbed();
+  embed.setTitle(item.name).setURL(await wikiClient.getWikiLink(item));
+  await item.addToEmbed(embed);
+  return embed;
+}
+
 export async function execute(interaction: ChatInputCommandInteraction) {
   const itemId = interaction.options.getInteger("item", true);
   await interaction.deferReply();
 
-  const item = wikiClient.items.find((i) => i.id === itemId);
+  const embed = await embedForItem(itemId);
 
-  const embed = createEmbed();
-
-  if (!item) {
+  if (!embed) {
     await interaction.editReply({
       content: null,
-      embeds: [embed.setDescription("Item could not be found.")],
+      embeds: [createEmbed().setDescription("Item could not be found.")],
     });
     return;
   }
-
-  embed.setTitle(item.name).setURL(await wikiClient.getWikiLink(item));
-
-  await item.addToEmbed(embed);
 
   await interaction.editReply({
     content: null,

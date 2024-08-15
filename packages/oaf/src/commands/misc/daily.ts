@@ -53,7 +53,6 @@ async function onRollover() {
   );
 
   if (!announcementChannel?.isTextBased()) {
-    await discordClient.alert("No valid announcement channel");
     return;
   }
 
