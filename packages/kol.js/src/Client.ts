@@ -16,6 +16,7 @@ import {
 import { PlayerCache } from "./Cache.js";
 import { CookieJar } from "tough-cookie";
 import got, { OptionsOfJSONResponseBody, OptionsOfTextResponseBody } from "got";
+import { Memoize } from "typescript-memoize";
 
 type TypedEmitter<T extends EventMap> = TypedEventEmitter.default<T>;
 
@@ -509,5 +510,44 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     }
 
     return familiars;
+  }
+
+  @Memoize()
+  async descIdToId(descId: number): Promise<number> {
+    const page = await this.fetchText("desc_item.php", {
+      searchParams: {
+        whichitem: descId,
+      },
+    });
+    return Number(page.match(/<!-- itemid: (\d+) -->/)?.[1] ?? -1);
+  }
+
+  async getRaffle() {
+    const page = await this.fetchText("raffle.php");
+    const today = page.matchAll(
+      /<tr><td align=right>(?:First|Second) Prize:<\/td>.*?descitem\((\d+)\)/g,
+    );
+    const [first, second] = await Promise.all(
+      today
+        ? [...today].map(async (p) => await this.descIdToId(Number(p[1])))
+        : [null, null],
+    );
+    const winners = page.matchAll(
+      /<tr><td class=small><a href='showplayer\.php\?who=\d+'>(.*?) \(#(\d+)\).*?descitem\((\d+)\).*?([\d,]+)<\/td><\/tr>/g,
+    );
+    const yesterday = await Promise.all(
+      winners
+        ? [...winners].map(async (w) => ({
+            player: new Player(this, Number(w[2]), w[1]),
+            item: await this.descIdToId(Number(w[3])),
+            tickets: Number(w[4].replace(",", "")),
+          }))
+        : [],
+    );
+
+    return {
+      today: { first, second },
+      yesterday,
+    };
   }
 }

@@ -7772,6 +7772,7 @@ __metadata:
     ts-dedent: "npm:^2.2.0"
     typed-emitter: "npm:^2.1.0"
     typescript: "npm:^5.5.3"
+    typescript-memoize: "npm:^1.1.1"
     vitest: "npm:^1.6.0"
     xpath: "npm:^0.0.34"
   languageName: unknown

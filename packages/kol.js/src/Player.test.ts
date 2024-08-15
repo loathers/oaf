@@ -41,8 +41,6 @@ describe("Player searching", () => {
 
     expectNotNull(player);
 
-    console.log(player);
-
     expect(player.id).toBe(1046951);
     // Learns correct capitalisation
     expect(player.name).toBe("Beldur");
