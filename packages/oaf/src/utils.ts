@@ -123,14 +123,22 @@ export function titleCase(title: string) {
 }
 
 export function formatPlayer(player: Player | undefined, backupId?: number) {
-  const discordId = player?.discordId;
-  return discordId
-    ? `${userMention(discordId)}${hyperlink(
-        "👤",
-        `https://www.kingdomofloathing.com/showplayer.php?who=${player.playerId}`,
-        player.playerName,
-      )}`
-    : player?.playerName || `Player #${backupId}` || "Unknown player";
+  return [
+    player?.playerName ?? "Unknown Username",
+    ...(player?.playerId
+      ? [
+          `(#${player.playerId})`,
+          hyperlink(
+            "👤",
+            `https://www.kingdomofloathing.com/showplayer.php?who=${player.playerId}`,
+            player.playerName,
+          ),
+        ]
+      : backupId
+        ? [`(#${backupId})`]
+        : []),
+    ...(player?.discordId ? userMention(player.discordId) : ""),
+  ].join(" ");
 }
 
 export function ensureArray<T>(v: T | T[]) {
