@@ -137,7 +137,7 @@ export function formatPlayer(player: Player | undefined, backupId?: number) {
       : backupId
         ? [`(#${backupId})`]
         : []),
-    ...(player?.discordId ? userMention(player.discordId) : ""),
+    ...(player?.discordId ? [userMention(player.discordId)] : []),
   ].join(" ");
 }
 
