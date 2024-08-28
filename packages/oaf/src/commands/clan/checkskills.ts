@@ -13,7 +13,7 @@ export const data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option
       .setName("who")
-      .setDescription("The name or player id of the user in question")
+      .setDescription("The player id of the user in question")
       .setRequired(true)
       .setMaxLength(30),
   );
