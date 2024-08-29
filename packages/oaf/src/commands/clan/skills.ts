@@ -122,7 +122,7 @@ export async function parseOldLogs() {
 
       if (!player) {
         const playerName = (await kolClient.players.fetch(playerId))?.name;
-        if (!playerName) return;
+        if (!playerName) continue;
         tx.player.create({
           data: {
             playerId,
@@ -131,7 +131,7 @@ export async function parseOldLogs() {
             skills,
           },
         });
-        return;
+        continue;
       }
 
       tx.player.update({
