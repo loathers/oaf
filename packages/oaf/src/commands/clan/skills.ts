@@ -42,7 +42,7 @@ function addParticipation(
   });
 }
 
-export function mergeParticipation(a: Participation, b: Participation) {
+function mergeParticipation(a: Participation, b: Participation) {
   const merged = new Map(a);
 
   for (const [playerId, data] of b) {
@@ -52,7 +52,7 @@ export function mergeParticipation(a: Participation, b: Participation) {
   return merged;
 }
 
-export async function getParticipationFromCurrentRaid() {
+async function getParticipationFromCurrentRaid() {
   const raidLogs = await Promise.all(
     DREAD_CLANS.map((clan) => getRaidLog(clan.id)),
   );
@@ -86,7 +86,7 @@ export function getParticipationFromRaidLog(raidLog: string) {
   return participation;
 }
 
-export async function parseOldLogs() {
+async function parseOldLogs() {
   const parsedRaids = (
     await prisma.raid.findMany({ select: { id: true } })
   ).map(({ id }) => id);
