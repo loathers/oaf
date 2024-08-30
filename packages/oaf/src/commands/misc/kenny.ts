@@ -15,10 +15,13 @@ export const data = new SlashCommandBuilder()
   );
 
 export function makeComment(data: { isHigh: boolean; isLow: boolean }) {
-  if (data.isHigh) return "that's high! KENNY NEED INSULIN!!!";
-  if (data.isLow) return "that's low! KENNY NEED SUGAR!!!";
-  return "that's fine.";
+  if (data.isHigh) return "That's high! KENNY NEED INSULIN!!!";
+  if (data.isLow) return "That's low! KENNY NEED SUGAR!!!";
+  return "That's fine.";
 }
+
+const KENNY_TOO_HIGH = 180;
+const KENNY_TOO_LOW = 70;
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
@@ -44,7 +47,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `Kenny's blood glucose 🩸 was ${latest.value}mg/dL ${time(
         latest.date,
         TimestampStyles.RelativeTime,
-      )}. According to the API, ${makeComment(latest)}. According to Kenny's own statement of the range, ${makeComment({ isHigh: latest.value >= 180, isLow: latest.value <= 70 })}`,
+      )}. ${makeComment({ isHigh: latest.value >= KENNY_TOO_HIGH, isLow: latest.value <= KENNY_TOO_LOW })}`,
     );
   } catch (error) {
     return void (await interaction.editReply(
