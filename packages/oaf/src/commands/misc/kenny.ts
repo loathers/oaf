@@ -20,6 +20,9 @@ export function makeComment(data: { isHigh: boolean; isLow: boolean }) {
   return "That's fine.";
 }
 
+const KENNY_TOO_HIGH = 180;
+const KENNY_TOO_LOW = 70;
+
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
@@ -44,7 +47,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       `Kenny's blood glucose 🩸 was ${latest.value}mg/dL ${time(
         latest.date,
         TimestampStyles.RelativeTime,
-      )}. ${makeComment(latest)}`,
+      )}. ${makeComment({ isHigh: latest.value >= KENNY_TOO_HIGH, isLow: latest.value <= KENNY_TOO_LOW })}`,
     );
   } catch (error) {
     return void (await interaction.editReply(
