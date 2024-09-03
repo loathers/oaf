@@ -119,30 +119,26 @@ export async function parseOldLogs() {
 
     for (const [playerId, { kills, skills }] of participation.entries()) {
       const player = await tx.player.findUnique({ where: { playerId } });
+      const playerName =
+        player?.playerName ?? (await kolClient.players.fetch(playerId))?.name;
 
-      if (!player) {
-        const playerName = (await kolClient.players.fetch(playerId))?.name;
-        if (!playerName) continue;
-        tx.player.create({
-          data: {
-            playerId,
-            playerName,
-            kills,
-            skills,
-          },
-        });
-        continue;
-      }
+      if (!playerName) continue;
 
-      tx.player.update({
+      await tx.player.upsert({
         where: { playerId },
-        data: {
+        update: {
           kills: {
             increment: kills,
           },
           skills: {
             increment: skills,
           },
+        },
+        create: {
+          playerId,
+          playerName,
+          kills,
+          skills,
         },
       });
     }
