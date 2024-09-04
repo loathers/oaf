@@ -1,4 +1,5 @@
-import type { Player, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { Player } from "kol.js";
 
 import { prisma } from "../clients/database.js";
 import { kolClient } from "../clients/kol.js";
@@ -9,23 +10,7 @@ export function validPlayerIdentifier(identifier: string) {
   return /^([a-zA-Z][a-zA-Z0-9_ ]{2,29})|[0-9]+$/.test(identifier);
 }
 
-const _getFullPlayer = (x: string) => kolClient.players.fetch(x, true);
-type KoLPlayer = Awaited<ReturnType<typeof _getFullPlayer>>;
-
-export type FindPlayerResult =
-  | (Player & {
-      greenbox: {
-        id: number;
-        playerId: number;
-        data: string;
-        createdAt: Date;
-      } | null;
-    })
-  | null;
-
-export async function findPlayer(
-  where: Prisma.PlayerWhereInput,
-): Promise<FindPlayerResult> {
+export async function findPlayer(where: Prisma.PlayerWhereInput) {
   const player = await prisma.player.findFirst({
     where,
     include: { greenbox: { orderBy: { id: "desc" }, take: 1 } },
@@ -34,9 +19,11 @@ export async function findPlayer(
   return { ...player, greenbox: player.greenbox.at(0) ?? null };
 }
 
+type FoundPlayer = Awaited<ReturnType<typeof findPlayer>>;
+
 export async function identifyPlayer(
   input: string,
-): Promise<string | [KoLPlayer, FindPlayerResult]> {
+): Promise<string | [Player<true>, FoundPlayer]> {
   // Check if this is a discord mention
   if (input.match(/^<@\d+>$/)) {
     const knownPlayer = await findPlayer({ discordId: input.slice(2, -1) });
@@ -45,7 +32,10 @@ export async function identifyPlayer(
       return "That user hasn't claimed a KoL account.";
     }
 
-    return [await kolClient.players.fetch(knownPlayer.playerId), knownPlayer];
+    return [
+      await kolClient.players.fetch(knownPlayer.playerId, true),
+      knownPlayer,
+    ];
   }
 
   // Validate if the string identifies a KoL player, either as a player ID or a user name
