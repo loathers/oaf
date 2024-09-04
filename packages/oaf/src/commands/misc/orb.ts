@@ -39,6 +39,7 @@ const ORB_RESPONSES: string[] = [
   "The devs know, go pester them instead of me.",
   "INSUFFICIENT DATA FOR MEANINGFUL ANSWER",
   "THERE IS AS YET INSUFFICIENT DATA FOR A MEANINGFUL ANSWER",
+  "kol streamer",
 ];
 
 export const data = new SlashCommandBuilder()
