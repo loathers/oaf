@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 
 import { prisma } from "../../clients/database.js";
-import { kolClient } from "../../clients/kol.js";
+import { identifyPlayer } from "../_player.js";
 
 export const data = new SlashCommandBuilder()
   .setName("brainiac")
@@ -26,46 +26,32 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const playerName = interaction.options.getString("player", true);
+  const input = interaction.options.getString("player", true);
   const available = interaction.options.getBoolean("available", false) ?? true;
 
   await interaction.deferReply();
 
-  const existing = await prisma.player.findFirst({
-    where: {
-      playerName: {
-        equals: playerName,
-        mode: "insensitive",
-      },
-    },
-  });
+  const identification = await identifyPlayer(input);
 
-  if (!existing) {
-    const player = await kolClient.players.fetch(playerName);
-
-    if (!player) {
-      await interaction.editReply(
-        `User ${italic(playerName)} could not be found`,
-      );
-      return;
-    }
-
-    await prisma.player.create({
-      data: {
-        playerId: player.id,
-        playerName: player.name,
-        brainiac: available,
-      },
-    });
-  } else {
-    await prisma.player.update({
-      where: { playerId: existing.playerId },
-      data: { brainiac: available },
-    });
+  if (typeof identification === "string") {
+    await interaction.editReply(identification);
+    return;
   }
 
+  const [player] = identification;
+
+  await prisma.player.upsert({
+    where: { playerId: player.id },
+    create: {
+      playerId: player.id,
+      playerName: player.name,
+      brainiac: available,
+    },
+    update: { brainiac: available },
+  });
+
   await interaction.editReply(
-    `${available ? "Added" : "Removed"} user ${italic(playerName)} ${
+    `${available ? "Added" : "Removed"} user ${italic(player.name)} ${
       available ? "to" : "from"
     } the list of players always available to help with skills.`,
   );
