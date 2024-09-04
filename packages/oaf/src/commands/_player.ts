@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, Player as PrismaPlayer } from "@prisma/client";
 
 import { prisma } from "../clients/database.js";
 import { kolClient } from "../clients/kol.js";
@@ -9,7 +9,22 @@ export function validPlayerIdentifier(identifier: string) {
   return /^([a-zA-Z][a-zA-Z0-9_ ]{2,29})|[0-9]+$/.test(identifier);
 }
 
-export async function findPlayer(where: Prisma.PlayerWhereInput) {
+type KoLPlayer = Awaited<ReturnType<typeof kolClient.players.fetch>>;
+
+export type FindPlayerResult =
+  | (PrismaPlayer & {
+      greenbox: {
+        id: number;
+        playerId: number;
+        data: string;
+        createdAt: Date;
+      } | null;
+    })
+  | null;
+
+export async function findPlayer(
+  where: Prisma.PlayerWhereInput,
+): Promise<FindPlayerResult> {
   const player = await prisma.player.findFirst({
     where,
     include: { greenbox: { orderBy: { id: "desc" }, take: 1 } },
@@ -18,7 +33,9 @@ export async function findPlayer(where: Prisma.PlayerWhereInput) {
   return { ...player, greenbox: player.greenbox.at(0) ?? null };
 }
 
-export async function identifyPlayer(input: string) {
+export async function identifyPlayer(
+  input: string,
+): Promise<string | [KoLPlayer, FindPlayerResult]> {
   // If the input is a Discord mention, we'll try to set a player identifier there. Otherwise this just gets set to
   // the same value as input.
   let playerIdentifier;
