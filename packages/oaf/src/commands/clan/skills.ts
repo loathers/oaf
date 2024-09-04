@@ -100,16 +100,17 @@ async function parseOldLogs() {
     .flat()
     .filter((id) => !parsedRaids.includes(id));
 
-  let participation: Participation = new Map();
-
-  // Parse each raid and extract the player participation
-  for (const raidId of raidsToParse) {
-    const raidLog = await getFinishedRaidLog(raidId);
-    participation = mergeParticipation(
-      participation,
-      getParticipationFromRaidLog(raidLog),
-    );
-  }
+  const participation = (
+    await Promise.all(
+      raidsToParse.map(async (id) =>
+        getParticipationFromRaidLog(await getFinishedRaidLog(id)),
+      ),
+    )
+  ).reduce(
+    (partialParticipation, raidParticipation) =>
+      mergeParticipation(partialParticipation, raidParticipation),
+    new Map(),
+  );
 
   await prisma.$transaction(async (tx) => {
     await tx.raid.createMany({
