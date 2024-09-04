@@ -178,10 +178,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       const [, knownPlayer] = identifyResult;
       if (!knownPlayer)
         return void (await interaction.editReply(
-          `Player matching ${input} could not be found.`,
+          `We have no data on skills for player matching ${input}!`,
         ));
       return void (await interaction.editReply(
-        `${knownPlayer.playerName} is currently ${knownPlayer.doneWithSkills ? "" : "not yet "} done with skills. They have performed ${knownPlayer.kills} kills and received ${knownPlayer.skills} skills in ASS Dread instances.`,
+        `${knownPlayer.playerName} is currently ${knownPlayer.doneWithSkills ? "" : "not yet "}done with skills. They have performed ${knownPlayer.kills} ${pluralize(knownPlayer.kills, "kill")} and received ${knownPlayer.skills} ${pluralize(knownPlayer.skills, "skill")} in ASS Dread instances.`,
       ));
     } else {
       const skillsOwed = [...participation.entries()]
