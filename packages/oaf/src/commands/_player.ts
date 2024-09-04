@@ -1,4 +1,4 @@
-import type { Prisma, Player as PrismaPlayer } from "@prisma/client";
+import type { Player, Prisma } from "@prisma/client";
 
 import { prisma } from "../clients/database.js";
 import { kolClient } from "../clients/kol.js";
@@ -9,10 +9,11 @@ export function validPlayerIdentifier(identifier: string) {
   return /^([a-zA-Z][a-zA-Z0-9_ ]{2,29})|[0-9]+$/.test(identifier);
 }
 
-type KoLPlayer = Awaited<ReturnType<typeof kolClient.players.fetch>>;
+const _getFullPlayer = (x: string) => kolClient.players.fetch(x, true);
+type KoLPlayer = Awaited<ReturnType<typeof _getFullPlayer>>;
 
 export type FindPlayerResult =
-  | (PrismaPlayer & {
+  | (Player & {
       greenbox: {
         id: number;
         playerId: number;
