@@ -181,7 +181,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           `We have no data on skills for player matching ${input}!`,
         ));
       return void (await interaction.editReply(
-        `${knownPlayer.playerName} is currently ${knownPlayer.doneWithSkills ? "" : "not yet "}done with skills. They have performed ${knownPlayer.kills} ${pluralize(knownPlayer.kills, "kill")} and received ${knownPlayer.skills} ${pluralize(knownPlayer.skills, "skill")} in ASS Dread instances.`,
+        `${knownPlayer.playerName} is currently ${knownPlayer.doneWithSkills ? "" : "not yet "}done with skills. They have performed ${pluralize(knownPlayer.kills, "kill")} and received ${pluralize(knownPlayer.skills, "skill")} in ASS Dread instances.`,
       ));
     } else {
       const skillsOwed = [...participation.entries()]
