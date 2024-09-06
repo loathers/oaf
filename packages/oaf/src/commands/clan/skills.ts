@@ -9,6 +9,7 @@ import {
   notNull,
   pluralize,
 } from "../../utils.js";
+import { identifyPlayer } from "../_player.js";
 import { DREAD_CLANS } from "./_clans.js";
 import {
   JoinClanError,
@@ -23,6 +24,12 @@ const SKILL_KILL_MATCHER =
 
 export const data = new SlashCommandBuilder()
   .setName("skills")
+  .addStringOption((option) =>
+    option
+      .setName("player")
+      .setDescription("An individual player to check, if you want just one")
+      .setRequired(false),
+  )
   .setDescription(
     "Get a list of everyone currently elgible for Dreadsylvania skills.",
   );
@@ -147,6 +154,8 @@ async function parseOldLogs() {
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  const input = interaction.options.getString("player", false);
+
   await interaction.deferReply();
 
   try {
@@ -161,32 +170,47 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await getParticipationFromCurrentRaid(),
     );
 
-    const skillsOwed = [...participation.entries()]
-      .filter(([playerId]) => players.get(playerId)?.doneWithSkills !== true)
-      .map(
-        ([playerId, { skills, kills }]) =>
-          [playerId, Math.floor((kills + 450) / 900) - skills] as const,
-      )
-      .filter(([, owed]) => owed > 0)
-      .sort(([, a], [, b]) => b - a)
-      .map(
-        ([playerId, owed]) =>
-          `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(
-            owed,
-            "skill",
-          )}.`,
-      );
+    if (input) {
+      const identifyResult = await identifyPlayer(input);
+      if (typeof identifyResult === "string") {
+        return void (await interaction.editReply(identifyResult));
+      }
+      const [, knownPlayer] = identifyResult;
+      if (!knownPlayer)
+        return void (await interaction.editReply(
+          `We have no data on skills for player matching ${input}!`,
+        ));
+      return void (await interaction.editReply(
+        `${knownPlayer.playerName} is currently ${knownPlayer.doneWithSkills ? "" : "not yet "}done with skills. They have performed ${knownPlayer.kills} ${pluralize(knownPlayer.kills, "kill")} and received ${knownPlayer.skills} ${pluralize(knownPlayer.skills, "skill")} in ASS Dread instances.`,
+      ));
+    } else {
+      const skillsOwed = [...participation.entries()]
+        .filter(([playerId]) => players.get(playerId)?.doneWithSkills !== true)
+        .map(
+          ([playerId, { skills, kills }]) =>
+            [playerId, Math.floor((kills + 450) / 900) - skills] as const,
+        )
+        .filter(([, owed]) => owed > 0)
+        .sort(([, a], [, b]) => b - a)
+        .map(
+          ([playerId, owed]) =>
+            `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(
+              owed,
+              "skill",
+            )}.`,
+        );
 
-    await interaction.editReply({
-      content: null,
-      embeds: [
-        {
-          title: "Skills owed",
-          fields: columnsByMaxLength(skillsOwed),
-        },
-      ],
-      allowedMentions: { users: [] },
-    });
+      await interaction.editReply({
+        content: null,
+        embeds: [
+          {
+            title: "Skills owed",
+            fields: columnsByMaxLength(skillsOwed),
+          },
+        ],
+        allowedMentions: { users: [] },
+      });
+    }
   } catch (error) {
     if (error instanceof JoinClanError) {
       await discordClient.alert("Unable to join clan", interaction, error);
