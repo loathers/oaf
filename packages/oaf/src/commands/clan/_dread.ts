@@ -252,7 +252,9 @@ export async function getFinishedRaidLog(raidId: number) {
 export async function getRaidLog(clanId: number): Promise<string> {
   return await kolClient.actionMutex.runExclusive(async () => {
     if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
-    const log = await kolClient.fetchText("clan_raidlogs.php");
+    const log = await kolClient.fetchText("clan_raidlogs.php", {
+      method: "GET",
+    });
     if (!log) throw new RaidLogMissingError();
     return log;
   });
