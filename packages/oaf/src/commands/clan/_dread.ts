@@ -203,7 +203,9 @@ export async function getMissingRaidLogs(
 ): Promise<number[]> {
   return await kolClient.actionMutex.runExclusive(async () => {
     if (!(await kolClient.joinClan(clanId))) throw new JoinClanError();
-    let raidLogs = await kolClient.fetchText("clan_oldraidlogs.php");
+    let raidLogs = await kolClient.fetchText("clan_oldraidlogs.php", {
+      method: "GET",
+    });
     const raidIds: number[] = [];
     let row = 0;
     let done = false;
@@ -226,6 +228,7 @@ export async function getMissingRaidLogs(
       if (!done) {
         row += 10;
         raidLogs = await kolClient.fetchText("clan_oldraidlogs.php", {
+          method: "GET",
           searchParams: {
             startrow: row,
           },
@@ -238,6 +241,7 @@ export async function getMissingRaidLogs(
 
 export async function getFinishedRaidLog(raidId: number) {
   return await kolClient.fetchText("clan_viewraidlog.php", {
+    method: "GET",
     searchParams: {
       viewlog: raidId,
       backstart: 0,
