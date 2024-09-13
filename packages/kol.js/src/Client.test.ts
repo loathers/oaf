@@ -212,6 +212,8 @@ describe("Raffle", () => {
     text.mockResolvedValueOnce("<!-- itemid: 2 -->");
     text.mockResolvedValueOnce("<!-- itemid: 3 -->");
     text.mockResolvedValueOnce("<!-- itemid: 4 -->");
+    text.mockResolvedValueOnce("<!-- itemid: 4 -->");
+    text.mockResolvedValueOnce("<!-- itemid: 4 -->");
 
     const raffle = await client.getRaffle();
 
