@@ -3,9 +3,12 @@
     "packages/*"
   ],
   "private": true,
-  "packageManager": "yarn@4.2.1",
+  "packageManager": "yarn@4.4.1",
   "scripts": {
     "format": "yarn workspaces foreach -A run format",
     "test": "yarn workspaces foreach -A run test"
+  },
+  "resolutions": {
+    "uri-js": "npm:uri-js-replace@1.0.1"
   }
 }
