@@ -101,7 +101,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const reminderDate = add(new Date(), duration);
 
-  if (interaction.channel && !interaction.channel.send) {
+  if (!interaction?.channel?.isSendable()) {
     return void (await interaction.reply({
       content:
         "It doesn't look possible for oaf to respond to this request when the time comes",

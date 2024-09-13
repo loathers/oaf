@@ -17,8 +17,8 @@ import {
   REST,
   RESTPostAPIApplicationCommandsJSONBody,
   Routes,
+  SendableChannels,
   SlashCommandBuilder,
-  TextBasedChannel,
   channelLink,
   codeBlock,
   userMention,
@@ -46,7 +46,7 @@ export type CommandHandler = {
 export class DiscordClient extends Client {
   private clientId: string;
   private alertsQueue: MessageCreateOptions[] = [];
-  private alertsChannel: TextBasedChannel | null = null;
+  private alertsChannel: SendableChannels | null = null;
   parka: Date | null = null;
 
   commands = new Collection<string, CommandHandler>();
@@ -83,7 +83,7 @@ export class DiscordClient extends Client {
 
     this.on(Events.ClientReady, async (client) => {
       const channel = await client.channels.fetch(alertsChannelId);
-      if (!channel?.isTextBased()) return;
+      if (!channel?.isSendable()) return;
       await this.initAlertsChannel(channel);
     });
   }
@@ -152,7 +152,7 @@ export class DiscordClient extends Client {
     }
   }
 
-  async initAlertsChannel(channel: TextBasedChannel) {
+  async initAlertsChannel(channel: SendableChannels) {
     this.alertsChannel = channel;
     while (this.alertsQueue.length > 0) {
       const alert = this.alertsQueue.shift();
