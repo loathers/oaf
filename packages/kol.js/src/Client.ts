@@ -16,7 +16,6 @@ import {
 import { PlayerCache } from "./Cache.js";
 import { CookieJar } from "tough-cookie";
 import got, { OptionsOfJSONResponseBody, OptionsOfTextResponseBody } from "got";
-import { Memoize } from "typescript-memoize";
 
 type TypedEmitter<T extends EventMap> = TypedEventEmitter.default<T>;
 
@@ -512,14 +511,18 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     return familiars;
   }
 
-  @Memoize()
+  static #descIdToIdCache: Map<number, number> = new Map();
+
   async descIdToId(descId: number): Promise<number> {
+    if (Client.#descIdToIdCache.has(descId)) return Client.#descIdToIdCache.get(descId)!;
     const page = await this.fetchText("desc_item.php", {
       searchParams: {
         whichitem: descId,
       },
     });
-    return Number(page.match(/<!-- itemid: (\d+) -->/)?.[1] ?? -1);
+    const id = Number(page.match(/<!-- itemid: (\d+) -->/)?.[1] ?? -1);
+    Client.#descIdToIdCache.set(descId, id);
+    return id;
   }
 
   async getRaffle() {

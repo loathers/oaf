@@ -1,6 +1,6 @@
 {
   "name": "kol.js",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "main": "src/index.ts",
   "type": "module",
   "files": [
@@ -29,7 +29,6 @@
     "tough-cookie": "^5.0.0",
     "ts-dedent": "^2.2.0",
     "typed-emitter": "^2.1.0",
-    "typescript-memoize": "^1.1.1",
     "xpath": "^0.0.34"
   }
 }
