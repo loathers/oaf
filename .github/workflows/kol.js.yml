@@ -15,6 +15,6 @@ jobs:
       - name: Install modules
         run: yarn install --immutable
       - name: Run tests
-        run: yarn workspace kol.js run test --pool=forks
+        run: yarn workspace kol.js run test
       - name: Run type check
         run: yarn workspace kol.js run tsc

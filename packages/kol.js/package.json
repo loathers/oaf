@@ -13,12 +13,12 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "prettier": "^3.3.2",
-    "typescript": "^5.5.3",
-    "vitest": "^1.6.0"
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.0"
   },
   "dependencies": {
-    "@xmldom/xmldom": "^0.8.10",
+    "@xmldom/xmldom": "^0.9.2",
     "async-mutex": "^0.5.0",
     "date-fns": "^3.6.0",
     "got": "^14.4.2",

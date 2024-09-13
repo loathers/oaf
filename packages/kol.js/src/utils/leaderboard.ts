@@ -1,5 +1,5 @@
 import xpath, { select } from "xpath";
-import { DOMParser } from "@xmldom/xmldom";
+import { DOMParser, MIME_TYPE } from "@xmldom/xmldom";
 
 export type LeaderboardInfo = {
   name: string;
@@ -19,11 +19,8 @@ type RunInfo = {
 };
 
 const parser = new DOMParser({
-  locator: {},
-  errorHandler: {
-    warning: () => {},
-    error: () => {},
-    fatalError: console.error,
+  onError: (level, message) => {
+    if (level === "fatalError") console.error(message);
   },
 });
 
@@ -34,8 +31,9 @@ const selectMulti = (expression: string, node: Node) => {
 };
 
 export function parseLeaderboard(page: string): LeaderboardInfo {
-  const document = parser.parseFromString(page);
-  const [board, ...boards] = selectMulti("//table", document);
+  const doc = parser.parseFromString(page, MIME_TYPE.HTML);
+  // @ts-expect-error see https://github.com/xmldom/xmldom/issues/724
+  const [board, ...boards] = selectMulti("//table", doc);
 
   return {
     name: selectMulti(".//text()", board.firstChild!)

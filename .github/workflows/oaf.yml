@@ -16,6 +16,6 @@ jobs:
       - name: Generate prisma types
         run: yarn workspace oaf run prisma generate
       - name: Run tests
-        run: yarn workspace oaf run test --pool=forks
+        run: yarn workspace oaf run test
       - name: Run type check
         run: yarn workspace oaf run tsc
