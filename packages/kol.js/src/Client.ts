@@ -356,9 +356,9 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
         : minPrice
       : minPrice;
     const formattedMinPrice = minPrice
-      ? (minPrice === unlimitedPrice
+      ? ((minPrice === unlimitedPrice
           ? unlimitedMatch?.[1]
-          : limitedMatch?.[1]) ?? ""
+          : limitedMatch?.[1]) ?? "")
       : "";
     return {
       mallPrice: unlimitedPrice,
