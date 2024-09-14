@@ -41,6 +41,10 @@ export const schema = {
   IOTM_CHANNEL_ID: SNOWFLAKE_PATTERN,
   SUBS_ROLLING_TOKEN: String,
 
+  // Samsara webhook
+  UNRESTRICTED_CHANNEL_ID: SNOWFLAKE_PATTERN,
+  SAMSARA_TOKEN: String,
+
   // /claim
   VERIFIED_ROLE_ID: SNOWFLAKE_PATTERN,
   SALT: String,

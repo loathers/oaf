@@ -1,5 +1,6 @@
 /// <reference types="../../remix.env.d.ts" />
 import { createRequestHandler } from "@remix-run/express";
+import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import { StatusCodes } from "http-status-codes";
@@ -9,6 +10,7 @@ import { prisma } from "../clients/database.js";
 import { discordClient } from "../clients/discord.js";
 import { wikiClient } from "../clients/wiki.js";
 import { config } from "../config.js";
+import { samsara } from "./samsara.js";
 import { rollSubs } from "./subs.js";
 
 const viteDevServer =
@@ -31,6 +33,7 @@ app
   .use(
     viteDevServer ? viteDevServer.middlewares : express.static("build/client"),
   )
+  .use(bodyParser.json())
   .get("/favicon.ico", (req, res) => void res.send())
   .get("/api/greenbox/:playerId", async (req, res) => {
     const playerId = Number(req.params.playerId);
@@ -127,6 +130,29 @@ app
       return res.status(StatusCodes.OK).json({ status: "Thanks Chris!" });
     } catch (e) {
       if (e instanceof Error) {
+        return res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ error: e.message });
+      }
+
+      throw e;
+    }
+  })
+  .post("/webhooks/samsara", async (req, res) => {
+    const token = req.query.token;
+
+    if (!token)
+      return res.status(StatusCodes.UNAUTHORIZED).json({ error: "No token" });
+    if (token !== config.SAMSARA_TOKEN)
+      return res.status(StatusCodes.FORBIDDEN).json({ error: "Invalid token" });
+
+    try {
+      console.log(req);
+      await samsara(req.body);
+      return res.status(StatusCodes.OK).json({ success: "true" });
+    } catch (e) {
+      if (e instanceof Error) {
+        console.error(e);
         return res
           .status(StatusCodes.INTERNAL_SERVER_ERROR)
           .json({ error: e.message });
