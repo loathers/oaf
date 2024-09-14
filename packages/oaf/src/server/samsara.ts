@@ -36,8 +36,5 @@ export async function samsara({
 
   await iotmChannel.send({
     content: `🚨${goldStarEmoji} ${player.name} (#${player.id}) has achieved the best ${bold(`${lifestyle} ${pathName}`)} with ${days}/${turns}.`,
-    allowedMentions: {
-      roles: [config.SUBSCRIBER_ROLE_ID],
-    },
   });
 }
