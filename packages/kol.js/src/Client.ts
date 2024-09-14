@@ -514,7 +514,8 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
   static #descIdToIdCache: Map<number, number> = new Map();
 
   async descIdToId(descId: number): Promise<number> {
-    if (Client.#descIdToIdCache.has(descId)) return Client.#descIdToIdCache.get(descId)!;
+    if (Client.#descIdToIdCache.has(descId))
+      return Client.#descIdToIdCache.get(descId)!;
     const page = await this.fetchText("desc_item.php", {
       searchParams: {
         whichitem: descId,

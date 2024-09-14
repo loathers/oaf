@@ -3565,7 +3565,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/body-parser@npm:*":
+"@types/body-parser@npm:*, @types/body-parser@npm:^1":
   version: 1.19.5
   resolution: "@types/body-parser@npm:1.19.5"
   dependencies:
@@ -4534,7 +4534,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"body-parser@npm:1.20.3":
+"body-parser@npm:1.20.3, body-parser@npm:^1.20.3":
   version: 1.20.3
   resolution: "body-parser@npm:1.20.3"
   dependencies:
@@ -9499,6 +9499,7 @@ __metadata:
     "@remix-run/serve": "npm:^2.12.0"
     "@remix-run/server-runtime": "npm:^2.12.0"
     "@trivago/prettier-plugin-sort-imports": "npm:^4.3.0"
+    "@types/body-parser": "npm:^1"
     "@types/cors": "npm:^2.8.17"
     "@types/eslint__js": "npm:^8.42.3"
     "@types/express": "npm:^4.17.21"
@@ -9508,6 +9509,7 @@ __metadata:
     "@types/react-dom": "npm:^18.3.0"
     "@types/serialize-error": "npm:^4.0.1"
     "@vitest/coverage-v8": "npm:^2.1.0"
+    body-parser: "npm:^1.20.3"
     convert-svg-to-png: "npm:^0.6.4"
     cors: "npm:^2.8.5"
     date-fns: "npm:^3.6.0"
