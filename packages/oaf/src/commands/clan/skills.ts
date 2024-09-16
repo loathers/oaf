@@ -126,8 +126,6 @@ async function parseLogs() {
     }
   }
 
-  mergeParticipation(participation, await getParticipationFromCurrentRaid());
-
   const knownPlayerNames = Object.fromEntries(
     (
       await prisma.player.findMany({
@@ -194,6 +192,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const players = new Map(
       (await prisma.player.findMany({})).map((p) => [p.playerId, p] as const),
     );
+
+    mergeParticipation(players, await getParticipationFromCurrentRaid());
 
     if (input) {
       const identifyResult = await identifyPlayer(input);
