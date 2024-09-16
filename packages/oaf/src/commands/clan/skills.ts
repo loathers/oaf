@@ -99,58 +99,80 @@ async function parseOldLogs() {
   ).map(({ id }) => id);
 
   // Determine all the raid ids that are yet to be passed
-  const raidsToParse = (
-    await Promise.all(
-      DREAD_CLANS.map((clan) => getMissingRaidLogs(clan.id, parsedRaids)),
-    )
-  )
-    .flat()
-    .filter((id) => !parsedRaids.includes(id));
+  let participation = new Map();
+  const missingRaids: number[] = [];
+  for (const clan of DREAD_CLANS) {
+    const raids = (await getMissingRaidLogs(clan.id, parsedRaids)).filter(
+      (id) => !parsedRaids.includes(id),
+    );
+    const raidLogs = await Promise.all(
+      raids.map(async (id) => ({ id, log: await getFinishedRaidLog(id) })),
+    );
+    for (const { id, log } of raidLogs) {
+      if (log.includes("No such raid was found.")) continue;
+      missingRaids.push(id);
+      participation = mergeParticipation(
+        participation,
+        getParticipationFromRaidLog(log),
+      );
+    }
+  }
 
-  const participation = (
-    await Promise.all(
-      raidsToParse.map(async (id) =>
-        getParticipationFromRaidLog(await getFinishedRaidLog(id)),
-      ),
-    )
+  const knownPlayerNames = (
+    await prisma.player.findMany({
+      where: {
+        playerId: { in: [...participation.keys()] },
+      },
+      select: {
+        playerId: true,
+        playerName: true,
+      },
+    })
   ).reduce(
-    (partialParticipation, raidParticipation) =>
-      mergeParticipation(partialParticipation, raidParticipation),
-    new Map(),
+    (acc, p) => ({ ...acc, [p.playerId]: p.playerName }),
+    {} as Record<number, string>,
   );
 
-  await prisma.$transaction(async (tx) => {
-    await tx.raid.createMany({
-      data: raidsToParse.map((r) => ({ id: r })),
+  const playerNames = Object.fromEntries(
+    await Promise.all(
+      [...participation.keys()].map(async (playerId) => {
+        const known = knownPlayerNames[playerId];
+        if (known) return [playerId, known];
+        console.log("Looking up name for", playerId);
+        const player = await kolClient.players.fetch(playerId);
+        if (player) return [playerId, player.name];
+        return [playerId, null];
+      }),
+    ),
+  );
+
+  await prisma.$transaction([
+    prisma.raid.createMany({
+      data: missingRaids.map((r) => ({ id: r })),
       skipDuplicates: true,
-    });
-
-    for (const [playerId, { kills, skills }] of participation.entries()) {
-      const player = await tx.player.findUnique({ where: { playerId } });
-      const playerName =
-        player?.playerName ?? (await kolClient.players.fetch(playerId))?.name;
-
-      if (!playerName) continue;
-
-      await tx.player.upsert({
-        where: { playerId },
-        update: {
-          kills: {
-            increment: kills,
+    }),
+    ...[...participation.entries()]
+      .filter(([playerId]) => playerNames[playerId])
+      .map(([playerId, { kills, skills }]) =>
+        prisma.player.upsert({
+          where: { playerId },
+          update: {
+            kills: {
+              increment: kills,
+            },
+            skills: {
+              increment: skills,
+            },
           },
-          skills: {
-            increment: skills,
+          create: {
+            playerId,
+            playerName: playerNames[playerId],
+            kills,
+            skills,
           },
-        },
-        create: {
-          playerId,
-          playerName,
-          kills,
-          skills,
-        },
-      });
-    }
-  });
+        }),
+      ),
+  ]);
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -205,7 +227,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         embeds: [
           {
             title: "Skills owed",
-            fields: columnsByMaxLength(skillsOwed),
+            fields: columnsByMaxLength(skillsOwed.slice(0, 50)),
           },
         ],
         allowedMentions: { users: [] },
