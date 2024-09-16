@@ -49,25 +49,31 @@ function addParticipation(
   });
 }
 
-function mergeParticipation(a: Participation, b: Participation) {
-  const merged = new Map(a);
-
-  for (const [playerId, data] of b) {
-    addParticipation(merged, playerId, data);
+/**
+ * Mutating the first parameter, merge the participation maps
+ * @param target Base participation map
+ * @param sources New maps to merge into the target
+ * @returns A reference to the first parameter
+ */
+function mergeParticipation(
+  target: Participation,
+  ...sources: Participation[]
+) {
+  for (const source of sources) {
+    for (const [playerId, data] of source) {
+      addParticipation(target, playerId, data);
+    }
   }
 
-  return merged;
+  return target;
 }
 
 async function getParticipationFromCurrentRaid() {
-  const raidLogs = await Promise.all(
-    DREAD_CLANS.map((clan) => getRaidLog(clan.id)),
-  );
+  const participation = (
+    await Promise.all(DREAD_CLANS.map((clan) => getRaidLog(clan.id)))
+  ).map((log) => getParticipationFromRaidLog(log));
 
-  return raidLogs.reduce(
-    (p, log) => mergeParticipation(p, getParticipationFromRaidLog(log)),
-    new Map() as Participation,
-  );
+  return mergeParticipation(new Map(), ...participation);
 }
 
 export function getParticipationFromRaidLog(raidLog: string) {
@@ -93,64 +99,88 @@ export function getParticipationFromRaidLog(raidLog: string) {
   return participation;
 }
 
-async function parseOldLogs() {
+async function parseLogs() {
   const parsedRaids = (
     await prisma.raid.findMany({ select: { id: true } })
   ).map(({ id }) => id);
 
   // Determine all the raid ids that are yet to be passed
-  const raidsToParse = (
-    await Promise.all(
-      DREAD_CLANS.map((clan) => getMissingRaidLogs(clan.id, parsedRaids)),
-    )
-  )
-    .flat()
-    .filter((id) => !parsedRaids.includes(id));
+  const participation = new Map();
+  const missingRaids: number[] = [];
+  for (const clan of DREAD_CLANS) {
+    const raids = (await getMissingRaidLogs(clan.id, parsedRaids)).filter(
+      (id) => !parsedRaids.includes(id),
+    );
+    const raidLogs = await Promise.all(
+      raids.map(async (id) => ({ id, log: await getFinishedRaidLog(id) })),
+    );
+    for (const { id, log } of raidLogs) {
+      if (log.includes("No such raid was found.")) {
+        await discordClient.alert(
+          `Discovered raid ${id} from clan ${clan} but couldn't load the log`,
+        );
+        continue;
+      }
+      missingRaids.push(id);
+      mergeParticipation(participation, getParticipationFromRaidLog(log));
+    }
+  }
 
-  const participation = (
-    await Promise.all(
-      raidsToParse.map(async (id) =>
-        getParticipationFromRaidLog(await getFinishedRaidLog(id)),
-      ),
-    )
-  ).reduce(
-    (partialParticipation, raidParticipation) =>
-      mergeParticipation(partialParticipation, raidParticipation),
-    new Map(),
+  mergeParticipation(participation, await getParticipationFromCurrentRaid());
+
+  const knownPlayerNames = Object.fromEntries(
+    (
+      await prisma.player.findMany({
+        where: {
+          playerId: { in: [...participation.keys()] },
+        },
+        select: {
+          playerId: true,
+          playerName: true,
+        },
+      })
+    ).map(({ playerId, playerName }) => [playerId, playerName]),
   );
 
-  await prisma.$transaction(async (tx) => {
-    await tx.raid.createMany({
-      data: raidsToParse.map((r) => ({ id: r })),
+  const playerNames = Object.fromEntries(
+    await Promise.all(
+      [...participation.keys()].map(async (playerId) => {
+        const known = knownPlayerNames[playerId];
+        if (known) return [playerId, known];
+        const player = await kolClient.players.fetch(playerId);
+        if (player) return [playerId, player.name];
+        return [playerId, null];
+      }),
+    ),
+  );
+
+  await prisma.$transaction([
+    prisma.raid.createMany({
+      data: missingRaids.map((r) => ({ id: r })),
       skipDuplicates: true,
-    });
-
-    for (const [playerId, { kills, skills }] of participation.entries()) {
-      const player = await tx.player.findUnique({ where: { playerId } });
-      const playerName =
-        player?.playerName ?? (await kolClient.players.fetch(playerId))?.name;
-
-      if (!playerName) continue;
-
-      await tx.player.upsert({
-        where: { playerId },
-        update: {
-          kills: {
-            increment: kills,
+    }),
+    ...[...participation.entries()]
+      .filter(([playerId]) => playerNames[playerId])
+      .map(([playerId, { kills, skills }]) =>
+        prisma.player.upsert({
+          where: { playerId },
+          update: {
+            kills: {
+              increment: kills,
+            },
+            skills: {
+              increment: skills,
+            },
           },
-          skills: {
-            increment: skills,
+          create: {
+            playerId,
+            playerName: playerNames[playerId],
+            kills,
+            skills,
           },
-        },
-        create: {
-          playerId,
-          playerName,
-          kills,
-          skills,
-        },
-      });
-    }
-  });
+        }),
+      ),
+  ]);
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -159,15 +189,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   try {
-    await parseOldLogs();
+    await parseLogs();
 
     const players = new Map(
       (await prisma.player.findMany({})).map((p) => [p.playerId, p] as const),
-    );
-
-    const participation = mergeParticipation(
-      players,
-      await getParticipationFromCurrentRaid(),
     );
 
     if (input) {
@@ -184,17 +209,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         `${knownPlayer.playerName} is currently ${knownPlayer.doneWithSkills ? "" : "not yet "}done with skills. They have performed ${pluralize(knownPlayer.kills, "kill")} and received ${pluralize(knownPlayer.skills, "skill")} in ASS Dread instances.`,
       ));
     } else {
-      const skillsOwed = [...participation.entries()]
-        .filter(([playerId]) => players.get(playerId)?.doneWithSkills !== true)
+      const skillsOwed = [...players.entries()]
+        .filter(([, player]) => player.doneWithSkills !== true)
         .map(
-          ([playerId, { skills, kills }]) =>
-            [playerId, Math.floor((kills + 450) / 900) - skills] as const,
+          ([, player]) =>
+            [
+              player,
+              Math.floor((player.kills + 450) / 900) - player.skills,
+            ] as const,
         )
         .filter(([, owed]) => owed > 0)
         .sort(([, a], [, b]) => b - a)
         .map(
-          ([playerId, owed]) =>
-            `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(
+          ([player, owed]) =>
+            `${formatPlayer(player, player.playerId)}: ${pluralize(
               owed,
               "skill",
             )}.`,
@@ -205,7 +233,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         embeds: [
           {
             title: "Skills owed",
-            fields: columnsByMaxLength(skillsOwed),
+            fields: columnsByMaxLength(skillsOwed.slice(0, 50)),
           },
         ],
         allowedMentions: { users: [] },

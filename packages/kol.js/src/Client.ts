@@ -115,19 +115,20 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
   ): Promise<Result | null> {
     if (!(await this.login())) return fallback ?? null;
 
+    let failed = false;
+
     // Make the request
-    const response = await this.session(path, {
-      ...options,
-      responseType: "json",
-    });
+    try {
+      const response = await this.session(path, {
+        ...options,
+        responseType: "json",
+      });
+      if (!response.url.includes("/login.php")) return response.body as Result;
+    } catch (error) {}
 
-    // If we've been redirected to the login page, clear the pwd and try again
-    if (response.url.includes("/login.php")) {
-      this.#pwd = "";
-      return this.fetchJson(path, options);
-    }
-
-    return response.body as Result;
+    // If we've not been successful, clear the pwd and try again
+    this.#pwd = "";
+    return this.fetchJson(path, options);
   }
 
   async login(): Promise<boolean> {
