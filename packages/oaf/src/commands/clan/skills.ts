@@ -51,27 +51,29 @@ function addParticipation(
 
 /**
  * Mutating the first parameter, merge the participation maps
- * @param a Base participation map
- * @param b New map to merge into the first parameter
+ * @param target Base participation map
+ * @param sources New maps to merge into the target
  * @returns A reference to the first parameter
  */
-function mergeParticipation(a: Participation, b: Participation) {
-  for (const [playerId, data] of b) {
-    addParticipation(a, playerId, data);
+function mergeParticipation(
+  target: Participation,
+  ...sources: Participation[]
+) {
+  for (const source of sources) {
+    for (const [playerId, data] of source) {
+      addParticipation(target, playerId, data);
+    }
   }
 
-  return a;
+  return target;
 }
 
 async function getParticipationFromCurrentRaid() {
-  const raidLogs = await Promise.all(
-    DREAD_CLANS.map((clan) => getRaidLog(clan.id)),
-  );
+  const participation = (
+    await Promise.all(DREAD_CLANS.map((clan) => getRaidLog(clan.id)))
+  ).map((log) => getParticipationFromRaidLog(log));
 
-  return raidLogs.reduce(
-    (p, log) => mergeParticipation(p, getParticipationFromRaidLog(log)),
-    new Map() as Participation,
-  );
+  return mergeParticipation(new Map(), ...participation);
 }
 
 export function getParticipationFromRaidLog(raidLog: string) {
@@ -97,7 +99,7 @@ export function getParticipationFromRaidLog(raidLog: string) {
   return participation;
 }
 
-async function parseOldLogs() {
+async function parseLogs() {
   const parsedRaids = (
     await prisma.raid.findMany({ select: { id: true } })
   ).map(({ id }) => id);
@@ -118,6 +120,8 @@ async function parseOldLogs() {
       mergeParticipation(participation, getParticipationFromRaidLog(log));
     }
   }
+
+  mergeParticipation(participation, await getParticipationFromCurrentRaid());
 
   const knownPlayerNames = Object.fromEntries(
     (
@@ -180,13 +184,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   try {
-    await parseOldLogs();
+    await parseLogs();
 
     const players = new Map(
       (await prisma.player.findMany({})).map((p) => [p.playerId, p] as const),
     );
-
-    mergeParticipation(players, await getParticipationFromCurrentRaid());
 
     if (input) {
       const identifyResult = await identifyPlayer(input);
