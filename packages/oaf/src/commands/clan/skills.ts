@@ -1,3 +1,4 @@
+import type { Player } from "@prisma/client";
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { prisma } from "../../clients/database.js";
@@ -34,7 +35,7 @@ export const data = new SlashCommandBuilder()
     "Get a list of everyone currently elgible for Dreadsylvania skills.",
   );
 
-type ParticipationData = { skills: number; kills: number };
+type ParticipationData = { skills: number; kills: number; playerId: number };
 export type Participation = Map<number, ParticipationData>;
 
 function addParticipation(
@@ -44,8 +45,10 @@ function addParticipation(
 ) {
   const existing = a.get(playerId) || { skills: 0, kills: 0 };
   a.set(playerId, {
+    ...existing,
     skills: existing.skills + (skills || 0),
     kills: existing.kills + (kills || 0),
+    playerId,
   });
 }
 
@@ -189,7 +192,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     await parseLogs();
 
-    const players = new Map(
+    const players = new Map<number, Player | ParticipationData>(
       (await prisma.player.findMany({})).map((p) => [p.playerId, p] as const),
     );
 
@@ -210,7 +213,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ));
     } else {
       const skillsOwed = [...players.entries()]
-        .filter(([, player]) => player.doneWithSkills !== true)
+        .filter(
+          ([, player]) =>
+            "doneWithSkills" in player && player.doneWithSkills !== true,
+        )
         .map(
           ([, player]) =>
             [

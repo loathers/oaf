@@ -1,4 +1,3 @@
-import { Player } from "@prisma/client";
 import { APIEmbedField, hyperlink, userMention } from "discord.js";
 import { decode } from "html-entities";
 
@@ -122,17 +121,27 @@ export function titleCase(title: string) {
     .join(" ");
 }
 
-export function formatPlayer(player: Player | undefined, backupId?: number) {
+export function formatPlayer(
+  player:
+    | Partial<{
+        playerName: string;
+        playerId: number;
+        discordId: string | null;
+      }>
+    | undefined,
+  backupId?: number,
+) {
   return [
     player?.playerName ?? "Unknown Username",
     ...(player?.playerId
       ? [
           `(#${player.playerId})`,
-          hyperlink(
-            "👤",
-            `https://www.kingdomofloathing.com/showplayer.php?who=${player.playerId}`,
-            player.playerName,
-          ),
+          player.playerName &&
+            hyperlink(
+              "👤",
+              `https://www.kingdomofloathing.com/showplayer.php?who=${player.playerId}`,
+              player.playerName,
+            ),
         ]
       : backupId
         ? [`(#${backupId})`]
