@@ -118,19 +118,18 @@ async function parseOldLogs() {
     }
   }
 
-  const knownPlayerNames = (
-    await prisma.player.findMany({
-      where: {
-        playerId: { in: [...participation.keys()] },
-      },
-      select: {
-        playerId: true,
-        playerName: true,
-      },
-    })
-  ).reduce(
-    (acc, p) => ({ ...acc, [p.playerId]: p.playerName }),
-    {} as Record<number, string>,
+  const knownPlayerNames = Object.fromEntries(
+    (
+      await prisma.player.findMany({
+        where: {
+          playerId: { in: [...participation.keys()] },
+        },
+        select: {
+          playerId: true,
+          playerName: true,
+        },
+      })
+    ).map(({ playerId, playerName }) => [playerId, playerName]),
   );
 
   const playerNames = Object.fromEntries(
@@ -138,7 +137,6 @@ async function parseOldLogs() {
       [...participation.keys()].map(async (playerId) => {
         const known = knownPlayerNames[playerId];
         if (known) return [playerId, known];
-        console.log("Looking up name for", playerId);
         const player = await kolClient.players.fetch(playerId);
         if (player) return [playerId, player.name];
         return [playerId, null];
