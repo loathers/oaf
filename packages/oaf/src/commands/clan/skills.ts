@@ -117,7 +117,7 @@ async function parseLogs() {
     for (const { id, log } of raidLogs) {
       if (log.includes("No such raid was found.")) {
         await discordClient.alert(
-          `Discovered raid ${id} from clan ${clan} but couldn't load the log`,
+          `Discovered raid ${id} from clan ${clan.name} but couldn't load the log`,
         );
         continue;
       }
