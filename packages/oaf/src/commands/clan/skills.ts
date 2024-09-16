@@ -49,14 +49,18 @@ function addParticipation(
   });
 }
 
+/**
+ * Mutating the first parameter, merge the participation maps
+ * @param a Base participation map
+ * @param b New map to merge into the first parameter
+ * @returns A reference to the first parameter
+ */
 function mergeParticipation(a: Participation, b: Participation) {
-  const merged = new Map(a);
-
   for (const [playerId, data] of b) {
-    addParticipation(merged, playerId, data);
+    addParticipation(a, playerId, data);
   }
 
-  return merged;
+  return a;
 }
 
 async function getParticipationFromCurrentRaid() {
@@ -99,7 +103,7 @@ async function parseOldLogs() {
   ).map(({ id }) => id);
 
   // Determine all the raid ids that are yet to be passed
-  let participation = new Map();
+  const participation = new Map();
   const missingRaids: number[] = [];
   for (const clan of DREAD_CLANS) {
     const raids = (await getMissingRaidLogs(clan.id, parsedRaids)).filter(
@@ -111,10 +115,7 @@ async function parseOldLogs() {
     for (const { id, log } of raidLogs) {
       if (log.includes("No such raid was found.")) continue;
       missingRaids.push(id);
-      participation = mergeParticipation(
-        participation,
-        getParticipationFromRaidLog(log),
-      );
+      mergeParticipation(participation, getParticipationFromRaidLog(log));
     }
   }
 
@@ -185,10 +186,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       (await prisma.player.findMany({})).map((p) => [p.playerId, p] as const),
     );
 
-    const participation = mergeParticipation(
-      players,
-      await getParticipationFromCurrentRaid(),
-    );
+    mergeParticipation(players, await getParticipationFromCurrentRaid());
 
     if (input) {
       const identifyResult = await identifyPlayer(input);
@@ -204,17 +202,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         `${knownPlayer.playerName} is currently ${knownPlayer.doneWithSkills ? "" : "not yet "}done with skills. They have performed ${pluralize(knownPlayer.kills, "kill")} and received ${pluralize(knownPlayer.skills, "skill")} in ASS Dread instances.`,
       ));
     } else {
-      const skillsOwed = [...participation.entries()]
-        .filter(([playerId]) => players.get(playerId)?.doneWithSkills !== true)
+      const skillsOwed = [...players.entries()]
+        .filter(([, player]) => player.doneWithSkills !== true)
         .map(
-          ([playerId, { skills, kills }]) =>
-            [playerId, Math.floor((kills + 450) / 900) - skills] as const,
+          ([, player]) =>
+            [
+              player,
+              Math.floor((player.kills + 450) / 900) - player.skills,
+            ] as const,
         )
         .filter(([, owed]) => owed > 0)
         .sort(([, a], [, b]) => b - a)
         .map(
-          ([playerId, owed]) =>
-            `${formatPlayer(players.get(playerId), playerId)}: ${pluralize(
+          ([player, owed]) =>
+            `${formatPlayer(player, player.playerId)}: ${pluralize(
               owed,
               "skill",
             )}.`,
