@@ -53,7 +53,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   );
 
   const players = await prisma.player.findMany({
-    where: { OR: [{ brainiac: true }, { skills: { gt: 0 } }] },
+    where: {
+      OR: [
+        { brainiac: true },
+        { raidParticipation: { some: { skills: { gt: 0 } } } },
+      ],
+    },
   });
 
   const playerNameUpdates: PrismaPromise<Player>[] = [];
