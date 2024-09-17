@@ -82,7 +82,7 @@ export class Player<IsFull extends boolean = boolean> {
   ): Promise<Player<false> | null> {
     try {
       const matcher =
-        /<tr><td class=small><b><a target=mainpane href="showplayer\.php\?who=(?<playerId>\d+)">(?<playerName>[^<]+)<\/a><\/b>.*?<\/td><td valign=top class=small>\d*<\/td><td valign=top class=small>(?:<img src=".*?">|(?<level>\d+))<\/td><td class=small valign=top>(?<class>[^<]+)<\/td><\/tr>/i;
+        /<tr><td class=small><b><a target=mainpane href="showplayer\.php\?who=(?<playerId>\d+)">(?<playerName>[^<]+)<\/a><\/b>.*?<\/td><td valign=top class=small>\d*<\/td><td valign=top class=small>(?:<img src=".*?">|(?<level>\d+))<\/td><td class=small valign=top>(?<class>[^<]*)<\/td><\/tr>/i;
       const search = await client.fetchText("searchplayer.php", {
         searchParams: {
           searchstring: name.replace(/_/g, "\\_"),
