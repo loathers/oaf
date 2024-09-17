@@ -66,11 +66,11 @@ export class Player<IsFull extends boolean = boolean> {
     id: number,
   ): Promise<string | null> {
     try {
-      const profile = await client.fetchText("showplayer.php", {
-        searchParams: { who: id },
+      const profile = await client.fetchText("submitnewchat.php", {
+        searchParams: { graf: `/whois ${id}` },
       });
-      const name = profile.match(/<b>([^>]*?)<\/b> \(#(\d+)\)<br>/)?.[1];
-      return name || null;
+      const name = profile.match(/<a.*?><b.*?>(.*?) \(#(\d+)\)<\/b><\/a>/)?.[1];
+      return name ?? null;
     } catch {
       return null;
     }
