@@ -1,4 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { Player } from "kol.js";
 
 import { prisma } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
@@ -105,9 +106,16 @@ async function parseLogs() {
     await prisma.raid.findMany({ select: { id: true } })
   ).map(({ id }) => id);
 
+  const knownPlayers = (
+    await prisma.player.findMany({
+      select: {
+        playerId: true,
+      },
+    })
+  ).map(({ playerId }) => playerId);
+
   // Determine all the raid ids that are yet to be passed
   const updates = [];
-  const playerIds = new Set<number>();
 
   for (const clan of DREAD_CLANS) {
     const raids = (await getMissingRaidLogs(clan.id, parsedRaids)).filter(
@@ -116,6 +124,7 @@ async function parseLogs() {
     const raidLogs = await Promise.all(
       raids.map(async (id) => ({ id, log: await getFinishedRaidLog(id) })),
     );
+
     for (const { id, log } of raidLogs) {
       if (log.includes("No such raid was found.")) {
         await discordClient.alert(
@@ -124,11 +133,26 @@ async function parseLogs() {
         continue;
       }
 
-      const participation = mergeParticipation(
-        {},
-        ...getParticipationFromRaidLog(log),
+      const participation = await Promise.all(
+        Object.values(
+          mergeParticipation({}, ...getParticipationFromRaidLog(log)),
+        ).map(async ({ playerId, skills, kills }) => ({
+          skills,
+          kills,
+          player: {
+            connectOrCreate: {
+              where: { playerId },
+              create: {
+                playerId,
+                playerName:
+                  (!knownPlayers.includes(playerId) &&
+                    (await Player.getNameFromId(kolClient, playerId))) ||
+                  "Unknown",
+              },
+            },
+          },
+        })),
       );
-      Object.keys(participation).forEach((id) => playerIds.add(parseInt(id)));
 
       updates.push(
         prisma.raid.create({
@@ -136,46 +160,13 @@ async function parseLogs() {
             id,
             clanId: clan.id,
             participation: {
-              create: Object.values(participation).map((p) => ({
-                skills: p.skills ?? 0,
-                kills: p.kills ?? 0,
-                player: {
-                  connect: { playerId: p.playerId },
-                },
-              })),
+              create: participation,
             },
           },
         }),
       );
     }
   }
-
-  const knownPlayers = (
-    await prisma.player.findMany({
-      where: {
-        playerId: { in: [...playerIds] },
-      },
-      select: {
-        playerId: true,
-      },
-    })
-  ).map(({ playerId }) => playerId);
-
-  const unknownPlayers = await Promise.all(
-    [...playerIds]
-      .filter((p) => !knownPlayers.includes(p))
-      .map(async (playerId) => {
-        const player = await kolClient.players.fetch(playerId);
-        return { playerId, playerName: player?.name ?? "Unknown" };
-      }),
-  );
-
-  updates.unshift(
-    prisma.player.createMany({
-      data: unknownPlayers,
-      skipDuplicates: true,
-    }),
-  );
 
   await prisma.$transaction(updates);
 }
