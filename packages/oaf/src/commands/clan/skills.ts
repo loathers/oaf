@@ -34,8 +34,8 @@ export const data = new SlashCommandBuilder()
     "Get a list of everyone currently elgible for Dreadsylvania skills.",
   );
 
-export type Participation = Map<
-  number,
+export type Participation = Record<
+  string | number,
   {
     skills: number;
     kills: number;
@@ -49,21 +49,21 @@ export type Participation = Map<
  * @param sources New maps to merge into the target
  * @returns A reference to the first parameter
  */
-function mergeParticipation(
+export function mergeParticipation(
   target: Participation,
   ...sources: Participation[]
 ) {
-  for (const source of sources) {
-    for (const [playerId, { skills, kills }] of source) {
-      const existing = target.get(playerId) || { skills: 0, kills: 0 };
-      target.set(playerId, {
+  sources
+    .flatMap((s) => Object.entries(s))
+    .forEach(([playerId, { skills, kills }]) => {
+      const existing = target[playerId] ?? { skills: 0, kills: 0 };
+      target[playerId] = {
         ...existing,
-        skills: (existing.skills || 0) + (skills || 0),
-        kills: (existing.kills || 0) + (kills || 0),
-        playerId,
-      });
-    }
-  }
+        skills: existing.skills + skills,
+        kills: existing.kills + kills,
+        playerId: parseInt(playerId),
+      };
+    });
 
   return target;
 }
@@ -88,17 +88,14 @@ export function getParticipationFromRaidLog(raidLog: string) {
       .map((m) => {
         const playerId = parseInt(m[2]);
         const type = m[3].startsWith("defeated") ? "kills" : "skills";
-        const num = parseInt(m[4] || "1");
-        return new Map([
-          [
+        const num = parseInt(m[4] ?? "1");
+        return {
+          [playerId]: {
             playerId,
-            {
-              playerId,
-              skills: type === "skills" ? num : 0,
-              kills: type === "kills" ? num : 0,
-            },
-          ],
-        ]);
+            skills: type === "skills" ? num : 0,
+            kills: type === "kills" ? num : 0,
+          },
+        };
       }) ?? []
   );
 }
@@ -128,10 +125,10 @@ async function parseLogs() {
       }
 
       const participation = mergeParticipation(
-        new Map(),
+        {},
         ...getParticipationFromRaidLog(log),
       );
-      players.push(...participation.keys());
+      players.push(...Object.keys(participation).map((id) => parseInt(id)));
 
       updates.push(
         prisma.raid.create({
@@ -139,7 +136,7 @@ async function parseLogs() {
             id,
             clanId: clan.id,
             participation: {
-              create: [...participation.values()].map((p) => ({
+              create: Object.values(participation).map((p) => ({
                 raidId: id,
                 skills: p.skills ?? 0,
                 kills: p.kills ?? 0,
@@ -203,9 +200,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
 
     const participation = mergeParticipation(
-      new Map(),
+      {},
       ...players
-        .map((p) => p.raidParticipation.map((r) => new Map([[p.playerId, r]])))
+        .map((p) => p.raidParticipation.map((r) => ({ [p.playerId]: r })))
         .flat(),
       ...(await getParticipationFromCurrentRaid()),
     );
@@ -221,7 +218,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           `We have no data on skills for player matching ${input}!`,
         ));
 
-      const { skills, kills } = participation.get(player.playerId) ?? {
+      const { skills, kills } = participation[player.playerId] ?? {
         skills: 0,
         kills: 0,
       };
@@ -237,7 +234,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             player.raidParticipation.length > 0,
         )
         .map((player) => {
-          const { skills, kills } = participation.get(player.playerId) ?? {
+          const { skills, kills } = participation[player.playerId] ?? {
             skills: 0,
             kills: 0,
           };
