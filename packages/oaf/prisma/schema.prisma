@@ -25,6 +25,8 @@ model Player {
   greenbox            Greenbox[]
   greenboxString      String?
   greenboxLastUpdate  DateTime?
+  latitude            Float?
+  longitude           Float?
   thiccEntered        Boolean             @default(false)
   thiccGifteeId       Int?                @unique
   thiccGiftee         Player?             @relation("ThiccGiftee", fields: [thiccGifteeId], references: [playerId])
