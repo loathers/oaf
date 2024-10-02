@@ -33,7 +33,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 proj4.defs(
   "robinson",
-  "+proj=robin +ellps=WGS84 +datum=WGS84 +units=m +no_defs",
+  "+proj=robin +ellps=WGS84 +datum=WGS84 +units=m +no_defs +lon_0=12",
 );
 proj4.defs("longlat", "+proj=longlat +datum=WGS84 +no_defs");
 const converter = proj4("longlat", "robinson");
@@ -43,7 +43,7 @@ const yMax = 8625154; // Coordinate starts in the range (-8625154,8625154)
 
 function longLatToRobinson(longitude: number, latitude: number) {
   const { x, y } = converter.forward({ x: longitude, y: latitude });
-  return { x: (x + xMax) / (xMax * 2), y: (y + yMax) / (yMax * 2) };
+  return { x: (x + xMax) / (2 * xMax), y: (-y + yMax) / (2 * yMax) };
 }
 
 const MAP = bufferToDataUri(
@@ -63,7 +63,6 @@ async function renderMap(interaction: ChatInputCommandInteraction) {
   const coords = positions.map(({ longitude, latitude }) =>
     longLatToRobinson(longitude!, latitude!),
   );
-  console.log(coords);
 
   const svg = dedent`
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
