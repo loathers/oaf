@@ -15,11 +15,15 @@ import { bufferToDataUri } from "../../utils.js";
 
 export const data = new SlashCommandBuilder()
   .setName("map")
-  .setDescription("Let's see how far ASS is spread!")
+  .setDescription(
+    "Let's see how far ASS is spread! No options will display the map, or you can add your location",
+  )
   .addStringOption((option) =>
     option
       .setName("location")
-      .setDescription("Your location (`clear` to remove yours)")
+      .setDescription(
+        'Your location (or "clear" to remove). Will respond with the resolved location, try again if wrong.',
+      )
       .setRequired(false),
   );
 
