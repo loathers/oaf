@@ -74,7 +74,7 @@ async function renderMap(interaction: ChatInputCommandInteraction) {
       <image href="${MAP}"/>
       ${coords.map(
         ({ x, y }) =>
-          `<text x="${x * 800}" y="${y * 406}" font-size="8px">📍</text>`,
+          `<text x="${x * 800}" y="${y * 406}" font-size="8px" font-family="Noto Color Emoji">📍</text>`,
       )}
     </svg>
   `;
