@@ -3946,6 +3946,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/proj4@npm:^2":
+  version: 2.5.5
+  resolution: "@types/proj4@npm:2.5.5"
+  checksum: 10c0/d8bf889945a7184c05a049e8125feaee9cf2d36c434435547653f3f2e29d581108b49b1b964452994277b45ef5415896defbe26e42ca647420e6d0aa60483f29
+  languageName: node
+  linkType: hard
+
 "@types/prop-types@npm:*":
   version: 15.7.12
   resolution: "@types/prop-types@npm:15.7.12"
@@ -8902,6 +8909,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mgrs@npm:1.0.0":
+  version: 1.0.0
+  resolution: "mgrs@npm:1.0.0"
+  checksum: 10c0/a360853be5a3b4f4734dbf0a193851c08039ccb6077362ab0f890cccd170ef88b59585129757da9fea4d7a313d7dc3ee88f37f594fc1ae3e4e8efc5353144d77
+  languageName: node
+  linkType: hard
+
 "micromark-core-commonmark@npm:^1.0.0, micromark-core-commonmark@npm:^1.0.1":
   version: 1.1.0
   resolution: "micromark-core-commonmark@npm:1.1.0"
@@ -9765,6 +9779,7 @@ __metadata:
     "@types/express": "npm:^4.17.21"
     "@types/jsonwebtoken": "npm:^9.0.6"
     "@types/node": "npm:^22.5.4"
+    "@types/proj4": "npm:^2"
     "@types/react": "npm:^18.3.5"
     "@types/react-dom": "npm:^18.3.0"
     "@types/serialize-error": "npm:^4.0.1"
@@ -9788,6 +9803,7 @@ __metadata:
     prettier: "npm:^3.3.3"
     pretty-ms: "npm:^9.1.0"
     prisma: "npm:^5.19.1"
+    proj4: "npm:^2.12.1"
     puppeteer: "npm:^13.7.0"
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
@@ -10462,6 +10478,16 @@ __metadata:
   version: 2.0.3
   resolution: "progress@npm:2.0.3"
   checksum: 10c0/1697e07cb1068055dbe9fe858d242368ff5d2073639e652b75a7eb1f2a1a8d4afd404d719de23c7b48481a6aa0040686310e2dac2f53d776daa2176d3f96369c
+  languageName: node
+  linkType: hard
+
+"proj4@npm:^2.12.1":
+  version: 2.12.1
+  resolution: "proj4@npm:2.12.1"
+  dependencies:
+    mgrs: "npm:1.0.0"
+    wkt-parser: "npm:^1.3.3"
+  checksum: 10c0/0a6f5f87137aa4297f02a95fab41f2cf5d39924f0e9800999be90e901b2d77a0b4fcab44a0c664839f4828c5a433fe81ec4c270a8fce62728f980ab4c8becdd4
   languageName: node
   linkType: hard
 
@@ -12750,6 +12776,13 @@ __metadata:
   bin:
     why-is-node-running: cli.js
   checksum: 10c0/1cde0b01b827d2cf4cb11db962f3958b9175d5d9e7ac7361d1a7b0e2dc6069a263e69118bd974c4f6d0a890ef4eedfe34cf3d5167ec14203dbc9a18620537054
+  languageName: node
+  linkType: hard
+
+"wkt-parser@npm:^1.3.3":
+  version: 1.3.3
+  resolution: "wkt-parser@npm:1.3.3"
+  checksum: 10c0/900fcdaea02828407742c4ea370b46a04c48ed95f63cde3db8e5b90c5a1b80da9827b43eb58940dd8cf790a971f9b8c42022b1548bce29a11153e699eef5bcb4
   languageName: node
   linkType: hard
 
