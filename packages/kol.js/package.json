@@ -27,7 +27,6 @@
     "html-entities": "^2.5.2",
     "htmlparser2": "^9.1.0",
     "image-size": "^1.1.1",
-    "node-html-parser": "^6.1.13",
     "querystring": "^0.2.1",
     "tough-cookie": "^5.0.0",
     "ts-dedent": "^2.2.0",
