@@ -56,6 +56,8 @@ const BOARD_MAPPINGS = {
   "Legacy of Loathing": 50,
   "A Shrunken Adventurer am I": 51,
   WereProfessor: 52,
+  "11 Things I Hate About U": 53,
+  "Avant Guard": 54,
   Standard: 999,
   "Elf Gratitude": 900,
 } as const;
@@ -137,6 +139,9 @@ const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
   smol: "A Shrunken Adventurer am I",
   shrunk: "A Shrunken Adventurer am I",
   shrunken: "A Shrunken Adventurer am I",
+  "11t": "11 Things I Hate About U",
+  "11tihau": "11 Things I Hate About U",
+  ag: "Avant Guard",
 };
 
 const AUTOCOMPLETE_CHOICES = [
