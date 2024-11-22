@@ -39,7 +39,7 @@ app
     const playerId = Number(req.params.playerId);
 
     if (Number.isNaN(playerId) || playerId < 1)
-      return res
+      return void res
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: "playerId is invalid" });
 
@@ -54,7 +54,7 @@ app
     });
 
     if (!latestGreenbox)
-      return res
+      return void res
         .status(StatusCodes.NOT_FOUND)
         .json({ error: "No greenbox data found" });
 
@@ -62,7 +62,7 @@ app
       where: { playerId },
     });
 
-    return res.status(StatusCodes.OK).json({
+    return void res.status(StatusCodes.OK).json({
       data: latestGreenbox.data,
       createdAt: latestGreenbox.createdAt,
       total,
@@ -73,12 +73,12 @@ app
     const greenboxNumber = Number(req.params.greenboxNumber);
 
     if (Number.isNaN(playerId) || playerId < 1)
-      return res
+      return void res
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: "playerId is invalid" });
 
     if (Number.isNaN(greenboxNumber) || greenboxNumber < 1)
-      return res
+      return void res
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: "greenboxNumber is invalid" });
 
@@ -99,19 +99,19 @@ app
     });
 
     if (!player)
-      return res.status(StatusCodes.NOT_FOUND).json({
+      return void res.status(StatusCodes.NOT_FOUND).json({
         error: `We don't know about that player`,
       });
 
     const greenbox = player.greenbox.at(0);
 
     if (!greenbox) {
-      return res.status(StatusCodes.NOT_FOUND).json({
+      return void res.status(StatusCodes.NOT_FOUND).json({
         error: `That greenbox entry doesn't exist`,
       });
     }
 
-    return res.status(StatusCodes.OK).json({
+    return void res.status(StatusCodes.OK).json({
       data: greenbox.data,
       createdAt: greenbox.createdAt,
       total: player._count.greenbox,
@@ -121,16 +121,20 @@ app
     const token = req.query.token;
 
     if (!token)
-      return res.status(StatusCodes.UNAUTHORIZED).json({ error: "No token" });
+      return void res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ error: "No token" });
     if (token !== config.SUBS_ROLLING_TOKEN)
-      return res.status(StatusCodes.FORBIDDEN).json({ error: "Invalid token" });
+      return void res
+        .status(StatusCodes.FORBIDDEN)
+        .json({ error: "Invalid token" });
 
     try {
       await rollSubs();
-      return res.status(StatusCodes.OK).json({ status: "Thanks Chris!" });
+      return void res.status(StatusCodes.OK).json({ status: "Thanks Chris!" });
     } catch (e) {
       if (e instanceof Error) {
-        return res
+        return void res
           .status(StatusCodes.INTERNAL_SERVER_ERROR)
           .json({ error: e.message });
       }
@@ -142,18 +146,20 @@ app
     const token = req.query.token;
 
     if (!token)
-      return res.status(StatusCodes.UNAUTHORIZED).json({ error: "No token" });
+      return void res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ error: "No token" });
     if (token !== config.SAMSARA_TOKEN)
-      return res.status(StatusCodes.FORBIDDEN).json({ error: "Invalid token" });
+      return void res
+        .status(StatusCodes.FORBIDDEN)
+        .json({ error: "Invalid token" });
 
     try {
-      console.log(req);
       await samsara(req.body);
-      return res.status(StatusCodes.OK).json({ success: "true" });
+      return void res.status(StatusCodes.OK).json({ success: "true" });
     } catch (e) {
       if (e instanceof Error) {
-        console.error(e);
-        return res
+        return void res
           .status(StatusCodes.INTERNAL_SERVER_ERROR)
           .json({ error: e.message });
       }
@@ -162,7 +168,7 @@ app
     }
   })
   .all(
-    "*",
+    "*route",
     createRequestHandler({
       build,
       getLoadContext: () => ({ discordClient, wikiClient }),
