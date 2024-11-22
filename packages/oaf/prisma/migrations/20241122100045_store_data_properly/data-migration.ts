@@ -2,12 +2,18 @@ import { expand } from "greenbox-data";
 
 import { prisma } from "../../../src/clients/database.js";
 
-const compressed = await prisma.greenbox.findMany({
-  where: { oldData: { not: null } },
-});
+console.log("Migrating greenbox data");
 
-for (const e of compressed) {
-  console.log("Converting", e.id, "for player", e.playerId);
+while (true) {
+  const e = await prisma.greenbox.findFirst({
+    where: { oldData: { not: null } },
+    take: 1,
+  });
+
+  if (!e) break;
+
+  console.log(`Migrating ${e.id} for player ${e.playerId}`);
+
   await prisma.greenbox.update({
     where: { id: e.id },
     data: {
@@ -16,3 +22,5 @@ for (const e of compressed) {
     },
   });
 }
+
+console.log("Done migrating greenbox data");
