@@ -18,6 +18,11 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react"
   },
-  "include": ["src/**/*.ts", "vite.config.ts", "remix.env.d.ts"],
+  "include": [
+    "src/**/*.ts",
+    "vite.config.ts",
+    "remix.env.d.ts",
+    "prisma/**/*.ts"
+  ],
   "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 }

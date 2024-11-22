@@ -1,3 +1,5 @@
+import { deepEqual } from "fast-equals";
+import { expand } from "greenbox-data";
 import { type KoLMessage } from "kol.js";
 
 import { isRecordNotFoundError, prisma } from "./clients/database.js";
@@ -34,12 +36,14 @@ async function update(
       include: { greenbox: { orderBy: { id: "desc" }, take: 1 } },
     });
 
+    const greenboxData = expand(greenboxString);
+
     // Only add a new entry if something has changed
-    if (player.greenbox.at(0)?.data !== greenboxString) {
+    if (!deepEqual(player.greenbox.at(0)?.data, greenboxData)) {
       await prisma.greenbox.create({
         data: {
           playerId,
-          data: greenboxString,
+          data: { ...greenboxData },
         },
       });
     }

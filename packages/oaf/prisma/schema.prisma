@@ -11,7 +11,8 @@ model Greenbox {
   id        Int      @id @default(autoincrement())
   playerId  Int
   player    Player   @relation(fields: [playerId], references: [playerId])
-  data      String
+  oldData   String?
+  data      Json
   createdAt DateTime @default(now())
 }
 
