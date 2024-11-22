@@ -49,6 +49,7 @@ app
       select: {
         player: true,
         data: true,
+        oldData: true,
         createdAt: true,
       },
     });
@@ -63,7 +64,7 @@ app
     });
 
     return void res.status(StatusCodes.OK).json({
-      data: latestGreenbox.data,
+      data: latestGreenbox.oldData || latestGreenbox.data,
       createdAt: latestGreenbox.createdAt,
       total,
     });
