@@ -4376,10 +4376,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"date-fns@npm:^3.6.0":
-  version: 3.6.0
-  resolution: "date-fns@npm:3.6.0"
-  checksum: 10c0/0b5fb981590ef2f8e5a3ba6cd6d77faece0ea7f7158948f2eaae7bbb7c80a8f63ae30b01236c2923cf89bb3719c33aeb150c715ea4fe4e86e37dcf06bed42fb6
+"date-fns@npm:^4.1.0":
+  version: 4.1.0
+  resolution: "date-fns@npm:4.1.0"
+  checksum: 10c0/b79ff32830e6b7faa009590af6ae0fb8c3fd9ffad46d930548fbb5acf473773b4712ae887e156ba91a7b3dc30591ce0f517d69fd83bd9c38650fdc03b4e0bac8
   languageName: node
   linkType: hard
 
@@ -7282,7 +7282,7 @@ __metadata:
   dependencies:
     async-mutex: "npm:^0.5.0"
     css-select: "npm:^5.1.0"
-    date-fns: "npm:^3.6.0"
+    date-fns: "npm:^4.1.0"
     domhandler: "npm:^5.0.3"
     domutils: "npm:^3.1.0"
     got: "npm:^14.4.4"
@@ -8718,7 +8718,7 @@ __metadata:
     body-parser: "npm:^1.20.3"
     convert-svg-to-png: "npm:^0.6.4"
     cors: "npm:^2.8.5"
-    date-fns: "npm:^3.6.0"
+    date-fns: "npm:^4.1.0"
     discord.js: "npm:^14.16.3"
     eslint: "npm:^9.15.0"
     express: "npm:^4.21.1"
@@ -8737,7 +8737,7 @@ __metadata:
     pretty-ms: "npm:^9.2.0"
     prisma: "npm:^5.22.0"
     proj4: "npm:^2.14.0"
-    puppeteer: "npm:^13.7.0"
+    puppeteer: "npm:13.7.0"
     react: "npm:^18.3.1"
     react-dom: "npm:^18.3.1"
     remix-auth: "npm:^3.7.0"
@@ -9500,7 +9500,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"puppeteer@npm:^13.7.0":
+"puppeteer@npm:13.7.0, puppeteer@npm:^13.7.0":
   version: 13.7.0
   resolution: "puppeteer@npm:13.7.0"
   dependencies:
