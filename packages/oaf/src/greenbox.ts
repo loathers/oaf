@@ -1,5 +1,6 @@
+import { JsonValue } from "@prisma/client/runtime/library";
 import { deepEqual } from "fast-equals";
-import { expand } from "greenbox-data";
+import { RawSnapshotData, expand } from "greenbox-data";
 import { type KoLMessage } from "kol.js";
 
 import { isRecordNotFoundError, prisma } from "./clients/database.js";
@@ -39,7 +40,7 @@ async function update(
     const greenboxData = expand(greenboxString);
 
     // Only add a new entry if something has changed
-    if (!deepEqual(player.greenbox.at(0)?.data, greenboxData)) {
+    if (isSnapshotDifferent(player.greenbox.at(0)?.data, greenboxData)) {
       await prisma.greenbox.create({
         data: {
           playerId,
@@ -88,4 +89,9 @@ async function wipe(playerId: number) {
     playerId,
     "At your request, your public greenbox profile, if it existed, has been removed",
   );
+}
+
+function isSnapshotDifferent(a: JsonValue | undefined, b: RawSnapshotData) {
+  if (!a || typeof a !== "object") return true;
+  return !deepEqual({ ...a, meta: undefined }, { ...b, meta: undefined });
 }
