@@ -40,14 +40,14 @@ async function update(
     const greenboxData = expand(greenboxString);
 
     // Only add a new entry if something has changed
-    if (isSnapshotDifferent(player.greenbox.at(0)?.data, greenboxData)) {
-      await prisma.greenbox.create({
-        data: {
-          playerId,
-          data: { ...greenboxData },
-        },
-      });
-    }
+    if (!isSnapshotDifferent(player.greenbox.at(0)?.data, greenboxData)) return;
+
+    await prisma.greenbox.create({
+      data: {
+        playerId,
+        data: { ...greenboxData },
+      },
+    });
   } catch (error) {
     await discordClient.alert(
       "Error processing greenbox submission",
