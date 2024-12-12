@@ -1,7 +1,7 @@
 import svgToPng from "convert-svg-to-png";
 import type { Converter } from "convert-svg-to-png";
 
-let timeout: NodeJS.Timer | null = null;
+let timeout: ReturnType<typeof setTimeout> | null = null;
 let converter: Converter | null = null;
 
 export async function renderSvg(svg: string) {
