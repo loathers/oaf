@@ -117,7 +117,7 @@ export function columnsByMaxLength<T extends { toString: () => string }>(
 export function titleCase(title: string) {
   return title
     .split(" ")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
 }
 

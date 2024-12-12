@@ -1,3 +1,4 @@
+import { ApplicationCommandType } from "discord-api-types/v10";
 import {
   ActionRowBuilder,
   ContextMenuCommandBuilder,
@@ -14,9 +15,6 @@ import {
   hyperlink,
   inlineCode,
 } from "discord.js";
-
-// Had to import this from here to avoid a type issue
-import { ApplicationCommandType } from "discord-api-types/v10";
 
 import { prisma } from "../../clients/database.js";
 import { config } from "../../config.js";

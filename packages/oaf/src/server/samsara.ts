@@ -2,6 +2,7 @@ import { bold } from "discord.js";
 
 import { discordClient } from "../clients/discord.js";
 import { config } from "../config.js";
+import { titleCase } from "../utils.js";
 
 type Details = {
   player: {
@@ -34,7 +35,9 @@ export async function samsara({
   const goldStarEmoji =
     guild.emojis.cache.find((e) => e.name === "goldstar") ?? "";
 
+  const path = pathName === "None" ? "No Path" : pathName;
+
   await iotmChannel.send({
-    content: `🚨${goldStarEmoji} ${player.name} (#${player.id}) has achieved the best ${bold(`${lifestyle} ${pathName}`)} with ${days}/${turns}.`,
+    content: `🚨${goldStarEmoji} ${player.name} (#${player.id}) has achieved the best ${bold(`${titleCase(lifestyle)} ${path}`)} with ${days}/${turns}.`,
   });
 }
