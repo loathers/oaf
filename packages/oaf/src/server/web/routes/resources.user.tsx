@@ -1,29 +1,29 @@
 /// <reference types="../../../../remix.env.d.ts" />
 import { Text } from "@chakra-ui/react";
-import { LoaderFunctionArgs, json } from "@remix-run/node";
+import { LoaderFunctionArgs } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { useEffect } from "react";
 import React from "react";
 
-import { authenticator } from "../auth.server";
+import { authenticate } from "../auth.server";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-  await authenticator.isAuthenticated(request, { failureRedirect: "/" });
+  await authenticate(request);
 
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
 
-  if (!id) return json({ user: null });
+  if (!id) return { user: null };
 
   const { discordClient } = context;
 
   const user = await discordClient.users.fetch(id);
 
-  if (!user) return json({ user: null });
+  if (!user) return { user: null };
 
-  return json({
+  return {
     user: { name: user.username, avatar: user.displayAvatarURL() },
-  });
+  };
 }
 
 type Props = {

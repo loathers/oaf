@@ -20,13 +20,12 @@ import { useFetcher, useLoaderData } from "@remix-run/react";
 import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
-  json,
 } from "@remix-run/server-runtime";
 import { Message, messageLink } from "discord.js";
 import React, { useEffect, useRef } from "react";
 
 import { DiscordClient } from "../../../clients/discord";
-import { authenticator } from "../auth.server";
+import { authenticate } from "../auth.server";
 
 async function fetchChannels(discordClient: DiscordClient) {
   if (!discordClient.guild) return [];
@@ -46,18 +45,18 @@ async function fetchEmoji(discordClient: DiscordClient) {
   }));
 }
 
-export async function loader({ context }: LoaderFunctionArgs) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
+  await authenticate(request);
   const { discordClient } = context;
-  return json({
+  return {
     channels: await fetchChannels(discordClient),
     emoji: await fetchEmoji(discordClient),
-  });
+  };
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
-  const user = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/",
-  });
+  const user = await authenticate(request);
+
   const formData = await request.formData();
   const channelId = formData.get("channelId");
   const content = formData.get("content");
@@ -69,7 +68,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     !content ||
     typeof content !== "string"
   )
-    return json({ success: false });
+    return { success: false };
 
   const { discordClient } = context;
 
@@ -89,11 +88,11 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
       message = await replyee.reply(content);
     } catch (error) {
-      return json({ success: false });
+      return { success: false };
     }
   } else {
     const channel = await discordClient.channels.fetch(channelId);
-    if (!channel || !channel.isTextBased()) return json({ success: false });
+    if (!channel || !channel.isSendable()) return { success: false };
     message = await channel.send(content);
   }
 
@@ -101,7 +100,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     `${user.name} made me say ${messageLink(message.channelId, message.id)}`,
   );
 
-  return json({ success: true });
+  return { success: true };
 }
 
 export default function Pilot() {

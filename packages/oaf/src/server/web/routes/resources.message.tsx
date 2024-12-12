@@ -1,21 +1,21 @@
 /// <reference types="../../../../remix.env.d.ts" />
-import { LoaderFunctionArgs, json } from "@remix-run/node";
+import { LoaderFunctionArgs } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { useEffect } from "react";
 import React from "react";
 
-import { authenticator } from "../auth.server";
+import { authenticate } from "../auth.server";
 import DiscordMessage from "../components/DiscordMessage";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
-  await authenticator.isAuthenticated(request, { failureRedirect: "/" });
+  await authenticate(request);
 
   const url = new URL(request.url);
   const guildId = url.searchParams.get("guildId");
   const channelId = url.searchParams.get("channelId");
   const messageId = url.searchParams.get("messageId");
 
-  if (!guildId || !channelId || !messageId) return json({ message: null });
+  if (!guildId || !channelId || !messageId) return { message: null };
 
   const { discordClient } = context;
 
@@ -23,18 +23,18 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 
   const channel = await guild.channels.fetch(channelId);
 
-  if (!channel?.isTextBased()) return json({ message: null });
+  if (!channel?.isTextBased()) return { message: null };
 
   const message = await channel.messages.fetch(messageId);
 
-  return json({
+  return {
     message: {
       authorName: message.author.username,
       authorAvatar: message.author.displayAvatarURL(),
       content: message.content,
       createdAt: message.createdAt,
     },
-  });
+  };
 }
 
 type Props = {

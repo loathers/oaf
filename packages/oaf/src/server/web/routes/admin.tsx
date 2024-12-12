@@ -13,18 +13,16 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { LoaderFunctionArgs, json } from "@remix-run/node";
+import { LoaderFunctionArgs } from "@remix-run/node";
 import { Link, Outlet, useLoaderData } from "@remix-run/react";
 import React from "react";
 
-import { authenticator } from "../auth.server";
+import { authenticate } from "../auth.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const user = await authenticator.isAuthenticated(request, {
-    failureRedirect: "/",
-  });
+  const user = await authenticate(request);
 
-  return json({ user });
+  return { user };
 }
 
 export default function Admin() {
