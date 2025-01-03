@@ -2,7 +2,7 @@ import { DiscordAPIError, Events, Message } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 
-const ITOM_MATCHER = /(?:\W|^)(itoms?)(?:[^a-z]|$)/i;
+const ITOM_MATCHER = /(?:\W|^)(ito(m|y)s?)(?:[^a-z]|$)/i;
 
 async function onMessage(message: Message) {
   if (message.author.bot) return;
