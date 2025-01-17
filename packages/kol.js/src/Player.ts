@@ -137,7 +137,7 @@ export class Player<IsFull extends boolean = boolean> {
   matchesIdentifier(identifier: string | number) {
     const id = Number(identifier);
     if (!Number.isNaN(id) || typeof identifier === "number") {
-      return this.id === identifier;
+      return this.id === id;
     }
 
     return this.name.toLowerCase() === identifier.toLowerCase();
