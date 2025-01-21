@@ -6577,13 +6577,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"greenbox-data@npm:^0.0.6":
-  version: 0.0.6
-  resolution: "greenbox-data@npm:0.0.6"
+"greenbox-data@npm:^0.0.7":
+  version: 0.0.7
+  resolution: "greenbox-data@npm:0.0.7"
   dependencies:
     jsoncrush: "npm:^1.1.8"
-    libram: "npm:^0.9.20"
-  checksum: 10c0/d920c711c13bd43170e8fe00a49eaaa6f7000e7d930d3ff6ac53fa9cd935e2c548e0bd9902fa028f706566d727c236331481aba9313389e2ccf64647c222a587
+    libram: "npm:^0.9.31"
+  checksum: 10c0/218515428c997136f42a1c842fd265ddbf9f4740aa7c735fc416be73385935a377f616ed8aec0e6c695b6eadb8c4201ee4b16682a2ce07ae4295e33c87800a42
   languageName: node
   linkType: hard
 
@@ -7539,14 +7539,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"libram@npm:^0.9.20":
-  version: 0.9.20
-  resolution: "libram@npm:0.9.20"
+"libram@npm:^0.9.31":
+  version: 0.9.31
+  resolution: "libram@npm:0.9.31"
   dependencies:
     html-entities: "npm:^2.5.2"
   peerDependencies:
     kolmafia: ^5.28100.0
-  checksum: 10c0/38a6b1decf94dad10834d700d4b4e4b041972e5035a3455c827bfdf13132d70baec0782491479698bac05c107add3efc6874e1bc618869bb01d38ad96da12086
+  checksum: 10c0/6a67612b58e383ac639a2f126e63c70340b2e9b330399f6a20994aae96dc5390e84037e7ed498d2531c22affac233baad06891618bcf8c1ff40c2fb752df82d4
   languageName: node
   linkType: hard
 
@@ -9016,7 +9016,7 @@ __metadata:
     express: "npm:^5.0.1"
     fast-equals: "npm:^5.0.1"
     framer-motion: "npm:^11.14.0"
-    greenbox-data: "npm:^0.0.6"
+    greenbox-data: "npm:^0.0.7"
     html-entities: "npm:^2.5.2"
     http-status-codes: "npm:^2.3.0"
     husky: "npm:^9.1.7"
