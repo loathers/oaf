@@ -6,7 +6,7 @@
   "main": "./src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "node --import tsx ./src/index.ts",
+    "start": "node --import tsx --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(pathToFileURL(\"./https-hooks.mjs\"));' ./src/index.ts",
     "format": "prettier --write .",
     "prisma": "prisma",
     "build": "remix vite:build",

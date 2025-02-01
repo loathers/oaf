@@ -1,6 +1,6 @@
 import { JsonValue } from "@prisma/client/runtime/library";
 import { deepEqual } from "fast-equals";
-import { RawSnapshotData, expand } from "greenbox-data";
+import { type RawSnapshotData } from "greenbox-data";
 import { type KoLMessage } from "kol.js";
 
 import { isRecordNotFoundError, prisma } from "./clients/database.js";
@@ -23,6 +23,17 @@ export async function handleGreenboxKmail(message: KoLMessage) {
   }
 }
 
+/**
+ * Load a fresh version of the greenbox-data package to expand the string
+ */
+async function expand(greenboxString: string) {
+  const { expand } = (await import(
+    // @ts-expect-error Cannot gather types from URL import
+    "https://cdn.skypack.dev/greenbox-data"
+  )) as { expand: (str: string) => RawSnapshotData };
+  return expand(greenboxString);
+}
+
 async function update(
   playerId: number,
   playerName: string,
@@ -37,7 +48,7 @@ async function update(
       include: { greenbox: { orderBy: { id: "desc" }, take: 1 } },
     });
 
-    const greenboxData = expand(greenboxString);
+    const greenboxData = await expand(greenboxString);
 
     // Only add a new entry if something has changed
     if (!isSnapshotDifferent(player.greenbox.at(0)?.data, greenboxData)) return;
