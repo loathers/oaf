@@ -21,15 +21,25 @@ async function getRaffleEmbeds() {
 
   const embeds = [];
 
-  let first = raffle.today.first && (await embedForItem(raffle.today.first));
-  if (!first)
-    first = createEmbed().setTitle(`Unknown item (#${raffle.today.first})`);
+  if (raffle.today.first === null || raffle.today.second === null) {
+    embeds.push(
+      createEmbed()
+        .setTitle("First Prize: Rollover anticipation!")
+        // Oprah giving out anticipation to all
+        .setImage("https://i.imgur.com/JNhU5Tt.gif"),
+    );
+    return embeds;
+  }
+
+  const first =
+    (await embedForItem(raffle.today.first)) ??
+    createEmbed().setTitle(`Unknown item (#${raffle.today.first})`);
   first.setTitle(`First Prize: ${first.toJSON().title}`);
   embeds.push(first);
 
-  let second = raffle.today.second && (await embedForItem(raffle.today.second));
-  if (!second)
-    second = createEmbed().setTitle(`Unknown item (#${raffle.today.second})`);
+  const second =
+    (await embedForItem(raffle.today.second)) ??
+    createEmbed().setTitle(`Unknown item (#${raffle.today.second})`);
   second.setTitle(`Second Prize: ${second.toJSON().title}`);
   embeds.push(second);
 
