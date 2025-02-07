@@ -7,6 +7,7 @@ import {
 
 import { LibreLinkUpClient } from "../../clients/LibreLinkupClient.js";
 import { config } from "../../config.js";
+import { discordClient } from "../../clients/discord.js";
 
 export const data = new SlashCommandBuilder()
   .setName("kenny")
@@ -50,6 +51,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       )}. ${makeComment({ isHigh: latest.value >= KENNY_TOO_HIGH, isLow: latest.value <= KENNY_TOO_LOW })}`,
     );
   } catch (error) {
+    discordClient.alert(`Kenny cyborg implant error: ${error}`, interaction, error);
     return void (await interaction.editReply(
       "Can't communicate with Kenny's cyborg implant right now.",
     ));
