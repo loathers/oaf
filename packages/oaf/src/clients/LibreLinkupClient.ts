@@ -47,6 +47,8 @@ export class LibreLinkUpClient {
       data: { authTicket: { token: string } };
     };
 
+    throw new Error(`Kenny login result looks like ${JSON.stringify(result)}`);
+
     if (result.status === 2) {
       throw new Error("Invalid credentials");
     }
