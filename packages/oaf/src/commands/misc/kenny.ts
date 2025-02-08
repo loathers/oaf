@@ -35,8 +35,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         firstName === "Kenneth" && lastName === "Tester",
     );
 
-    const result = await client.login();
-    discordClient.alert(`${result}`);
+    await client.login();
     const latest = await client.latest();
 
     if (!latest) {
