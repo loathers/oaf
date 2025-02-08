@@ -36,7 +36,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
 
     const result = await client.login();
-    discordClient.alert(result);
+    discordClient.alert(`${result}`);
     const latest = await client.latest();
 
     if (!latest) {

@@ -54,7 +54,7 @@ export class LibreLinkUpClient {
     this.token = result.data.authTicket.token;
     await this.discoverPatientId();
 
-    return JSON.stringify(result);
+    return result;
   }
 
   async discoverPatientId() {
