@@ -48,13 +48,14 @@ export class LibreLinkUpClient {
     };
 
     throw new Error(`Kenny login result looks like ${JSON.stringify(result)}`);
-
+/*
     if (result.status === 2) {
       throw new Error("Invalid credentials");
     }
 
     this.token = result.data.authTicket.token;
     await this.discoverPatientId();
+*/
   }
 
   async discoverPatientId() {
