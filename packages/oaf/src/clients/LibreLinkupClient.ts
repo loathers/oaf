@@ -60,6 +60,7 @@ export class LibreLinkUpClient {
       headers: this.headers(),
     });
     const patients = (await response.json()) as { data: Patient[] };
+    if (!("data" in patients)) throw new Error(`Patients does not contain \`data\` attribute! Instead, it looks like ${JSON.stringify(patients)}`);
     if (!patients.data.length)
       throw new Error("No patients connected to this account.");
     const patient = patients.data.find(this.isPatient) || patients.data[0];
