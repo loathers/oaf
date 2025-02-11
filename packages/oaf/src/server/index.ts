@@ -59,14 +59,9 @@ app
         .status(StatusCodes.NOT_FOUND)
         .json({ error: "No greenbox data found" });
 
-    const total = await prisma.greenbox.count({
-      where: { playerId },
-    });
-
     return void res.status(StatusCodes.OK).json({
       data: latestGreenbox.oldData || latestGreenbox.data,
       createdAt: latestGreenbox.createdAt,
-      total,
     });
   })
   .get("/api/greenbox/:playerId/:greenboxNumber", async (req, res) => {
@@ -83,28 +78,11 @@ app
         .status(StatusCodes.BAD_REQUEST)
         .json({ error: "greenboxNumber is invalid" });
 
-    const player = await prisma.player.findFirst({
+    const greenbox = await prisma.greenbox.findFirst({
       where: { playerId },
-      include: {
-        greenbox: {
-          orderBy: { id: "asc" },
-          skip: greenboxNumber - 1,
-          take: 1,
-        },
-        _count: {
-          select: {
-            greenbox: true,
-          },
-        },
-      },
+      orderBy: { id: "asc" },
+      skip: greenboxNumber - 1,
     });
-
-    if (!player)
-      return void res.status(StatusCodes.NOT_FOUND).json({
-        error: `We don't know about that player`,
-      });
-
-    const greenbox = player.greenbox.at(0);
 
     if (!greenbox) {
       return void res.status(StatusCodes.NOT_FOUND).json({
@@ -115,7 +93,6 @@ app
     return void res.status(StatusCodes.OK).json({
       data: greenbox.data,
       createdAt: greenbox.createdAt,
-      total: player._count.greenbox,
     });
   })
   .get("/webhooks/subsrolling", async (req, res) => {
