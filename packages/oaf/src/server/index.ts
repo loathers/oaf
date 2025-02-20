@@ -8,6 +8,7 @@ import path from "node:path";
 
 import { prisma } from "../clients/database.js";
 import { discordClient } from "../clients/discord.js";
+import { kolClient } from "../clients/kol.js";
 import { wikiClient } from "../clients/wiki.js";
 import { config } from "../config.js";
 import { samsara } from "./samsara.js";
@@ -35,6 +36,17 @@ app
   )
   .use(bodyParser.json())
   .get("/favicon.ico", (req, res) => void res.send())
+  .get("/standard.php", async (req, res) => {
+    const date =
+      typeof req.query.date === "string"
+        ? req.query.date
+        : `${new Date().getFullYear() - 2}-01-02`;
+    res
+      .status(StatusCodes.OK)
+      .send(
+        await kolClient.fetchText("standard.php", { searchParams: { date } }),
+      );
+  })
   .get("/api/greenbox/:playerId", async (req, res) => {
     const playerId = Number(req.params.playerId);
 
