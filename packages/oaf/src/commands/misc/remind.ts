@@ -147,25 +147,25 @@ async function checkReminders() {
   });
 
   for (const reminder of reminders) {
-    const user = await discordClient.users.fetch(reminder.userId);
-    const channel = reminder.guildId
-      ? await discordClient.channels.fetch(reminder.channelId)
-      : await user.createDM();
-
-    if (!channel || !("send" in channel)) {
-      await discordClient.alert(
-        `Skipping reminder #${reminder.id} for ${userMention(
-          user.id,
-        )} due to unknown channel or cannot be posted in ${reminder.channelId}`,
-      );
-      continue;
-    }
-
-    const reply = reminder.interactionReplyId
-      ? { messageReference: reminder.interactionReplyId }
-      : undefined;
-
     try {
+      const user = await discordClient.users.fetch(reminder.userId);
+      const channel = reminder.guildId
+        ? await discordClient.channels.fetch(reminder.channelId)
+        : await user.createDM();
+
+      if (!channel || !("send" in channel)) {
+        await discordClient.alert(
+          `Skipping reminder #${reminder.id} for ${userMention(
+            user.id,
+          )} due to unknown channel or cannot be posted in ${reminder.channelId}`,
+        );
+        continue;
+      }
+
+      const reply = reminder.interactionReplyId
+        ? { messageReference: reminder.interactionReplyId }
+        : undefined;
+
       await channel.send({
         content: userMention(reminder.userId),
         embeds: [{ title: "⏰⏰⏰", description: reminder.messageContents }],
