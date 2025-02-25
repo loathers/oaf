@@ -555,4 +555,17 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
       yesterday,
     };
   }
+
+  async getStandard(date?: Date) {
+    if (!date) {
+      date = new Date();
+      date.setFullYear(date.getFullYear() - 2);
+      date.setMonth(0);
+      date.setDate(2);
+    }
+
+    const formattedDate = date.toISOString().split("T")[0];
+
+    return await this.fetchText("standard.php", { searchParams: { date: formattedDate } });
+  }
 }
