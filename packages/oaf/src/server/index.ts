@@ -146,7 +146,7 @@ app
     }
   })
   .all(
-    "*route",
+    "*",
     createRequestHandler({
       build,
       getLoadContext: () => ({ discordClient, wikiClient }),
