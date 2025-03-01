@@ -566,6 +566,8 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
 
     const formattedDate = date.toISOString().split("T")[0];
 
-    return await this.fetchText("standard.php", { searchParams: { date: formattedDate } });
+    return await this.fetchText("standard.php", {
+      searchParams: { date: formattedDate },
+    });
   }
 }

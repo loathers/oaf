@@ -1,6 +1,7 @@
 import { EmbedBuilder } from "discord.js";
 import { StatusCodes } from "http-status-codes";
 import { Memoize, clear } from "typescript-memoize";
+import { Agent, fetch } from "undici";
 
 import { config } from "../config.js";
 import {
@@ -15,6 +16,12 @@ import { cleanString, notNull } from "../utils.js";
 import { createEmbed } from "./discord.js";
 import { googleSearch } from "./googleSearch.js";
 import { pizzaTree } from "./pizza.js";
+
+const insecureAgent = new Agent({
+  connect: {
+    rejectUnauthorized: false,
+  },
+});
 
 export class WikiSearchError extends Error {
   step: string;
@@ -483,7 +490,7 @@ export class WikiClient {
   }
 
   private async tryWiki(url: string, stage: string) {
-    const response = await fetch(url);
+    const response = await fetch(url, { dispatcher: insecureAgent });
 
     if (!response.ok) {
       if (response.status === StatusCodes.NOT_FOUND) return null;
