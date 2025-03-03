@@ -26,7 +26,7 @@
     "got": "^14.4.6",
     "html-entities": "^2.5.2",
     "htmlparser2": "^10.0.0",
-    "image-size": "^1.2.0",
+    "image-size": "^2.0.0",
     "querystring": "^0.2.1",
     "tough-cookie": "^5.1.2",
     "ts-dedent": "^2.2.0",
