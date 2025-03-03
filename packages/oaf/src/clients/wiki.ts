@@ -19,7 +19,7 @@ import { pizzaTree } from "./pizza.js";
 
 const insecureAgent = new Agent({
   connect: {
-    rejectUnauthorized: false,
+    ciphers: "DEFAULT:@SECLEVEL=1",
   },
 });
 
@@ -575,16 +575,16 @@ export class WikiClient {
       url += `_(${blockDescription})`;
     }
 
-    const pattern =
-      type === "Skill"
-        ? new RegExp(
-            `${thing.id.toString().padStart(4, "0")} <a href="([^"]+)"`,
-          )
-        : new RegExp(`${thing.id}\\. <a href="([^"]+)"`);
-
     try {
-      const request = await fetch(url);
+      const request = await fetch(url, { dispatcher: insecureAgent });
       const blockPage = await request.text();
+
+      const pattern =
+        type === "Skill"
+          ? new RegExp(
+              `${thing.id.toString().padStart(4, "0")} <a href="([^"]+)"`,
+            )
+          : new RegExp(`${thing.id}\\. <a href="([^"]+)"`);
 
       const match = blockPage.match(pattern);
       if (!match) return null;
@@ -598,7 +598,9 @@ export class WikiClient {
 }
 
 async function parseFoundName(url: string, contents?: string) {
-  if (!contents) contents = (await (await fetch(url)).text()) || "";
+  if (!contents)
+    contents =
+      (await (await fetch(url, { dispatcher: insecureAgent })).text()) || "";
   const name = nameFromWikiPage(url, contents);
   const image = imageFromWikiPage(url, contents);
   return { name, url, image };
