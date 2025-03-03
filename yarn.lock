@@ -1862,6 +1862,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jitl/quickjs-ffi-types@npm:0.31.0":
+  version: 0.31.0
+  resolution: "@jitl/quickjs-ffi-types@npm:0.31.0"
+  checksum: 10c0/0684b2ea64c0975778ea4836f80fd527ea643b668bbe66c6a3caf2aecf2c4a332afcf27e7f8dbe187b848b056a48b8f26d4e3ae32964a4856c05808a00a27fb5
+  languageName: node
+  linkType: hard
+
+"@jitl/quickjs-ng-wasmfile-release-sync@npm:^0.31.0":
+  version: 0.31.0
+  resolution: "@jitl/quickjs-ng-wasmfile-release-sync@npm:0.31.0"
+  dependencies:
+    "@jitl/quickjs-ffi-types": "npm:0.31.0"
+  checksum: 10c0/0c9a06d95387322c2b00d5be1ba0248a61e510fceb7cae634942abe2aa1d1137b72f44b9b55b6eb280b577582e7936bf815a3d6fd2fd1a71ab7470525e408524
+  languageName: node
+  linkType: hard
+
 "@jridgewell/gen-mapping@npm:^0.3.5":
   version: 0.3.5
   resolution: "@jridgewell/gen-mapping@npm:0.3.5"
@@ -1908,6 +1924,38 @@ __metadata:
     "@jridgewell/resolve-uri": "npm:^3.1.0"
     "@jridgewell/sourcemap-codec": "npm:^1.4.14"
   checksum: 10c0/3d1ce6ebc69df9682a5a8896b414c6537e428a1d68b02fcc8363b04284a8ca0df04d0ee3013132252ab14f2527bc13bea6526a912ecb5658f0e39fd2860b4df4
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/base64@npm:^1.1.1":
+  version: 1.1.2
+  resolution: "@jsonjoy.com/base64@npm:1.1.2"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/88717945f66dc89bf58ce75624c99fe6a5c9a0c8614e26d03e406447b28abff80c69fb37dabe5aafef1862cf315071ae66e5c85f6018b437d95f8d13d235e6eb
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/json-pack@npm:^1.0.3":
+  version: 1.1.1
+  resolution: "@jsonjoy.com/json-pack@npm:1.1.1"
+  dependencies:
+    "@jsonjoy.com/base64": "npm:^1.1.1"
+    "@jsonjoy.com/util": "npm:^1.1.2"
+    hyperdyperid: "npm:^1.2.0"
+    thingies: "npm:^1.20.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/fd0d8baa0c8eba536924540717901e0d7eed742576991033cceeb32dcce801ee0a4318cf6eb40b444c9e78f69ddbd4f38b9eb0041e9e54c17e7b6d1219b12e1d
+  languageName: node
+  linkType: hard
+
+"@jsonjoy.com/util@npm:^1.1.2, @jsonjoy.com/util@npm:^1.3.0":
+  version: 1.5.0
+  resolution: "@jsonjoy.com/util@npm:1.5.0"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/0065ae12c4108d8aede01a479c8d2b5a39bce99e9a449d235befc753f57e8385d9c1115720529f26597840b7398d512898155423d9859fd638319fb0c827365d
   languageName: node
   linkType: hard
 
@@ -2661,6 +2709,22 @@ __metadata:
   version: 3.5.3
   resolution: "@sapphire/snowflake@npm:3.5.3"
   checksum: 10c0/361b6a3e16eea4eb48b2608005ce397d4163065ccd84077059a0f609b97fb9cc52a173d7a64bbfce6f5d1e77be0f9704fd72ef64683a3dc7e455e9b4a1c90db1
+  languageName: node
+  linkType: hard
+
+"@sebastianwessel/quickjs@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "@sebastianwessel/quickjs@npm:2.0.0"
+  dependencies:
+    memfs: "npm:^4.17.0"
+    quickjs-emscripten-core: "npm:^0.31.0"
+    rate-limiter-flexible: "npm:^5.0.5"
+  peerDependencies:
+    typescript: ">= 5.5.4"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/8f615f0cc621edb14e454df3102c11158791b689550088e46b614f53d0b5336a5fb0155f990f480b1df27f620e07c0c1aad0063327206d032c9fe7921beff52f
   languageName: node
   linkType: hard
 
@@ -6489,6 +6553,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hyperdyperid@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "hyperdyperid@npm:1.2.0"
+  checksum: 10c0/885ba3177c7181d315a856ee9c0005ff8eb5dcb1ce9e9d61be70987895d934d84686c37c981cceeb53216d4c9c15c1cc25f1804e84cc6a74a16993c5d7fd0893
+  languageName: node
+  linkType: hard
+
 "iconv-lite@npm:0.4.24":
   version: 0.4.24
   resolution: "iconv-lite@npm:0.4.24"
@@ -7694,6 +7765,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"memfs@npm:^4.17.0":
+  version: 4.17.0
+  resolution: "memfs@npm:4.17.0"
+  dependencies:
+    "@jsonjoy.com/json-pack": "npm:^1.0.3"
+    "@jsonjoy.com/util": "npm:^1.3.0"
+    tree-dump: "npm:^1.0.1"
+    tslib: "npm:^2.0.0"
+  checksum: 10c0/2901f69e80e1fbefa8aafe994a253fff6f34eb176d8b80d57476311611e516a11ab4dd93f852c8739fe04f2b57d6a4ca7a1828fa0bd401ce631bcac214b3d58b
+  languageName: node
+  linkType: hard
+
 "merge-descriptors@npm:1.0.3":
   version: 1.0.3
   resolution: "merge-descriptors@npm:1.0.3"
@@ -8600,6 +8683,7 @@ __metadata:
     "@remix-run/react": "npm:^2.15.3"
     "@remix-run/serve": "npm:^2.15.3"
     "@remix-run/server-runtime": "npm:^2.15.3"
+    "@sebastianwessel/quickjs": "npm:^2.0.0"
     "@trivago/prettier-plugin-sort-imports": "npm:^5.2.2"
     "@types/body-parser": "npm:^1.19.5"
     "@types/cors": "npm:^2.8.17"
@@ -9486,10 +9570,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"quickjs-emscripten-core@npm:^0.31.0":
+  version: 0.31.0
+  resolution: "quickjs-emscripten-core@npm:0.31.0"
+  dependencies:
+    "@jitl/quickjs-ffi-types": "npm:0.31.0"
+  checksum: 10c0/f212754ada4bbcf0bbf43f7128c7ba1890a1071bb2e633767cc1dc5d25035ab88a4010d0db071dbd4a41c254bba57cbb8b1407b99bbe98419e706a3b1192ce48
+  languageName: node
+  linkType: hard
+
 "range-parser@npm:~1.2.1":
   version: 1.2.1
   resolution: "range-parser@npm:1.2.1"
   checksum: 10c0/96c032ac2475c8027b7a4e9fe22dc0dfe0f6d90b85e496e0f016fbdb99d6d066de0112e680805075bd989905e2123b3b3d002765149294dce0c1f7f01fcc2ea0
+  languageName: node
+  linkType: hard
+
+"rate-limiter-flexible@npm:^5.0.5":
+  version: 5.0.5
+  resolution: "rate-limiter-flexible@npm:5.0.5"
+  checksum: 10c0/ae7cba6a46a2133bfbd310d3f83c65b3b732deab84e0c79b4fda78cd1d6578f69111bb37f09401ea45334eb75b8e40637ab0a8a9fd3efbb0b54084d6cd3b4ead
   languageName: node
   linkType: hard
 
@@ -10029,6 +10129,8 @@ __metadata:
 "root-workspace-0b6124@workspace:.":
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
+  dependencies:
+    "@jitl/quickjs-ng-wasmfile-release-sync": "npm:^0.31.0"
   languageName: unknown
   linkType: soft
 
@@ -10646,6 +10748,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"thingies@npm:^1.20.0":
+  version: 1.21.0
+  resolution: "thingies@npm:1.21.0"
+  peerDependencies:
+    tslib: ^2
+  checksum: 10c0/7570ee855aecb73185a672ecf3eb1c287a6512bf5476449388433b2d4debcf78100bc8bfd439b0edd38d2bc3bfb8341de5ce85b8557dec66d0f27b962c9a8bc1
+  languageName: node
+  linkType: hard
+
 "thirty-two@npm:^1.0.2":
   version: 1.0.2
   resolution: "thirty-two@npm:1.0.2"
@@ -10790,6 +10901,15 @@ __metadata:
   version: 0.0.3
   resolution: "tr46@npm:0.0.3"
   checksum: 10c0/047cb209a6b60c742f05c9d3ace8fa510bff609995c129a37ace03476a9b12db4dbf975e74600830ef0796e18882b2381fb5fb1f6b4f96b832c374de3ab91a11
+  languageName: node
+  linkType: hard
+
+"tree-dump@npm:^1.0.1":
+  version: 1.0.2
+  resolution: "tree-dump@npm:1.0.2"
+  peerDependencies:
+    tslib: 2
+  checksum: 10c0/d1d180764e9c691b28332dbd74226c6b6af361dfb1e134bb11e60e17cb11c215894adee50ffc578da5dcf546006693947be8b6665eb1269b56e2f534926f1c1f
   languageName: node
   linkType: hard
 

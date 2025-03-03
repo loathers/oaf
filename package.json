@@ -10,5 +10,8 @@
   },
   "resolutions": {
     "uri-js": "npm:uri-js-replace@1.0.1"
+  },
+  "dependencies": {
+    "@jitl/quickjs-ng-wasmfile-release-sync": "^0.31.0"
   }
 }
