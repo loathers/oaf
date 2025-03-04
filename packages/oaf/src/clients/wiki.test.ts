@@ -1,3 +1,4 @@
+import { fetch } from "undici";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { loadFixture } from "../testUtils.js";
@@ -5,13 +6,13 @@ import { Effect } from "../things/Effect.js";
 import { Skill } from "../things/Skill.js";
 import { wikiClient } from "./wiki.js";
 
-const text = vi.fn();
+vi.mock("undici");
 
-globalThis.fetch = vi.fn();
+const text = vi.fn();
 
 describe("Wiki links", () => {
   beforeEach(() => {
-    vi.mocked(globalThis.fetch).mockResolvedValue({
+    vi.mocked(fetch).mockResolvedValue({
       text,
       ok: true,
       status: 200,
@@ -31,6 +32,7 @@ describe("Wiki links", () => {
 
     expect(fetch).toHaveBeenCalledWith(
       "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number_(1-99)",
+      expect.anything(),
     );
   });
 
@@ -46,6 +48,7 @@ describe("Wiki links", () => {
 
     expect(fetch).toHaveBeenCalledWith(
       "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number_(100-199)",
+      expect.anything(),
     );
     expect(link).toBe("https://kol.coldfront.net/thekolwiki/index.php/Gothy");
   });
@@ -60,6 +63,7 @@ describe("Wiki links", () => {
 
     expect(fetch).toHaveBeenCalledWith(
       "https://kol.coldfront.net/thekolwiki/index.php/Skills_by_number",
+      expect.anything(),
     );
     expect(link).toBe(
       "https://kol.coldfront.net/thekolwiki/index.php/Impetuous_Sauciness",
