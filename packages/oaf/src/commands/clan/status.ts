@@ -47,7 +47,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
 
     if (interaction.channel?.isTextBased() && pingableClans.length) {
-      await interaction.channel.send(`${roleMention(config.DUNGEON_MASTER_ROLE_ID)}, looks like ${pingableClans.join(" and ")} need${pingableClans.length === 1 ? "s" : ""} rolling!`);
+      await interaction.channel.send({ content: `${roleMention(config.DUNGEON_MASTER_ROLE_ID)}, looks like ${pingableClans.join(" and ")} need${pingableClans.length === 1 ? "s" : ""} rolling!`, allowedMentions: { roles: [config.DUNGEON_MASTER_ROLE_ID]} });
     }
   } catch (error) {
     await discordClient.alert("Unknown error", interaction, error);
