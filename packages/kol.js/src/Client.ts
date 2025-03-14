@@ -135,7 +135,7 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
     try {
-      await this.session
+      const result = await this.session
         .post("login.php", {
           form: {
             loggingin: "Yup.",
@@ -146,6 +146,10 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
           },
         })
         .text();
+
+      if (Client.#rolloverPattern.test(result)) {
+        throw new Error("It's rollover!")
+      }
 
       if (!(await this.checkLoggedIn())) return false;
 
@@ -181,9 +185,11 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     }
   }
 
+  static #rolloverPattern = /The system is currently down for nightly maintenance/;
+
   async #checkForRollover() {
     const isRollover =
-      /The system is currently down for nightly maintenance/.test(
+      Client.#rolloverPattern.test(
         await this.fetchText("/"),
       );
 
@@ -196,7 +202,7 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
 
     if (this.#isRollover) {
       // Rollover appears to be in progress. Check again in one minute.
-      setTimeout(() => this.#checkForRollover(), 60000);
+      setTimeout(() => this.#checkForRollover(), 60_000);
     }
   }
 
