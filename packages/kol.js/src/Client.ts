@@ -190,7 +190,7 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
   async #checkForRollover() {
     const isRollover =
       Client.#rolloverPattern.test(
-        await this.fetchText("/"),
+        await this.fetchText(""),
       );
 
     if (this.#isRollover && !isRollover) {
