@@ -1,10 +1,14 @@
 import {
   ChatInputCommandInteraction,
   Events,
+  Guild,
+  GuildMember,
+  Message,
   SlashCommandBuilder,
   inlineCode,
 } from "discord.js";
 import { Client } from "discord.js";
+import { Player } from "kol.js";
 import { totp } from "otplib";
 
 import { prisma } from "../../clients/database.js";
@@ -50,6 +54,42 @@ export const data = new SlashCommandBuilder()
       .setRequired(false),
   );
 
+async function updatePlayerVerification(
+  player: Player<true>,
+  playerId: number,
+  discordId: string,
+  guild: Guild,
+  member: GuildMember,
+): Promise<boolean> {
+  const previouslyClaimed = await prisma.player.updateMany({
+    where: { discordId },
+    data: { discordId: null },
+  });
+
+  await prisma.player.upsert({
+    where: { playerId },
+    update: {
+      discordId,
+      playerName: player.name,
+      accountCreationDate: player.createdDate,
+    },
+    create: {
+      playerName: player.name,
+      discordId,
+      playerId,
+      accountCreationDate: player.createdDate,
+    },
+  });
+
+  const role = await guild.roles.fetch(config.VERIFIED_ROLE_ID);
+
+  if (role) {
+    await member.roles.add(role);
+  }
+
+  return previouslyClaimed.count > 0;
+}
+
 export async function execute(interaction: ChatInputCommandInteraction) {
   const token = interaction.options.getString("token", false);
 
@@ -80,40 +120,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!player) return;
 
   const discordId = interaction.user.id;
-
-  const previouslyClaimed = await prisma.player.updateMany({
-    where: { discordId },
-    data: { discordId: null },
-  });
-
-  await prisma.player.upsert({
-    where: { playerId },
-    update: {
-      discordId,
-      playerName: player.name,
-      accountCreationDate: player.createdDate,
-    },
-    create: {
-      playerName: player.name,
-      discordId: interaction.user.id,
-      playerId,
-      accountCreationDate: player.createdDate,
-    },
-  });
-
   const guild =
     interaction.guild || (await discordClient.guilds.fetch(config.GUILD_ID));
-  const role = await guild.roles.fetch(config.VERIFIED_ROLE_ID);
+  const member = await guild.members.fetch(interaction.user.id);
 
-  if (role) {
-    const member = await guild.members.fetch(interaction.user.id);
-    await member.roles.add(role);
-  }
+  const previouslyClaimed = await updatePlayerVerification(
+    player,
+    playerId,
+    discordId,
+    guild,
+    member,
+  );
 
-  const previous =
-    previouslyClaimed.count > 0
-      ? " Any previous link will have been removed."
-      : "";
+  const previous = previouslyClaimed
+    ? " Any previous link will have been removed."
+    : "";
 
   await interaction.editReply(
     `Your Discord account has been successfully linked with ${inlineCode(
@@ -155,6 +176,57 @@ async function synchroniseRoles(client: Client) {
   }
 }
 
+async function onMessage(message: Message) {
+  if (message.author.bot) return;
+  if (!("send" in message.channel)) return;
+  const member = message.member;
+  if (!member) return;
+
+  const opening = "/claim ";
+  if (!message.content.startsWith(opening)) return;
+  const token = message.content.slice(opening.length);
+  if (!token) return;
+
+  const reply = await message.reply(
+    "Looks like you accidentally failed to send this as a slash command. Don't worry, I'll do my best with what you've given me.",
+  );
+
+  const [playerId, valid] = oauf.checkPlayer(token);
+  if (!valid) {
+    return void (await reply.edit(
+      `That code is invalid. Hopefully it timed out and you're not being a naughty little ${message.member.user.username}`,
+    ));
+  }
+
+  const player = await kolClient.players.fetch(playerId, true);
+
+  if (!player) {
+    return void (await reply.edit(
+      "Unable to find the player associated with that token. Sorry, we did our best.",
+    ));
+  }
+
+  const discordId = message.member.user.id;
+  const guild =
+    member.guild || (await discordClient.guilds.fetch(config.GUILD_ID));
+
+  const previouslyClaimed = await updatePlayerVerification(
+    player,
+    playerId,
+    discordId,
+    guild,
+    member,
+  );
+
+  const previous = previouslyClaimed
+    ? " Any previous link will have been removed."
+    : "";
+
+  return void (await reply.edit(
+    `Your discord account has been successfully linked with ${inlineCode(`${player.name} (#${player.id})`)}.${previous}`,
+  ));
+}
+
 export async function init() {
   kolClient.on("whisper", async (whisper) => {
     if (whisper.msg.trim() !== "claim") return;
@@ -170,4 +242,5 @@ export async function init() {
   });
 
   discordClient.on(Events.ClientReady, synchroniseRoles);
+  discordClient.on(Events.MessageCreate, onMessage);
 }
