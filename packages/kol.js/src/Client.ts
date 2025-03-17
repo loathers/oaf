@@ -148,7 +148,7 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
         .text();
 
       if (Client.#rolloverPattern.test(result)) {
-        throw new Error("It's rollover!")
+        throw new Error("It's rollover!");
       }
 
       if (!(await this.checkLoggedIn())) return false;
@@ -185,13 +185,11 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     }
   }
 
-  static #rolloverPattern = /The system is currently down for nightly maintenance/;
+  static #rolloverPattern =
+    /The system is currently down for nightly maintenance/;
 
   async #checkForRollover() {
-    const isRollover =
-      Client.#rolloverPattern.test(
-        await this.fetchText(""),
-      );
+    const isRollover = Client.#rolloverPattern.test(await this.fetchText(""));
 
     if (this.#isRollover && !isRollover) {
       // Set the post-rollover latch so the bot can react on next log in.

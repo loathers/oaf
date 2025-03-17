@@ -1,18 +1,17 @@
 import { Player } from "@prisma/client";
 import { heading, userMention } from "discord.js";
-import { resolveKoLImage } from "kol.js";
 
 import { prisma } from "../../clients/database.js";
-import { createEmbed, discordClient } from "../../clients/discord.js";
+import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
-import { englishJoin, notNull } from "../../utils.js";
+import { englishJoin } from "../../utils.js";
 
 Array.prototype.toSorted = function (compareFn) {
   return [...this].sort(compareFn);
 };
 
-async function createBirthdayEmbed() {
+async function createBirthdayMessage() {
   const birthdays = await prisma.$queryRaw<
     Player[]
   >`SELECT * FROM "Player" WHERE "discordId" IS NOT NULL AND EXTRACT(MONTH FROM "accountCreationDate") = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM "accountCreationDate") = EXTRACT(DAY FROM CURRENT_DATE)`;
@@ -30,7 +29,7 @@ async function createBirthdayEmbed() {
     {} as Record<number, Player[]>,
   );
 
-  const content = (Object.entries(byAge) as [string, Player[]][])
+  const content = Object.entries(byAge)
     .toSorted((a, b) => Number(a[0]) - Number(b[0]))
     .map(([age, players]) => {
       const playerTags = players.map((p) => userMention(p.discordId!));
@@ -40,10 +39,7 @@ async function createBirthdayEmbed() {
     })
     .join("\n");
 
-  return createEmbed()
-    .setTitle("In-Game Birthdays")
-    .setThumbnail(resolveKoLImage("/itemimages/cake3.gif"))
-    .setDescription(content);
+  return `${heading("In-Game Birthdays 🎂")}\n\n${content}`;
 }
 
 async function onRollover() {
@@ -56,13 +52,12 @@ async function onRollover() {
     return;
   }
 
-  const embeds = [await createBirthdayEmbed()].filter(notNull);
+  const content = await createBirthdayMessage();
 
-  if (embeds.length === 0) return;
+  if (!content) return;
 
   await announcementChannel.send({
-    content: heading("Daily Announcements"),
-    embeds,
+    content,
     allowedMentions: { users: [] },
   });
 }
