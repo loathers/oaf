@@ -12,7 +12,10 @@ import { pluralize } from "../../utils.js";
 import { DREAD_CLANS } from "./_clans.js";
 import { getDreadStatusOverview } from "./_dread.js";
 
-async function constructDreadStatusMessage(ping: boolean): Promise<string[]> {
+async function constructDreadStatusMessage(): Promise<{
+  pingableClans: string[];
+  messages: string[];
+}> {
   const pingableClans: string[] = [];
 
   const messages = await Promise.all(
@@ -41,20 +44,14 @@ async function constructDreadStatusMessage(ping: boolean): Promise<string[]> {
     }),
   );
 
-  if (ping && pingableClans.length) {
-    messages.push(
-      `${roleMention(config.DUNGEON_MASTER_ROLE_ID)}, looks like ${pingableClans.join(" and ")} ${pingableClans.length === 1 ? "is" : "are"} ready to rock (and roll).`,
-    );
-  }
-
-  return messages;
+  return { pingableClans, messages };
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   try {
-    const dreadStatus = await constructDreadStatusMessage(false);
+    const dreadStatus = (await constructDreadStatusMessage()).messages;
 
     await interaction.editReply({
       content: null,
@@ -81,7 +78,7 @@ export const data = new SlashCommandBuilder()
 
 export async function init() {
   kolClient.on("rollover", async () => {
-    const messages = await constructDreadStatusMessage(true);
+    const { messages, pingableClans } = await constructDreadStatusMessage();
     const channel = discordClient.guild?.channels.cache.get(
       config.DUNGEON_CHANNEL_ID,
     );
@@ -89,6 +86,11 @@ export async function init() {
       discordClient.alert("No clan dungeon channel found");
     } else {
       channel.send({
+        ...(pingableClans.length
+          ? {
+              content: `${roleMention(config.DUNGEON_MASTER_ROLE_ID)}, looks like ${pingableClans.join(" and ")} ${pingableClans.length === 1 ? "is" : "are"} ready to rock (and roll).`,
+            }
+          : {}),
         embeds: [
           {
             title: "Dread Status",
