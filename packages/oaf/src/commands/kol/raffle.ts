@@ -81,33 +81,24 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   );
 }
 
-async function onRollover() {
-  const guild = await discordClient.guilds.fetch(config.GUILD_ID);
-  const raffleChannel = guild?.channels.cache.get(config.RAFFLE_CHANNEL_ID);
-
-  if (!raffleChannel?.isTextBased()) {
+async function trackRaffle(
+  raffle: Awaited<ReturnType<typeof kolClient.getRaffle>>,
+  messageId: string,
+) {
+  // Do this only if the raffle has actually loaded
+  if (!raffle.today.first) {
     return;
   }
 
-  const raffle = await kolClient.getRaffle();
-
-  const message = await raffleChannel.send({
-    content: heading("Raffle"),
-    embeds: await getRaffleEmbeds(raffle),
-    allowedMentions: { users: [] },
-  });
-
   // Add today to the database
-  if (!raffle.today.first || !raffle.today.second) {
-    await prisma.raffle.create({
-      data: {
-        gameday: raffle.gameday,
-        firstPrize: raffle.today.first!,
-        secondPrize: raffle.today.second!,
-        messageId: message.id,
-      },
-    });
-  }
+  await prisma.raffle.create({
+    data: {
+      gameday: raffle.gameday,
+      firstPrize: raffle.today.first!,
+      secondPrize: raffle.today.second!,
+      messageId: messageId,
+    },
+  });
 
   // Update yesterday's winners
   for (const winner of raffle.yesterday) {
@@ -145,6 +136,25 @@ async function onRollover() {
       },
     });
   }
+}
+
+async function onRollover() {
+  const guild = await discordClient.guilds.fetch(config.GUILD_ID);
+  const raffleChannel = guild?.channels.cache.get(config.RAFFLE_CHANNEL_ID);
+
+  if (!raffleChannel?.isTextBased()) {
+    return;
+  }
+
+  const raffle = await kolClient.getRaffle();
+
+  const message = await raffleChannel.send({
+    content: heading("Raffle"),
+    embeds: await getRaffleEmbeds(raffle),
+    allowedMentions: { users: [] },
+  });
+
+  await trackRaffle(raffle, message.id);
 }
 
 export async function init() {
