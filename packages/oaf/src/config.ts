@@ -72,6 +72,9 @@ export const schema = {
     type: String,
     optional: true,
   },
+
+  // /raffle
+  RAFFLE_CHANNEL_ID: SNOWFLAKE_PATTERN,
 };
 
 export type Env = EnvType<typeof schema>;

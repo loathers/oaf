@@ -34,6 +34,7 @@ model Player {
   thiccGifter         Player?             @relation("ThiccGiftee")
   standingOffers      StandingOffer[]
   raidParticipation   RaidParticipation[]
+  raffleWins RaffleWins[]
 }
 
 model StandingOffer {
@@ -90,4 +91,23 @@ model Tag {
 model Setting {
   key   String @id
   value Json
+}
+
+model Raffle {
+  gameday Int @id
+  firstPrize Int
+  secondPrize Int
+  winners RaffleWins[]
+  messageId String
+}
+
+model RaffleWins {
+  gameday Int
+  raffle Raffle @relation(fields: [gameday], references: [gameday])
+  playerId Int
+  player Player @relation(fields: [playerId], references: [playerId])
+  place Int
+  tickets Int
+
+  @@unique([gameday, playerId])
 }

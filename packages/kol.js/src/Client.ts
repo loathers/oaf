@@ -42,6 +42,17 @@ type Familiar = {
   image: string;
 };
 
+type ApiStatus = {
+  /** number of ascensions */
+  ascensions: string;
+  /** number of turns played */
+  turnsplayed: string;
+  /** kol game day number */
+  daynumber: string;
+  /** session password */
+  pwd: string;
+};
+
 export class Client extends (EventEmitter as unknown as new () => TypedEmitter<Events>) {
   actionMutex = new Mutex();
   session = got.extend({
@@ -253,6 +264,14 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
             return void this.emit("system", message);
         }
       });
+  }
+
+  async fetchStatus(): Promise<ApiStatus | null> {
+    const api = await this.fetchJson<ApiStatus>("api.php", {
+      searchParams: { what: "status", for: `${this.#username} bot` },
+    });
+
+    return api;
   }
 
   async fetchKmails(): Promise<KmailMessage[]> {
@@ -546,17 +565,21 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     );
     const yesterday = await Promise.all(
       winners
-        ? [...winners].map(async (w) => ({
+        ? [...winners].map(async (w, i) => ({
             player: new Player(this, Number(w[2]), w[1]),
             item: await this.descIdToId(Number(w[3])),
             tickets: Number(w[4].replace(",", "")),
+            place: Math.min(i + 1, 2),
           }))
         : [],
     );
 
+    const { daynumber } = (await this.fetchStatus()) ?? { daynumber: "0" };
+
     return {
       today: { first, second },
       yesterday,
+      gameday: Number(daynumber),
     };
   }
 
