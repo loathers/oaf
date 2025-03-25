@@ -8,7 +8,6 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import React from "react";
 
@@ -19,9 +18,9 @@ import { DiscordUser } from "./resources.user.js";
 export async function loader() {
   const tags = await prisma.tag.findMany({});
 
-  return json({
+  return {
     tags,
-  });
+  };
 }
 
 export default function Tags() {
