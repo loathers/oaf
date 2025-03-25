@@ -53,6 +53,9 @@ export default function Admin() {
             <MenuItem as={Link} to="./verified">
               Verified
             </MenuItem>
+            <MenuItem as={Link} to="./raffle">
+              Raffle
+            </MenuItem>
             <MenuDivider />
             <MenuItem as={Link} to="/logout">
               Logout
