@@ -1,9 +1,9 @@
 import {
-  Stack,
   Table,
   TableContainer,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
@@ -12,7 +12,6 @@ import { useLoaderData } from "@remix-run/react";
 import React from "react";
 
 import { prisma } from "../../../clients/database.js";
-import { DiscordUser } from "./resources.user.js";
 
 export async function loader() {
   const raffles = await prisma.raffle.findMany({
@@ -40,17 +39,10 @@ function formatWinners(
   return (
     <>
       {winners.map((w) => (
-        <Stack>
-          <span>
-            {w.player.playerName} (#{w.player.playerId})
-          </span>
-          {w.player.discordId && (
-            <span>
-              (<DiscordUser id={w.player.discordId} />)
-            </span>
-          )}
-          <span>{w.tickets} tickets</span>
-        </Stack>
+        <Text>
+          {w.player.playerName} (#{w.player.playerId})
+          {w.player.discordId && ` (verified) `}, {w.tickets} tickets
+        </Text>
       ))}
     </>
   );
