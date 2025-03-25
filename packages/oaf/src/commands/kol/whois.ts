@@ -125,6 +125,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
   }
 
+  if (knownPlayer?.raffleWins?.length) {
+    const [first, second] = knownPlayer.raffleWins.reduce<[number, number]>(
+      (acc, w) => [
+        acc[0] + Number(w.place === 1),
+        acc[1] + Number(w.place === 2),
+      ],
+      [0, 0],
+    );
+    fields.push({
+      name: "Raffle Wins",
+      value: `${"🥇".repeat(first)}${"🥈".repeat(second)}`,
+    });
+  }
+
   // Use this opportunity to either
   // a) learn about a new player for our database, or
   // b) update player names either from name changes or capitalization changes
