@@ -1,4 +1,5 @@
 import {
+  Stack,
   Table,
   TableContainer,
   Tbody,
@@ -15,6 +16,7 @@ import { DiscordUser } from "./resources.user.js";
 
 export async function loader() {
   const raffles = await prisma.raffle.findMany({
+    orderBy: [{ gameday: "desc" }],
     include: {
       winners: {
         include: {
@@ -38,11 +40,17 @@ function formatWinners(
   return (
     <>
       {winners.map((w) => (
-        <div>
-          {w.player.playerName} ({w.player.playerId})
-          {w.player.discordId && <DiscordUser id={w.player.discordId} />},{" "}
-          {w.tickets} tickets
-        </div>
+        <Stack>
+          <span>
+            {w.player.playerName} (#{w.player.playerId})
+          </span>
+          {w.player.discordId && (
+            <span>
+              (<DiscordUser id={w.player.discordId} />)
+            </span>
+          )}
+          <span>{w.tickets} tickets</span>
+        </Stack>
       ))}
     </>
   );
