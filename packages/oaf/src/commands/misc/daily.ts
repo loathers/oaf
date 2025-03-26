@@ -44,9 +44,7 @@ async function createBirthdayMessage() {
 
 async function onRollover() {
   const guild = await discordClient.guilds.fetch(config.GUILD_ID);
-  const announcementChannel = guild?.channels.cache.get(
-    config.KOL_CHANNEL_ID,
-  );
+  const announcementChannel = guild?.channels.cache.get(config.KOL_CHANNEL_ID);
 
   if (!announcementChannel?.isTextBased()) {
     return;
