@@ -72,7 +72,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   });
 
   if (!raffle) {
-    await interaction.editReply("Raffle information not available yet");
+    // If the rollover post didn't work for whatever reason, just run it now
+    await interaction.editReply(
+      "Hey, thanks! Rollover post was missing so I'll post it now",
+    );
+    await onRollover();
     return;
   }
 
@@ -143,6 +147,7 @@ async function onRollover() {
   const raffleChannel = guild?.channels.cache.get(config.RAFFLE_CHANNEL_ID);
 
   if (!raffleChannel?.isTextBased()) {
+    await discordClient.alert("Raffle channel not found or not text-based");
     return;
   }
 
