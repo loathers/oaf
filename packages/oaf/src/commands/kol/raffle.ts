@@ -1,10 +1,13 @@
+import { Player } from "@prisma/client";
 import {
   ChatInputCommandInteraction,
   MessageFlags,
   SlashCommandBuilder,
   heading,
   messageLink,
+  userMention,
 } from "discord.js";
+import { Player as KoLPlayer } from "kol.js";
 
 import { prisma } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
@@ -19,9 +22,9 @@ export const data = new SlashCommandBuilder()
 
 const numberFormat = new Intl.NumberFormat();
 
-async function getRaffleEmbeds(
-  raffle: Awaited<ReturnType<typeof kolClient.getRaffle>>,
-) {
+type Raffle = Awaited<ReturnType<typeof kolClient.getRaffle>>;
+
+async function getRaffleEmbeds(raffle: Raffle, members: Player[]) {
   const embeds = [];
 
   if (raffle.today.first === null || raffle.today.second === null) {
@@ -48,6 +51,12 @@ async function getRaffleEmbeds(
 
   const winners = createEmbed().setTitle(`Yesterday's Winners`);
 
+  function renderWinner(p: KoLPlayer) {
+    const member = members.find((m) => m.playerId === p.id);
+    if (member && member.discordId) return userMention(member.discordId);
+    return p.toString();
+  }
+
   winners.addFields(
     raffle.yesterday.map((winner) => {
       const itemName =
@@ -55,7 +64,7 @@ async function getRaffleEmbeds(
         `Unknown item (#${winner.item})`;
       return {
         name: itemName,
-        value: `${winner.player.toString()} (${numberFormat.format(winner.tickets)} tickets)`,
+        value: `${renderWinner(winner.player)} (${numberFormat.format(winner.tickets)} tickets)`,
       };
     }),
   );
@@ -142,6 +151,24 @@ async function trackRaffle(
   }
 }
 
+async function getWinners(raffle: Raffle) {
+  return await prisma.player.findMany({
+    where: {
+      playerId: { in: raffle.yesterday.map((prize) => prize.player.id) },
+      discordId: { not: null },
+    },
+  });
+}
+
+async function getAlertableWinners(players: Player[]) {
+  const role = await discordClient.guild?.roles.fetch(config.LISTENER_ROLE_ID);
+  if (!role) return [];
+  return players
+    .map((p) => p.discordId)
+    .filter((s) => s !== null)
+    .filter((s) => role.members.has(s));
+}
+
 async function onRollover() {
   const guild = await discordClient.guilds.fetch(config.GUILD_ID);
   const raffleChannel = guild?.channels.cache.get(config.RAFFLE_CHANNEL_ID);
@@ -153,10 +180,13 @@ async function onRollover() {
 
   const raffle = await kolClient.getRaffle();
 
+  const winningMembers = await getWinners(raffle);
+  const alertable = await getAlertableWinners(winningMembers);
+
   const message = await raffleChannel.send({
     content: heading("Raffle"),
-    embeds: await getRaffleEmbeds(raffle),
-    allowedMentions: { users: [] },
+    embeds: await getRaffleEmbeds(raffle, winningMembers),
+    allowedMentions: { users: alertable },
   });
 
   await trackRaffle(raffle, message.id);
