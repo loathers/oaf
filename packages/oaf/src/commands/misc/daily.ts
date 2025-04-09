@@ -1,11 +1,11 @@
 import { Player } from "@prisma/client";
-import { heading, userMention } from "discord.js";
+import { heading } from "discord.js";
 
 import { prisma } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
-import { englishJoin } from "../../utils.js";
+import { englishJoin, formatPlayer } from "../../utils.js";
 
 Array.prototype.toSorted = function (compareFn) {
   return [...this].sort(compareFn);
@@ -32,7 +32,7 @@ async function createBirthdayMessage() {
   const content = Object.entries(byAge)
     .toSorted((a, b) => Number(a[0]) - Number(b[0]))
     .map(([age, players]) => {
-      const playerTags = players.map((p) => userMention(p.discordId!));
+      const playerTags = players.map((p) => formatPlayer(p));
       return `${age} year${age === "1" ? "" : "s"} old: ${englishJoin(
         playerTags,
       )}${age === "11" ? " (ridiculous; not even funny)" : ""}`;

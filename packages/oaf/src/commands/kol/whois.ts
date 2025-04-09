@@ -7,14 +7,13 @@ import {
   hyperlink,
   italic,
   time,
-  userMention,
 } from "discord.js";
 
 import { prisma } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { snapshotClient } from "../../clients/snapshot.js";
 import { renderSvg } from "../../svgConverter.js";
-import { toKoldbLink, toMuseumLink } from "../../utils.js";
+import { formatPlayer, toKoldbLink, toMuseumLink } from "../../utils.js";
 import { findPlayer, identifyPlayer } from "../_player.js";
 
 export const data = new SlashCommandBuilder()
@@ -158,7 +157,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (knownPlayer?.discordId) {
     fields.push({
       name: "Discord",
-      value: userMention(knownPlayer.discordId),
+      value: formatPlayer(knownPlayer),
     });
   }
 

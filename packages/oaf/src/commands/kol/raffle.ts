@@ -5,7 +5,6 @@ import {
   SlashCommandBuilder,
   heading,
   messageLink,
-  userMention,
 } from "discord.js";
 import { Player as KoLPlayer } from "kol.js";
 
@@ -15,6 +14,7 @@ import { kolClient } from "../../clients/kol.js";
 import { wikiClient } from "../../clients/wiki.js";
 import { config } from "../../config.js";
 import { embedForItem } from "../wiki/item.js";
+import { formatPlayer } from "../../utils.js";
 
 export const data = new SlashCommandBuilder()
   .setName("raffle")
@@ -53,7 +53,7 @@ async function getRaffleEmbeds(raffle: Raffle, members: Player[]) {
 
   function renderWinner(p: KoLPlayer) {
     const member = members.find((m) => m.playerId === p.id);
-    if (member && member.discordId) return userMention(member.discordId);
+    if (member && member.discordId) return formatPlayer(member, p.id);
     return p.toString();
   }
 
