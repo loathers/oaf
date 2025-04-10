@@ -1,6 +1,8 @@
 import {
   ChatInputCommandInteraction,
   Events,
+  GuildMember,
+  PartialGuildMember,
   SlashCommandBuilder,
   inlineCode,
 } from "discord.js";
@@ -137,22 +139,52 @@ async function synchroniseRoles(client: Client) {
   const playersWithDiscordId = await prisma.player.findMany({
     where: { discordId: { not: null } },
   });
-  const expectedMembers = playersWithDiscordId.map((p) => p.discordId!);
-
   for (const member of role.members.values()) {
-    const index = expectedMembers.indexOf(member.user.id);
+    const index = playersWithDiscordId.findIndex(
+      (p) => p.discordId === member.user.id,
+    );
     if (index < 0) {
       await member.roles.remove(role);
     } else {
-      expectedMembers.splice(index, 1);
+      playersWithDiscordId.splice(index, 1);
     }
   }
 
-  for (const missing of expectedMembers) {
-    // Catch cases where user has left the guild
-    const member = await guild.members.fetch(missing).catch(() => null);
-    if (member) await member.roles.add(role);
+  for (const missing of playersWithDiscordId) {
+    try {
+      const member = await guild.members.fetch(missing.discordId!);
+      await member.roles.add(role);
+    } catch (error) {
+      // User has left the guild, remove their verification
+      await prisma.player.update({
+        where: { playerId: missing.playerId },
+        data: { discordId: null },
+      });
+      await discordClient.alert(
+        `Whomever was verified to player account ${missing.playerName} (#${missing.playerId}) left the server at some point, removing their verification`,
+      );
+    }
   }
+}
+
+async function removeVerification(member: GuildMember | PartialGuildMember) {
+  const player = await prisma.player.findFirst({
+    where: { discordId: member.id },
+  });
+
+  if (!player) return;
+
+  await prisma.player.update({
+    where: { playerId: player.playerId },
+    data: { discordId: null },
+  });
+
+  const role = await member.guild.roles.fetch(config.VERIFIED_ROLE_ID);
+  if (role) await member.roles.remove(role);
+
+  await discordClient.alert(
+    `${member.user.username} has just left the server, so we removed their verification to player account ${player.playerName} (#${player.playerId})`,
+  );
 }
 
 export async function init() {
@@ -170,4 +202,5 @@ export async function init() {
   });
 
   discordClient.on(Events.ClientReady, synchroniseRoles);
+  discordClient.on(Events.GuildMemberRemove, removeVerification);
 }

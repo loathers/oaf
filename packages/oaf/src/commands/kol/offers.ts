@@ -8,8 +8,8 @@ import { resolveKoLImage } from "kol.js";
 import { isRecordNotFoundError, prisma } from "../../clients/database.js";
 import { createEmbed } from "../../clients/discord.js";
 import { wikiClient } from "../../clients/wiki.js";
-import { itemAutocomplete, itemOption } from "../_options.js";
 import { formatPlayer } from "../../utils.js";
+import { itemAutocomplete, itemOption } from "../_options.js";
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -85,9 +85,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
     })
   ).map(
     ({ buyer, price }) =>
-      `${formatPlayer(buyer)} buys at ${numberFormat.format(
-        price,
-      )} meat`,
+      `${formatPlayer(buyer)} buys at ${numberFormat.format(price)} meat`,
   );
 
   if (offers.length === 0) {
