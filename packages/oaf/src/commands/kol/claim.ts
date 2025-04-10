@@ -1,5 +1,6 @@
 import {
   ChatInputCommandInteraction,
+  DiscordAPIError,
   Events,
   GuildMember,
   PartialGuildMember,
@@ -155,16 +156,17 @@ async function synchroniseRoles(client: Client) {
       const member = await guild.members.fetch(missing.discordId!);
       await member.roles.add(role);
     } catch (error) {
-      // User has left the guild, remove their verification
-      await prisma.player.update({
-        where: { playerId: missing.playerId },
-        data: { discordId: null },
-      });
-      await discordClient.alert(
-        `Whomever was verified to player account ${missing.playerName} (#${missing.playerId}) left the server at some point, removing their verification`,
-        undefined,
-        error as Error,
-      );
+      if (error instanceof DiscordAPIError && error.code === 10007) {
+        // User has left the guild, remove their verification
+        await prisma.player.update({
+          where: { playerId: missing.playerId },
+          data: { discordId: null },
+        });
+        await discordClient.alert(
+          `Whomever was verified to player account ${missing.playerName} (#${missing.playerId}) left the server at some point, removing their verification`,
+        );
+      }
+      throw error;
     }
   }
 }
