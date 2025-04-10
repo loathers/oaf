@@ -162,6 +162,8 @@ async function synchroniseRoles(client: Client) {
       });
       await discordClient.alert(
         `Whomever was verified to player account ${missing.playerName} (#${missing.playerId}) left the server at some point, removing their verification`,
+        undefined,
+        error as Error,
       );
     }
   }
