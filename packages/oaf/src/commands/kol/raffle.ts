@@ -3,6 +3,7 @@ import {
   ChatInputCommandInteraction,
   MessageFlags,
   SlashCommandBuilder,
+  bold,
   heading,
   messageLink,
 } from "discord.js";
@@ -171,7 +172,7 @@ async function renderWinners(raffle: Raffle, members: Player[]) {
     const itemName =
       wikiClient.items.find((i) => i.id === winner.item)?.name ??
       `Unknown item (#${winner.item})`;
-    return `${winner.place === 1 ? "🥇" : "🥈"} - ${itemName} won by ${renderWinner(winner.player)} (${numberFormat.format(winner.tickets)} tickets)`;
+    return `${winner.place === 1 ? "🥇" : "🥈"} - ${bold(itemName)} won by ${renderWinner(winner.player)} (with ${numberFormat.format(winner.tickets)} tickets)`;
   });
 }
 
