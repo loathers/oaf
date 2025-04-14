@@ -131,23 +131,24 @@ export function formatPlayer(
     | undefined,
   backupId?: number,
 ) {
-  return [
-    player?.playerName ?? "Unknown Username",
-    ...(player?.playerId
-      ? [
-          `(#${player.playerId})`,
-          player.playerName &&
-            hyperlink(
-              "👤",
-              `https://www.kingdomofloathing.com/showplayer.php?who=${player.playerId}`,
-              player.playerName,
-            ),
-        ]
-      : backupId
-        ? [`(#${backupId})`]
-        : []),
-    ...(player?.discordId ? [userMention(player.discordId)] : []),
-  ].join(" ");
+  const { playerName, playerId = backupId, discordId } = player ?? {};
+
+  // Closure to wrap text in a hyperlink if we have a player id
+  const maybeHyperlink = (text: string) => {
+    if (!playerId) return text;
+    return hyperlink(
+      text,
+      `https://www.kingdomofloathing.com/showplayer.php?who=${playerId}`,
+    );
+  };
+
+  // Format the best player name we can
+  const playerLink = maybeHyperlink(
+    `${playerName ?? "Unknown Username"} (#${playerId ?? "???"})`,
+  );
+
+  // Add Discord mention if available
+  return discordId ? `${playerLink} ${userMention(discordId)}` : playerLink;
 }
 
 export function ensureArray<T>(v: T | T[]) {

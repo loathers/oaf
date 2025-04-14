@@ -155,7 +155,7 @@ async function getRaffleChannel() {
 
   if (!raffleChannel?.isTextBased()) {
     await discordClient.alert("Raffle channel not found or not text-based");
-    return;
+    return null;
   }
 
   return raffleChannel;
