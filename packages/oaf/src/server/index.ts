@@ -111,6 +111,8 @@ app
           "secondPlaceWinner1Tickets",
           "secondPlaceWinner2",
           "secondPlaceWinner2Tickets",
+          "secondPlaceWinner3",
+          "secondPlaceWinner3Tickets",
         ]),
       );
   })
