@@ -1,4 +1,4 @@
-import { APIEmbedField, hyperlink, userMention } from "discord.js";
+import { APIEmbedField, hideLinkEmbed, hyperlink, userMention } from "discord.js";
 import { decode } from "html-entities";
 
 export function indent(textToIndent: string): string {
@@ -138,7 +138,7 @@ export function formatPlayer(
     if (!playerId) return text;
     return hyperlink(
       text,
-      `https://www.kingdomofloathing.com/showplayer.php?who=${playerId}`,
+      hideLinkEmbed(`https://www.kingdomofloathing.com/showplayer.php?who=${playerId}`),
     );
   };
 
