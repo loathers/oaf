@@ -123,6 +123,7 @@ export function titleCase(title: string) {
 
 export function formatPlayer(
   player:
+    | { name: string; id: number }
     | Partial<{
         playerName: string;
         playerId: number;
@@ -131,7 +132,20 @@ export function formatPlayer(
     | undefined,
   backupId?: number,
 ) {
-  const { playerName, playerId = backupId, discordId } = player ?? {};
+  let playerName: string | undefined = undefined;
+  let playerId: number | undefined = backupId;
+  let discordId: string | undefined = undefined;
+
+  if (player) {
+    if ("name" in player) {
+      playerName = player.name;
+      playerId = player.id;
+    } else {
+      playerName = player.playerName;
+      playerId = player.playerId;
+      discordId = player.discordId ?? undefined;
+    }
+  }
 
   // Closure to wrap text in a hyperlink if we have a player id
   const maybeHyperlink = (text: string) => {
