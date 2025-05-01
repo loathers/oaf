@@ -7,6 +7,7 @@
   "type": "module",
   "scripts": {
     "start": "node --import tsx ./src/index.ts",
+    "dev": "DEBUG=true tsx watch ./src/index.ts",
     "format": "prettier --write .",
     "prisma": "prisma",
     "build": "remix vite:build",

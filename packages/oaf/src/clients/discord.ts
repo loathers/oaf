@@ -175,7 +175,6 @@ export class DiscordClient extends Client {
     }
 
     if (config.DEBUG) {
-      console.warn("(Suppressing alerts due to debug mode)");
       return;
     }
 
