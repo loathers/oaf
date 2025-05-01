@@ -162,7 +162,8 @@ async function getRaffleChannel() {
 }
 
 async function renderWinners(raffle: Raffle, members: Player[]) {
-  const renderWinner = (p: KoLPlayer) => formatPlayer(members.find((m) => m.playerId === p.id) ?? p, p.id);
+  const renderWinner = (p: KoLPlayer) =>
+    formatPlayer(members.find((m) => m.playerId === p.id) ?? p, p.id);
 
   return raffle.yesterday.map((winner) => {
     const itemName =

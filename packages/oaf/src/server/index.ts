@@ -48,6 +48,18 @@ app
   )
   .use(bodyParser.json())
   .get("/favicon.ico", (req, res) => void res.send())
+  .get("/verified.json", async (req, res) => {
+    const verified = await prisma.player.findMany({
+      where: { discordId: { not: null } },
+      select: {
+        playerId: true,
+      },
+    });
+
+    return void res
+      .set("Content-Type", "application/json")
+      .send(verified.map((p) => p.playerId));
+  })
   .get("/raffle.csv", async (req, res) => {
     const raffles = (
       await prisma.raffle.findMany({
