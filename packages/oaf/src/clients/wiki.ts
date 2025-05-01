@@ -283,6 +283,7 @@ export class WikiClient {
         const item = Item.from(line, itemInfoForUse);
         if (item.id > this.#lastItem) this.#lastItem = item.id;
         this.knownItemIds.add(item.id);
+
         if (item.name) {
           this.register(item);
           if (item.types.includes("avatar")) {
@@ -375,7 +376,9 @@ export class WikiClient {
         if (this.#lastFamiliar < familiar.id) this.#lastFamiliar = familiar.id;
 
         if (familiar) {
-          const hatchling = this.itemByName.get(familiar.larva);
+          const hatchling = this.itemByName.get(
+            cleanString(familiar.larva.trim().toLowerCase()),
+          );
 
           if (hatchling) {
             familiar.hatchling = hatchling;
@@ -383,12 +386,12 @@ export class WikiClient {
           }
 
           const equipment = this.itemByName.get(familiar.item);
-
           if (equipment) {
             familiar.equipment = equipment;
-            this.register(familiar);
             equipment.addEquppingFamiliar(familiar);
           }
+
+          this.register(familiar);
         }
       } catch {
         continue;
@@ -478,15 +481,10 @@ export class WikiClient {
 
     const embed = createEmbed().setTitle(title).setURL(foundName.url);
 
-    if (thing) {
-      await thing.addToEmbed(embed);
-    } else if (foundName.image) {
-      embed.setImage(foundName.image.replace("https", "http"));
-    } else {
-      embed.setImage("http://kol.coldfront.net/thekolwiki/vis_sig.jpg");
-    }
-
-    return embed;
+    if (thing) return await thing.addToEmbed(embed);
+    if (foundName.image)
+      return embed.setImage(foundName.image.replace("https", "http"));
+    return embed.setImage("http://kol.coldfront.net/thekolwiki/vis_sig.jpg");
   }
 
   private async tryWiki(url: string, stage: string) {

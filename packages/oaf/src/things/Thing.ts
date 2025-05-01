@@ -25,11 +25,12 @@ export class Thing {
   }
 
   addImageToEmbed(embed: EmbedBuilder) {
-    embed.setThumbnail(resolveKoLImage(this.getImagePath()));
+    return embed.setThumbnail(resolveKoLImage(this.getImagePath()));
   }
 
-  async addToEmbed(embed: EmbedBuilder): Promise<void> {
-    this.addImageToEmbed(embed);
-    embed.setDescription(await this.getDescription());
+  async addToEmbed(embed: EmbedBuilder): Promise<EmbedBuilder> {
+    return this.addImageToEmbed(embed).setDescription(
+      await this.getDescription(),
+    );
   }
 }
