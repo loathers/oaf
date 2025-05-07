@@ -58,7 +58,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       name: "Ascensions",
       value: player.ascensions > 0 ? hyperlink(
         player.ascensions.toLocaleString(),
-        toSamsaraLink(player.id) : 0,
+        toSamsaraLink(player.id)) : 0,
       ),
     });
 
