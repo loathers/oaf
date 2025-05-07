@@ -31,7 +31,6 @@ export function toWikiLink(input: string): string {
 }
 
 export function toSamsaraLink(id: number): string {
-  // NOTE: KOLDB does not support https. If this ever changes, this should change too.
   return `https://samsara.loathers.net/player/${id}`;
 }
 
