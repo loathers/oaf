@@ -30,9 +30,9 @@ export function toWikiLink(input: string): string {
     .replace(/\)/g, "%29")}`;
 }
 
-export function toKoldbLink(input: string): string {
+export function toSamsaraLink(id: number): string {
   // NOTE: KOLDB does not support https. If this ever changes, this should change too.
-  return `http://www.koldb.com/player.php?name=${encodeURI(input)}`;
+  return `https://samsara.loathers.net/player/${id}`;
 }
 
 export function toMuseumLink(id: number): string {
