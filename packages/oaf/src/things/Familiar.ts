@@ -16,7 +16,8 @@ export type FamiliarActionTypes =
   | "combat1"
   | "drop"
   | "block"
-  | "delevel"
+  | "delevel0"
+  | "delevel1"
   | "hp0"
   | "mp0"
   | "meat1"
@@ -37,7 +38,7 @@ type FamiliarClassification = {
 
 export const FAMILIAR_CLASSIFCATIONS: FamiliarClassification[] = [
   {
-    combination: ["combat0", "meat1", "delevel", "hp0", "mp0"],
+    combination: ["combat0", "meat1", "delevel1", "hp0", "mp0"],
     description: "Cocoabo-like.",
   },
   {
@@ -141,8 +142,12 @@ export const FAMILIAR_CLASSIFCATIONS: FamiliarClassification[] = [
     description: "Staggers enemies in combat.",
   },
   {
-    combination: ["delevel"],
-    description: "Delevels enemies in combat.",
+    combination: ["delevel0"],
+    description: "Delevels enemies at the start of combat (barrrnacle-like).",
+  },
+  {
+    combination: ["delevel1"],
+    description: "Delevels enemies during combat (ghost pickle-like).",
   },
   {
     combination: ["hp0", "mp0"],

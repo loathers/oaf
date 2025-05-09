@@ -6216,13 +6216,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"greenbox-data@npm:^0.0.18":
-  version: 0.0.18
-  resolution: "greenbox-data@npm:0.0.18"
+"greenbox-data@npm:^0.0.23":
+  version: 0.0.23
+  resolution: "greenbox-data@npm:0.0.23"
   dependencies:
     jsoncrush: "npm:^1.1.8"
     libram: "npm:^0.9.31"
-  checksum: 10c0/e5dbc8a94c6522959d21f32df47f3a2bf96256bcd116263348b78c26edeebf308eaaf1c71e7250852760c03575a8f1a52f3ef0912bcbfc0b4d24ff797e601557
+  checksum: 10c0/ec0ea946c618de63e027d15567a6f26fc2b80507bb374a95cd5f4ffefd03b4182a4ca9f2d1109aaf8e52a3b59a4ed654e6fc4404dcafc3f2e2d266700f63eff5
   languageName: node
   linkType: hard
 
@@ -8624,7 +8624,7 @@ __metadata:
     express: "npm:^4.21.2"
     fast-equals: "npm:^5.2.2"
     framer-motion: "npm:^12.5.0"
-    greenbox-data: "npm:^0.0.18"
+    greenbox-data: "npm:^0.0.23"
     html-entities: "npm:^2.5.3"
     http-status-codes: "npm:^2.3.0"
     husky: "npm:^9.1.7"
