@@ -27,12 +27,25 @@ export async function generateAvatarSvg(profile: string) {
   for (const imgElement of selectAll("img", block)) {
     const src = imgElement.attribs.src;
     if (!src) continue;
-    const name = src;
 
-    const result = await fetch(resolveKoLImage(src));
+    let name = src;
+    let result = await fetch(resolveKoLImage(src));
+    let replaced = false;
+
+    if (!result.ok) {
+      // If this is some decoration that failed, just skip it
+      if (images.length > 0) continue;
+      // Otherwise let's use nopic
+      name = "/adventureimages/nopic.gif";
+      result = await fetch(resolveKoLImage(name));
+      replaced = true;
+    }
+
     const buffer = Buffer.from(await result.arrayBuffer());
 
-    const { width = 0, height = 0 } = imageSize(buffer);
+    const { width = 0, height = 0 } = !replaced
+      ? imageSize(buffer)
+      : { width: 60, height: 100 };
 
     const href = `data:image/png;base64,${buffer.toString("base64")}`;
 
