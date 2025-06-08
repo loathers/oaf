@@ -13,7 +13,7 @@ import { prisma } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { snapshotClient } from "../../clients/snapshot.js";
 import { renderSvg } from "../../svgConverter.js";
-import { formatPlayer, toKoldbLink, toMuseumLink } from "../../utils.js";
+import { formatPlayer, toSamsaraLink, toMuseumLink } from "../../utils.js";
 import { findPlayer, identifyPlayer } from "../_player.js";
 
 export const data = new SlashCommandBuilder()
@@ -56,10 +56,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!astralSpirit) {
     fields.push({
       name: "Ascensions",
-      value: hyperlink(
+      value: player.ascensions > 0 ? hyperlink(
         player.ascensions.toLocaleString(),
-        toKoldbLink(player.name),
-      ),
+        toSamsaraLink(player.id)) : "0",
     });
 
     if (player.favoriteFood)
