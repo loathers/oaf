@@ -1,8 +1,4 @@
-import {
-  ChatInputCommandInteraction,
-  MessageType,
-  SlashCommandBuilder,
-} from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 
@@ -39,27 +35,36 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const quantity = interaction.options.getInteger("count", false) || 1;
 
-  const toDelete = [];
+  const messagesToDelete = [];
 
-  for (const [messageId, message] of (await channel.messages.fetch()) ?? []) {
+  const messages = await channel.messages.fetch();
+
+  for (const [messageId, message] of messages.sorted(
+    (a, b) => b.createdTimestamp - a.createdTimestamp,
+  )) {
     // If we have queued enough messages for deletion, end the loop
-    if (toDelete.length >= quantity) break;
+    if (messagesToDelete.length >= quantity) break;
 
     // Only consider messages from OAF
     if (message.author.id !== getOwnUserId()) continue;
 
-    // Only consider messages that are a reply to the purging user
-    const originatorId = message.interactionMetadata?.interactedMessageId;
-    if (!originatorId) continue;
-    const originator = await channel.messages.fetch(originatorId);
-    if (!originator) continue;
-    if (originator.author.id !== interaction.user.id) continue;
+    console.log(message);
 
-    // If we got here, we have a message to delete
-    toDelete.push(messageId);
+    // If the message is a slash command interaction, was it was initiated by the user?
+    const originator = message.interactionMetadata?.user.id;
+    if (originator === interaction.user.id) {
+      messagesToDelete.push(messageId);
+      continue;
+    }
+
+    // Otherwise, if the message is a reply, was it a reply to the user?
+    if (message.mentions.repliedUser?.id === interaction.user.id) {
+      messagesToDelete.push(messageId);
+      continue;
+    }
   }
 
-  await channel.bulkDelete(toDelete);
+  await channel.bulkDelete(messagesToDelete);
 
   await interaction.editReply("Purge complete");
 }
