@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  MessageType,
+  SlashCommandBuilder,
+} from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 
@@ -21,7 +25,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!channel) {
     await interaction.editReply(
-      "You have to perform this action from within a Channel.",
+      "You have to perform this action from within a channel.",
     );
     return;
   }
@@ -37,11 +41,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const toDelete = [];
 
-  for (const message of (await channel.messages.fetch()) ?? []) {
+  for (const [messageId, message] of (await channel.messages.fetch()) ?? []) {
+    // If we have queued enough messages for deletion, end the loop
     if (toDelete.length >= quantity) break;
-    if (message[1].author.id === getOwnUserId()) {
-      toDelete.push(message[0]);
-    }
+
+    // Only consider messages from OAF
+    if (message.author.id !== getOwnUserId()) continue;
+
+    // Only consider messages that are a reply to the purging user
+    const originatorId = message.interactionMetadata?.interactedMessageId;
+    if (!originatorId) continue;
+    const originator = await channel.messages.fetch(originatorId);
+    if (!originator) continue;
+    if (originator.author.id !== interaction.user.id) continue;
+
+    // If we got here, we have a message to delete
+    toDelete.push(messageId);
   }
 
   await channel.bulkDelete(toDelete);
