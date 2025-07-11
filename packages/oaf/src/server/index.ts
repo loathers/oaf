@@ -128,66 +128,6 @@ app
         ]),
       );
   })
-  .get("/api/greenbox/:playerId", async (req, res) => {
-    const playerId = Number(req.params.playerId);
-
-    if (Number.isNaN(playerId) || playerId < 1)
-      return void res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ error: "playerId is invalid" });
-
-    const latestGreenbox = await prisma.greenbox.findFirst({
-      where: { playerId },
-      orderBy: { id: "desc" },
-      select: {
-        player: true,
-        data: true,
-        oldData: true,
-        createdAt: true,
-      },
-    });
-
-    if (!latestGreenbox)
-      return void res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ error: "No greenbox data found" });
-
-    return void res.status(StatusCodes.OK).json({
-      data: latestGreenbox.oldData || latestGreenbox.data,
-      createdAt: latestGreenbox.createdAt,
-    });
-  })
-  .get("/api/greenbox/:playerId/:greenboxNumber", async (req, res) => {
-    const playerId = Number(req.params.playerId);
-    const greenboxNumber = Number(req.params.greenboxNumber);
-
-    if (Number.isNaN(playerId) || playerId < 1)
-      return void res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ error: "playerId is invalid" });
-
-    if (Number.isNaN(greenboxNumber) || greenboxNumber < 1)
-      return void res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ error: "greenboxNumber is invalid" });
-
-    const greenbox = await prisma.greenbox.findFirst({
-      where: { playerId },
-      orderBy: { id: "asc" },
-      skip: greenboxNumber - 1,
-    });
-
-    if (!greenbox) {
-      return void res.status(StatusCodes.NOT_FOUND).json({
-        error: `That greenbox entry doesn't exist`,
-      });
-    }
-
-    return void res.status(StatusCodes.OK).json({
-      data: greenbox.data,
-      createdAt: greenbox.createdAt,
-    });
-  })
   .get("/webhooks/subsrolling", async (req, res) => {
     const token = req.query.token;
 
