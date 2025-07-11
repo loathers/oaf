@@ -6216,16 +6216,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"greenbox-data@npm:^0.0.23":
-  version: 0.0.23
-  resolution: "greenbox-data@npm:0.0.23"
-  dependencies:
-    jsoncrush: "npm:^1.1.8"
-    libram: "npm:^0.9.31"
-  checksum: 10c0/ec0ea946c618de63e027d15567a6f26fc2b80507bb374a95cd5f4ffefd03b4182a4ca9f2d1109aaf8e52a3b59a4ed654e6fc4404dcafc3f2e2d266700f63eff5
-  languageName: node
-  linkType: hard
-
 "gunzip-maybe@npm:^1.4.2":
   version: 1.4.2
   resolution: "gunzip-maybe@npm:1.4.2"
@@ -6342,13 +6332,6 @@ __metadata:
   dependencies:
     lru-cache: "npm:^7.5.1"
   checksum: 10c0/ba7158f81ae29c1b5a1e452fa517082f928051da8797a00788a84ff82b434996d34f78a875bbb688aec162bda1d4cf71d2312f44da3c896058803f5efa6ce77f
-  languageName: node
-  linkType: hard
-
-"html-entities@npm:^2.5.2":
-  version: 2.5.2
-  resolution: "html-entities@npm:2.5.2"
-  checksum: 10c0/f20ffb4326606245c439c231de40a7c560607f639bf40ffbfb36b4c70729fd95d7964209045f1a4e62fe17f2364cef3d6e49b02ea09016f207fde51c2211e481
   languageName: node
   linkType: hard
 
@@ -7066,13 +7049,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsoncrush@npm:^1.1.8":
-  version: 1.1.8
-  resolution: "jsoncrush@npm:1.1.8"
-  checksum: 10c0/fe75c2d6efc627d5fa2c48f7330a6d361f9a011e30c0d95f1e7452b0abe4e36c230d6dfe10b0782f08ccedd0ef56a20a67bb8f3594cc79af8336dc28ede65121
-  languageName: node
-  linkType: hard
-
 "jsonfile@npm:^6.0.1":
   version: 6.1.0
   resolution: "jsonfile@npm:6.1.0"
@@ -7171,17 +7147,6 @@ __metadata:
     prelude-ls: "npm:^1.2.1"
     type-check: "npm:~0.4.0"
   checksum: 10c0/effb03cad7c89dfa5bd4f6989364bfc79994c2042ec5966cb9b95990e2edee5cd8969ddf42616a0373ac49fac1403437deaf6e9050fbbaa3546093a59b9ac94e
-  languageName: node
-  linkType: hard
-
-"libram@npm:^0.9.31":
-  version: 0.9.31
-  resolution: "libram@npm:0.9.31"
-  dependencies:
-    html-entities: "npm:^2.5.2"
-  peerDependencies:
-    kolmafia: ^5.28100.0
-  checksum: 10c0/6a67612b58e383ac639a2f126e63c70340b2e9b330399f6a20994aae96dc5390e84037e7ed498d2531c22affac233baad06891618bcf8c1ff40c2fb752df82d4
   languageName: node
   linkType: hard
 
@@ -8624,7 +8589,6 @@ __metadata:
     express: "npm:^4.21.2"
     fast-equals: "npm:^5.2.2"
     framer-motion: "npm:^12.5.0"
-    greenbox-data: "npm:^0.0.23"
     html-entities: "npm:^2.5.3"
     http-status-codes: "npm:^2.3.0"
     husky: "npm:^9.1.7"

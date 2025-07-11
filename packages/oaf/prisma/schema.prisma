@@ -7,15 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Greenbox {
-  id        Int      @id @default(autoincrement())
-  playerId  Int
-  player    Player   @relation(fields: [playerId], references: [playerId])
-  oldData   String?
-  data      Json
-  createdAt DateTime @default(now())
-}
-
 model Player {
   playerId            Int                 @id
   playerName          String
@@ -23,9 +14,6 @@ model Player {
   doneWithSkills      Boolean             @default(false)
   brainiac            Boolean             @default(false)
   discordId           String?
-  greenbox            Greenbox[]
-  greenboxString      String?
-  greenboxLastUpdate  DateTime?
   latitude            Float?
   longitude           Float?
   thiccEntered        Boolean             @default(false)

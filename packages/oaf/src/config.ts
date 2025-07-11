@@ -31,6 +31,7 @@ export const schema = {
   },
   KOL_USER: String,
   KOL_PASS: String,
+  GREENBOX_TOKEN: String,
 
   // General guild info
   GUILD_ID: SNOWFLAKE_PATTERN,

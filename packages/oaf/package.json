@@ -39,7 +39,6 @@
     "express": "^4.21.2",
     "fast-equals": "^5.2.2",
     "framer-motion": "^12.5.0",
-    "greenbox-data": "^0.0.23",
     "html-entities": "^2.5.3",
     "http-status-codes": "^2.3.0",
     "isbot": "5.1.25",
