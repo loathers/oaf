@@ -26,7 +26,15 @@ async function update(
   greenboxString: string,
 ) {
   try {
-    await greenboxClient.update(playerId, playerName, greenboxString);
+    const response = await greenboxClient.update(
+      playerId,
+      playerName,
+      greenboxString,
+    );
+    console.log(
+      `Updated greenbox for player ${playerId} (${playerName})`,
+      response,
+    );
   } catch (error) {
     await discordClient.alert(
       "Error processing greenbox submission",
@@ -42,7 +50,8 @@ async function update(
 
 async function wipe(playerId: number) {
   try {
-    await greenboxClient.wipe(playerId);
+    const response = await greenboxClient.wipe(playerId);
+    console.log(`Wiped greenbox for player ${playerId}`, response);
     await kolClient.kmail(
       playerId,
       "At your request, your public greenbox profile, if it existed, has been removed",
