@@ -96,6 +96,9 @@ async function main() {
   });
 
   kolClient.on("kmail", async (message) => {
+    console.log(
+      `Received Kmail from ${message.who.id}: "${message.msg.substring(0, 15)}"${message.msg.length > 15 ? "..." : ""}`,
+    );
     if (message.msg.startsWith("GREENBOX:")) await handleGreenboxKmail(message);
   });
 
