@@ -14,12 +14,10 @@ export async function findPlayer(where: Prisma.PlayerWhereInput) {
   const player = await prisma.player.findFirst({
     where,
     include: {
-      greenbox: { orderBy: { id: "desc" }, take: 1 },
       raffleWins: true,
     },
   });
-  if (!player) return null;
-  return { ...player, greenbox: player.greenbox.at(0) ?? null };
+  return player ?? null;
 }
 
 type FoundPlayer = Awaited<ReturnType<typeof findPlayer>>;

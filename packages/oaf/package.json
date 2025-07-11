@@ -13,8 +13,7 @@
     "build": "remix vite:build",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "prepare": "husky install",
-    "migrate": "node --import tsx ./prisma/migrations/20241122100045_store_data_properly/data-migration.ts"
+    "prepare": "husky install"
   },
   "author": "",
   "license": "ISC",
@@ -39,7 +38,6 @@
     "express": "^4.21.2",
     "fast-equals": "^5.2.2",
     "framer-motion": "^12.5.0",
-    "greenbox-data": "^0.0.23",
     "html-entities": "^2.5.3",
     "http-status-codes": "^2.3.0",
     "isbot": "5.1.25",

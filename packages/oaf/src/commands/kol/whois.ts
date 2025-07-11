@@ -11,6 +11,7 @@ import {
 
 import { prisma } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
+import { greenboxClient } from "../../clients/greenbox.js";
 import { snapshotClient } from "../../clients/snapshot.js";
 import { renderSvg } from "../../svgConverter.js";
 import { formatPlayer, toMuseumLink, toSamsaraLink } from "../../utils.js";
@@ -103,12 +104,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     // Show different greenboxen services
     const greenboxes = [];
-    if (knownPlayer?.greenbox) {
+    const greenbox = await greenboxClient.getInfo(player.id);
+    if (greenbox) {
       greenboxes.push(
         `${hyperlink(
           `Greenbox`,
           `https://greenbox.loathers.net/?u=${player.id}`,
-        )} (updated ${time(knownPlayer.greenbox.createdAt, "R")})`,
+        )} (updated ${time(greenbox.createdAt, "R")})`,
       );
     }
     const snapshot = await snapshotClient.getInfo(player.name);

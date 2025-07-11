@@ -1,10 +1,7 @@
-import { JsonValue } from "@prisma/client/runtime/library";
-import { deepEqual } from "fast-equals";
-import { RawSnapshotData, expand } from "greenbox-data";
 import { type KoLMessage } from "kol.js";
 
-import { isRecordNotFoundError, prisma } from "./clients/database.js";
 import { discordClient } from "./clients/discord.js";
+import { greenboxClient } from "./clients/greenbox.js";
 import { kolClient } from "./clients/kol.js";
 
 export async function handleGreenboxKmail(message: KoLMessage) {
@@ -29,30 +26,12 @@ async function update(
   greenboxString: string,
 ) {
   try {
-    // If the player isn't already in the database, add them
-    const player = await prisma.player.upsert({
-      where: { playerId },
-      update: {},
-      create: { playerId, playerName },
-      include: { greenbox: { orderBy: { id: "desc" }, take: 1 } },
-    });
-
-    const greenboxData = expand(greenboxString);
-
-    // Only add a new entry if something has changed
-    if (!isSnapshotDifferent(player.greenbox.at(0)?.data, greenboxData)) return;
-
-    await prisma.greenbox.create({
-      data: {
-        playerId,
-        data: { ...greenboxData },
-      },
-    });
+    await greenboxClient.update(playerId, playerName, greenboxString);
   } catch (error) {
     await discordClient.alert(
       "Error processing greenbox submission",
       undefined,
-      error,
+      `Failed to update greenbox for player ${playerId}: ${error}`,
     );
     await kolClient.kmail(
       playerId,
@@ -63,35 +42,20 @@ async function update(
 
 async function wipe(playerId: number) {
   try {
-    await prisma.player.update({
-      where: { playerId },
-      data: {
-        greenboxString: null,
-        greenboxLastUpdate: null,
-        greenbox: { deleteMany: {} },
-      },
-    });
+    await greenboxClient.wipe(playerId);
+    await kolClient.kmail(
+      playerId,
+      "At your request, your public greenbox profile, if it existed, has been removed",
+    );
   } catch (error) {
-    if (!isRecordNotFoundError(error)) {
-      await discordClient.alert(
-        "Error processing greenbox submission",
-        undefined,
-        error,
-      );
-      return await kolClient.kmail(
-        playerId,
-        "There was an error wiping your public greenbox profile",
-      );
-    }
+    await discordClient.alert(
+      "Error processing greenbox wipe request",
+      undefined,
+      `Failed to wipe greenbox for player ${playerId}: ${error}`,
+    );
+    await kolClient.kmail(
+      playerId,
+      "There was an error processing your greenbox wipe request",
+    );
   }
-
-  await kolClient.kmail(
-    playerId,
-    "At your request, your public greenbox profile, if it existed, has been removed",
-  );
-}
-
-function isSnapshotDifferent(a: JsonValue | undefined, b: RawSnapshotData) {
-  if (!a || typeof a !== "object") return true;
-  return !deepEqual({ ...a, meta: undefined }, { ...b, meta: undefined });
 }
