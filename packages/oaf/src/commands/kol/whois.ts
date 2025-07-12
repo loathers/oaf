@@ -103,25 +103,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       knownPlayer = await findPlayer({ playerId: player.id });
 
     // Show different greenboxen services
-    const greenboxes = [];
-    const greenbox = await greenboxClient.getInfo(player.id);
-    if (greenbox) {
-      greenboxes.push(
-        `${hyperlink(
-          `Greenbox`,
-          `https://greenbox.loathers.net/?u=${player.id}`,
-        )} (updated ${time(greenbox.createdAt, "R")})`,
+    const greenboxes = [
+      ["Greenbox", await greenboxClient.getInfo(player)] as const,
+      ["Snapshot", await snapshotClient.getInfo(player)] as const,
+    ]
+      .filter(([, info]) => info !== null)
+      .map(
+        ([name, info]) =>
+          hyperlink(name, info!.link) + ` (updated ${time(info!.date, "R")})`,
       );
-    }
-    const snapshot = await snapshotClient.getInfo(player.name);
-    if (snapshot) {
-      greenboxes.push(
-        `${hyperlink(`Snapshot`, snapshot.link)} (updated ${time(
-          snapshot.date,
-          "R",
-        )})`,
-      );
-    }
 
     fields.push({
       name: "Greenboxes",

@@ -1,8 +1,10 @@
-type Player = {
+import { type Player } from "kol.js";
+
+type GreenboxResponse = {
   playerId: number;
   playerName: string;
   greenbox: {
-    createdAt: Date;
+    createdAt: string;
     id: number;
     data: object;
   } | null;
@@ -51,15 +53,17 @@ export class GreenboxClient {
     return result;
   }
 
-  async getInfo(playerId: number) {
+  async getInfo(player: Player) {
     const response = await fetch(
-      `https://greenbox.loathers.net/api/player/${playerId}`,
+      `https://greenbox.loathers.net/api/player/${player.id}`,
     );
-    const data = await response.json();
-    if (!response.ok) {
-      return null;
-    }
-    return (data as Player).greenbox;
+    if (!response.ok) return null;
+    const data = (await response.json()) as GreenboxResponse;
+    if (!data.greenbox) return null;
+    return {
+      link: `https://greenbox.loathers.net/?u=${player.id}`,
+      date: new Date(data.greenbox.createdAt),
+    };
   }
 }
 
