@@ -22,7 +22,9 @@ model Player {
   thiccGifter         Player?             @relation("ThiccGiftee")
   standingOffers      StandingOffer[]
   raidParticipation   RaidParticipation[]
-  raffleWins RaffleWins[]
+  raffleWins          RaffleWins[]
+
+  flowerPriceAlert FlowerPriceAlert?
 }
 
 model StandingOffer {
@@ -82,20 +84,34 @@ model Setting {
 }
 
 model Raffle {
-  gameday Int @id
-  firstPrize Int
+  gameday     Int          @id
+  firstPrize  Int
   secondPrize Int
-  winners RaffleWins[]
-  messageId String
+  winners     RaffleWins[]
+  messageId   String
 }
 
 model RaffleWins {
-  gameday Int
-  raffle Raffle @relation(fields: [gameday], references: [gameday])
+  gameday  Int
+  raffle   Raffle @relation(fields: [gameday], references: [gameday])
   playerId Int
-  player Player @relation(fields: [playerId], references: [playerId])
-  place Int
-  tickets Int
+  player   Player @relation(fields: [playerId], references: [playerId])
+  place    Int
+  tickets  Int
 
   @@unique([gameday, playerId])
+}
+
+model FlowerPrices {
+  id        Int      @id @default(autoincrement())
+  red       Int
+  white     Int
+  blue      Int
+  createdAt DateTime @default(now())
+}
+
+model FlowerPriceAlert {
+  playerId Int    @id
+  player   Player @relation(fields: [playerId], references: [playerId])
+  price    Int
 }
