@@ -153,7 +153,7 @@ async function manageAlerts(interaction: ChatInputCommandInteraction) {
 async function checkPrices() {
   const page = await visitFlowerTradeIn();
   const prices = parsePrices(page);
-  if (!prices) return;
+  if (!prices) return null;
 
   const lastPrices = await prisma.flowerPrices.findFirst({
     orderBy: { createdAt: "desc" },
@@ -167,7 +167,7 @@ async function checkPrices() {
     lastPrices.white === prices.white &&
     lastPrices.blue === prices.blue
   )
-    return;
+    return prices;
 
   await prisma.flowerPrices.create({
     data: {
