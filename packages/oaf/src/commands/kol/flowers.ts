@@ -13,7 +13,26 @@ const CHECK_DURATION = { minutes: 1 };
 
 export const data = new SlashCommandBuilder()
   .setName("flowers")
-  .setDescription("Find information about the tulip market (from TTT).");
+  .setDescription(
+    "Set reminders for price thresholds in the tulip market (from TTT).",
+  )
+  .addSubcommand((subcommand) =>
+    subcommand.setName("check").setDescription("Check the current prices"),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("manage")
+      .setDescription(
+        "Manage your alert price. Can also be used to set or remove (price 0)",
+      )
+      .addIntegerOption((option) =>
+        option
+          .setName("price")
+          .setDescription("Price for which you want to be alerted.")
+          .setRequired(true)
+          .setMinValue(0),
+      ),
+  );
 
 async function visitFlowerTradeIn(): Promise<string> {
   return kolClient.fetchText("shop.php?whichshop=flowertradein");
@@ -66,21 +85,69 @@ function createPriceEmbed(prices: Prices) {
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  const subcommand = interaction.options.getSubcommand();
+
+  switch (subcommand) {
+    case "check": {
+      return await replyWithFlowerPrices(interaction);
+    }
+    case "manage":
+      return await manageAlerts(interaction);
+    default:
+      return await interaction.reply({
+        content:
+          "Invalid subcommand. It shouldn't be possible to see this message. Please report it.",
+        ephemeral: true,
+      });
+  }
+}
+
+async function replyWithFlowerPrices(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  const page = await visitFlowerTradeIn();
+  const prices = await checkPrices();
 
-  const prices = parsePrices(page);
-
-  if (!prices)
+  if (!prices) {
     return void (await interaction.editReply(
-      "I wasn't able to read the current prices from the floral mercantile exchange.",
+      "Could not read the flower prices. Please try again later.",
     ));
+  }
 
-  await interaction.editReply({
-    content: null,
-    embeds: [createPriceEmbed(prices)],
+  const embed = createPriceEmbed(prices);
+  return await interaction.editReply({ embeds: [embed] });
+}
+
+async function manageAlerts(interaction: ChatInputCommandInteraction) {
+  await interaction.deferReply({ ephemeral: true });
+
+  const price = interaction.options.getInteger("price", true);
+
+  const player = await prisma.player.findFirst({
+    where: { discordId: interaction.user.id },
   });
+
+  if (!player) {
+    return void (await interaction.editReply(
+      "You need to link your account first.",
+    ));
+  }
+
+  if (price === 0) {
+    await prisma.flowerPriceAlert.deleteMany({
+      where: { playerId: player.playerId },
+    });
+    return void (await interaction.editReply("Removed your price alert."));
+  }
+
+  await prisma.flowerPriceAlert.upsert({
+    where: { playerId: player.playerId },
+    update: { price },
+    create: { playerId: player.playerId, price },
+  });
+
+  return await interaction.editReply(
+    `You will be alerted when the price of a tulip is at or above ${numberFormat.format(price)} meat.`,
+  );
 }
 
 async function checkPrices() {
@@ -130,6 +197,8 @@ async function checkPrices() {
       embeds: [createPriceEmbed(prices)],
     });
   }
+
+  return prices;
 }
 
 export async function init() {
