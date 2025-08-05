@@ -58,7 +58,8 @@ const BOARD_MAPPINGS = {
   WereProfessor: 52,
   "11 Things I Hate About U": 53,
   "Avant Guard": 54,
-  "Hat Trick": 55,
+  "Z is for Zootomist": 55,
+  "Hat Trick": 56,
   Standard: 999,
   "Elf Gratitude": 900,
 } as const;
@@ -144,6 +145,8 @@ const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
   "11tihau": "11 Things I Hate About U",
   ag: "Avant Guard",
   hats: "Hat Trick",
+  zoot: "Z is for Zootomist",
+  zootomist: "Z is for Zootomist",
   ht: "Hat Trick",
 };
 
