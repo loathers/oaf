@@ -157,7 +157,6 @@ async function checkPrices() {
 
   const lastPrices = await prisma.flowerPrices.findFirst({
     orderBy: { createdAt: "desc" },
-    take: 1,
   });
 
   // Return if we already have these prices

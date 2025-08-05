@@ -58,6 +58,7 @@ const BOARD_MAPPINGS = {
   WereProfessor: 52,
   "11 Things I Hate About U": 53,
   "Avant Guard": 54,
+  "Hat Trick": 55,
   Standard: 999,
   "Elf Gratitude": 900,
 } as const;
@@ -142,6 +143,8 @@ const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
   "11t": "11 Things I Hate About U",
   "11tihau": "11 Things I Hate About U",
   ag: "Avant Guard",
+  hats: "Hat Trick",
+  ht: "Hat Trick",
 };
 
 const AUTOCOMPLETE_CHOICES = [
