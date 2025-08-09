@@ -17,7 +17,7 @@ const OTHER_TYPES = [
 ] as const;
 type OtherType = (typeof OTHER_TYPES)[number];
 
-const CONSUMABLE_TYPES = ["food", "booze", "spleen"] as const;
+const CONSUMABLE_TYPES = ["food", "drink", "spleen"] as const;
 type ConsumableType = (typeof CONSUMABLE_TYPES)[number];
 
 const EQUIPMENT_TYPES = [
@@ -190,7 +190,7 @@ export class Item extends Thing {
       switch (consumableType) {
         case "food":
           return ["food", "fullness"];
-        case "booze":
+        case "drink":
           return ["booze", "inebriety"];
         case "spleen":
           return ["spleen item", "spleen"];
@@ -400,8 +400,7 @@ export class Item extends Thing {
       .join(", ");
 
     output.push(
-      `${titleCase(groupType)}s into: ${turnsInto}${
-        group.length > 8 ? " ...and more." : ""
+      `${titleCase(groupType)}s into: ${turnsInto}${group.length > 8 ? " ...and more." : ""
       }`,
     );
 
