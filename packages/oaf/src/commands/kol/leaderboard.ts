@@ -60,6 +60,7 @@ const BOARD_MAPPINGS = {
   "Avant Guard": 54,
   "Z is for Zootomist": 55,
   "Hat Trick": 56,
+  "11,037 Leagues Under the Sea": 57,
   Standard: 999,
   "Elf Gratitude": 900,
 } as const;
@@ -148,6 +149,7 @@ const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
   zoot: "Z is for Zootomist",
   zootomist: "Z is for Zootomist",
   ht: "Hat Trick",
+  sea: "11,037 Leagues Under the Sea",
 };
 
 const AUTOCOMPLETE_CHOICES = [
