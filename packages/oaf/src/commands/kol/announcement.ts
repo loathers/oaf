@@ -12,9 +12,20 @@ function isAnnouncement(message: KoLMessage) {
   );
 }
 
+function isUpdatesMessage(message: KoLMessage) {
+  return (
+    message.msg ===
+    "A new update has been posted. Use the /updates command to read it."
+  );
+}
+
 function listenForAnnouncements() {
   kolClient.on("system", async (systemMessage) => {
     if (!isAnnouncement(systemMessage)) return;
+
+    const announcement = isUpdatesMessage(systemMessage)
+      ? (await kolClient.getUpdates())[0]
+      : systemMessage.msg;
 
     const guild = await discordClient.guilds.fetch(config.GUILD_ID);
     const announcementChannel = guild?.channels.cache.get(
@@ -29,7 +40,7 @@ function listenForAnnouncements() {
     const message = await announcementChannel.send({
       content: dedent`
         New announcement posted to KoL chat!
-        ${blockQuote(systemMessage.msg)}
+        ${blockQuote(announcement)}
       `,
     });
 
