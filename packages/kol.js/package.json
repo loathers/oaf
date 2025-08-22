@@ -14,19 +14,19 @@
   },
   "devDependencies": {
     "prettier": "^3.6.2",
-    "typescript": "^5.8.2",
-    "vitest": "^3.0.9"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "async-mutex": "^0.5.0",
-    "css-select": "^5.1.0",
+    "css-select": "^5.2.2",
     "date-fns": "^4.1.0",
     "domhandler": "^5.0.3",
     "domutils": "^3.2.2",
-    "got": "^14.4.6",
-    "html-entities": "^2.5.3",
+    "got": "^14.4.7",
+    "html-entities": "^2.6.0",
     "htmlparser2": "^10.0.0",
-    "image-size": "^2.0.1",
+    "image-size": "^2.0.2",
     "querystring": "^0.2.1",
     "tough-cookie": "^5.1.2",
     "ts-dedent": "^2.2.0",
