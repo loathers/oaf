@@ -400,7 +400,8 @@ export class Item extends Thing {
       .join(", ");
 
     output.push(
-      `${titleCase(groupType)}s into: ${turnsInto}${group.length > 8 ? " ...and more." : ""
+      `${titleCase(groupType)}s into: ${turnsInto}${
+        group.length > 8 ? " ...and more." : ""
       }`,
     );
 

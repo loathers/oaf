@@ -328,6 +328,15 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     );
   }
 
+  async getUpdates() {
+    const result = await this.sendChat("/updates");
+    return [
+      ...(result?.output.matchAll(
+        /<p><b>[A-za-z]+ \d+<\/b> - (.*?)(?=<p>(?:<b>|<hr>))/g,
+      ) ?? []),
+    ].map((m) => m[1]);
+  }
+
   async useChatMacro(macro: string) {
     return await this.sendChat(`/clan ${macro}`);
   }
