@@ -10,6 +10,7 @@ import { prisma } from "../clients/database.js";
 import { discordClient } from "../clients/discord.js";
 import { wikiClient } from "../clients/wiki.js";
 import { config } from "../config.js";
+import { eggnet } from "./eggnet.js";
 import { samsara } from "./samsara.js";
 import { rollSubs } from "./subs.js";
 
@@ -167,6 +168,31 @@ app
 
     try {
       await samsara(req.body);
+      return void res.status(StatusCodes.OK).json({ success: "true" });
+    } catch (e) {
+      if (e instanceof Error) {
+        return void res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ error: e.message });
+      }
+
+      throw e;
+    }
+  })
+  .post("/webhooks/eggnet", async (req, res) => {
+    const token = req.query.token;
+
+    if (!token)
+      return void res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ error: "No token" });
+    if (token !== config.EGGNET_TOKEN)
+      return void res
+        .status(StatusCodes.FORBIDDEN)
+        .json({ error: "Invalid token" });
+
+    try {
+      await eggnet(req.body);
       return void res.status(StatusCodes.OK).json({ success: "true" });
     } catch (e) {
       if (e instanceof Error) {

@@ -23,9 +23,11 @@ export async function samsara({
   days,
 }: Details) {
   const guild = await discordClient.guilds.fetch(config.GUILD_ID);
-  const iotmChannel = guild?.channels.cache.get(config.UNRESTRICTED_CHANNEL_ID);
+  const unrestrictedChannel = guild?.channels.cache.get(
+    config.UNRESTRICTED_CHANNEL_ID,
+  );
 
-  if (!iotmChannel?.isTextBased()) {
+  if (!unrestrictedChannel?.isTextBased()) {
     await discordClient.alert(
       "Someone has tried to hit a Samsara webhook but the guild or unrestricted channel are incorrectly configured",
     );
@@ -37,7 +39,7 @@ export async function samsara({
 
   const path = pathName === "None" ? "No Path" : pathName;
 
-  await iotmChannel.send({
+  await unrestrictedChannel.send({
     content: `🚨${goldStarEmoji} ${player.name} (#${player.id}) has achieved the best ${bold(`${titleCase(lifestyle)} ${path}`)} with ${days}/${turns}.`,
   });
 }
