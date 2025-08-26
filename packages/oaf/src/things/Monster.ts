@@ -176,7 +176,7 @@ export class Monster extends Thing {
       description.push("Scales unusually.");
     }
 
-    const phylum = this.parameters.match(/P: (?<phylum>[a-z]+)/);
+    const phylum = this.parameters.match(/P: (?<phylum>[a-z-]+)/);
     if (phylum) description.push(`Phylum: ${phylum[1]}`);
 
     const element = this.parameters.match(/E: (?<element>[a-z]+)/);
