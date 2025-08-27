@@ -205,7 +205,7 @@ app
     }
   })
   .all(
-    "*",
+    "*splat",
     createRequestHandler({
       build,
       getLoadContext: () => ({ discordClient, wikiClient }),
