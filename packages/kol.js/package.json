@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "async-mutex": "^0.5.0",
-    "css-select": "^5.2.2",
+    "css-select": "^6.0.0",
     "date-fns": "^4.1.0",
     "domhandler": "^5.0.3",
     "domutils": "^3.2.2",
@@ -28,7 +28,7 @@
     "htmlparser2": "^10.0.0",
     "image-size": "^2.0.2",
     "querystring": "^0.2.1",
-    "tough-cookie": "^5.1.2",
+    "tough-cookie": "^6.0.0",
     "ts-dedent": "^2.2.0",
     "typed-emitter": "^2.1.0"
   }

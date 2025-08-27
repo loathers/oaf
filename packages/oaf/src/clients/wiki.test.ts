@@ -1,4 +1,4 @@
-import { fetch } from "undici";
+import { fetch, type Response } from "undici";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { loadFixture } from "../testUtils.js";
