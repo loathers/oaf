@@ -1,3 +1,5 @@
+import { hyperlink } from "discord.js";
+
 import { createEmbed, discordClient } from "../clients/discord.js";
 import { wikiClient } from "../clients/wiki.js";
 import { config } from "../config.js";
@@ -31,7 +33,7 @@ export async function eggnet({ monsterId }: Details) {
   await monster.addToEmbed(embed);
 
   await iotmChannel.send({
-    content: `Huh? ${monster.name} came out of its egg 🥚! New monster available in the Mimic DNA Bank`,
+    content: `Huh? ${monster.name} came out of its egg 🥚! New monster available in the ${hyperlink("Mimic DNA Bank", "https://eggnet.loathers.net")}`,
     embeds: [embed],
   });
 }
