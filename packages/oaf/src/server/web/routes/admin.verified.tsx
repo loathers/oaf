@@ -1,4 +1,3 @@
-/// <reference types="../../../../remix.env.d.ts" />
 import {
   Table,
   TableContainer,
@@ -8,9 +7,8 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { useLoaderData } from "@remix-run/react";
-import { json } from "@remix-run/server-runtime";
-import React from "react";
+import { useLoaderData } from "react-router";
+import { data } from "react-router";
 
 import { prisma } from "../../../clients/database.js";
 import { DiscordUser } from "./resources.user.js";
@@ -20,7 +18,7 @@ export async function loader() {
     where: { discordId: { not: null } },
   });
 
-  return json({ players });
+  return data({ players });
 }
 
 export default function Verified() {

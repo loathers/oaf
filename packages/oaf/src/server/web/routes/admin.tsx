@@ -13,9 +13,8 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { Link, Outlet, useLoaderData } from "@remix-run/react";
-import React from "react";
+import { LoaderFunctionArgs } from "react-router";
+import { Link, Outlet, useLoaderData } from "react-router";
 
 import { authenticate } from "../auth.server";
 

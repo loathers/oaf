@@ -1,4 +1,3 @@
-/// <reference types="../../../../remix.env.d.ts" />
 import {
   Alert,
   AlertIcon,
@@ -16,13 +15,10 @@ import {
   Stack,
   Textarea,
 } from "@chakra-ui/react";
-import { useFetcher, useLoaderData } from "@remix-run/react";
-import {
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
-} from "@remix-run/server-runtime";
+import { useFetcher, useLoaderData } from "react-router";
+import { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Message, messageLink } from "discord.js";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { DiscordClient } from "../../../clients/discord";
 import { authenticate } from "../auth.server";

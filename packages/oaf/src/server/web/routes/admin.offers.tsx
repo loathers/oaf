@@ -1,4 +1,3 @@
-/// <reference types="../../../../remix.env.d.ts" />
 import {
   Table,
   TableContainer,
@@ -8,8 +7,8 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { useLoaderData } from "@remix-run/react";
-import { LoaderFunctionArgs, json } from "@remix-run/server-runtime";
+import { useLoaderData } from "react-router";
+import { LoaderFunctionArgs, data } from "react-router";
 import React from "react";
 
 import { prisma } from "../../../clients/database.js";
@@ -28,7 +27,7 @@ export async function loader({ context }: LoaderFunctionArgs) {
     },
   });
 
-  return json({
+  return data({
     offers: offers.map((o) => ({
       ...o,
       price: Number(o.price),

@@ -1,5 +1,4 @@
-/// <reference types="../../remix.env.d.ts" />
-import { createRequestHandler } from "@remix-run/express";
+import { createRequestHandler } from "@react-router/express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
@@ -13,6 +12,7 @@ import { config } from "../config.js";
 import { eggnet } from "./eggnet.js";
 import { samsara } from "./samsara.js";
 import { rollSubs } from "./subs.js";
+import { unstable_RouterContextProvider } from "react-router";
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
@@ -24,7 +24,7 @@ const viteDevServer =
       );
 
 const build = viteDevServer
-  ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
+  ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
   : await import(path.resolve("build/server/index.js"));
 
 function arrayToCsv<T extends object>(data: T[], headers: (keyof T)[]): string {
@@ -208,11 +208,16 @@ app
     "*splat",
     createRequestHandler({
       build,
-      getLoadContext: () => ({ discordClient, wikiClient }),
+      getLoadContext() {
+        const context = new unstable_RouterContextProvider();
+        context.discordClient = discordClient;
+        context.wikiClient = wikiClient;
+        return context;
+      },
     }),
   );
 
 export const startApiServer = () =>
   app.listen(config.PORT, () =>
-    console.log(`Server listening on ${config.PORT}`),
+    console.log(`Server listening on ${config.PORT}`, config),
   );

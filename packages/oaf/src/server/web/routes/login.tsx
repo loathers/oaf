@@ -1,4 +1,4 @@
-import { redirect } from "@remix-run/server-runtime";
+import { redirect } from "react-router";
 
 import { authenticator } from "../auth.server.js";
 import { commitSession, getSession } from "../session.server.js";

@@ -10,6 +10,7 @@
     "dev": "yarn workspace oaf dev"
   },
   "resolutions": {
-    "uri-js": "npm:uri-js-replace@1.0.1"
+    "uri-js": "npm:uri-js-replace@1.0.1",
+    "@emotion/server/@emotion/utils": "^1.4.2"
   }
 }

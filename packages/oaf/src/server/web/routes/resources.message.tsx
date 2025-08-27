@@ -1,8 +1,6 @@
-/// <reference types="../../../../remix.env.d.ts" />
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { useFetcher } from "@remix-run/react";
+import { LoaderFunctionArgs } from "react-router";
+import { useFetcher } from "react-router";
 import { useEffect } from "react";
-import React from "react";
 
 import { authenticate } from "../auth.server";
 import DiscordMessage from "../components/DiscordMessage";
