@@ -1,8 +1,9 @@
-import { fetch } from "undici";
+import { type Response, fetch } from "undici";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { loadFixture } from "../testUtils.js";
 import { Effect } from "../things/Effect.js";
+import { Monster } from "../things/Monster.js";
 import { Skill } from "../things/Skill.js";
 import { wikiClient } from "./wiki.js";
 
@@ -67,6 +68,25 @@ describe("Wiki links", () => {
     );
     expect(link).toBe(
       "https://kol.coldfront.net/thekolwiki/index.php/Impetuous_Sauciness",
+    );
+  });
+
+  test("Can get wiki link for a monster", async () => {
+    text.mockResolvedValueOnce(
+      await loadFixture(__dirname, "monsters_by_number_1400-1499.html"),
+    );
+
+    const monster = Monster.from(
+      "quirky indie-rock accordionist	1454	wanderacc3.gif	FREE WANDERER Scale: -3 Floor: ? Init: -10000 P: dude Article: a	quirky accordion (a100)",
+    );
+    const link = await wikiClient.getWikiLink(monster);
+
+    expect(fetch).toHaveBeenCalledWith(
+      "https://kol.coldfront.net/thekolwiki/index.php/Monsters_by_number_(1400-1499)",
+      expect.anything(),
+    );
+    expect(link).toBe(
+      "https://kol.coldfront.net/thekolwiki/index.php/Quirky_indie-rock_accordionist",
     );
   });
 });
