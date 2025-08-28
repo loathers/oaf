@@ -5,7 +5,7 @@ import { loadFixture } from "../testUtils.js";
 import { Effect } from "../things/Effect.js";
 import { Monster } from "../things/Monster.js";
 import { Skill } from "../things/Skill.js";
-import { wikiClient } from "./wiki.js";
+import { mafiaClient } from "./mafia.js";
 
 vi.mock("undici");
 
@@ -29,7 +29,7 @@ describe("Wiki links", () => {
       "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation",
     );
 
-    await wikiClient.getWikiLink(effect);
+    await mafiaClient.getWikiLink(effect);
 
     expect(fetch).toHaveBeenCalledWith(
       "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number_(1-99)",
@@ -45,7 +45,7 @@ describe("Wiki links", () => {
     const effect = Effect.from(
       "127	Gothy	gothy.gif	06cb86ddd689278c5af31423a8210a72	neutral	none	use either 1 spooky eyeliner, 1 spooky lipstick|drink 1 gloomy mushroom wine",
     );
-    const link = await wikiClient.getWikiLink(effect);
+    const link = await mafiaClient.getWikiLink(effect);
 
     expect(fetch).toHaveBeenCalledWith(
       "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number_(100-199)",
@@ -60,7 +60,7 @@ describe("Wiki links", () => {
     );
 
     const skill = Skill.from("4015	Impetuous Sauciness	5alarm.gif	0	0	0	12");
-    const link = await wikiClient.getWikiLink(skill);
+    const link = await mafiaClient.getWikiLink(skill);
 
     expect(fetch).toHaveBeenCalledWith(
       "https://kol.coldfront.net/thekolwiki/index.php/Skills_by_number",
@@ -79,7 +79,7 @@ describe("Wiki links", () => {
     const monster = Monster.from(
       "quirky indie-rock accordionist	1454	wanderacc3.gif	FREE WANDERER Scale: -3 Floor: ? Init: -10000 P: dude Article: a	quirky accordion (a100)",
     );
-    const link = await wikiClient.getWikiLink(monster);
+    const link = await mafiaClient.getWikiLink(monster);
 
     expect(fetch).toHaveBeenCalledWith(
       "https://kol.coldfront.net/thekolwiki/index.php/Monsters_by_number_(1400-1499)",

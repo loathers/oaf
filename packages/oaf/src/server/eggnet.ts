@@ -1,7 +1,7 @@
 import { hyperlink } from "discord.js";
 
 import { createEmbed, discordClient } from "../clients/discord.js";
-import { wikiClient } from "../clients/wiki.js";
+import { mafiaClient } from "../clients/mafia.js";
 import { config } from "../config.js";
 
 type Details = {
@@ -19,7 +19,7 @@ export async function eggnet({ monsterId }: Details) {
     throw new Error("Something is configured wrong");
   }
 
-  const monster = wikiClient.monsters.find((i) => i.id === monsterId);
+  const monster = mafiaClient.monsters.find((i) => i.id === monsterId);
 
   if (!monster) {
     await discordClient.alert(
@@ -29,7 +29,7 @@ export async function eggnet({ monsterId }: Details) {
   }
 
   const embed = createEmbed();
-  embed.setTitle(monster.name).setURL(await wikiClient.getWikiLink(monster));
+  embed.setTitle(monster.name).setURL(await mafiaClient.getWikiLink(monster));
   await monster.addToEmbed(embed);
 
   await iotmChannel.send({

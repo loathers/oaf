@@ -6,7 +6,7 @@ import {
 
 import { createEmbed } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import { wikiClient } from "../../clients/wiki.js";
+import { mafiaClient } from "../../clients/mafia.js";
 
 export const data = new SlashCommandBuilder()
   .setName("bookmobile")
@@ -64,12 +64,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const embed = createEmbed().setTitle(`The Bookmobile`);
 
-  const item = wikiClient.items.find((i) => i.name === info.title);
+  const item = mafiaClient.items.find((i) => i.name === info.title);
   let itemInfo = info.title;
 
   if (item) {
     item.addImageToEmbed(embed);
-    const link = await wikiClient.getWikiLink(item);
+    const link = await mafiaClient.getWikiLink(item);
     if (link) itemInfo = hyperlink(item.name, link);
   }
 

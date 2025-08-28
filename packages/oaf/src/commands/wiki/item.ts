@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 
 import { createEmbed } from "../../clients/discord.js";
-import { wikiClient } from "../../clients/wiki.js";
+import { mafiaClient } from "../../clients/mafia.js";
 import { itemAutocomplete, itemOption } from "../_options.js";
 
 export const data = new SlashCommandBuilder()
@@ -14,10 +14,10 @@ export const data = new SlashCommandBuilder()
   .addIntegerOption(itemOption());
 
 export async function embedForItem(id: number) {
-  const item = wikiClient.items.find((i) => i.id === id);
+  const item = mafiaClient.items.find((i) => i.id === id);
   if (!item) return null;
   const embed = createEmbed();
-  embed.setTitle(item.name).setURL(await wikiClient.getWikiLink(item));
+  embed.setTitle(item.name).setURL(await mafiaClient.getWikiLink(item));
   await item.addToEmbed(embed);
   return embed;
 }

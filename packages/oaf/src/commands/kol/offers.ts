@@ -7,7 +7,7 @@ import { resolveKoLImage } from "kol.js";
 
 import { isRecordNotFoundError, prisma } from "../../clients/database.js";
 import { createEmbed } from "../../clients/discord.js";
-import { wikiClient } from "../../clients/wiki.js";
+import { mafiaClient } from "../../clients/mafia.js";
 import { formatPlayer } from "../../utils.js";
 import { itemAutocomplete, itemOption } from "../_options.js";
 
@@ -62,7 +62,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  const item = wikiClient.items.find((i) => i.id === itemId);
+  const item = mafiaClient.items.find((i) => i.id === itemId);
 
   if (!item) {
     return void (await interaction.editReply(`That item does not exist.`));
@@ -96,7 +96,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 
   const embed = createEmbed()
     .setTitle(`Standing Offers for ${item.name}`)
-    .setURL(await wikiClient.getWikiLink(item))
+    .setURL(await mafiaClient.getWikiLink(item))
     .setDescription(offers.join("\n"))
     .setThumbnail(resolveKoLImage(item.getImagePath()));
 
@@ -120,7 +120,7 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  const item = wikiClient.items.find((i) => i.id === itemId);
+  const item = mafiaClient.items.find((i) => i.id === itemId);
 
   if (!item) {
     return void (await interaction.editReply(`That item does not exist.`));

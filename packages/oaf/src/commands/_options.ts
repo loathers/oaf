@@ -1,6 +1,6 @@
 import { SlashCommandIntegerOption } from "discord.js";
 
-import { wikiClient } from "../clients/wiki.js";
+import { mafiaClient } from "../clients/mafia.js";
 
 export const itemOption =
   (required = true) =>
@@ -14,7 +14,7 @@ export const itemOption =
       .setRequired(required);
 
 export const itemAutocomplete = (value: string) =>
-  wikiClient.items
+  mafiaClient.items
     .map(({ name, id }) => ({ name, value: id }))
     .filter(({ name }) => name.toLowerCase().includes(value.toLowerCase()))
     .toSorted((a, b) =>

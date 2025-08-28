@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { wikiClient } from "../../clients/wiki.js";
+import { mafiaClient } from "../../clients/mafia.js";
 
 export const data = new SlashCommandBuilder()
   .setName("rescan")
@@ -9,7 +9,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  if (await wikiClient.reloadMafiaData()) {
+  if (await mafiaClient.reloadMafiaData()) {
     return interaction.editReply(
       "Information reloaded from KoLMafia Github data files.",
     );

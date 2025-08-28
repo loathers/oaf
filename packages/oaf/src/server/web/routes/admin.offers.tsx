@@ -33,7 +33,7 @@ export async function loader({ context }: LoaderFunctionArgs) {
       ...o,
       price: Number(o.price),
       itemName:
-        context.wikiClient.items.find((i) => i.id === o.itemId)?.name ??
+        context.mafiaDataClient.items.find((i) => i.id === o.itemId)?.name ??
         "Unknown",
     })),
   });

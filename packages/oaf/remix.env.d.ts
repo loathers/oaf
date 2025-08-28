@@ -1,9 +1,9 @@
 import { DiscordClient } from "./src/clients/discord.ts";
-import { WikiClient } from "./src/clients/wiki.ts";
+import { MafiaClient } from "./src/clients/mafia.ts";
 
 declare module "@remix-run/server-runtime" {
   export interface AppLoadContext {
     discordClient: DiscordClient;
-    wikiClient: WikiClient;
+    mafiaDataClient: MafiaClient;
   }
 }

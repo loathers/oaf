@@ -10,7 +10,7 @@ import {
   discordClient,
 } from "./clients/discord.js";
 import { kolClient } from "./clients/kol.js";
-import { wikiClient } from "./clients/wiki.js";
+import { mafiaClient } from "./clients/mafia.js";
 import { handleGreenboxKmail } from "./greenbox.js";
 import { startApiServer } from "./server/index.js";
 
@@ -70,7 +70,7 @@ async function main() {
   startApiServer();
 
   console.log("Downloading KoLmafia data.");
-  await wikiClient.loadMafiaData();
+  await mafiaClient.loadMafiaData();
   console.log("All KoLmafia data downloaded.");
 
   console.log("Loading commands and syncing relevant data");

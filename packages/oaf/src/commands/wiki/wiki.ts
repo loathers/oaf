@@ -10,7 +10,8 @@ import {
 } from "discord.js";
 
 import { blankEmbed, discordClient } from "../../clients/discord.js";
-import { WikiSearchError, wikiClient } from "../../clients/wiki.js";
+import { mafiaClient } from "../../clients/mafia.js";
+import { WikiSearchError } from "../../clients/wiki.js";
 import { lf } from "../../utils.js";
 
 const ITEMMATCHER = /\[\[([^[\]]*)\]\]/g;
@@ -27,7 +28,7 @@ export const data = new SlashCommandBuilder()
 
 async function getWikiReply(item: string) {
   try {
-    const embed = await wikiClient.getEmbed(item);
+    const embed = await mafiaClient.getEmbed(item);
     if (!embed) {
       return blankEmbed(`"${item}" wasn't found. Please refine your search.`);
     }
