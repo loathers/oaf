@@ -120,6 +120,10 @@ async function onMessage(message: Message) {
     });
   }
 
+  if (Math.random() < 0.01) {
+    preamble += `The ISS piss tank is currently ${await getPissLevel()}% full. `;
+  }
+
   const searchingMessage = await message.reply({
     content: `${preamble}${userMention(
       member.id,
@@ -130,10 +134,6 @@ async function onMessage(message: Message) {
   const embeds = await Promise.all(
     considered.map((query) => getWikiReply(query)),
   );
-
-  if (Math.random() < 0.01) {
-    preamble += `The ISS piss tank is currently ${await getPissLevel()}% full. `;
-  }
 
   await searchingMessage.edit({
     content: `${preamble}${userMention(member.id)} searched for...`,
