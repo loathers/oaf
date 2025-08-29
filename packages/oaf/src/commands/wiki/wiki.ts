@@ -10,6 +10,7 @@ import {
 } from "discord.js";
 
 import { blankEmbed, discordClient } from "../../clients/discord.js";
+import { getPissLevel } from "../../clients/iss.js";
 import { mafiaClient } from "../../clients/mafia.js";
 import { WikiSearchError } from "../../clients/wiki.js";
 import { lf } from "../../utils.js";
@@ -74,7 +75,7 @@ async function onMessage(message: Message) {
 
   if (queries.length === 0) return;
 
-  let slashNote = "";
+  let preamble = "";
   let reaction;
   if (
     matches.length > 0 &&
@@ -87,7 +88,7 @@ async function onMessage(message: Message) {
     }
 
     reaction = "<:kol_mad:516763545657016320>";
-    slashNote = `Remember, for this query you could have just run ${inlineCode(
+    preamble += `Remember, for this query you could have just run ${inlineCode(
       `/wiki ${matches[0][1]}`,
     )}\n\n`;
   } else {
@@ -120,7 +121,7 @@ async function onMessage(message: Message) {
   }
 
   const searchingMessage = await message.reply({
-    content: `${slashNote}${userMention(
+    content: `${preamble}${userMention(
       member.id,
     )} is searching for ${lf.format(considered.map((q) => `"${q}"`))}...`,
     allowedMentions: { parse: [], repliedUser: false },
@@ -130,8 +131,12 @@ async function onMessage(message: Message) {
     considered.map((query) => getWikiReply(query)),
   );
 
+  if (Math.random() < 0.01) {
+    preamble += `The ISS piss tank is currently ${await getPissLevel()}% full. `;
+  }
+
   await searchingMessage.edit({
-    content: `${slashNote}${userMention(member.id)} searched for...`,
+    content: `${preamble}${userMention(member.id)} searched for...`,
     embeds,
     allowedMentions: {
       parse: [],

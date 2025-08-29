@@ -4369,6 +4369,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cookiejar@npm:^2.1.4":
+  version: 2.1.4
+  resolution: "cookiejar@npm:2.1.4"
+  checksum: 10c0/2dae55611c6e1678f34d93984cbd4bda58f4fe3e5247cc4993f4a305cd19c913bbaf325086ed952e892108115073a747596453d3dc1c34947f47f731818b8ad1
+  languageName: node
+  linkType: hard
+
 "copy-to-clipboard@npm:3.3.3":
   version: 3.3.3
   resolution: "copy-to-clipboard@npm:3.3.3"
@@ -7219,6 +7226,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsonpatch@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "jsonpatch@npm:3.1.0"
+  checksum: 10c0/bd28b54e4e962ded51acbe061623fe79405e0ec97df18bb818631ee15f1e6015bd017f4393e8784e1f31bd9ba4806cbfad2ef9e88e5040536ffa312574384e79
+  languageName: node
+  linkType: hard
+
 "jsonwebtoken@npm:^9.0.2":
   version: 9.0.2
   resolution: "jsonwebtoken@npm:9.0.2"
@@ -7304,6 +7318,18 @@ __metadata:
     prelude-ls: "npm:^1.2.1"
     type-check: "npm:~0.4.0"
   checksum: 10c0/effb03cad7c89dfa5bd4f6989364bfc79994c2042ec5966cb9b95990e2edee5cd8969ddf42616a0373ac49fac1403437deaf6e9050fbbaa3546093a59b9ac94e
+  languageName: node
+  linkType: hard
+
+"lightstreamer-client-node@npm:^9.2.2":
+  version: 9.2.2
+  resolution: "lightstreamer-client-node@npm:9.2.2"
+  dependencies:
+    cookiejar: "npm:^2.1.4"
+    jsonpatch: "npm:^3.1.0"
+    ws: "npm:^8.14.2"
+    xmlhttprequest: "git+https://github.com/driverdan/node-XMLHttpRequest.git"
+  checksum: 10c0/59c9fab8f433de9aa38177cbf783adb9dfdd66541d2a13c304650a5a4367869603856b368c63afca1eb20de3ae148473fabe1311faf48d70bb367de158d0317f
   languageName: node
   linkType: hard
 
@@ -8721,6 +8747,7 @@ __metadata:
     js-sha256: "npm:^0.11.0"
     jsonwebtoken: "npm:^9.0.2"
     kol.js: "workspace:^"
+    lightstreamer-client-node: "npm:^9.2.2"
     lint-staged: "npm:^15.5.0"
     otplib: "npm:^12.0.1"
     prettier: "npm:^3.6.2"
@@ -11165,7 +11192,7 @@ __metadata:
 
 "typescript@patch:typescript@npm%3A^5.8.2#optional!builtin<compat/typescript>":
   version: 5.8.2
-  resolution: "typescript@patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>::version=5.8.2&hash=8c6c40"
+  resolution: "typescript@patch:typescript@npm%3A5.8.2#optional!builtin<compat/typescript>::version=5.8.2&hash=b45daf"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
@@ -11908,6 +11935,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ws@npm:^8.14.2, ws@npm:^8.18.3":
+  version: 8.18.3
+  resolution: "ws@npm:8.18.3"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 10c0/eac918213de265ef7cb3d4ca348b891a51a520d839aa51cdb8ca93d4fa7ff9f6ccb339ccee89e4075324097f0a55157c89fa3f7147bde9d8d7e90335dc087b53
+  languageName: node
+  linkType: hard
+
 "ws@npm:^8.17.0":
   version: 8.18.0
   resolution: "ws@npm:8.18.0"
@@ -11923,18 +11965,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:^8.18.3":
-  version: 8.18.3
-  resolution: "ws@npm:8.18.3"
-  peerDependencies:
-    bufferutil: ^4.0.1
-    utf-8-validate: ">=5.0.2"
-  peerDependenciesMeta:
-    bufferutil:
-      optional: true
-    utf-8-validate:
-      optional: true
-  checksum: 10c0/eac918213de265ef7cb3d4ca348b891a51a520d839aa51cdb8ca93d4fa7ff9f6ccb339ccee89e4075324097f0a55157c89fa3f7147bde9d8d7e90335dc087b53
+"xmlhttprequest@git+https://github.com/driverdan/node-XMLHttpRequest.git":
+  version: 1.8.0
+  resolution: "xmlhttprequest@https://github.com/driverdan/node-XMLHttpRequest.git#commit=97966e4ca1c9f2cc5574d8775cbdacebfec75455"
+  checksum: 10c0/c87b0c7d337c483469f34b5df89dc3052368db3a4fa252625a32667a7609c5030946b70ceded62b20e69f00c1a7b9bdbca0cfe9d777474a0bf3aa7a69070af8a
   languageName: node
   linkType: hard
 
