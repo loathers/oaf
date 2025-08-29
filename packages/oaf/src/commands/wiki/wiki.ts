@@ -120,7 +120,7 @@ async function onMessage(message: Message) {
     });
   }
 
-  if (Math.random() < 0.01) {
+  if (Math.random() < 0.05) {
     preamble += `The ISS piss tank is currently ${await getPissLevel()}% full. `;
   }
 
