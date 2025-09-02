@@ -6,9 +6,122 @@ import { Monster } from "./Monster.js";
 
 describe("Monster description", () => {
   test("Monsters with copied drops are described successfully", async () => {
-    const monster = Monster.from(
-      "drunken rat king	996	ratking.gif	NOCOPY Atk: 40 Def: 36 HP: 32 Init: 100 Meat: 40 P: beast EA: sleaze Article: a	rat whisker (100)	rat whisker (100)	rat whisker (100)	rat whisker (100)	rat appendix (20)	rat appendix (20)	rat appendix (20)	tangle of rat tails (100)",
-    );
+    const monster = new Monster({
+      ambiguous: false,
+      article: "a",
+      boss: false,
+      attack: "40",
+      defence: "36",
+      elementalDefence: "COLD",
+      drippy: false,
+      element: "COLD",
+      elementalAttack: "COLD",
+      elementalResistance: "0",
+      experience: null,
+      free: false,
+      ghost: false,
+      groupSize: 1,
+      hp: "32",
+      id: 996,
+      image: ["ratking.gif"],
+      initiative: "100",
+      itemBlockChance: 0,
+      lucky: false,
+      manuel: null,
+      meat: 40,
+      meatExpression: "40",
+      monsterDropsByMonster: {
+        nodes: [
+          {
+            category: null,
+            rate: 100,
+            itemByItem: {
+              name: "rat whisker",
+              id: 197,
+            },
+          },
+          {
+            category: null,
+            rate: 100,
+            itemByItem: {
+              name: "rat whisker",
+              id: 197,
+            },
+          },
+          {
+            category: null,
+            rate: 0,
+            itemByItem: {
+              name: "rat whisker",
+              id: 197,
+            },
+          },
+          {
+            category: null,
+            rate: 0,
+            itemByItem: {
+              name: "rat whisker",
+              id: 197,
+            },
+          },
+          {
+            category: null,
+            rate: 20,
+            itemByItem: {
+              name: "rat appendix",
+              id: 198,
+            },
+          },
+          {
+            category: null,
+            rate: 20,
+            itemByItem: {
+              name: "rat appendix",
+              id: 198,
+            },
+          },
+          {
+            category: null,
+            rate: 20,
+            itemByItem: {
+              name: "rat appendix",
+              id: 198,
+            },
+          },
+          {
+            category: null,
+            rate: 100,
+            itemByItem: {
+              name: "tangle of rat tails",
+              id: 4736,
+            },
+          },
+        ],
+      },
+      monsterLevelMultiplier: "1",
+      name: "drunken rat king",
+      nobanish: false,
+      nocopy: true,
+      nodeId: "WyJtb25zdGVycyIsOTk2XQ==",
+      nomanuel: false,
+      nowander: false,
+      nowish: false,
+      phylum: "beast",
+      physicalResistance: "0",
+      poison: null,
+      scaling: "0",
+      scalingCap: "0",
+      scalingFloor: "0",
+      snake: false,
+      skillBlockChance: 0,
+      spellBlockChance: 0,
+      sprinkles: ["0", "0"],
+      superlikely: false,
+      ultrarare: false,
+      wanderer: false,
+      wiki: null,
+      wish: false,
+    });
     const description = await monster.getDescription();
 
     expect(description).toBe(
@@ -29,9 +142,66 @@ describe("Monster description", () => {
   });
 
   test("Monsters with capped scaling are described successfully", async () => {
-    const monster = Monster.from(
-      "Gurgle the Turgle	1768	animturtle.gif	NOBANISH Scale: [5+20*pref(dinseyAudienceEngagement)] Cap: 11111 Floor: 100 MLMult: [3+2*pref(dinseyAudienceEngagement)] Init: -10000 P: construct E: stench	turtle voicebox (0)	fake washboard (c0)",
-    );
+    const monster = new Monster({
+      ambiguous: false,
+      article: "undefined",
+      boss: false,
+      attack: "0",
+      defence: "0",
+      elementalDefence: "COLD",
+      drippy: false,
+      element: "STENCH",
+      elementalAttack: "COLD",
+      elementalResistance: "0",
+      experience: null,
+      free: false,
+      ghost: false,
+      groupSize: 1,
+      hp: "0",
+      id: 1768,
+      image: ["animturtle.gif"],
+      initiative: "-10000",
+      itemBlockChance: 0,
+      lucky: false,
+      manuel: null,
+      meat: 0,
+      meatExpression: null,
+      monsterDropsByMonster: {
+        nodes: [
+          {
+            category: null,
+            rate: 15,
+            itemByItem: {
+              name: "turtle voicebox",
+              id: 8230,
+            },
+          },
+        ],
+      },
+      monsterLevelMultiplier: "[3+2*pref(dinseyAudienceEngagement)]",
+      name: "Gurgle the Turgle",
+      nobanish: true,
+      nocopy: false,
+      nodeId: "WyJtb25zdGVycyIsMTc2OF0=",
+      nomanuel: false,
+      nowander: false,
+      nowish: false,
+      phylum: "construct",
+      physicalResistance: "0",
+      poison: null,
+      scaling: "[5+20*pref(dinseyAudienceEngagement)]",
+      scalingCap: "11111",
+      scalingFloor: "100",
+      snake: false,
+      skillBlockChance: 0,
+      spellBlockChance: 0,
+      sprinkles: ["0", "0"],
+      superlikely: false,
+      ultrarare: false,
+      wanderer: false,
+      wiki: null,
+      wish: false,
+    });
     const description = await monster.getDescription();
 
     expect(description).toBe(
@@ -51,9 +221,57 @@ describe("Monster description", () => {
   });
 
   test("Monsters with normal scaling are described successfully", async () => {
-    const monster = Monster.from(
-      "clan of cave bars	1162	cavebars.gif	NOCOPY Scale: 20 Cap: 200 Floor: 30 MLMult: 5 Init: -10000 Meat: 400 Group: 10 P: beast Article: a",
-    );
+    const monster = new Monster({
+      ambiguous: false,
+      article: "a",
+      boss: false,
+      attack: "0",
+      defence: "0",
+      elementalDefence: "COLD",
+      drippy: false,
+      element: "COLD",
+      elementalAttack: "COLD",
+      elementalResistance: "0",
+      experience: null,
+      free: false,
+      ghost: false,
+      groupSize: 10,
+      hp: "0",
+      id: 1162,
+      image: ["cavebars.gif"],
+      initiative: "-10000",
+      itemBlockChance: 0,
+      lucky: false,
+      manuel: null,
+      meat: 400,
+      meatExpression: "400",
+      monsterDropsByMonster: {
+        nodes: [],
+      },
+      monsterLevelMultiplier: "5",
+      name: "clan of cave bars",
+      nobanish: false,
+      nocopy: true,
+      nodeId: "WyJtb25zdGVycyIsMTE2Ml0=",
+      nomanuel: false,
+      nowander: false,
+      nowish: false,
+      phylum: "beast",
+      physicalResistance: "0",
+      poison: null,
+      scaling: "20",
+      scalingCap: "200",
+      scalingFloor: "30",
+      snake: false,
+      skillBlockChance: 0,
+      spellBlockChance: 0,
+      sprinkles: ["0", "0"],
+      superlikely: false,
+      ultrarare: false,
+      wanderer: false,
+      wiki: null,
+      wish: false,
+    });
     const description = await monster.getDescription();
 
     expect(description).toBe(
@@ -72,9 +290,114 @@ describe("Monster description", () => {
   });
 
   test("Monsters who scale unusally are described successfully", async () => {
-    const monster = Monster.from(
-      "Count Drunkula (Hard Mode)	-89	drunkula_hm.gif	NOCOPY NOMANUEL P: undead	Thunkula's drinking cap (c0)	Drunkula's cape (c0)	Drunkula's silky pants (c0)	Drunkula's ring of haze (c0)	Drunkula's wineglass (c0)",
-    );
+    const monster = new Monster({
+      ambiguous: false,
+      article: "undefined",
+      boss: false,
+      attack: "0",
+      defence: "0",
+      elementalDefence: "COLD",
+      drippy: false,
+      element: "COLD",
+      elementalAttack: "COLD",
+      elementalResistance: "0",
+      experience: null,
+      free: false,
+      ghost: false,
+      groupSize: 1,
+      hp: "0",
+      id: -89,
+      image: ["drunkula_hm.gif"],
+      initiative: "0",
+      itemBlockChance: 0,
+      lucky: false,
+      manuel: null,
+      meat: 0,
+      meatExpression: null,
+      monsterDropsByMonster: {
+        nodes: [
+          {
+            category: "C",
+            rate: 100,
+            itemByItem: {
+              name: "Thunkula's drinking cap",
+              id: 6469,
+            },
+          },
+          {
+            category: "C",
+            rate: 100,
+            itemByItem: {
+              name: "Drunkula's cape",
+              id: 6470,
+            },
+          },
+          {
+            category: "C",
+            rate: 100,
+            itemByItem: {
+              name: "Drunkula's silky pants",
+              id: 6471,
+            },
+          },
+          {
+            category: "C",
+            rate: 100,
+            itemByItem: {
+              name: "Drunkula's ring of haze",
+              id: 6473,
+            },
+          },
+          {
+            category: "C",
+            rate: 100,
+            itemByItem: {
+              name: "Drunkula's wineglass",
+              id: 6474,
+            },
+          },
+          {
+            category: "C",
+            rate: 100,
+            itemByItem: {
+              name: "Drunkula's bell",
+              id: 6472,
+            },
+          },
+          {
+            category: null,
+            rate: 100,
+            itemByItem: {
+              name: "skull capacitor",
+              id: 6512,
+            },
+          },
+        ],
+      },
+      monsterLevelMultiplier: "1",
+      name: "Count Drunkula (Hard Mode)",
+      nobanish: false,
+      nocopy: true,
+      nodeId: "WyJtb25zdGVycyIsLTg5XQ==",
+      nomanuel: true,
+      nowander: false,
+      nowish: false,
+      phylum: "undead",
+      physicalResistance: "0",
+      poison: null,
+      scaling: "0",
+      scalingCap: "0",
+      scalingFloor: "0",
+      snake: false,
+      skillBlockChance: 0,
+      spellBlockChance: 0,
+      sprinkles: ["0", "0"],
+      superlikely: false,
+      ultrarare: false,
+      wanderer: false,
+      wiki: null,
+      wish: false,
+    });
     const description = await monster.getDescription();
 
     expect(description).toBe(
@@ -96,9 +419,74 @@ describe("Monster description", () => {
   });
 
   test("Monsters with a stealable accordion are described successfully", async () => {
-    const monster = Monster.from(
-      "bar	202	bar.gif	Atk: 3 Def: 2 HP: 5 Init: 50 Meat: 15 P: beast Article: a	bar skin (35)	baritone accordion (a0)",
-    );
+    const monster = new Monster({
+      ambiguous: false,
+      article: "a",
+      boss: false,
+      attack: "3",
+      defence: "2",
+      elementalDefence: "COLD",
+      drippy: false,
+      element: "COLD",
+      elementalAttack: "COLD",
+      elementalResistance: "0",
+      experience: null,
+      free: false,
+      ghost: false,
+      groupSize: 1,
+      hp: "5",
+      id: 202,
+      image: ["bar.gif"],
+      initiative: "50",
+      itemBlockChance: 0,
+      lucky: false,
+      manuel: null,
+      meat: 15,
+      meatExpression: "15",
+      monsterDropsByMonster: {
+        nodes: [
+          {
+            category: null,
+            rate: 35,
+            itemByItem: {
+              name: "bar skin",
+              id: 70,
+            },
+          },
+          {
+            category: "A",
+            rate: 100,
+            itemByItem: {
+              name: "baritone accordion",
+              id: 6811,
+            },
+          },
+        ],
+      },
+      monsterLevelMultiplier: "1",
+      name: "bar",
+      nobanish: false,
+      nocopy: false,
+      nodeId: "WyJtb25zdGVycyIsMjAyXQ==",
+      nomanuel: false,
+      nowander: false,
+      nowish: false,
+      phylum: "beast",
+      physicalResistance: "0",
+      poison: null,
+      scaling: "0",
+      scalingCap: "0",
+      scalingFloor: "0",
+      snake: false,
+      skillBlockChance: 0,
+      spellBlockChance: 0,
+      sprinkles: ["0", "0"],
+      superlikely: false,
+      ultrarare: false,
+      wanderer: false,
+      wiki: null,
+      wish: false,
+    });
     const description = await monster.getDescription();
 
     expect(description).toBe(
@@ -119,22 +507,158 @@ describe("Monster description", () => {
 
 describe("Hashcodes", () => {
   test("Can create a reliable hashcode for Monsters", () => {
-    const line =
-      "bar	202	bar.gif	Atk: 3 Def: 2 HP: 5 Init: 50 Meat: 15 P: beast Article: a	bar skin (35)	baritone accordion (a0)";
-    const a = Monster.from(line);
-    const b = Monster.from(line);
+    const data = {
+      ambiguous: false,
+      article: "a",
+      boss: false,
+      attack: "3",
+      defence: "2",
+      elementalDefence: "COLD" as const,
+      drippy: false,
+      element: "COLD" as const,
+      elementalAttack: "COLD" as const,
+      elementalResistance: "0",
+      experience: null,
+      free: false,
+      ghost: false,
+      groupSize: 1,
+      hp: "5",
+      id: 202,
+      image: ["bar.gif"],
+      initiative: "50",
+      itemBlockChance: 0,
+      lucky: false,
+      manuel: null,
+      meat: 15,
+      meatExpression: "15",
+      monsterDropsByMonster: {
+        nodes: [
+          {
+            category: null,
+            rate: 35,
+            itemByItem: {
+              name: "bar skin",
+              id: 70,
+            },
+          },
+          {
+            category: "A" as const,
+            rate: 100,
+            itemByItem: {
+              name: "baritone accordion",
+              id: 6811,
+            },
+          },
+        ],
+      },
+      monsterLevelMultiplier: "1",
+      name: "bar",
+      nobanish: false,
+      nocopy: false,
+      nodeId: "WyJtb25zdGVycyIsMjAyXQ==",
+      nomanuel: false,
+      nowander: false,
+      nowish: false,
+      phylum: "beast",
+      physicalResistance: "0",
+      poison: null,
+      scaling: "0",
+      scalingCap: "0",
+      scalingFloor: "0",
+      snake: false,
+      skillBlockChance: 0,
+      spellBlockChance: 0,
+      sprinkles: ["0", "0"],
+      superlikely: false,
+      ultrarare: false,
+      wanderer: false,
+      wiki: null,
+      wish: false,
+    };
+    const a = new Monster(data);
+    const b = new Monster(data);
 
     expect(a.hashcode()).toBe("Monster:202");
     expect(a.hashcode()).toEqual(b.hashcode());
   });
 
   test("Compares by thing type", () => {
-    const a = Monster.from(
-      "bar	202	bar.gif	Atk: 3 Def: 2 HP: 5 Init: 50 Meat: 15 P: beast Article: a	bar skin (35)	baritone accordion (a0)",
-    );
-    const b = Effect.from(
-      "202	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation",
-    );
+    const a = new Monster({
+      ambiguous: false,
+      article: "a",
+      boss: false,
+      attack: "3",
+      defence: "2",
+      elementalDefence: "COLD",
+      drippy: false,
+      element: "COLD",
+      elementalAttack: "COLD",
+      elementalResistance: "0",
+      experience: null,
+      free: false,
+      ghost: false,
+      groupSize: 1,
+      hp: "5",
+      id: 202,
+      image: ["bar.gif"],
+      initiative: "50",
+      itemBlockChance: 0,
+      lucky: false,
+      manuel: null,
+      meat: 15,
+      meatExpression: "15",
+      monsterDropsByMonster: {
+        nodes: [
+          {
+            category: null,
+            rate: 35,
+            itemByItem: {
+              name: "bar skin",
+              id: 70,
+            },
+          },
+          {
+            category: "A",
+            rate: 100,
+            itemByItem: {
+              name: "baritone accordion",
+              id: 6811,
+            },
+          },
+        ],
+      },
+      monsterLevelMultiplier: "1",
+      name: "bar",
+      nobanish: false,
+      nocopy: false,
+      nomanuel: false,
+      nowander: false,
+      nowish: false,
+      phylum: "beast",
+      physicalResistance: "0",
+      poison: null,
+      scaling: "0",
+      scalingCap: "0",
+      scalingFloor: "0",
+      snake: false,
+      skillBlockChance: 0,
+      spellBlockChance: 0,
+      sprinkles: ["0", "0"],
+      superlikely: false,
+      ultrarare: false,
+      wanderer: false,
+      wiki: null,
+      wish: false,
+    });
+    const b = new Effect({
+      id: 202,
+      image: "scwad.gif",
+      name: "Spooky Demeanor",
+      descid: "89099ac4df5c9d8171b4930a79feaeae",
+      nohookah: false,
+      quality: "GOOD",
+      effectModifierByEffect: null,
+    });
 
     expect(a.hashcode()).not.toEqual(b.hashcode());
   });

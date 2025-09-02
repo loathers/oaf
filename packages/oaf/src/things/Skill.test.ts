@@ -11,9 +11,21 @@ vi.mock("kol.js", async (importOriginal) => {
   return koljs;
 });
 test("Can describe a Skill with no bluetext", async () => {
-  const skill = Skill.from(
-    "7017	Overload Discarded Refrigerator	littlefridge.gif	5	100	0",
-  );
+  const skill = new Skill({
+    __typename: "Skill",
+    id: 7017,
+    ambiguous: false,
+    guildLevel: null,
+    duration: 0,
+    image: "littlefridge.gif",
+    mpCost: 100,
+    maxLevel: null,
+    name: "Overload Discarded Refrigerator",
+    nodeId: "WyJza2lsbHMiLDcwMTdd",
+    permable: false,
+    tags: ["COMBAT"],
+    skillModifierBySkill: null,
+  });
 
   blueText.mockReturnValueOnce({ blueText: "" });
 
@@ -29,7 +41,21 @@ test("Can describe a Skill with no bluetext", async () => {
 });
 
 test("Can describe a Skill with bluetext", async () => {
-  const skill = Skill.from("4015	Impetuous Sauciness	5alarm.gif	0	0	0	12");
+  const skill = new Skill({
+    __typename: "Skill",
+    id: 4015,
+    ambiguous: false,
+    guildLevel: 12,
+    duration: 0,
+    image: "5alarm.gif",
+    mpCost: 0,
+    maxLevel: null,
+    name: "Impetuous Sauciness",
+    nodeId: "WyJza2lsbHMiLDQwMTVd",
+    permable: true,
+    tags: ["PASSIVE"],
+    skillModifierBySkill: null,
+  });
 
   blueText.mockReturnValueOnce({ blueText: "Makes Sauce Potions last longer" });
 
