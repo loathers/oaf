@@ -205,8 +205,8 @@ describe("Foldable", () => {
         Maximum HP +10
         Autosell value: 7 meat.
         Mall Price: [500 meat](https://api.aventuristo.net/itemgraph?itemid=3915&timespan=1&noanim=0)
-        Folds into: [turtle wax helmet](https://kol.coldfront.net/thekolwiki/index.php/turtle_wax_helmet), [turtle wax greaves](https://kol.coldfront.net/thekolwiki/index.php/turtle_wax_greaves)
-        (Cheapest: [turtle wax helmet](https://kol.coldfront.net/thekolwiki/index.php/turtle_wax_helmet) @ [100 meat](https://api.aventuristo.net/itemgraph?itemid=3916&timespan=1&noanim=0))
+        Folds into: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet), [turtle wax greaves](https://wiki.kingdomofloathing.com/turtle_wax_greaves)
+        (Cheapest: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet) @ [100 meat](https://api.aventuristo.net/itemgraph?itemid=3916&timespan=1&noanim=0))
       `,
     );
   });

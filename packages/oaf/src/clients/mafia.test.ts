@@ -32,7 +32,7 @@ describe("Wiki links", () => {
     await mafiaClient.getWikiLink(effect);
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number_(1-99)",
+      "https://wiki.kingdomofloathing.com/Effects_by_number_(1-99)",
       expect.anything(),
     );
   });
@@ -48,10 +48,10 @@ describe("Wiki links", () => {
     const link = await mafiaClient.getWikiLink(effect);
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number_(100-199)",
+      "https://wiki.kingdomofloathing.com/Effects_by_number_(100-199)",
       expect.anything(),
     );
-    expect(link).toBe("https://kol.coldfront.net/thekolwiki/index.php/Gothy");
+    expect(link).toBe("https://wiki.kingdomofloathing.com/Gothy");
   });
 
   test("Can get wiki link for a skill", async () => {
@@ -63,12 +63,10 @@ describe("Wiki links", () => {
     const link = await mafiaClient.getWikiLink(skill);
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://kol.coldfront.net/thekolwiki/index.php/Skills_by_number",
+      "https://wiki.kingdomofloathing.com/Skills_by_number",
       expect.anything(),
     );
-    expect(link).toBe(
-      "https://kol.coldfront.net/thekolwiki/index.php/Impetuous_Sauciness",
-    );
+    expect(link).toBe("https://wiki.kingdomofloathing.com/Impetuous_Sauciness");
   });
 
   test("Can get wiki link for a monster", async () => {
@@ -82,11 +80,11 @@ describe("Wiki links", () => {
     const link = await mafiaClient.getWikiLink(monster);
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://kol.coldfront.net/thekolwiki/index.php/Monsters_by_number_(1400-1499)",
+      "https://wiki.kingdomofloathing.com/Monsters_by_number_(1400-1499)",
       expect.anything(),
     );
     expect(link).toBe(
-      "https://kol.coldfront.net/thekolwiki/index.php/Quirky_indie-rock_accordionist",
+      "https://wiki.kingdomofloathing.com/Quirky_indie-rock_accordionist",
     );
   });
 });

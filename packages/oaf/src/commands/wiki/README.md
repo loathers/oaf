@@ -2,7 +2,7 @@
 
 ### /wiki
 
-When invoked, this can be used to look up any term in the [KoL Wiki](https://kol.coldfront.net/thekolwiki/index.php/Main_Page). If the term is an item, the command will also spawn a great deal of of tertiary information, including:
+When invoked, this can be used to look up any term in the [KoL Wiki](https://wiki.kingdomofloathing.com/Main_Page). If the term is an item, the command will also spawn a great deal of of tertiary information, including:
 
 - _Pricing:_ If tradeable, `oaf` will look up the current mall price, as well as the autosell.
 - _Enchantment:_ If it has an enchantment, what that enchantment is.
@@ -25,6 +25,6 @@ Similar to /wiki, /mafia searches the [KoLmafia Wiki](https://wiki.kolmafia.us/i
 
 ### /pizza
 
-When invoked, ~~orders you a pizza~~. OK, no, it doesn't do that. This command goes through the list of possible pizza effects and predicts what pizza effect your pizza would spawn if you were to put ingredients with those first letters into the [Diabolic Pizza Cube](https://kol.coldfront.net/thekolwiki/index.php/Diabolic_pizza_cube). For wildcards at the end, use \* or simply do not fill in the closing letters.
+When invoked, ~~orders you a pizza~~. OK, no, it doesn't do that. This command goes through the list of possible pizza effects and predicts what pizza effect your pizza would spawn if you were to put ingredients with those first letters into the [Diabolic Pizza Cube](https://wiki.kingdomofloathing.com/Diabolic_pizza_cube). For wildcards at the end, use \* or simply do not fill in the closing letters.
 
 ![image](https://user-images.githubusercontent.com/8014761/172419808-e98fe63d-5a6e-40c3-a303-2b4da1804de9.png)

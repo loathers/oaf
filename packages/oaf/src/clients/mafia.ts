@@ -460,7 +460,7 @@ export class MafiaClient {
     if (thing) return await thing.addToEmbed(embed);
     if (foundName.image)
       return embed.setImage(foundName.image.replace("https", "http"));
-    return embed.setImage("http://kol.coldfront.net/thekolwiki/vis_sig.jpg");
+    return embed;
   }
 
   @Memoize({ tags: ["things"] })
@@ -469,7 +469,7 @@ export class MafiaClient {
 
     const block = thing.id < 0 ? -1 : Math.floor(thing.id / 100) * 100;
 
-    let url = `https://kol.coldfront.net/thekolwiki/index.php/${type}s_by_number`;
+    let url = `https://wiki.kingdomofloathing.com/${type}s_by_number`;
     if (type !== "Skill") {
       const blockDescription =
         block < 0 ? "negative" : `${Math.max(1, block)}-${block + 99}`;
@@ -490,7 +490,7 @@ export class MafiaClient {
       const match = blockPage.match(pattern);
       if (!match) return null;
 
-      return `https://kol.coldfront.net${match[1]}`;
+      return `https://wiki.kingdomofloathing.com${match[1]}`;
     } catch (e) {
       console.log(e);
       return null;

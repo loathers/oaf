@@ -21,9 +21,9 @@ describe("Monster description", () => {
 
         Drops:
         40 (±8) meat
-        4x [rat whisker](https://kol.coldfront.net/thekolwiki/index.php/rat_whisker) (100%)
-        [tangle of rat tails](https://kol.coldfront.net/thekolwiki/index.php/tangle_of_rat_tails) (100%)
-        3x [rat appendix](https://kol.coldfront.net/thekolwiki/index.php/rat_appendix) (20%)
+        4x [rat whisker](https://wiki.kingdomofloathing.com/rat_whisker) (100%)
+        [tangle of rat tails](https://wiki.kingdomofloathing.com/tangle_of_rat_tails) (100%)
+        3x [rat appendix](https://wiki.kingdomofloathing.com/rat_appendix) (20%)
       `,
     );
   });
@@ -44,8 +44,8 @@ describe("Monster description", () => {
         Always loses initiative.
 
         Drops:
-        [turtle voicebox](https://kol.coldfront.net/thekolwiki/index.php/turtle_voicebox) (Sometimes)
-        [fake washboard](https://kol.coldfront.net/thekolwiki/index.php/fake_washboard) (Sometimes, conditional)
+        [turtle voicebox](https://wiki.kingdomofloathing.com/turtle_voicebox) (Sometimes)
+        [fake washboard](https://wiki.kingdomofloathing.com/fake_washboard) (Sometimes, conditional)
       `,
     );
   });
@@ -86,11 +86,11 @@ describe("Monster description", () => {
         Can't be copied.
 
         Drops:
-        [Thunkula's drinking cap](https://kol.coldfront.net/thekolwiki/index.php/Thunkula's_drinking_cap) (Sometimes, conditional)
-        [Drunkula's cape](https://kol.coldfront.net/thekolwiki/index.php/Drunkula's_cape) (Sometimes, conditional)
-        [Drunkula's silky pants](https://kol.coldfront.net/thekolwiki/index.php/Drunkula's_silky_pants) (Sometimes, conditional)
-        [Drunkula's ring of haze](https://kol.coldfront.net/thekolwiki/index.php/Drunkula's_ring_of_haze) (Sometimes, conditional)
-        [Drunkula's wineglass](https://kol.coldfront.net/thekolwiki/index.php/Drunkula's_wineglass) (Sometimes, conditional)
+        [Thunkula's drinking cap](https://wiki.kingdomofloathing.com/Thunkula's_drinking_cap) (Sometimes, conditional)
+        [Drunkula's cape](https://wiki.kingdomofloathing.com/Drunkula's_cape) (Sometimes, conditional)
+        [Drunkula's silky pants](https://wiki.kingdomofloathing.com/Drunkula's_silky_pants) (Sometimes, conditional)
+        [Drunkula's ring of haze](https://wiki.kingdomofloathing.com/Drunkula's_ring_of_haze) (Sometimes, conditional)
+        [Drunkula's wineglass](https://wiki.kingdomofloathing.com/Drunkula's_wineglass) (Sometimes, conditional)
       `,
     );
   });
@@ -110,8 +110,8 @@ describe("Monster description", () => {
 
         Drops:
         15 (±3) meat
-        [bar skin](https://kol.coldfront.net/thekolwiki/index.php/bar_skin) (35%)
-        [baritone accordion](https://kol.coldfront.net/thekolwiki/index.php/baritone_accordion) (Stealable accordion)
+        [bar skin](https://wiki.kingdomofloathing.com/bar_skin) (35%)
+        [baritone accordion](https://wiki.kingdomofloathing.com/baritone_accordion) (Stealable accordion)
       `,
     );
   });

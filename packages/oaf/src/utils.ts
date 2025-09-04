@@ -23,7 +23,7 @@ export function cleanString(input: string | undefined): string {
 }
 
 export function toWikiLink(input: string): string {
-  return `https://kol.coldfront.net/thekolwiki/index.php/${encodeURI(
+  return `https://wiki.kingdomofloathing.com/${encodeURI(
     input.replace(/\s/g, "_"),
   )
     .replace(/\(/g, "%28")
