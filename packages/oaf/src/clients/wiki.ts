@@ -64,7 +64,7 @@ export class WikiClient {
   private async tryPreciseWikiPage(searchTerm: string) {
     const wikiName = encodeURIComponent(searchTerm).replace(/\s/g, "_");
     return await this.tryWiki(
-      `https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`,
+      `https://wiki.kingdomofloathing.com/${wikiName}`,
       "precise",
     );
   }
@@ -72,7 +72,7 @@ export class WikiClient {
   private async tryWikiSearch(searchTerm: string) {
     const wikiSearchName = encodeURIComponent(searchTerm).replace(/%20/g, "+");
     return await this.tryWiki(
-      `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`,
+      `https://wiki.kingdomofloathing.com/index.php?search=${wikiSearchName}`,
       "search",
     );
   }
@@ -84,7 +84,7 @@ export class WikiClient {
       .replace(/\s/g, "+");
 
     return await this.tryWiki(
-      `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchNameCrushed}`,
+      `https://wiki.kingdomofloathing.com/index.php?search=${wikiSearchNameCrushed}`,
       "crushed",
     );
   }
