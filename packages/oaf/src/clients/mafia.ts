@@ -1,6 +1,5 @@
 import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
-import { Agent, fetch } from "undici";
 
 import {
   Effect,
@@ -14,12 +13,6 @@ import { cleanString, notNull } from "../utils.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 import { wikiClient } from "./wiki.js";
-
-const insecureAgent = new Agent({
-  connect: {
-    ciphers: "DEFAULT:@SECLEVEL=1",
-  },
-});
 
 const PACKAGES = new Map([
   ["iceberglet", "ice pick"],
@@ -477,7 +470,7 @@ export class MafiaClient {
     }
 
     try {
-      const request = await fetch(url, { dispatcher: insecureAgent });
+      const request = await fetch(url);
       const blockPage = await request.text();
 
       const pattern =

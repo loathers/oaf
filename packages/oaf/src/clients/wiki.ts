@@ -1,15 +1,8 @@
 import { StatusCodes } from "http-status-codes";
 import { Memoize } from "typescript-memoize";
-import { Agent, fetch } from "undici";
 
 import { config } from "../config.js";
 import { googleSearch } from "./googleSearch.js";
-
-const insecureAgent = new Agent({
-  connect: {
-    ciphers: "DEFAULT:@SECLEVEL=1",
-  },
-});
 
 type FoundName = {
   name: string;
@@ -46,7 +39,7 @@ export class WikiClient {
   }
 
   private async tryWiki(url: string, stage: string) {
-    const response = await fetch(url, { dispatcher: insecureAgent });
+    const response = await fetch(url);
 
     if (!response.ok) {
       if (response.status === StatusCodes.NOT_FOUND) return null;
@@ -119,9 +112,7 @@ export class WikiClient {
   }
 
   async parseFoundName(url: string, contents?: string) {
-    if (!contents)
-      contents =
-        (await (await fetch(url, { dispatcher: insecureAgent })).text()) || "";
+    if (!contents) contents = (await (await fetch(url)).text()) || "";
     const name = this.nameFromWikiPage(url, contents);
     const image = this.imageFromWikiPage(url, contents);
     return { name, url, image };
@@ -157,9 +148,7 @@ export class WikiClient {
 
   imageFromWikiPage(url: string, data: string): string {
     // As far as I know this is always the first relevant image
-    const imageMatch = String(data).match(
-      /src="\/images\/[^"']*\.gif/,
-    );
+    const imageMatch = String(data).match(/src="\/images\/[^"']*\.gif/);
     return imageMatch ? imageMatch[0] : "";
   }
 }

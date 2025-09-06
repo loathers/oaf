@@ -1,4 +1,3 @@
-import { type Response, fetch } from "undici";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { loadFixture } from "../testUtils.js";
@@ -7,7 +6,7 @@ import { Monster } from "../things/Monster.js";
 import { Skill } from "../things/Skill.js";
 import { mafiaClient } from "./mafia.js";
 
-vi.mock("undici");
+global.fetch = vi.fn();
 
 const text = vi.fn();
 
@@ -33,7 +32,6 @@ describe("Wiki links", () => {
 
     expect(fetch).toHaveBeenCalledWith(
       "https://wiki.kingdomofloathing.com/Effects_by_number_(1-99)",
-      expect.anything(),
     );
   });
 
@@ -49,7 +47,6 @@ describe("Wiki links", () => {
 
     expect(fetch).toHaveBeenCalledWith(
       "https://wiki.kingdomofloathing.com/Effects_by_number_(100-199)",
-      expect.anything(),
     );
     expect(link).toBe("https://wiki.kingdomofloathing.com/Gothy");
   });
@@ -64,7 +61,6 @@ describe("Wiki links", () => {
 
     expect(fetch).toHaveBeenCalledWith(
       "https://wiki.kingdomofloathing.com/Skills_by_number",
-      expect.anything(),
     );
     expect(link).toBe("https://wiki.kingdomofloathing.com/Impetuous_Sauciness");
   });
@@ -81,7 +77,6 @@ describe("Wiki links", () => {
 
     expect(fetch).toHaveBeenCalledWith(
       "https://wiki.kingdomofloathing.com/Monsters_by_number_(1400-1499)",
-      expect.anything(),
     );
     expect(link).toBe(
       "https://wiki.kingdomofloathing.com/Quirky_indie-rock_accordionist",
