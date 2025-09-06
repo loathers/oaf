@@ -439,8 +439,8 @@ export class MafiaClient {
     return this.knownItemIds.has(id);
   }
 
-  async getEmbed(item: string): Promise<EmbedBuilder | null> {
-    const foundName = await wikiClient.findName(item);
+  async getEmbed(query: string): Promise<EmbedBuilder | null> {
+    const foundName = await wikiClient.findName(query);
     if (!foundName) return null;
 
     const thing = this.findThingByName(foundName.name);

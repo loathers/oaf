@@ -115,13 +115,14 @@ export class WikiClient {
     if (!contents) contents = (await (await fetch(url)).text()) || "";
     const name = this.nameFromWikiPage(url, contents);
     const image = this.imageFromWikiPage(url, contents);
+
     return { name, url, image };
   }
 
   nameFromWikiPage(url: string, data: string): string {
     //Mediawiki redirects are unreliable, so we can't just read off the url, so we do this horrible thing instead.
     const titleMatch = String(data).match(
-      /<h1 id="firstHeading" class="firstHeading mw-first-heading">\s*<span class="mw-page-title-main">(?<pageTitle>.+)<\/span><\/h1>/,
+      /<h1 id="firstHeading" class="firstHeading mw-first-heading">.*?<span class="mw-page-title-main">(?<pageTitle>.+)<\/span><\/h1>/,
     );
     let result = "";
     if (titleMatch?.groups && titleMatch.groups.pageTitle) {
