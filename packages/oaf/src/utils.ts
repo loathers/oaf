@@ -30,6 +30,11 @@ export function toWikiLink(input: string): string {
     .replace(/\)/g, "%29")}`;
 }
 
+export function resolveWikiLink(path: string) {
+  if (/^https?:\/\//i.test(path)) return path;
+  return new URL(path, "https://wiki.kingdomofloathing.com").href;
+}
+
 export function toSamsaraLink(id: number): string {
   return `https://samsara.loathers.net/player/${id}`;
 }

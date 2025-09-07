@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import { Memoize } from "typescript-memoize";
 
 import { config } from "../config.js";
+import { resolveWikiLink } from "../utils.js";
 import { googleSearch } from "./googleSearch.js";
 
 type FoundName = {
@@ -115,7 +116,6 @@ export class WikiClient {
     if (!contents) contents = (await (await fetch(url)).text()) || "";
     const name = this.nameFromWikiPage(url, contents);
     const image = this.imageFromWikiPage(url, contents);
-
     return { name, url, image };
   }
 
@@ -149,8 +149,8 @@ export class WikiClient {
 
   imageFromWikiPage(url: string, data: string): string {
     // As far as I know this is always the first relevant image
-    const imageMatch = String(data).match(/src="\/images\/[^"']*\.gif/);
-    return imageMatch ? imageMatch[0] : "";
+    const imageMatch = String(data).match(/src="(\/images\/[^"']*\.gif)/);
+    return imageMatch ? resolveWikiLink(imageMatch[1]) : "";
   }
 }
 
