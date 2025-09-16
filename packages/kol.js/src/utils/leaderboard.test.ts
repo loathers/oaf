@@ -20,8 +20,10 @@ describe("Leaderboards", () => {
     expect(hardcore.name).toBe(
       "Fastest Hardcore Way of the Surprising Fist Ascensions",
     );
+
     expect(hardcore.runs).toHaveLength(35);
-    expect(hardcore.runs[0].player).toBe("Iron Bob (AT)");
+    expect(hardcore.runs[0].playerName).toBe("Iron Bob (AT)");
+    expect(hardcore.runs[0].playerId).toBe(592920);
     expect(hardcore.runs[0].days).toBe("3");
     expect(hardcore.runs[0].turns).toBe("712");
     expect(hardcore.updated).toStrictEqual(
@@ -34,7 +36,8 @@ describe("Leaderboards", () => {
       "Fastest Normal Way of the Surprising Fist Ascensions",
     );
     expect(softcore.runs).toHaveLength(35);
-    expect(softcore.runs[34].player).toBe("Jesusisagurl (SC)");
+    expect(softcore.runs[34].playerName).toBe("Jesusisagurl (SC)");
+    expect(softcore.runs[34].playerId).toBe(1992917);
     expect(softcore.runs[34].days).toBe("3");
     expect(softcore.runs[34].turns).toBe("583");
     expect(softcore.updated).toStrictEqual(

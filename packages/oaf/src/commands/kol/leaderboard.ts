@@ -180,7 +180,8 @@ const parseBoard = (input: string) => {
 
 const formatSubboard = (subboard: SubboardInfo) => {
   const runs = subboard.runs.map(
-    (run) => `${run.player} - ${run.days ? `${run.days}/` : ""}${run.turns}`,
+    (run) =>
+      `${run.playerName} - ${run.days ? `${run.days}/` : ""}${run.turns}`,
   );
   if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
   if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
