@@ -419,11 +419,13 @@ describe("Monster description", () => {
         Can't be copied.
 
         Drops:
-        [Thunkula's drinking cap](https://wiki.kingdomofloathing.com/Thunkula's_drinking_cap) (Sometimes, conditional)
-        [Drunkula's cape](https://wiki.kingdomofloathing.com/Drunkula's_cape) (Sometimes, conditional)
-        [Drunkula's silky pants](https://wiki.kingdomofloathing.com/Drunkula's_silky_pants) (Sometimes, conditional)
-        [Drunkula's ring of haze](https://wiki.kingdomofloathing.com/Drunkula's_ring_of_haze) (Sometimes, conditional)
-        [Drunkula's wineglass](https://wiki.kingdomofloathing.com/Drunkula's_wineglass) (Sometimes, conditional)
+        [Thunkula's drinking cap](https://wiki.kingdomofloathing.com/Thunkula's_drinking_cap) (100%, conditional)
+        [Drunkula's cape](https://wiki.kingdomofloathing.com/Drunkula's_cape) (100%, conditional)
+        [Drunkula's silky pants](https://wiki.kingdomofloathing.com/Drunkula's_silky_pants) (100%, conditional)
+        [Drunkula's ring of haze](https://wiki.kingdomofloathing.com/Drunkula's_ring_of_haze) (100%, conditional)
+        [Drunkula's wineglass](https://wiki.kingdomofloathing.com/Drunkula's_wineglass) (100%, conditional)
+        [Drunkula's bell](https://wiki.kingdomofloathing.com/Drunkula's_bell) (100%, conditional)
+        [skull capacitor](https://wiki.kingdomofloathing.com/skull_capacitor) (100%)
       `,
     );
   });
