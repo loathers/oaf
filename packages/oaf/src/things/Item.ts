@@ -58,6 +58,9 @@ interface TItem {
   discardable?: boolean;
   gift?: boolean;
   uses?: (ItemUse | null)[];
+  itemModifierByItem?: {
+    modifiers: Record<string, string>;
+  } | null;
   consumableById?: {
     adventureRange: string;
     adventures: number;

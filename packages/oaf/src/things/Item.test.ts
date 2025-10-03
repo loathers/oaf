@@ -25,10 +25,28 @@ vi.mock("kol.js", async (importOriginal) => {
 
 describe("Food", () => {
   test("Can describe a food with a range of adventures", async () => {
-    const item = Item.from(
-      "1365	tofurkey leg	927393854	turkeyleg.gif	food	t,d	50",
-      new Map([["tofurkey leg", "tofurkey leg	3	5	awesome	7-14	70-74	0	0".split("	")]]),
-    );
+    const item = new Item({
+      id: 1365,
+      name: "tofurkey leg",
+      image: "turkeyleg.gif",
+      descid: 927393854,
+      uses: ["FOOD"],
+      quest: false,
+      tradeable: true,
+      discardable: true,
+      gift: false,
+      itemModifierByItem: null,
+      consumableById: {
+        adventureRange: "7-14",
+        adventures: 10.5,
+        stomach: 3,
+        liver: 0,
+        spleen: 0,
+        levelRequirement: 5,
+        quality: "AWESOME",
+      },
+      equipmentById: null,
+    });
 
     mallPrice.mockResolvedValueOnce({
       formattedMallPrice: "502",
@@ -50,17 +68,32 @@ describe("Food", () => {
   });
 
   test("Can describe a food with a set number of adventures", async () => {
-    const item = Item.from(
-      "9423	alien meat	672000286	alienmeat.gif	food, cook	t,d	8	pieces of alien meat",
-      new Map([
-        [
-          "alien meat",
-          "alien meat	1	1	good	3	0	0	0	gain 5 turns of a random positive effect".split(
-            "	",
-          ),
-        ],
-      ]),
-    );
+    const item = new Item({
+      id: 9423,
+      name: "alien meat",
+      image: "alienmeat.gif",
+      descid: 672000286,
+      uses: ["FOOD", "COOK"],
+      quest: false,
+      tradeable: true,
+      discardable: true,
+      gift: false,
+      itemModifierByItem: {
+        modifiers: {
+          "Last Available": '"2017-04"',
+        },
+      },
+      consumableById: {
+        adventureRange: "3",
+        adventures: 3,
+        stomach: 1,
+        liver: 0,
+        spleen: 0,
+        levelRequirement: 1,
+        quality: "GOOD",
+      },
+      equipmentById: null,
+    });
 
     blueText.mockReturnValueOnce({
       blueText: "Gives 5 Adventures of a random positive effect",
@@ -88,10 +121,31 @@ describe("Food", () => {
 
 describe("Equipment", () => {
   test("Can describe a shield", async () => {
-    const item = Item.from(
-      "9327	LOV Elephant	284967813	pl_elephant.gif	offhand	g,d	5",
-      new Map([["lov elephant", ["LOV Elephant", "100", "Mus: 25", "shield"]]]),
-    );
+    const item = new Item({
+      id: 9327,
+      name: "LOV Elephant",
+      image: "pl_elephant.gif",
+      descid: 284967813,
+      uses: ["OFFHAND"],
+      quest: false,
+      tradeable: false,
+      discardable: true,
+      gift: true,
+      itemModifierByItem: {
+        modifiers: {
+          "Last Available": '"2017-02"',
+          "Damage Reduction": "16",
+        },
+      },
+      consumableById: null,
+      equipmentById: {
+        power: 100,
+        moxRequirement: 0,
+        mysRequirement: 0,
+        musRequirement: 25,
+        type: "shield",
+      },
+    });
 
     blueText.mockReturnValueOnce({ blueText: "Damage Reduction: 10" });
 
@@ -114,9 +168,20 @@ describe("Equipment", () => {
 
 describe("Other", () => {
   test("Can describe a potion that is multiple use and combat usable", async () => {
-    const item = Item.from(
-      "518	magical mystery juice	400545756	potion4.gif	multiple, combat	d	50",
-    );
+    const item = new Item({
+      id: 518,
+      name: "magical mystery juice",
+      image: "potion4.gif",
+      descid: 400545756,
+      uses: ["MULTIPLE", "COMBAT"],
+      quest: false,
+      tradeable: false,
+      discardable: true,
+      gift: false,
+      itemModifierByItem: null,
+      consumableById: null,
+      equipmentById: null,
+    });
 
     blueText.mockReturnValueOnce({
       blueText: "Restores an amount of MP that increases as you level up",
@@ -139,30 +204,31 @@ describe("Other", () => {
 
 describe("Foldable", () => {
   test("Can describe a foldable", async () => {
-    const itemMeta = new Map([
-      ["turtle wax helmet", ["turtle wax helmet", "40", "Mox: 5"]],
-      ["turtle wax greaves", ["turtle wax greaves", "40", "Mox: 5"]],
-      ["turtle wax shield", ["turtle wax shield", "40", "Mus: 5", "shield"]],
-    ]);
-
-    const item = Item.from(
-      "3915	turtle wax shield	490908351	waxshield.gif	offhand, usable	t,d	7",
-      itemMeta,
-    );
-
-    const group = [
-      item,
-      Item.from(
-        "3916	turtle wax helmet	760962787	waxhat.gif	hat, usable	t,d	7",
-        itemMeta,
-      ),
-      Item.from(
-        "3917	turtle wax greaves	649657203	waxgreaves.gif	pants, usable	t,d	7	pairs of turtle wax greaves",
-        itemMeta,
-      ),
-    ];
-
-    item.foldGroup = group;
+    const item = new Item({
+      id: 3915,
+      name: "turtle wax shield",
+      image: "waxshield.gif",
+      descid: 490908351,
+      uses: ["OFFHAND", "USABLE"],
+      quest: false,
+      tradeable: true,
+      discardable: true,
+      gift: false,
+      itemModifierByItem: {
+        modifiers: {
+          "Maximum HP": "+10",
+          "Damage Reduction": "2",
+        },
+      },
+      consumableById: null,
+      equipmentById: {
+        power: 40,
+        moxRequirement: 0,
+        mysRequirement: 0,
+        musRequirement: 5,
+        type: "shield",
+      },
+    });
 
     blueText.mockReturnValueOnce({ blueText: "Maximum HP +10" });
     // Shield
