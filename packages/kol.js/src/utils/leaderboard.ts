@@ -1,6 +1,6 @@
 import { selectAll, selectOne } from "css-select";
 import { parseDocument } from "htmlparser2";
-import { isComment, Text } from "domhandler";
+import { Element, Document, isComment, Text } from "domhandler";
 import { innerText } from "domutils";
 
 export type LeaderboardInfo = {
@@ -15,7 +15,8 @@ export type SubboardInfo = {
 };
 
 type RunInfo = {
-  player: string;
+  playerName: string;
+  playerId: number;
   days: string;
   turns: string;
 };
@@ -49,13 +50,18 @@ export function parseLeaderboard(page: string): LeaderboardInfo {
               const rowText = selectAll("td", node).map((col) =>
                 innerText(col).replace(/&amp;nbsp;/g, ""),
               );
+              const playerLink = (selectOne("a", node) as Element | null)
+                ?.attribs.href;
               const hasTwoNumbers = !!parseInt(rowText[rowText.length - 2]);
               return {
-                player: rowText
+                playerName: rowText
                   .slice(0, rowText.length - (hasTwoNumbers ? 2 : 1))
                   .join("")
                   .trim()
                   .toString(),
+                playerId: Number(
+                  playerLink?.substring(playerLink.indexOf("who=") + 4) ?? "0",
+                ),
                 days: hasTwoNumbers
                   ? rowText[rowText.length - 2].toString() || "0"
                   : "",

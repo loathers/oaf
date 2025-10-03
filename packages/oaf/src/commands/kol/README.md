@@ -4,7 +4,7 @@ These commands engage with KoL itself.
 
 ### /leaderboard
 
-When invoked, this command generates a path ascension leaderboard, showing the gold, silver, and bronze finishers for that particular season (or, if it is an active board, the current holders of those categorizations). The boards are associated with the # in the board's URL, which is roughly correlated to [Path ID](https://kol.coldfront.net/thekolwiki/index.php/Paths_by_number) but (annoyingly) not entirely correlated. Still, this is useful whenever you want to see what the native KoL Boards showed for a challenge path in the distant past, or (more usefully) the current path when the season is competitive in the last month or so.
+When invoked, this command generates a path ascension leaderboard, showing the gold, silver, and bronze finishers for that particular season (or, if it is an active board, the current holders of those categorizations). The boards are associated with the # in the board's URL, which is roughly correlated to [Path ID](https://wiki.kingdomofloathing.com/Paths_by_number) but (annoyingly) not entirely correlated. Still, this is useful whenever you want to see what the native KoL Boards showed for a challenge path in the distant past, or (more usefully) the current path when the season is competitive in the last month or so.
 
 ![image](https://user-images.githubusercontent.com/8014761/172418964-be08e036-afa8-46ea-9fc1-4adc46a254ef.png)
 

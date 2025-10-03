@@ -1,4 +1,3 @@
-import { type Response, fetch } from "undici";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { loadFixture } from "../testUtils.js";
@@ -7,7 +6,7 @@ import { Monster } from "../things/Monster.js";
 import { Skill } from "../things/Skill.js";
 import { mafiaClient } from "./mafia.js";
 
-vi.mock("undici");
+global.fetch = vi.fn();
 
 const text = vi.fn();
 
@@ -32,8 +31,7 @@ describe("Wiki links", () => {
     await mafiaClient.getWikiLink(effect);
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number_(1-99)",
-      expect.anything(),
+      "https://wiki.kingdomofloathing.com/Effects_by_number_(1-99)",
     );
   });
 
@@ -48,10 +46,9 @@ describe("Wiki links", () => {
     const link = await mafiaClient.getWikiLink(effect);
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://kol.coldfront.net/thekolwiki/index.php/Effects_by_number_(100-199)",
-      expect.anything(),
+      "https://wiki.kingdomofloathing.com/Effects_by_number_(100-199)",
     );
-    expect(link).toBe("https://kol.coldfront.net/thekolwiki/index.php/Gothy");
+    expect(link).toBe("https://wiki.kingdomofloathing.com/Gothy");
   });
 
   test("Can get wiki link for a skill", async () => {
@@ -63,12 +60,9 @@ describe("Wiki links", () => {
     const link = await mafiaClient.getWikiLink(skill);
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://kol.coldfront.net/thekolwiki/index.php/Skills_by_number",
-      expect.anything(),
+      "https://wiki.kingdomofloathing.com/Skills_by_number",
     );
-    expect(link).toBe(
-      "https://kol.coldfront.net/thekolwiki/index.php/Impetuous_Sauciness",
-    );
+    expect(link).toBe("https://wiki.kingdomofloathing.com/Impetuous_Sauciness");
   });
 
   test("Can get wiki link for a monster", async () => {
@@ -82,11 +76,10 @@ describe("Wiki links", () => {
     const link = await mafiaClient.getWikiLink(monster);
 
     expect(fetch).toHaveBeenCalledWith(
-      "https://kol.coldfront.net/thekolwiki/index.php/Monsters_by_number_(1400-1499)",
-      expect.anything(),
+      "https://wiki.kingdomofloathing.com/Monsters_by_number_(1400-1499)",
     );
     expect(link).toBe(
-      "https://kol.coldfront.net/thekolwiki/index.php/Quirky_indie-rock_accordionist",
+      "https://wiki.kingdomofloathing.com/Quirky_indie-rock_accordionist",
     );
   });
 });

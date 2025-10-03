@@ -27,11 +27,11 @@ export const data = new SlashCommandBuilder()
       .setRequired(true),
   );
 
-async function getWikiReply(item: string) {
+async function getWikiReply(query: string) {
   try {
-    const embed = await mafiaClient.getEmbed(item);
+    const embed = await mafiaClient.getEmbed(query);
     if (!embed) {
-      return blankEmbed(`"${item}" wasn't found. Please refine your search.`);
+      return blankEmbed(`"${query}" wasn't found. Please refine your search.`);
     }
 
     return embed;

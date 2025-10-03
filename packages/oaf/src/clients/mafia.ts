@@ -1,6 +1,5 @@
 import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
-import { Agent, fetch } from "undici";
 
 import {
   Effect,
@@ -14,12 +13,6 @@ import { cleanString, notNull } from "../utils.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 import { wikiClient } from "./wiki.js";
-
-const insecureAgent = new Agent({
-  connect: {
-    ciphers: "DEFAULT:@SECLEVEL=1",
-  },
-});
 
 const PACKAGES = new Map([
   ["iceberglet", "ice pick"],
@@ -446,8 +439,8 @@ export class MafiaClient {
     return this.knownItemIds.has(id);
   }
 
-  async getEmbed(item: string): Promise<EmbedBuilder | null> {
-    const foundName = await wikiClient.findName(item);
+  async getEmbed(query: string): Promise<EmbedBuilder | null> {
+    const foundName = await wikiClient.findName(query);
     if (!foundName) return null;
 
     const thing = this.findThingByName(foundName.name);
@@ -460,7 +453,7 @@ export class MafiaClient {
     if (thing) return await thing.addToEmbed(embed);
     if (foundName.image)
       return embed.setImage(foundName.image.replace("https", "http"));
-    return embed.setImage("http://kol.coldfront.net/thekolwiki/vis_sig.jpg");
+    return embed;
   }
 
   @Memoize({ tags: ["things"] })
@@ -469,7 +462,7 @@ export class MafiaClient {
 
     const block = thing.id < 0 ? -1 : Math.floor(thing.id / 100) * 100;
 
-    let url = `https://kol.coldfront.net/thekolwiki/index.php/${type}s_by_number`;
+    let url = `https://wiki.kingdomofloathing.com/${type}s_by_number`;
     if (type !== "Skill") {
       const blockDescription =
         block < 0 ? "negative" : `${Math.max(1, block)}-${block + 99}`;
@@ -477,7 +470,7 @@ export class MafiaClient {
     }
 
     try {
-      const request = await fetch(url, { dispatcher: insecureAgent });
+      const request = await fetch(url);
       const blockPage = await request.text();
 
       const pattern =
@@ -490,7 +483,7 @@ export class MafiaClient {
       const match = blockPage.match(pattern);
       if (!match) return null;
 
-      return `https://kol.coldfront.net${match[1]}`;
+      return `https://wiki.kingdomofloathing.com${match[1]}`;
     } catch (e) {
       console.log(e);
       return null;

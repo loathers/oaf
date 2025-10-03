@@ -6,7 +6,7 @@ import {
 
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
-import { identifyPlayer } from "../_player.js";
+import { findPlayer } from "../_player.js";
 import { ALL_CLANS } from "./_clans.js";
 
 const PERMITTED_ROLE_IDS = config.WHITELIST_ROLE_IDS.split(",");
@@ -17,7 +17,7 @@ export const data = new SlashCommandBuilder()
   .addStringOption((o) =>
     o
       .setName("player")
-      .setDescription("The name of the player to add to the whitelists.")
+      .setDescription("An @mention of the discord account associated with the kol account to whitelist.")
       .setRequired(true),
   );
 
@@ -46,20 +46,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const input = interaction.options.getString("player", true);
 
-  const identification = await identifyPlayer(input);
-
-  if (typeof identification === "string") {
-    interaction.editReply(identification);
-    return;
+  if (!input.match(/^<@\d+>$/)) {
+    return void await interaction.editReply(`Can only whitelist via user mention, and I don't see a user mention in the string ${input}`)
   }
 
-  const [player] = identification;
+  const player = await findPlayer({ discordId: input.slice(2, -1) });
+
+  if (!player) {
+    return void await interaction.editReply(`Couldn't find a kol account associated with discord user ${input}`);
+  }
+
 
   for (const clan of ALL_CLANS) {
-    await kolClient.addToWhitelist(player.id, clan.id);
+    await kolClient.addToWhitelist(player.playerId, clan.id);
   }
 
   interaction.editReply({
-    content: `Added player ${player.name} (#${player.id}) to all managed clan whitelists.`,
+    content: `Added player ${player.playerName} (#${player.playerId}) to all managed clan whitelists.`,
   });
 }

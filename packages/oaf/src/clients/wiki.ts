@@ -1,15 +1,9 @@
 import { StatusCodes } from "http-status-codes";
 import { Memoize } from "typescript-memoize";
-import { Agent, fetch } from "undici";
 
 import { config } from "../config.js";
+import { resolveWikiLink } from "../utils.js";
 import { googleSearch } from "./googleSearch.js";
-
-const insecureAgent = new Agent({
-  connect: {
-    ciphers: "DEFAULT:@SECLEVEL=1",
-  },
-});
 
 type FoundName = {
   name: string;
@@ -46,7 +40,7 @@ export class WikiClient {
   }
 
   private async tryWiki(url: string, stage: string) {
-    const response = await fetch(url, { dispatcher: insecureAgent });
+    const response = await fetch(url);
 
     if (!response.ok) {
       if (response.status === StatusCodes.NOT_FOUND) return null;
@@ -64,7 +58,7 @@ export class WikiClient {
   private async tryPreciseWikiPage(searchTerm: string) {
     const wikiName = encodeURIComponent(searchTerm).replace(/\s/g, "_");
     return await this.tryWiki(
-      `https://kol.coldfront.net/thekolwiki/index.php/${wikiName}`,
+      `https://wiki.kingdomofloathing.com/${wikiName}`,
       "precise",
     );
   }
@@ -72,7 +66,7 @@ export class WikiClient {
   private async tryWikiSearch(searchTerm: string) {
     const wikiSearchName = encodeURIComponent(searchTerm).replace(/%20/g, "+");
     return await this.tryWiki(
-      `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchName}`,
+      `https://wiki.kingdomofloathing.com/index.php?search=${wikiSearchName}`,
       "search",
     );
   }
@@ -84,7 +78,7 @@ export class WikiClient {
       .replace(/\s/g, "+");
 
     return await this.tryWiki(
-      `https://kol.coldfront.net/thekolwiki/index.php?search=${wikiSearchNameCrushed}`,
+      `https://wiki.kingdomofloathing.com/index.php?search=${wikiSearchNameCrushed}`,
       "crushed",
     );
   }
@@ -119,9 +113,7 @@ export class WikiClient {
   }
 
   async parseFoundName(url: string, contents?: string) {
-    if (!contents)
-      contents =
-        (await (await fetch(url, { dispatcher: insecureAgent })).text()) || "";
+    if (!contents) contents = (await (await fetch(url)).text()) || "";
     const name = this.nameFromWikiPage(url, contents);
     const image = this.imageFromWikiPage(url, contents);
     return { name, url, image };
@@ -130,7 +122,7 @@ export class WikiClient {
   nameFromWikiPage(url: string, data: string): string {
     //Mediawiki redirects are unreliable, so we can't just read off the url, so we do this horrible thing instead.
     const titleMatch = String(data).match(
-      /<h1 id="firstHeading" class="firstHeading" lang="en">\s*<span dir="auto">(?<pageTitle>.+)<\/span><\/h1>/,
+      /<h1 id="firstHeading" class="firstHeading mw-first-heading">.*?<span class="mw-page-title-main">(?<pageTitle>.+)<\/span><\/h1>/,
     );
     let result = "";
     if (titleMatch?.groups && titleMatch.groups.pageTitle) {
@@ -157,10 +149,8 @@ export class WikiClient {
 
   imageFromWikiPage(url: string, data: string): string {
     // As far as I know this is always the first relevant image
-    const imageMatch = String(data).match(
-      /https:\/\/kol.coldfront.net\/thekolwiki\/images\/[^"']*\.gif/,
-    );
-    return imageMatch ? imageMatch[0] : "";
+    const imageMatch = String(data).match(/src="(\/images\/[^"']*\.gif)/);
+    return imageMatch ? resolveWikiLink(imageMatch[1]) : "";
   }
 }
 

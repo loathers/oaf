@@ -23,11 +23,16 @@ export function cleanString(input: string | undefined): string {
 }
 
 export function toWikiLink(input: string): string {
-  return `https://kol.coldfront.net/thekolwiki/index.php/${encodeURI(
+  return `https://wiki.kingdomofloathing.com/${encodeURI(
     input.replace(/\s/g, "_"),
   )
     .replace(/\(/g, "%28")
     .replace(/\)/g, "%29")}`;
+}
+
+export function resolveWikiLink(path: string) {
+  if (/^https?:\/\//i.test(path)) return path;
+  return new URL(path, "https://wiki.kingdomofloathing.com").href;
 }
 
 export function toSamsaraLink(id: number): string {

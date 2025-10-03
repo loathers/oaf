@@ -37,11 +37,11 @@ test("Can describe a Familiar", async () => {
 
       Attributes: animal, bug, eyes, wings, quick, biting, flying
 
-      Hatchling: [mosquito larva](https://kol.coldfront.net/thekolwiki/index.php/mosquito_larva)
+      Hatchling: [mosquito larva](https://wiki.kingdomofloathing.com/mosquito_larva)
       Quest Item
       Cannot be traded or discarded.
 
-      Equipment: [hypodermic needle](https://kol.coldfront.net/thekolwiki/index.php/hypodermic_needle)
+      Equipment: [hypodermic needle](https://wiki.kingdomofloathing.com/hypodermic_needle)
       \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0+5 to Familiar Weight
     `,
   );
