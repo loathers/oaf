@@ -20,11 +20,27 @@ test("Can describe a Familiar", async () => {
       id: 275,
       name: "mosquito larva",
       image: "larva.gif",
+      itemModifierByItem: null,
+      tradeable: false,
+      quest: true,
+      discardable: false,
+      gift: false,
+      descid: 187601582,
     },
     itemByEquipment: {
       id: 848,
       name: "hypodermic needle",
       image: "syringe.gif",
+      itemModifierByItem: {
+        modifiers: {
+          "Familiar Weight": "+5",
+        },
+      },
+      tradeable: true,
+      quest: false,
+      discardable: true,
+      gift: false,
+      descid: 10000001,
     },
     categories: ["COMBAT0", "HP0"],
     attributes: [
@@ -53,7 +69,7 @@ test("Can describe a Familiar", async () => {
       **Familiar**
       Deals physical damage to heal you in combat.
 
-      Attributes: animal, bug, eyes, wings, quick, biting, flying
+      Attributes: animal, bite, fast, flies, haseyes, haswings, insect, organic, sentient
 
       Hatchling: [mosquito larva](https://wiki.kingdomofloathing.com/mosquito_larva)
       Quest Item

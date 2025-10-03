@@ -264,11 +264,27 @@ interface TFamiliar {
     id: number;
     name: string;
     image: string;
+    itemModifierByItem: {
+      modifiers: Record<string, string>;
+    } | null;
+    tradeable: boolean;
+    quest: boolean;
+    discardable: boolean;
+    gift: boolean;
+    descid: number | null;
   } | null;
   itemByEquipment: {
     id: number;
     name: string;
     image: string;
+    itemModifierByItem: {
+      modifiers: Record<string, string>;
+    } | null;
+    tradeable: boolean;
+    quest: boolean;
+    discardable: boolean;
+    gift: boolean;
+    descid: number | null;
   } | null;
   categories: (FamiliarCategory | null)[] | null;
   attributes: (string | null)[];
@@ -358,7 +374,7 @@ export class Familiar extends Thing {
       bold("Familiar"),
       this.classify(),
       "",
-      `Attributes: ${this.familiar.attributes || "None"}`,
+      `Attributes: ${this.familiar.attributes?.toSorted().join(", ") ?? "None"}`,
       "",
     ];
 

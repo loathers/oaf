@@ -18,7 +18,7 @@ interface TMonster extends DeepPartial<DMonster> {
   id: number;
   name: string;
   image: (string | null)[];
-  monsterDropsByMonster: {
+  monsterDropsByMonster?: {
     nodes: ({
       itemByItem: {
         name: string;
@@ -56,9 +56,8 @@ export class Monster extends Thing {
 
   private getDropsDescription() {
     const meat = this.monster.meat;
-    const drops = this.monster.monsterDropsByMonster.nodes.filter(
-      (d) => d !== null,
-    );
+    const drops =
+      this.monster.monsterDropsByMonster?.nodes.filter((d) => d !== null) ?? [];
 
     if (!drops.length && !meat) return null;
 
@@ -118,14 +117,14 @@ export class Monster extends Thing {
     const hp = this.monster.hp;
     const scale = this.monster.scaling;
 
-    if (atk && def && hp) {
-      description.push(`Attack: ${atk} | Defense: ${def[1]} | HP: ${hp[1]}`);
+    if (atk && atk !== "0" && def && def !== "0" && hp && hp !== "0") {
+      description.push(`Attack: ${atk} | Defense: ${def} | HP: ${hp}`);
     } else if (scale !== "0") {
       const scaleDetails: string[] = [];
 
       const scaleNum = Number(scale);
 
-      if (Number.isNaN(scale)) {
+      if (Number.isNaN(scaleNum)) {
         scaleDetails.push("something weird");
       } else {
         scaleDetails.push(
@@ -147,7 +146,7 @@ export class Monster extends Thing {
 
       description.push(
         `Scales to ${scaleDetails.join(" ")} | HP: ${
-          hp ? hp[1] : "75% of defense"
+          hp && hp !== "0" ? hp : "75% of defense"
         }.`,
       );
     } else {
@@ -157,7 +156,7 @@ export class Monster extends Thing {
     if (this.monster.phylum) description.push(`Phylum: ${this.monster.phylum}`);
 
     if (this.monster.element)
-      description.push(`Element: ${this.monster.element}`);
+      description.push(`Element: ${this.monster.element.toLowerCase()}`);
 
     if (this.monster.initiative === "10000")
       description.push("Always wins initiative.");

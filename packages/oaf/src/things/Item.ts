@@ -1,4 +1,4 @@
-import { ItemUse } from "data-of-loathing";
+import { ConsumableQuality, ItemUse } from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
 import { MemoizeExpiring } from "typescript-memoize";
 
@@ -102,15 +102,15 @@ export class Item extends Thing {
     return this.item.descid;
   }
 
-  mapQuality(rawQuality: string | null): string {
+  mapQuality(rawQuality: ConsumableQuality | null): string {
     switch (rawQuality) {
-      case "crappy":
+      case "CRAPPY":
         return "Crappy";
-      case "decent":
+      case "DECENT":
         return "Decent";
-      case "good":
+      case "GOOD":
         return "Good";
-      case "awesome":
+      case "AWESOME":
         return "Awesome";
       case "EPIC":
         return "EPIC";
@@ -217,9 +217,9 @@ export class Item extends Thing {
       equipment;
 
     const requirement = (() => {
-      if (moxRequirement > 0) return `requires ${moxRequirement} moxie`;
-      if (mysRequirement > 0) return `requires ${mysRequirement} mysticality`;
-      if (musRequirement > 0) return `requires ${musRequirement} muscle`;
+      if (moxRequirement > 0) return `requires ${moxRequirement} Moxie`;
+      if (mysRequirement > 0) return `requires ${mysRequirement} Mysticality`;
+      if (musRequirement > 0) return `requires ${musRequirement} Muscle`;
       return null;
     })();
 

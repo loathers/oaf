@@ -35,6 +35,7 @@ describe("Food", () => {
       tradeable: true,
       discardable: true,
       gift: false,
+      autosell: 50,
       itemModifierByItem: null,
       consumableById: {
         adventureRange: "7-14",
@@ -78,6 +79,7 @@ describe("Food", () => {
       tradeable: true,
       discardable: true,
       gift: false,
+      autosell: 8,
       itemModifierByItem: {
         modifiers: {
           "Last Available": '"2017-04"',
@@ -131,6 +133,7 @@ describe("Equipment", () => {
       tradeable: false,
       discardable: true,
       gift: true,
+      autosell: 5,
       itemModifierByItem: {
         modifiers: {
           "Last Available": '"2017-02"',
@@ -178,6 +181,7 @@ describe("Other", () => {
       tradeable: false,
       discardable: true,
       gift: false,
+      autosell: 50,
       itemModifierByItem: null,
       consumableById: null,
       equipmentById: null,
@@ -212,6 +216,7 @@ describe("Foldable", () => {
       uses: ["OFFHAND", "USABLE"],
       quest: false,
       tradeable: true,
+      autosell: 7,
       discardable: true,
       gift: false,
       itemModifierByItem: {

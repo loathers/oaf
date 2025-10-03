@@ -24,9 +24,19 @@ describe("Wiki links", () => {
       await loadFixture(__dirname, "effects_by_number_1-99.html"),
     );
 
-    const effect = Effect.from(
-      "23	Pasta Oneness	mandala.gif	583619abc0e4380d80629babe3677aed	good	none	cast 1 Manicotti Meditation",
-    );
+    const effect = new Effect({
+      id: 23,
+      image: "mandala.gif",
+      name: "Pasta Oneness",
+      quality: "GOOD",
+      nohookah: false,
+      descid: "583619abc0e4380d80629babe3677aed",
+      effectModifierByEffect: {
+        modifiers: {
+          Mysticality: "+2",
+        },
+      },
+    });
 
     await mafiaClient.getWikiLink(effect);
 
@@ -40,9 +50,21 @@ describe("Wiki links", () => {
       await loadFixture(__dirname, "effects_by_number_100-199.html"),
     );
 
-    const effect = Effect.from(
-      "127	Gothy	gothy.gif	06cb86ddd689278c5af31423a8210a72	neutral	none	use either 1 spooky eyeliner, 1 spooky lipstick|drink 1 gloomy mushroom wine",
-    );
+    const effect = new Effect({
+      id: 127,
+      image: "gothy.gif",
+      name: "Gothy",
+      quality: "NEUTRAL",
+      nohookah: false,
+      descid: "06cb86ddd689278c5af31423a8210a72",
+      effectModifierByEffect: {
+        modifiers: {
+          Moxie: "-10",
+          Muscle: "-10",
+          Mysticality: "+20",
+        },
+      },
+    });
     const link = await mafiaClient.getWikiLink(effect);
 
     expect(fetch).toHaveBeenCalledWith(
@@ -56,7 +78,11 @@ describe("Wiki links", () => {
       await loadFixture(__dirname, "skills_by_number.html"),
     );
 
-    const skill = Skill.from("4015	Impetuous Sauciness	5alarm.gif	0	0	0	12");
+    const skill = new Skill({
+      name: "Impetuous Sauciness",
+      id: 4015,
+      image: "5alarm.gif",
+    });
     const link = await mafiaClient.getWikiLink(skill);
 
     expect(fetch).toHaveBeenCalledWith(
@@ -70,9 +96,11 @@ describe("Wiki links", () => {
       await loadFixture(__dirname, "monsters_by_number_1400-1499.html"),
     );
 
-    const monster = Monster.from(
-      "quirky indie-rock accordionist	1454	wanderacc3.gif	FREE WANDERER Scale: -3 Floor: ? Init: -10000 P: dude Article: a	quirky accordion (a100)",
-    );
+    const monster = new Monster({
+      id: 1454,
+      image: ["wanderacc3.gif"],
+      name: "quirky indie-rock accordionist",
+    });
     const link = await mafiaClient.getWikiLink(monster);
 
     expect(fetch).toHaveBeenCalledWith(

@@ -14,7 +14,7 @@ describe("Monster description", () => {
       defence: "36",
       elementalDefence: "COLD",
       drippy: false,
-      element: "COLD",
+      element: undefined,
       elementalAttack: "COLD",
       elementalResistance: "0",
       experience: null,
@@ -134,9 +134,10 @@ describe("Monster description", () => {
 
         Drops:
         40 (±8) meat
-        4x [rat whisker](https://wiki.kingdomofloathing.com/rat_whisker) (100%)
-        [tangle of rat tails](https://wiki.kingdomofloathing.com/tangle_of_rat_tails) (100%)
+        2x [rat whisker](https://wiki.kingdomofloathing.com/rat_whisker) (100%)
+        2x [rat whisker](https://wiki.kingdomofloathing.com/rat_whisker) (Sometimes)
         3x [rat appendix](https://wiki.kingdomofloathing.com/rat_appendix) (20%)
+        [tangle of rat tails](https://wiki.kingdomofloathing.com/tangle_of_rat_tails) (100%)
       `,
     );
   });
@@ -165,7 +166,6 @@ describe("Monster description", () => {
       lucky: false,
       manuel: null,
       meat: 0,
-      meatExpression: null,
       monsterDropsByMonster: {
         nodes: [
           {
@@ -176,8 +176,18 @@ describe("Monster description", () => {
               id: 8230,
             },
           },
+          {
+            category: "C",
+            rate: 0.1,
+            itemByItem: {
+              name: "fake washboard",
+              id: 8231,
+            },
+          },
         ],
       },
+      meatExpression: null,
+
       monsterLevelMultiplier: "[3+2*pref(dinseyAudienceEngagement)]",
       name: "Gurgle the Turgle",
       nobanish: true,
@@ -214,8 +224,8 @@ describe("Monster description", () => {
         Always loses initiative.
 
         Drops:
-        [turtle voicebox](https://wiki.kingdomofloathing.com/turtle_voicebox) (Sometimes)
-        [fake washboard](https://wiki.kingdomofloathing.com/fake_washboard) (Sometimes, conditional)
+        [turtle voicebox](https://wiki.kingdomofloathing.com/turtle_voicebox) (15%)
+        [fake washboard](https://wiki.kingdomofloathing.com/fake_washboard) (0.1%, conditional)
       `,
     );
   });
@@ -229,7 +239,7 @@ describe("Monster description", () => {
       defence: "0",
       elementalDefence: "COLD",
       drippy: false,
-      element: "COLD",
+      element: undefined,
       elementalAttack: "COLD",
       elementalResistance: "0",
       experience: null,
@@ -298,7 +308,7 @@ describe("Monster description", () => {
       defence: "0",
       elementalDefence: "COLD",
       drippy: false,
-      element: "COLD",
+      element: undefined,
       elementalAttack: "COLD",
       elementalResistance: "0",
       experience: null,
@@ -427,7 +437,7 @@ describe("Monster description", () => {
       defence: "2",
       elementalDefence: "COLD",
       drippy: false,
-      element: "COLD",
+      element: undefined,
       elementalAttack: "COLD",
       elementalResistance: "0",
       experience: null,
