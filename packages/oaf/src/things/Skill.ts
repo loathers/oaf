@@ -42,6 +42,10 @@ export class Skill extends Thing {
     return Math.floor(this.skill.id / 1000);
   }
 
+  getModifiers(): Record<string, string> {
+    return this.skill.skillModifierBySkill?.modifiers ?? {};
+  }
+
   @Memoize()
   async getDescription(): Promise<string> {
     const description: string[] = [];

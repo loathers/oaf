@@ -1,7 +1,6 @@
 import { createClient } from "data-of-loathing";
 import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
-import { Agent, fetch } from "undici";
 
 import {
   Effect,
@@ -13,15 +12,9 @@ import {
 } from "../things/index.js";
 import { cleanString } from "../utils.js";
 import { createEmbed } from "./discord.js";
-import packages from "./iotmPackages.json" with { type: "json" };
+// import packages from "./iotmPackages.json" with { type: "json" };
 import { pizzaTree } from "./pizza.js";
 import { wikiClient } from "./wiki.js";
-
-const insecureAgent = new Agent({
-  connect: {
-    ciphers: "DEFAULT:@SECLEVEL=1",
-  },
-});
 
 // const ghostlings: [string, string][] = [
 //   ["grinning ghostling", "box o' ghosts"],
@@ -29,9 +22,9 @@ const insecureAgent = new Agent({
 //   ["greedy ghostling", "box o' ghosts"],
 // ];
 
-const reversed: [string, string][] = Array.from(
-  Object.keys(packages) as (keyof typeof packages)[],
-).map((key) => [packages[key] || "", key]);
+// const reversed: [string, string][] = Array.from(
+//   Object.keys(packages) as (keyof typeof packages)[],
+// ).map((key) => [packages[key] || "", key]);
 
 // const REVERSE_PACKAGES = new Map(reversed.concat(ghostlings).concat(foldables));
 
@@ -106,6 +99,14 @@ export class MafiaClient {
       allItems: {
         nodes: {
           id: true,
+          name: true,
+          image: true,
+          descid: true,
+          uses: true,
+          quest: true,
+          tradeable: true,
+          discardable: true,
+          gift: true,
           itemModifierByItem: {
             modifiers: true,
           },
@@ -113,6 +114,22 @@ export class MafiaClient {
             nodes: {
               foldGroup: true,
             },
+          },
+          consumableById: {
+            adventureRange: true,
+            adventures: true,
+            stomach: true,
+            liver: true,
+            spleen: true,
+            levelRequirement: true,
+            quality: true,
+          },
+          equipmentById: {
+            power: true,
+            moxRequirement: true,
+            mysRequirement: true,
+            musRequirement: true,
+            type: true,
           },
         },
       },
@@ -166,6 +183,23 @@ export class MafiaClient {
       allFamiliars: {
         nodes: {
           id: true,
+          name: true,
+          image: true,
+          itemByLarva: {
+            id: true,
+            name: true,
+            image: true,
+          },
+          itemByEquipment: {
+            id: true,
+            name: true,
+            image: true,
+          },
+          categories: true,
+          attributes: true,
+          familiarModifierByFamiliar: {
+            modifiers: true,
+          },
         },
       },
     });
@@ -252,36 +286,13 @@ export class MafiaClient {
 
   @Memoize({ tags: ["things"] })
   async getWikiLink(thing: Thing) {
-    const type = thing.constructor.name.replace(/^_/, "");
-
-    const block = thing.id < 0 ? -1 : Math.floor(thing.id / 100) * 100;
-
-    let url = `https://kol.coldfront.net/thekolwiki/index.php/${type}s_by_number`;
-    if (type !== "Skill") {
-      const blockDescription =
-        block < 0 ? "negative" : `${Math.max(1, block)}-${block + 99}`;
-      url += `_(${blockDescription})`;
-    }
-
-    try {
-      const request = await fetch(url, { dispatcher: insecureAgent });
-      const blockPage = await request.text();
-
-      const pattern =
-        type === "Skill"
-          ? new RegExp(
-              `${thing.id.toString().padStart(4, "0")} <a href="([^"]+)"`,
-            )
-          : new RegExp(`${thing.id}\\. <a href="([^"]+)"`);
-
-      const match = blockPage.match(pattern);
-      if (!match) return null;
-
-      return `https://kol.coldfront.net${match[1]}`;
-    } catch (e) {
-      console.log(e);
-      return null;
-    }
+    if (!thing) return null;
+    const modifiers = thing.getModifiers();
+    if (!modifiers) return null;
+    if ("Wiki Name" in modifiers === false) return null;
+    const wikiName = modifiers["Wiki Name"];
+    if (typeof wikiName !== "string") return null;
+    return wikiName.slice(1, -1);
   }
 }
 

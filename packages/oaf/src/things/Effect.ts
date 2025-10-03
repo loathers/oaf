@@ -40,6 +40,10 @@ export class Effect extends Thing {
       effect.quality !== "BAD";
   }
 
+  getModifiers(): Record<string, string> {
+    return this.effect.effectModifierByEffect?.modifiers ?? {};
+  }
+
   describePizzaCompatibility() {
     if (!this.hookah) return "Ineligible for pizza, wishes, or hookahs.";
     if (!this.pizza) return "Pizza: Something is broken.";

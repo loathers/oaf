@@ -33,4 +33,8 @@ export class Thing {
       await this.getDescription(),
     );
   }
+
+  getModifiers(): Record<string, string> | null {
+    throw "Implement me";
+  }
 }

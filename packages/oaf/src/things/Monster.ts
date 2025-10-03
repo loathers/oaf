@@ -46,6 +46,10 @@ export class Monster extends Thing {
     this.monster = monster;
   }
 
+  getModifiers(): Record<string, string> {
+    return {};
+  }
+
   getImagePath() {
     return `/adventureimages/${this.imageUrl}`;
   }
