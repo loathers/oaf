@@ -1,9 +1,10 @@
-import { type Skill as DSkill, type SkillTag } from "data-of-loathing";
+import { type SkillTag } from "data-of-loathing";
 import { bold } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol.js";
 import { Thing } from "./Thing.js";
+import { TData } from "./query.js";
 
 const TAG_LABELS: Record<SkillTag, string> = {
   COMBAT: "Combat Skill",
@@ -19,12 +20,7 @@ const TAG_LABELS: Record<SkillTag, string> = {
   SELF: "Self",
 };
 
-interface TSkill extends Partial<DSkill> {
-  id: number;
-  name: string;
-  image: string;
-  tags?: (SkillTag | null)[];
-}
+type TSkill = NonNullable<NonNullable<TData["allSkills"]>["nodes"][number]>;
 
 export class Skill extends Thing {
   private skill: TSkill;
@@ -53,7 +49,7 @@ export class Skill extends Thing {
     const tags = (
       this.skill.tags
         ?.filter((t) => t !== null)
-        .map((tag) => TAG_LABELS[tag])
+        .map((tag) => TAG_LABELS[tag!])
         .filter((t) => !!t) ?? []
     ).join(", ");
     description.push(bold(tags));

@@ -216,9 +216,10 @@ describe("Foldable", () => {
       uses: ["OFFHAND", "USABLE"],
       quest: false,
       tradeable: true,
-      autosell: 7,
       discardable: true,
       gift: false,
+      plural: null,
+      autosell: 7,
       itemModifierByItem: {
         modifiers: {
           "Maximum HP": "+10",
@@ -232,6 +233,42 @@ describe("Foldable", () => {
         mysRequirement: 0,
         musRequirement: 5,
         type: "shield",
+      },
+      foldablesByItem: {
+        nodes: [
+          {
+            foldGroupByFoldGroup: {
+              foldablesByFoldGroup: {
+                nodes: [
+                  {
+                    itemByItem: {
+                      id: 3915,
+                      image: "waxshield.gif",
+                      name: "turtle wax shield",
+                      tradeable: true,
+                    },
+                  },
+                  {
+                    itemByItem: {
+                      id: 3916,
+                      image: "waxhat.gif",
+                      name: "turtle wax helmet",
+                      tradeable: true,
+                    },
+                  },
+                  {
+                    itemByItem: {
+                      id: 3917,
+                      image: "waxgreaves.gif",
+                      name: "turtle wax greaves",
+                      tradeable: true,
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
       },
     });
 

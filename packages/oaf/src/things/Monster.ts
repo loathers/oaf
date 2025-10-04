@@ -1,34 +1,13 @@
-import {
-  type Monster as DMonster,
-  MonsterDropCategory,
-} from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
 import { toWikiLink } from "../utils.js";
 import { Thing } from "./Thing.js";
+import { TData } from "./query.js";
 
-type DeepPartial<T> = T extends object
-  ? {
-      [P in keyof T]?: DeepPartial<T[P]>;
-    }
-  : T;
-
-interface TMonster extends DeepPartial<DMonster> {
-  id: number;
-  name: string;
-  image: (string | null)[];
-  monsterDropsByMonster?: {
-    nodes: ({
-      itemByItem: {
-        name: string;
-        id: number;
-      } | null;
-      rate: number;
-      category: MonsterDropCategory | null;
-    } | null)[];
-  };
-}
+export type TMonster = NonNullable<
+  NonNullable<TData["allMonsters"]>["nodes"][number]
+>;
 
 export class Monster extends Thing {
   static is(thing?: Thing | null): thing is Monster {
@@ -47,7 +26,9 @@ export class Monster extends Thing {
   }
 
   getModifiers(): Record<string, string> {
-    return {};
+    const mods: Record<string, string> = {};
+    if (this.monster.wiki) mods["Wiki Name"] = `"${this.monster.wiki}"`;
+    return mods;
   }
 
   getImagePath() {

@@ -5,9 +5,9 @@ import {
 } from "discord.js";
 import { resolveKoLImage } from "kol.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { isRecordNotFoundError, prisma } from "../../clients/database.js";
 import { createEmbed } from "../../clients/discord.js";
-import { mafiaClient } from "../../clients/mafia.js";
 import { formatPlayer } from "../../utils.js";
 import { itemAutocomplete, itemOption } from "../_options.js";
 
@@ -62,7 +62,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  const item = mafiaClient.items.find((i) => i.id === itemId);
+  const item = dataOfLoathingClient.items.find((i) => i.id === itemId);
 
   if (!item) {
     return void (await interaction.editReply(`That item does not exist.`));
@@ -70,7 +70,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 
   if (!item.tradeable && !item.gift) {
     return void (await interaction.editReply(
-      `${item.pluralName} cannot be traded.`,
+      `${item.plural} cannot be traded.`,
     ));
   }
 
@@ -90,13 +90,13 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 
   if (offers.length === 0) {
     return void (await interaction.editReply(
-      `${item.pluralName} exist but no-one cares.`,
+      `${item.plural} exist but no-one cares.`,
     ));
   }
 
   const embed = createEmbed()
     .setTitle(`Standing Offers for ${item.name}`)
-    .setURL(await mafiaClient.getWikiLink(item))
+    .setURL(await dataOfLoathingClient.getWikiLink(item))
     .setDescription(offers.join("\n"))
     .setThumbnail(resolveKoLImage(item.getImagePath()));
 
@@ -120,7 +120,7 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  const item = mafiaClient.items.find((i) => i.id === itemId);
+  const item = dataOfLoathingClient.items.find((i) => i.id === itemId);
 
   if (!item) {
     return void (await interaction.editReply(`That item does not exist.`));
@@ -128,7 +128,7 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
 
   if (!item.tradeable && !item.gift) {
     return void (await interaction.editReply(
-      `${item.pluralName} cannot be traded.`,
+      `${item.plural} cannot be traded.`,
     ));
   }
 

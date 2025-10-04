@@ -1,26 +1,18 @@
-import { type EffectQuality } from "data-of-loathing";
 import { bold } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol.js";
 import { Thing } from "./Thing.js";
+import { TData } from "./query.js";
 
 export type PizzaData = {
   letters: string;
   options: number;
 };
 
-export type TEffect = {
-  id: number;
-  name: string;
-  image: string;
-  descid: string | null;
-  quality: EffectQuality;
-  nohookah: boolean;
-  effectModifierByEffect: {
-    modifiers: Record<string, string>;
-  } | null;
-};
+export type TEffect = NonNullable<
+  NonNullable<TData["allEffects"]>["nodes"][number]
+>;
 
 export class Effect extends Thing {
   static is(thing?: Thing | null): thing is Effect {

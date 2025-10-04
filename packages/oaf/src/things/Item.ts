@@ -1,4 +1,4 @@
-import { ConsumableQuality, ItemUse } from "data-of-loathing";
+import { ConsumableQuality } from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
 import { MemoizeExpiring } from "typescript-memoize";
 
@@ -6,6 +6,7 @@ import { kolClient } from "../clients/kol.js";
 import { pluralize, titleCase, toWikiLink } from "../utils.js";
 import { Familiar } from "./Familiar.js";
 import { Thing } from "./Thing.js";
+import { TData } from "./query.js";
 
 const OTHER_USES = [
   "POTION",
@@ -33,59 +34,17 @@ const EQUIPMENT_TYPES = [
 ] as const;
 type EquipmentType = (typeof EQUIPMENT_TYPES)[number];
 
-export type ItemData = {
-  id: number;
-  name: string;
-  descId: number;
-  imageUrl: string;
-  types: string[];
-  quest: boolean;
-  gift: boolean;
-  tradeable: boolean;
-  discardable: boolean;
-  autosell: number;
-  pluralName: string;
-};
-
-interface TItem {
-  id: number;
-  name: string;
-  image: string;
-  descid?: number | null;
-  quest?: boolean;
-  autosell?: number;
-  tradeable?: boolean;
-  discardable?: boolean;
-  gift?: boolean;
-  uses?: (ItemUse | null)[];
-  itemModifierByItem?: {
-    modifiers: Record<string, string>;
-  } | null;
-  consumableById?: {
-    adventureRange: string;
-    adventures: number;
-    stomach: number;
-    liver: number;
-    spleen: number;
-    levelRequirement: number;
-    quality: string | null;
-  } | null;
-  equipmentById?: {
-    moxRequirement: number;
-    mysRequirement: number;
-    musRequirement: number;
-    power: number;
-    type: string | null;
-  } | null;
-}
+export type TItem = Partial<
+  NonNullable<NonNullable<TData["allItems"]>["nodes"][number]>
+> & { id: number; name: string; image: string };
 
 export class Item extends Thing {
   readonly item: TItem;
 
   container?: Item;
   contents?: Item;
-  zapGroup?: Item[];
-  foldGroup?: Item[];
+  // zapGroup: Item[];
+  foldGroup: Item[];
 
   _addlDescription = "";
 
@@ -96,10 +55,32 @@ export class Item extends Thing {
   constructor(item: TItem) {
     super(item.id, item.name, item.image);
     this.item = item;
+    this.foldGroup =
+      item.foldablesByItem?.nodes
+        .flatMap(
+          (f) =>
+            f?.foldGroupByFoldGroup?.foldablesByFoldGroup.nodes.map(
+              (g) => g?.itemByItem ?? null,
+            ) ?? [],
+        )
+        .filter((i) => i !== null)
+        .map((i) => new Item(i)) ?? [];
   }
 
   get descid() {
     return this.item.descid;
+  }
+
+  get tradeable() {
+    return this.item.tradeable;
+  }
+
+  get gift() {
+    return this.item.gift;
+  }
+
+  get plural() {
+    return this.item.plural || `${this.name}s`;
   }
 
   mapQuality(rawQuality: ConsumableQuality | null): string {
@@ -171,8 +152,12 @@ export class Item extends Thing {
           return ["booze", "inebriety", "liver"] as const;
         case "SPLEEN":
           return ["spleen item", "spleen", "spleen"] as const;
+        default:
+          return [null, null, null] as const;
       }
     })();
+
+    if (!consumableName || !consumableUnit || !organ) return null;
 
     const size = consumable[organ];
     const { levelRequirement, adventures, adventureRange, quality } =
@@ -293,6 +278,8 @@ export class Item extends Thing {
           return "Reusable combat item";
         case "GROW":
           return "Familiar hatchling";
+        default:
+          return "Unknown type";
       }
     })();
 
@@ -374,6 +361,8 @@ export class Item extends Thing {
   }
 
   async formatGroup(group: Item[], groupType: string) {
+    if (group.length === 0) return null;
+
     const output: string[] = [];
 
     const turnsInto = group
@@ -422,7 +411,7 @@ export class Item extends Thing {
 
   @MemoizeExpiring(15 * 60 * 1000) // Ensure that prices are accurate to the last 15 minutes
   async getDescription(withAddl = true): Promise<string> {
-    const description: string[] = [this.getShortDescription()];
+    const description: (string | null)[] = [this.getShortDescription()];
 
     if (withAddl) description.push(this._addlDescription);
 
@@ -439,13 +428,8 @@ export class Item extends Thing {
       description.push(price);
     }
 
-    if (this.zapGroup) {
-      description.push(await this.formatGroup(this.zapGroup, "zap"));
-    }
-
-    if (this.foldGroup) {
-      description.push(await this.formatGroup(this.foldGroup, "fold"));
-    }
+    // description.push(await this.formatGroup(this.zapGroup, "zap"));
+    description.push(await this.formatGroup(this.foldGroup, "fold"));
 
     if (withAddl && this.container) {
       description.push(
@@ -465,6 +449,6 @@ export class Item extends Thing {
       description.push(await this.contents?.getDescription(false));
     }
 
-    return description.join("\n");
+    return description.filter((line) => line !== null).join("\n");
   }
 }

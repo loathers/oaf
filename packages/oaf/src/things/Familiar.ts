@@ -6,6 +6,7 @@ import { kolClient } from "../clients/kol.js";
 import { cleanString, indent, toWikiLink } from "../utils.js";
 import { Item } from "./Item.js";
 import { Thing } from "./Thing.js";
+import { TData } from "./query.js";
 
 type FamiliarClassification = {
   combination: FamiliarCategory[];
@@ -252,43 +253,9 @@ export const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
   ["o.a.f.", "Is optimal.\nGenerally messes with you.\n"],
 ]);
 
-interface TFamiliar {
-  id: number;
-  name: string;
-  image: string;
-
-  familiarModifierByFamiliar: {
-    modifiers: Record<string, string>;
-  } | null;
-  itemByLarva: {
-    id: number;
-    name: string;
-    image: string;
-    itemModifierByItem: {
-      modifiers: Record<string, string>;
-    } | null;
-    tradeable: boolean;
-    quest: boolean;
-    discardable: boolean;
-    gift: boolean;
-    descid: number | null;
-  } | null;
-  itemByEquipment: {
-    id: number;
-    name: string;
-    image: string;
-    itemModifierByItem: {
-      modifiers: Record<string, string>;
-    } | null;
-    tradeable: boolean;
-    quest: boolean;
-    discardable: boolean;
-    gift: boolean;
-    descid: number | null;
-  } | null;
-  categories: (FamiliarCategory | null)[] | null;
-  attributes: (string | null)[];
-}
+type TFamiliar = NonNullable<
+  NonNullable<TData["allFamiliars"]>["nodes"][number]
+>;
 
 export class Familiar extends Thing {
   private familiar: TFamiliar;
@@ -316,7 +283,7 @@ export class Familiar extends Thing {
 
     const classifications: string[] = [];
     let categoriesUnassigned = [
-      ...(this.familiar.categories?.filter((c) => c !== null) ?? []),
+      ...this.familiar.categories.filter((c) => c !== null),
     ];
 
     // For each classification...
@@ -329,7 +296,7 @@ export class Familiar extends Thing {
       ) {
         // ... remove the types that are reflected by this classification from future consideration...
         categoriesUnassigned = categoriesUnassigned.filter(
-          (cat) => !classification.combination.includes(cat),
+          (cat) => !classification.combination.includes(cat!),
         );
         // ... and add this classification to the list we use to describe this familair.
         classifications.push(classification.description);

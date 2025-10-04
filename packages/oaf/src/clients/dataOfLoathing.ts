@@ -1,4 +1,3 @@
-import { createClient } from "data-of-loathing";
 import { EmbedBuilder } from "discord.js";
 import { Memoize, clear } from "typescript-memoize";
 
@@ -10,6 +9,7 @@ import {
   Skill,
   Thing,
 } from "../things/index.js";
+import { getQueryData } from "../things/query.js";
 import { cleanString } from "../utils.js";
 import { createEmbed } from "./discord.js";
 // import packages from "./iotmPackages.json" with { type: "json" };
@@ -28,7 +28,7 @@ import { wikiClient } from "./wiki.js";
 
 // const REVERSE_PACKAGES = new Map(reversed.concat(ghostlings).concat(foldables));
 
-export class MafiaClient {
+export class DataOfLoathingClient {
   private itemByName: Map<string, Item> = new Map();
   private skillByName: Map<string, Skill> = new Map();
   private effectByName: Map<string, Effect> = new Map();
@@ -40,12 +40,6 @@ export class MafiaClient {
   #lastFamiliar = -1;
   #lastSkills: { [block: number]: number } = {};
   private lastDownloadTime = -1;
-
-  private client;
-
-  constructor() {
-    this.client = createClient();
-  }
 
   get lastItem() {
     return this.#lastItem;
@@ -95,131 +89,7 @@ export class MafiaClient {
   }
 
   async load() {
-    const data = await this.client.query({
-      allItems: {
-        nodes: {
-          id: true,
-          name: true,
-          image: true,
-          descid: true,
-          uses: true,
-          quest: true,
-          tradeable: true,
-          discardable: true,
-          gift: true,
-          autosell: true,
-          itemModifierByItem: {
-            modifiers: true,
-          },
-          foldablesByItem: {
-            nodes: {
-              foldGroup: true,
-            },
-          },
-          consumableById: {
-            adventureRange: true,
-            adventures: true,
-            stomach: true,
-            liver: true,
-            spleen: true,
-            levelRequirement: true,
-            quality: true,
-          },
-          equipmentById: {
-            power: true,
-            moxRequirement: true,
-            mysRequirement: true,
-            musRequirement: true,
-            type: true,
-          },
-        },
-      },
-      allSkills: {
-        nodes: {
-          id: true,
-          name: true,
-          image: true,
-          tags: true,
-        },
-      },
-      allEffects: {
-        nodes: {
-          id: true,
-          name: true,
-          image: true,
-          descid: true,
-          quality: true,
-          nohookah: true,
-          effectModifierByEffect: {
-            modifiers: true,
-          },
-        },
-      },
-      allFoldGroups: {
-        nodes: {
-          foldablesByFoldGroup: {
-            nodes: {
-              item: true,
-            },
-          },
-        },
-      },
-      allMonsters: {
-        nodes: {
-          id: true,
-          name: true,
-          image: true,
-          monsterDropsByMonster: {
-            nodes: {
-              itemByItem: {
-                name: true,
-                id: true,
-              },
-              rate: true,
-              category: true,
-            },
-          },
-        },
-      },
-      allFamiliars: {
-        nodes: {
-          id: true,
-          name: true,
-          image: true,
-          itemByLarva: {
-            id: true,
-            name: true,
-            image: true,
-            quest: true,
-            tradeable: true,
-            discardable: true,
-            descid: true,
-            gift: true,
-            itemModifierByItem: {
-              modifiers: true,
-            },
-          },
-          itemByEquipment: {
-            id: true,
-            name: true,
-            image: true,
-            quest: true,
-            tradeable: true,
-            discardable: true,
-            descid: true,
-            gift: true,
-            itemModifierByItem: {
-              modifiers: true,
-            },
-          },
-          categories: true,
-          attributes: true,
-          familiarModifierByFamiliar: {
-            modifiers: true,
-          },
-        },
-      },
-    });
+    const data = await getQueryData();
 
     for (const s of data.allSkills?.nodes ?? []) {
       if (s === null) continue;
@@ -313,4 +183,4 @@ export class MafiaClient {
   }
 }
 
-export const mafiaClient = new MafiaClient();
+export const dataOfLoathingClient = new DataOfLoathingClient();

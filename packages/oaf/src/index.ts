@@ -3,6 +3,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
 
+import { dataOfLoathingClient } from "./clients/dataOfLoathing.js";
 import {
   CommandHandler,
   InteractionHandler,
@@ -10,7 +11,6 @@ import {
   discordClient,
 } from "./clients/discord.js";
 import { kolClient } from "./clients/kol.js";
-import { mafiaClient } from "./clients/mafia.js";
 import { handleGreenboxKmail } from "./greenbox.js";
 import { startApiServer } from "./server/index.js";
 
@@ -69,9 +69,9 @@ async function main() {
   console.log("Starting API server");
   startApiServer();
 
-  console.log("Downloading KoLmafia data.");
-  await mafiaClient.loadMafiaData();
-  console.log("All KoLmafia data downloaded.");
+  console.log("Downloading data of loathing");
+  await dataOfLoathingClient.load();
+  console.log("All data of loathing downloaded.");
 
   console.log("Loading commands and syncing relevant data");
   await loadSlashCommands();
