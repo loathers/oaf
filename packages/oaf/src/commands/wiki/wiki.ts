@@ -9,9 +9,9 @@ import {
   userMention,
 } from "discord.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { blankEmbed, discordClient } from "../../clients/discord.js";
 import { getPissLevel } from "../../clients/iss.js";
-import { mafiaClient } from "../../clients/mafia.js";
 import { WikiSearchError } from "../../clients/wiki.js";
 import { lf } from "../../utils.js";
 
@@ -29,7 +29,7 @@ export const data = new SlashCommandBuilder()
 
 async function getWikiReply(query: string) {
   try {
-    const embed = await mafiaClient.getEmbed(query);
+    const embed = await dataOfLoathingClient.getEmbed(query);
     if (!embed) {
       return blankEmbed(`"${query}" wasn't found. Please refine your search.`);
     }

@@ -6,9 +6,9 @@ import express from "express";
 import { StatusCodes } from "http-status-codes";
 import path from "node:path";
 
+import { dataOfLoathingClient } from "../clients/dataOfLoathing.js";
 import { prisma } from "../clients/database.js";
 import { discordClient } from "../clients/discord.js";
-import { mafiaClient } from "../clients/mafia.js";
 import { config } from "../config.js";
 import { eggnet } from "./eggnet.js";
 import { samsara } from "./samsara.js";
@@ -80,8 +80,12 @@ app
         },
       })
     ).map(({ winners, ...r }) => {
-      const firstPrize = mafiaClient.items.find((i) => i.id === r.firstPrize);
-      const secondPrize = mafiaClient.items.find((i) => i.id === r.secondPrize);
+      const firstPrize = dataOfLoathingClient.items.find(
+        (i) => i.id === r.firstPrize,
+      );
+      const secondPrize = dataOfLoathingClient.items.find(
+        (i) => i.id === r.secondPrize,
+      );
       const firstWinner = winners.find((w) => w.place === 1)!;
       const secondWinners = winners.filter((w) => w.place === 2);
       return {
@@ -208,7 +212,7 @@ app
     "*",
     createRequestHandler({
       build,
-      getLoadContext: () => ({ discordClient, mafiaDataClient: mafiaClient }),
+      getLoadContext: () => ({ discordClient, dataOfLoathingClient }),
     }),
   );
 

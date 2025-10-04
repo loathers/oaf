@@ -2,7 +2,6 @@ import { dedent } from "ts-dedent";
 import { expect, test, vi } from "vitest";
 
 import { Familiar } from "./Familiar.js";
-import { Item } from "./Item.js";
 
 const blueText = vi.hoisted(() => vi.fn().mockResolvedValue({ blueText: "" }));
 
@@ -13,15 +12,50 @@ vi.mock("kol.js", async (importOriginal) => {
 });
 
 test("Can describe a Familiar", async () => {
-  const familiar = Familiar.from(
-    "1	Mosquito	familiar1.gif	combat0,hp0	mosquito larva	hypodermic needle	2	1	3	0	animal,bug,eyes,wings,quick,biting,flying",
-  );
-  familiar.hatchling = Item.from(
-    "275	mosquito larva	187601582	larva.gif	grow	q	0	mosquito larvae",
-  );
-  familiar.equipment = Item.from(
-    "848	hypodermic needle	10000001	syringe.gif	familiar	t,d	75",
-  );
+  const familiar = new Familiar({
+    id: 1,
+    name: "Mosquito",
+    image: "familiar1.gif",
+    itemByLarva: {
+      id: 275,
+      name: "mosquito larva",
+      image: "larva.gif",
+      itemModifierByItem: null,
+      tradeable: false,
+      quest: true,
+      discardable: false,
+      gift: false,
+      descid: 187601582,
+    },
+    itemByEquipment: {
+      id: 848,
+      name: "hypodermic needle",
+      image: "syringe.gif",
+      itemModifierByItem: {
+        modifiers: {
+          "Familiar Weight": "+5",
+        },
+      },
+      tradeable: true,
+      quest: false,
+      discardable: true,
+      gift: false,
+      descid: 10000001,
+    },
+    categories: ["COMBAT0", "HP0"],
+    attributes: [
+      "sentient",
+      "organic",
+      "insect",
+      "animal",
+      "haseyes",
+      "bite",
+      "haswings",
+      "flies",
+      "fast",
+    ],
+    familiarModifierByFamiliar: null,
+  });
 
   // For the hatchling
   blueText.mockResolvedValueOnce({ blueText: "" });
@@ -35,7 +69,7 @@ test("Can describe a Familiar", async () => {
       **Familiar**
       Deals physical damage to heal you in combat.
 
-      Attributes: animal, bug, eyes, wings, quick, biting, flying
+      Attributes: animal, bite, fast, flies, haseyes, haswings, insect, organic, sentient
 
       Hatchling: [mosquito larva](https://wiki.kingdomofloathing.com/mosquito_larva)
       Quest Item

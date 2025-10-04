@@ -57,10 +57,22 @@ export class WikiClient {
 
   private async tryPreciseWikiPage(searchTerm: string) {
     const wikiName = encodeURIComponent(searchTerm).replace(/\s/g, "_");
-    return await this.tryWiki(
-      `https://wiki.kingdomofloathing.com/${wikiName}`,
-      "precise",
-    );
+    const url = `https://wiki.kingdomofloathing.com/${wikiName}`
+    const response = await fetch(`https://wiki.kingdomofloathing.com/api.php?action=parse&page=${wikiName}&prop=text&format=json`);
+
+    if (!response.ok) {
+      throw new WikiSearchError("kolwiki precise", url);
+    }
+
+    const json = await response.json() as { error: { code: string } } | { parse: { title: string, text: { "*": string } } };
+    if ("error" in json) {
+      if (json.error.code === "missingtitle") return null;
+      throw new WikiSearchError("kolwiki precise", url);
+    }
+
+    const name = json.parse.title;
+    const image = this.imageFromWikiPage(json.parse.text["*"]);
+    return { name, url, image };
   }
 
   private async tryWikiSearch(searchTerm: string) {
@@ -115,7 +127,7 @@ export class WikiClient {
   async parseFoundName(url: string, contents?: string) {
     if (!contents) contents = (await (await fetch(url)).text()) || "";
     const name = this.nameFromWikiPage(url, contents);
-    const image = this.imageFromWikiPage(url, contents);
+    const image = this.imageFromWikiPage(contents);
     return { name, url, image };
   }
 
@@ -147,7 +159,7 @@ export class WikiClient {
     }
   }
 
-  imageFromWikiPage(url: string, data: string): string {
+  imageFromWikiPage(data: string): string {
     // As far as I know this is always the first relevant image
     const imageMatch = String(data).match(/src="(\/images\/[^"']*\.gif)/);
     return imageMatch ? resolveWikiLink(imageMatch[1]) : "";

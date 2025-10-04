@@ -9,10 +9,10 @@ import {
 } from "discord.js";
 import { Player as KoLPlayer } from "kol.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { prisma } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import { mafiaClient } from "../../clients/mafia.js";
 import { config } from "../../config.js";
 import { formatPlayer } from "../../utils.js";
 import { embedForItem } from "../wiki/item.js";
@@ -167,7 +167,7 @@ async function renderWinners(raffle: Raffle, members: Player[]) {
 
   return raffle.yesterday.map((winner) => {
     const itemName =
-      mafiaClient.items.find((i) => i.id === winner.item)?.name ??
+      dataOfLoathingClient.items.find((i) => i.id === winner.item)?.name ??
       `Unknown item (#${winner.item})`;
     return `${winner.place === 1 ? "🥇" : "🥈"} - ${bold(itemName)} won by ${renderWinner(winner.player)} (with ${numberFormat.format(winner.tickets)} tickets)`;
   });

@@ -1,7 +1,7 @@
 import { hyperlink } from "discord.js";
 
+import { dataOfLoathingClient } from "../clients/dataOfLoathing.js";
 import { createEmbed, discordClient } from "../clients/discord.js";
-import { mafiaClient } from "../clients/mafia.js";
 import { config } from "../config.js";
 
 type Details = {
@@ -28,7 +28,7 @@ export async function eggnet({ monsterId }: Details) {
     throw new Error("Something is configured wrong");
   }
 
-  const monster = mafiaClient.monsters.find((i) => i.id === monsterId);
+  const monster = dataOfLoathingClient.monsters.find((i) => i.id === monsterId);
 
   if (!monster) {
     await discordClient.alert(
@@ -40,7 +40,9 @@ export async function eggnet({ monsterId }: Details) {
   let content = `Huh? ${monster.name} came out of its egg 🥚! New monster available in the ${hyperlink("Mimic DNA Bank", "https://eggnet.loathers.net")}.`;
 
   const [nextMonsterId, nextEggs] = await getNextMonster();
-  const nextMonster = mafiaClient.monsters.find((i) => i.id === nextMonsterId);
+  const nextMonster = dataOfLoathingClient.monsters.find(
+    (i) => i.id === nextMonsterId,
+  );
 
   if (nextMonster) {
     const r = 100 - nextEggs;
@@ -48,7 +50,9 @@ export async function eggnet({ monsterId }: Details) {
   }
 
   const embed = createEmbed();
-  embed.setTitle(monster.name).setURL(await mafiaClient.getWikiLink(monster));
+  embed
+    .setTitle(monster.name)
+    .setURL(await dataOfLoathingClient.getWikiLink(monster));
   await monster.addToEmbed(embed);
 
   await iotmChannel.send({

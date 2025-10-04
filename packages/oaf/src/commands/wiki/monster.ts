@@ -4,8 +4,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
-import { mafiaClient } from "../../clients/mafia.js";
 
 export const data = new SlashCommandBuilder()
   .setName("monster")
@@ -22,7 +22,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const monsterId = interaction.options.getNumber("monster", true);
   await interaction.deferReply();
 
-  const monster = mafiaClient.monsters.find((i) => i.id === monsterId);
+  const monster = dataOfLoathingClient.monsters.find((i) => i.id === monsterId);
 
   const embed = createEmbed();
 
@@ -34,7 +34,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  embed.setTitle(monster.name).setURL(await mafiaClient.getWikiLink(monster));
+  embed
+    .setTitle(monster.name)
+    .setURL(await dataOfLoathingClient.getWikiLink(monster));
   await monster.addToEmbed(embed);
 
   await interaction.editReply({
@@ -47,7 +49,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 export async function autocomplete(interaction: AutocompleteInteraction) {
   const focusedValue = interaction.options.getFocused();
 
-  const filtered = mafiaClient.monsters
+  const filtered = dataOfLoathingClient.monsters
     .map(({ name, id }) => ({ name, value: id }))
     .filter(({ name }) =>
       name.toLowerCase().includes(focusedValue.toLowerCase()),
