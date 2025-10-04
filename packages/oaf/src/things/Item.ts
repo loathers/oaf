@@ -67,6 +67,10 @@ export class Item extends Thing {
         .map((i) => new Item(i)) ?? [];
   }
 
+  getModifiers(): Record<string, string> {
+    return this.item.itemModifierByItem?.modifiers ?? {};
+  }
+
   get descid() {
     return this.item.descid;
   }

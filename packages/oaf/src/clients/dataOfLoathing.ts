@@ -166,20 +166,29 @@ export class DataOfLoathingClient {
     const embed = createEmbed().setTitle(title).setURL(foundName.url);
 
     if (thing) return await thing.addToEmbed(embed);
-    if (foundName.image)
-      return embed.setImage(foundName.image.replace("https", "http"));
-    return embed.setImage("http://kol.coldfront.net/thekolwiki/vis_sig.jpg");
+    if (foundName.image) return embed.setImage(foundName.image);
+
+    return embed;
+  }
+
+  getWikiName(thing: Thing) {
+    const modifiers = thing.getModifiers();
+    if (modifiers && "Wiki Name" in modifiers) {
+      const wikiName = modifiers["Wiki Name"];
+      console.log(wikiName);
+      if (typeof wikiName !== "string") return null;
+      return wikiName.slice(1, -1);
+    }
+
+    return thing.name.replace(/ /g, "_");
   }
 
   @Memoize({ tags: ["things"] })
-  async getWikiLink(thing: Thing) {
-    if (!thing) return null;
-    const modifiers = thing.getModifiers();
-    if (!modifiers) return null;
-    if ("Wiki Name" in modifiers === false) return null;
-    const wikiName = modifiers["Wiki Name"];
-    if (typeof wikiName !== "string") return null;
-    return wikiName.slice(1, -1);
+  getWikiLink(thing: Thing) {
+    const wikiName = this.getWikiName(thing);
+    if (!wikiName) return null;
+
+    return `https://wiki.kingdomofloathing.com/${wikiName}`;
   }
 }
 

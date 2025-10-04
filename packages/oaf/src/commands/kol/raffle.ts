@@ -9,10 +9,10 @@ import {
 } from "discord.js";
 import { Player as KoLPlayer } from "kol.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { prisma } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import { dataOfLoathingClient } from "../../clients/mafia.js";
 import { config } from "../../config.js";
 import { formatPlayer } from "../../utils.js";
 import { embedForItem } from "../wiki/item.js";
