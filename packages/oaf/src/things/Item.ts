@@ -4,9 +4,20 @@ import { MemoizeExpiring } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol.js";
 import { pluralize, titleCase, toWikiLink } from "../utils.js";
+
 import { Familiar } from "./Familiar.js";
 import { Thing } from "./Thing.js";
 import { TData } from "./query.js";
+import packages from "./iotmPackages.json" with { type: "json" };
+
+const reversedPackages = new Map([
+  ["grinning ghostling", "box o' ghosts"],
+  ["gregarious ghostling", "box o' ghosts"],
+  ["greedy ghostling", "box o' ghosts"],
+  ...[
+    ...Object.keys(packages) as (keyof typeof packages)[],
+  ].map((key) => [packages[key] || "", key] as const),
+]);
 
 const OTHER_USES = [
   "POTION",
@@ -41,8 +52,8 @@ export type TItem = Partial<
 export class Item extends Thing {
   readonly item: TItem;
 
-  container?: Item;
-  contents?: Item;
+  container?: string;
+  contents?: string;
   zapGroup: Item[];
   foldGroup: Item[];
 
@@ -55,6 +66,15 @@ export class Item extends Thing {
   constructor(item: TItem) {
     super(item.id, item.name, item.image);
     this.item = item;
+
+    if (item.name in packages) {
+      this.contents = packages[item.name as keyof typeof packages];
+    }
+
+    if (item.name in reversedPackages) {
+      this.container = reversedPackages.get(item.name)!;
+    }
+
     this.foldGroup =
       item.foldablesByItem?.nodes
         .flatMap(
@@ -448,19 +468,19 @@ export class Item extends Thing {
     if (withAddl && this.container) {
       description.push(
         `Enclosed in: ${bold(
-          hyperlink(this.container.name, toWikiLink(this.container.name)),
+          hyperlink(this.container, toWikiLink(this.container)),
         )}`,
-        await this.container?.getDescription(false),
+        // await this.container?.getDescription(false),
       );
     }
 
     if (withAddl && this.contents) {
       description.push(
         `Encloses: ${bold(
-          hyperlink(this.contents.name, toWikiLink(this.contents.name)),
+          hyperlink(this.contents, toWikiLink(this.contents)),
         )}`,
       );
-      description.push(await this.contents?.getDescription(false));
+      // description.push(await this.contents?.getDescription(false));
     }
 
     return description.filter((line) => line !== null).join("\n");

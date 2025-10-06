@@ -12,21 +12,8 @@ import {
 import { getQueryData } from "../things/query.js";
 import { cleanString } from "../utils.js";
 import { createEmbed } from "./discord.js";
-// import packages from "./iotmPackages.json" with { type: "json" };
 import { pizzaTree } from "./pizza.js";
 import { wikiClient } from "./wiki.js";
-
-// const ghostlings: [string, string][] = [
-//   ["grinning ghostling", "box o' ghosts"],
-//   ["gregarious ghostling", "box o' ghosts"],
-//   ["greedy ghostling", "box o' ghosts"],
-// ];
-
-// const reversed: [string, string][] = Array.from(
-//   Object.keys(packages) as (keyof typeof packages)[],
-// ).map((key) => [packages[key] || "", key]);
-
-// const REVERSE_PACKAGES = new Map(reversed.concat(ghostlings).concat(foldables));
 
 export class DataOfLoathingClient {
   private itemByName: Map<string, Item> = new Map();
