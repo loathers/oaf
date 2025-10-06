@@ -38,6 +38,22 @@ export const getQueryData = async () =>
             },
           },
         },
+        zapGroupItemsByItem: {
+          nodes: {
+            zapGroupByZapGroup: {
+              zapGroupItemsByZapGroup: {
+                nodes: {
+                  itemByItem: {
+                    id: true,
+                    name: true,
+                    image: true,
+                    tradeable: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         consumableById: {
           adventureRange: true,
           adventures: true,

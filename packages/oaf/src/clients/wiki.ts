@@ -57,14 +57,18 @@ export class WikiClient {
 
   private async tryPreciseWikiPage(searchTerm: string) {
     const wikiName = encodeURIComponent(searchTerm).replace(/\s/g, "_");
-    const url = `https://wiki.kingdomofloathing.com/${wikiName}`
-    const response = await fetch(`https://wiki.kingdomofloathing.com/api.php?action=parse&page=${wikiName}&prop=text&format=json`);
+    const url = `https://wiki.kingdomofloathing.com/${wikiName}`;
+    const response = await fetch(
+      `https://wiki.kingdomofloathing.com/api.php?action=parse&page=${wikiName}&prop=text&format=json`,
+    );
 
     if (!response.ok) {
       throw new WikiSearchError("kolwiki precise", url);
     }
 
-    const json = await response.json() as { error: { code: string } } | { parse: { title: string, text: { "*": string } } };
+    const json = (await response.json()) as
+      | { error: { code: string } }
+      | { parse: { title: string; text: { "*": string } } };
     if ("error" in json) {
       if (json.error.code === "missingtitle") return null;
       throw new WikiSearchError("kolwiki precise", url);

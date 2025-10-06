@@ -43,7 +43,7 @@ export class Item extends Thing {
 
   container?: Item;
   contents?: Item;
-  // zapGroup: Item[];
+  zapGroup: Item[];
   foldGroup: Item[];
 
   _addlDescription = "";
@@ -60,6 +60,16 @@ export class Item extends Thing {
         .flatMap(
           (f) =>
             f?.foldGroupByFoldGroup?.foldablesByFoldGroup.nodes.map(
+              (g) => g?.itemByItem ?? null,
+            ) ?? [],
+        )
+        .filter((i) => i !== null)
+        .map((i) => new Item(i)) ?? [];
+    this.zapGroup =
+      item.zapGroupItemsByItem?.nodes
+        .flatMap(
+          (z) =>
+            z?.zapGroupByZapGroup?.zapGroupItemsByZapGroup.nodes.map(
               (g) => g?.itemByItem ?? null,
             ) ?? [],
         )
@@ -432,7 +442,7 @@ export class Item extends Thing {
       description.push(price);
     }
 
-    // description.push(await this.formatGroup(this.zapGroup, "zap"));
+    description.push(await this.formatGroup(this.zapGroup, "zap"));
     description.push(await this.formatGroup(this.foldGroup, "fold"));
 
     if (withAddl && this.container) {
