@@ -55,12 +55,11 @@ export class WikiClient {
     return null;
   }
 
-  private async tryPreciseWikiPage(searchTerm: string) {
-    const wikiName = encodeURIComponent(searchTerm).replace(/\s/g, "_");
-    const url = `https://wiki.kingdomofloathing.com/${wikiName}`;
-    const response = await fetch(
-      `https://wiki.kingdomofloathing.com/api.php?action=parse&page=${wikiName}&prop=text&format=json`,
-    );
+  /**
+   * @param url api.php?action=parse...
+   */
+  private async parseWiki(url: string) {
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new WikiSearchError("kolwiki precise", url);
@@ -68,34 +67,54 @@ export class WikiClient {
 
     const json = (await response.json()) as
       | { error: { code: string } }
-      | { parse: { title: string; text: { "*": string } } };
+      | { parse: { title: string; pageid: number; text: { "*": string } } };
     if ("error" in json) {
       if (json.error.code === "missingtitle") return null;
-      throw new WikiSearchError("kolwiki precise", url);
+      throw new WikiSearchError("kolwiki precise");
     }
 
-    const name = json.parse.title;
     const image = this.imageFromWikiPage(json.parse.text["*"]);
-    return { name, url, image };
+    return {
+      name: json.parse.title,
+      url: `https://wiki.kingdomofloathing.com/Special:Redirect/page/${json.parse.pageid}`,
+      image,
+    };
   }
 
-  private async tryWikiSearch(searchTerm: string) {
-    const wikiSearchName = encodeURIComponent(searchTerm).replace(/%20/g, "+");
-    return await this.tryWiki(
-      `https://wiki.kingdomofloathing.com/index.php?search=${wikiSearchName}`,
-      "search",
+  private async tryWikiPage(searchTerm: string) {
+    const wikiName = encodeURIComponent(searchTerm).replace(/\s/g, "_");
+    return await this.parseWiki(
+      `https://wiki.kingdomofloathing.com/api.php?action=parse&page=${wikiName}&prop=text&format=json`,
     );
   }
 
-  private async tryStrippedWikiSearch(searchTerm: string) {
-    const wikiSearchNameCrushed = searchTerm
-      .replace(/[^A-Za-z0-9\s]/g, "")
-      .toLowerCase()
-      .replace(/\s/g, "+");
+  private async tryWikiSearch(searchTerm: string, what: "text" | "title") {
+    const wikiName = encodeURIComponent(searchTerm).replace(/%20/g, "+");
+    const response = await fetch(
+      `https://wiki.kingdomofloathing.com/api.php?action=query&list=search&srwhat=${what}&srlimit=1&srsearch=${wikiName}&format=json`,
+    );
 
-    return await this.tryWiki(
-      `https://wiki.kingdomofloathing.com/index.php?search=${wikiSearchNameCrushed}`,
-      "crushed",
+    if (!response.ok) {
+      throw new WikiSearchError(`kolwiki search ${what}`);
+    }
+
+    const json = (await response.json()) as
+      | { error: { code: string } }
+      | {
+          query: {
+            search: { title: string; pageid: number; text: { "*": string } }[];
+          };
+        };
+    if ("error" in json) {
+      throw new WikiSearchError(`kolwiki search ${what}`);
+    }
+
+    const result = json.query.search[0];
+
+    if (!result) return null;
+
+    return await this.parseWiki(
+      `https://wiki.kingdomofloathing.com/api.php?action=parse&pageid=${result.pageid}&prop=text&format=json`,
     );
   }
 
@@ -121,9 +140,9 @@ export class WikiClient {
     if (!searchTerm.length) return null;
     const clean = emoteNamesFromEmotes(searchTerm).replace(/\u2019/g, "'");
     return (
-      (await this.tryPreciseWikiPage(clean)) ||
-      (await this.tryWikiSearch(clean)) ||
-      (await this.tryStrippedWikiSearch(clean)) ||
+      (await this.tryWikiPage(clean)) ||
+      (await this.tryWikiSearch(clean, "title")) ||
+      (await this.tryWikiSearch(clean, "text")) ||
       (await this.tryGoogleSearch(clean))
     );
   }

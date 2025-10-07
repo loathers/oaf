@@ -4,19 +4,18 @@ import { MemoizeExpiring } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol.js";
 import { pluralize, titleCase, toWikiLink } from "../utils.js";
-
 import { Familiar } from "./Familiar.js";
 import { Thing } from "./Thing.js";
-import { TData } from "./query.js";
 import packages from "./iotmPackages.json" with { type: "json" };
+import { TData } from "./query.js";
 
 const reversedPackages = new Map([
   ["grinning ghostling", "box o' ghosts"],
   ["gregarious ghostling", "box o' ghosts"],
   ["greedy ghostling", "box o' ghosts"],
-  ...[
-    ...Object.keys(packages) as (keyof typeof packages)[],
-  ].map((key) => [packages[key] || "", key] as const),
+  ...[...(Object.keys(packages) as (keyof typeof packages)[])].map(
+    (key) => [packages[key] || "", key] as const,
+  ),
 ]);
 
 const OTHER_USES = [
