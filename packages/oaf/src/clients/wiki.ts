@@ -142,8 +142,8 @@ export class WikiClient {
     return (
       (await this.tryWikiPage(clean)) ||
       (await this.tryWikiSearch(clean, "title")) ||
-      (await this.tryWikiSearch(clean, "text")) ||
-      (await this.tryGoogleSearch(clean))
+      (await this.tryWikiSearch(clean, "text"))
+      // || (await this.tryGoogleSearch(clean))
     );
   }
 
