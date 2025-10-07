@@ -4,8 +4,8 @@ import {
   hyperlink,
 } from "discord.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
-import { mafiaClient } from "../../clients/mafia.js";
 import { pizzaTree } from "../../clients/pizza.js";
 import { wikiClient } from "../../clients/wiki.js";
 
@@ -46,7 +46,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     return interaction.editReply({
       content: null,
-      embeds: [(await mafiaClient.getEmbed(name)) || createEmbed()],
+      embeds: [(await dataOfLoathingClient.getEmbed(name)) || createEmbed()],
       allowedMentions: {
         parse: [],
       },

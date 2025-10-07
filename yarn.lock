@@ -4490,6 +4490,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"data-of-loathing@npm:^2.6.0":
+  version: 2.6.0
+  resolution: "data-of-loathing@npm:2.6.0"
+  checksum: 10c0/de440bda79eb71a973c06ab290305fc584cd09b01716f5cd24a218ea1ab316e0edfd990a843c1181a5ef7698e91193901ce4212abb758c487d10015c235f8782
+  languageName: node
+  linkType: hard
+
 "data-uri-to-buffer@npm:^3.0.1":
   version: 3.0.1
   resolution: "data-uri-to-buffer@npm:3.0.1"
@@ -8734,6 +8741,7 @@ __metadata:
     body-parser: "npm:^1.20.3"
     convert-svg-to-png: "npm:^0.7.1"
     cors: "npm:^2.8.5"
+    data-of-loathing: "npm:^2.6.0"
     date-fns: "npm:^4.1.0"
     discord.js: "npm:^14.18.0"
     eslint: "npm:^9.23.0"

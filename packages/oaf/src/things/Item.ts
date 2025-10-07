@@ -1,66 +1,61 @@
+import { ConsumableQuality } from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
 import { MemoizeExpiring } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol.js";
-import { cleanString, pluralize, titleCase, toWikiLink } from "../utils.js";
+import { pluralize, titleCase, toWikiLink } from "../utils.js";
+
 import { Familiar } from "./Familiar.js";
 import { Thing } from "./Thing.js";
+import { TData } from "./query.js";
+import packages from "./iotmPackages.json" with { type: "json" };
 
-const OTHER_TYPES = [
-  "potion",
-  "reusable",
-  "usable",
-  "multiple",
-  "combat",
-  "combat reusable",
-  "grow",
+const reversedPackages = new Map([
+  ["grinning ghostling", "box o' ghosts"],
+  ["gregarious ghostling", "box o' ghosts"],
+  ["greedy ghostling", "box o' ghosts"],
+  ...[
+    ...Object.keys(packages) as (keyof typeof packages)[],
+  ].map((key) => [packages[key] || "", key] as const),
+]);
+
+const OTHER_USES = [
+  "POTION",
+  "REUSABLE",
+  "USABLE",
+  "MULTIPLE",
+  "COMBAT",
+  "COMBAT_REUSABLE",
+  "GROW",
 ] as const;
-type OtherType = (typeof OTHER_TYPES)[number];
+type OtherUse = (typeof OTHER_USES)[number];
 
-const CONSUMABLE_TYPES = ["food", "drink", "spleen"] as const;
+const CONSUMABLE_TYPES = ["FOOD", "DRINK", "SPLEEN"] as const;
 type ConsumableType = (typeof CONSUMABLE_TYPES)[number];
 
 const EQUIPMENT_TYPES = [
-  "weapon",
-  "offhand",
-  "container",
-  "hat",
-  "shirt",
-  "pants",
-  "accessory",
-  "familiar",
+  "WEAPON",
+  "OFFHAND",
+  "CONTAINER",
+  "HAT",
+  "SHIRT",
+  "PANTS",
+  "ACCESSORY",
+  "FAMILIAR",
 ] as const;
 type EquipmentType = (typeof EQUIPMENT_TYPES)[number];
 
-export type ItemData = {
-  id: number;
-  name: string;
-  descId: number;
-  imageUrl: string;
-  types: string[];
-  quest: boolean;
-  gift: boolean;
-  tradeable: boolean;
-  discardable: boolean;
-  autosell: number;
-  pluralName: string;
-};
+export type TItem = Partial<
+  NonNullable<NonNullable<TData["allItems"]>["nodes"][number]>
+> & { id: number; name: string; image: string };
 
 export class Item extends Thing {
-  readonly descId: number;
-  readonly shortDescription: string;
-  readonly types: string[];
-  readonly quest: boolean;
-  readonly gift: boolean;
-  readonly tradeable: boolean;
-  readonly discardable: boolean;
-  readonly autosell: number;
-  readonly pluralName: string;
+  readonly item: TItem;
 
-  container?: Item;
-  contents?: Item;
-  zapGroup?: Item[];
-  foldGroup?: Item[];
+  container?: string;
+  contents?: string;
+  zapGroup: Item[];
+  foldGroup: Item[];
 
   _addlDescription = "";
 
@@ -68,64 +63,69 @@ export class Item extends Thing {
     return !!thing && thing instanceof Item;
   }
 
-  static from(
-    line: string,
-    itemInfoForUse = new Map<string, string[]>(),
-  ): Item {
-    const parts = line.split(/\t/);
-    if (parts.length < 7) throw "Invalid data";
+  constructor(item: TItem) {
+    super(item.id, item.name, item.image);
+    this.item = item;
 
-    return new Item(
-      parseInt(parts[0]),
-      cleanString(parts[1]),
-      parseInt(parts[2]),
-      parts[3],
-      parts[4].split(", "),
-      parts[5].indexOf("q") >= 0,
-      parts[5].indexOf("g") >= 0,
-      parts[5].indexOf("t") >= 0,
-      parts[5].indexOf("d") >= 0,
-      parseInt(parts[6]),
-      cleanString(parts[7]) || `${cleanString(parts[1])}s`,
-      itemInfoForUse,
-    );
+    if (item.name in packages) {
+      this.contents = packages[item.name as keyof typeof packages];
+    }
+
+    if (item.name in reversedPackages) {
+      this.container = reversedPackages.get(item.name)!;
+    }
+
+    this.foldGroup =
+      item.foldablesByItem?.nodes
+        .flatMap(
+          (f) =>
+            f?.foldGroupByFoldGroup?.foldablesByFoldGroup.nodes.map(
+              (g) => g?.itemByItem ?? null,
+            ) ?? [],
+        )
+        .filter((i) => i !== null)
+        .map((i) => new Item(i)) ?? [];
+    this.zapGroup =
+      item.zapGroupItemsByItem?.nodes
+        .flatMap(
+          (z) =>
+            z?.zapGroupByZapGroup?.zapGroupItemsByZapGroup.nodes.map(
+              (g) => g?.itemByItem ?? null,
+            ) ?? [],
+        )
+        .filter((i) => i !== null)
+        .map((i) => new Item(i)) ?? [];
   }
 
-  constructor(
-    id: number,
-    name: string,
-    descId: number,
-    imageUrl: string,
-    types: string[],
-    quest: boolean,
-    gift: boolean,
-    tradeable: boolean,
-    discardable: boolean,
-    autosell: number,
-    pluralName: string,
-    itemInfoForUse: Map<string, string[]>,
-  ) {
-    super(id, name, imageUrl);
-    this.descId = descId;
-    this.types = types;
-    this.quest = quest;
-    this.gift = gift;
-    this.tradeable = tradeable;
-    this.discardable = discardable;
-    this.autosell = autosell;
-    this.pluralName = pluralName;
-    this.shortDescription = this.getShortDescription(itemInfoForUse);
+  getModifiers(): Record<string, string> {
+    return this.item.itemModifierByItem?.modifiers ?? {};
   }
 
-  mapQuality(rawQuality: string): string {
+  get descid() {
+    return this.item.descid;
+  }
+
+  get tradeable() {
+    return this.item.tradeable;
+  }
+
+  get gift() {
+    return this.item.gift;
+  }
+
+  get plural() {
+    return this.item.plural || `${this.name}s`;
+  }
+
+  mapQuality(rawQuality: ConsumableQuality | null): string {
     switch (rawQuality) {
-      case "crappy":
+      case "CRAPPY":
         return "Crappy";
-      case "decent":
+      case "DECENT":
         return "Decent";
-      case "good":
+      case "GOOD":
         return "Good";
-      case "awesome":
+      case "AWESOME":
         return "Awesome";
       case "EPIC":
         return "EPIC";
@@ -134,27 +134,17 @@ export class Item extends Thing {
     }
   }
 
-  mapStat(rawStat: string): string {
-    switch (rawStat) {
-      case "Mys":
-        return "Mysticality";
-      case "Mox":
-        return "Moxie";
-      case "Mus":
-        return "Muscle";
-      default:
-        return "???";
-    }
-  }
-
-  describeAdventures(adventures: string, size: number, consumableUnit: string) {
-    const usePlural = adventures !== "1";
-    let description = `${adventures} adventure${usePlural ? "s" : ""}`;
-
-    const average = this.getAverageFromRange(adventures);
+  describeAdventures(
+    average: number,
+    adventureRange: string,
+    size: number,
+    consumableUnit: string,
+  ) {
+    const usePlural = adventureRange !== "1";
+    let description = `${adventureRange} adventure${usePlural ? "s" : ""}`;
 
     const extra: string[] = [];
-    if (adventures.includes("-")) {
+    if (adventureRange.includes("-")) {
       extra.push(`Average ${pluralize(average, "adventure")}`);
     }
 
@@ -178,63 +168,78 @@ export class Item extends Thing {
       : parseInt(adventures);
   }
 
-  getConsumableDescription(data: string[]) {
-    const consumableType = this.types.find((t): t is ConsumableType =>
+  getConsumableDescription() {
+    const consumableType = this.item.uses?.find((t): t is ConsumableType =>
       CONSUMABLE_TYPES.includes(t as ConsumableType),
     );
-
     if (!consumableType) return null;
 
+    const consumable = this.item.consumableById;
+    if (!consumable) return null;
+
     const description = [];
-    const [consumableName, consumableUnit] = (() => {
+    const [consumableName, consumableUnit, organ] = (() => {
       switch (consumableType) {
-        case "food":
-          return ["food", "fullness"];
-        case "drink":
-          return ["booze", "inebriety"];
-        case "spleen":
-          return ["spleen item", "spleen"];
+        case "FOOD":
+          return ["food", "fullness", "stomach"] as const;
+        case "DRINK":
+          return ["booze", "inebriety", "liver"] as const;
+        case "SPLEEN":
+          return ["spleen item", "spleen", "spleen"] as const;
+        default:
+          return [null, null, null] as const;
       }
     })();
 
-    const [, sizeString, level, quality, adventures] = data;
-    const size = parseInt(sizeString);
+    if (!consumableName || !consumableUnit || !organ) return null;
+
+    const size = consumable[organ];
+    const { levelRequirement, adventures, adventureRange, quality } =
+      consumable;
 
     const name = [];
-    if (consumableType !== "spleen") name.push(this.mapQuality(quality));
+    if (consumableType !== "SPLEEN") name.push(this.mapQuality(quality));
     name.push(consumableName);
 
     const requirements = [`Size ${size}`];
-    if (level !== "1") requirements.push(`requires level ${level}`);
+    if (levelRequirement !== 1)
+      requirements.push(`requires level ${levelRequirement}`);
 
     const stats = `${bold(name.join(" "))} (${requirements.join(", ")})`;
     description.push(stats);
 
-    if (adventures !== "0") {
+    if (adventures !== 0) {
       description.push(
-        this.describeAdventures(adventures, size, consumableUnit),
+        this.describeAdventures(
+          adventures,
+          adventureRange,
+          size,
+          consumableUnit,
+        ),
       );
     }
 
     return description;
   }
 
-  getEquipmentDescription(data: string[]) {
-    const equipmentType = this.types.find((t): t is EquipmentType =>
+  getEquipmentDescription() {
+    const equipmentType = this.item.uses?.find((t): t is EquipmentType =>
       EQUIPMENT_TYPES.includes(t as EquipmentType),
     );
-
     if (!equipmentType) return null;
 
-    const description = [];
-    const [, powerString, requirementString, subtype] = data;
+    const equipment = this.item.equipmentById;
+    if (!equipment) return null;
 
-    const power = parseInt(powerString);
+    const description = [];
+    const { power, moxRequirement, mysRequirement, musRequirement, type } =
+      equipment;
 
     const requirement = (() => {
-      if (!requirementString || requirementString === "none") return null;
-      const parts = requirementString.split(": ");
-      return `requires ${parts[1]} ${this.mapStat(parts[0])}`;
+      if (moxRequirement > 0) return `requires ${moxRequirement} Moxie`;
+      if (mysRequirement > 0) return `requires ${mysRequirement} Mysticality`;
+      if (musRequirement > 0) return `requires ${musRequirement} Muscle`;
+      return null;
     })();
 
     const equipInfo: string[] = [];
@@ -242,17 +247,17 @@ export class Item extends Thing {
     if (requirement) equipInfo.push(requirement);
 
     switch (equipmentType) {
-      case "weapon": {
+      case "WEAPON": {
         const damage = power / 10;
-        description.push(bold(subtype));
+        description.push(bold(type!));
 
         equipInfo.unshift(
           `${Math.round(damage)}-${Math.round(damage * 2)} damage`,
         );
         break;
       }
-      case "offhand": {
-        const shield = subtype === "shield";
+      case "OFFHAND": {
+        const shield = type === "shield";
         description.push(bold(`Offhand ${shield ? "Shield" : "Item"}`));
 
         equipInfo.unshift(`${power} power`);
@@ -262,13 +267,13 @@ export class Item extends Thing {
           );
         break;
       }
-      case "familiar": {
+      case "FAMILIAR": {
         description.push(bold("Familiar Equipment"));
         break;
       }
       default: {
         const equipmentName =
-          equipmentType === "container"
+          equipmentType === "CONTAINER"
             ? "Back Item"
             : titleCase(equipmentType);
         description.push(bold(equipmentName));
@@ -284,60 +289,60 @@ export class Item extends Thing {
   }
 
   getOtherDescription() {
-    const otherType = this.types.find((t): t is OtherType =>
-      OTHER_TYPES.includes(t as OtherType),
+    const otherUses = this.item.uses?.find((t): t is OtherUse =>
+      OTHER_USES.includes(t as OtherUse),
     );
 
-    if (!otherType) return null;
+    if (!otherUses) return null;
 
-    const alsoCombat = this.types.includes("combat");
+    const alsoCombat = this.item.uses?.includes("COMBAT");
 
     const title = (() => {
-      switch (otherType) {
-        case "potion":
+      switch (otherUses) {
+        case "POTION":
           return "Potion";
-        case "reusable":
+        case "REUSABLE":
           return "Reusable item";
-        case "multiple":
-        case "usable":
+        case "MULTIPLE":
+        case "USABLE":
           return "Usable item";
-        case "combat":
+        case "COMBAT":
           return "Combat item";
-        case "combat reusable":
+        case "COMBAT_REUSABLE":
           return "Reusable combat item";
-        case "grow":
+        case "GROW":
           return "Familiar hatchling";
+        default:
+          return "Unknown type";
       }
     })();
 
     const typeDescription: string[] = [bold(title)];
 
-    if (!otherType.startsWith("combat") && alsoCombat)
+    if (!otherUses.startsWith("combat") && alsoCombat)
       typeDescription.push("(also usable in combat)");
 
     return [typeDescription.join(" ")];
   }
 
-  getShortDescription(itemInfoForUse: Map<string, string[]>): string {
+  getShortDescription(): string {
     const itemRules: string[] = [];
-    if (this.quest) itemRules.push("Quest Item");
-    if (this.gift) itemRules.push("Gift Item");
+    if (this.item.quest) itemRules.push("Quest Item");
+    if (this.item.gift) itemRules.push("Gift Item");
 
     const tradeability: string[] = [];
-    if (!this.tradeable) tradeability.push("traded");
-    if (!this.discardable) tradeability.push("discarded");
+    if (!this.item.tradeable) tradeability.push("traded");
+    if (!this.item.discardable) tradeability.push("discarded");
 
     if (tradeability.length > 0)
       itemRules.push(`Cannot be ${tradeability.join(" or ")}.`);
-
-    const data = itemInfoForUse.get(this.name.toLowerCase()) || [];
 
     const description = [`(Item ${this.id})`];
 
     return [
       ...description,
-      ...(this.getConsumableDescription(data) ||
-        this.getEquipmentDescription(data) ||
+      ...(this.getConsumableDescription() ||
+        this.getEquipmentDescription() ||
         this.getOtherDescription() || ["Miscellaneous Item"]),
       ...itemRules,
     ].join("\n");
@@ -357,7 +362,7 @@ export class Item extends Thing {
   }
 
   async getMallPrice() {
-    if (!this.tradeable) return "";
+    if (!this.item.tradeable) return "";
 
     const {
       mallPrice,
@@ -390,6 +395,8 @@ export class Item extends Thing {
   }
 
   async formatGroup(group: Item[], groupType: string) {
+    if (group.length === 0) return null;
+
     const output: string[] = [];
 
     const turnsInto = group
@@ -408,7 +415,7 @@ export class Item extends Thing {
     const tradeables = (
       await Promise.all(
         group
-          .filter((item) => item.tradeable)
+          .filter((item) => item.item.tradeable)
           .map(async (item) => ({
             item: item,
             price: await kolClient.getMallPrice(item.id),
@@ -438,16 +445,16 @@ export class Item extends Thing {
 
   @MemoizeExpiring(15 * 60 * 1000) // Ensure that prices are accurate to the last 15 minutes
   async getDescription(withAddl = true): Promise<string> {
-    const description: string[] = [this.shortDescription];
+    const description: (string | null)[] = [this.getShortDescription()];
 
     if (withAddl) description.push(this._addlDescription);
 
-    const { blueText } = await kolClient.getItemDescription(this.descId);
+    const { blueText } = await kolClient.getItemDescription(this.item.descid!);
 
     if (blueText) description.push(blueText);
 
-    if (this.discardable && this.autosell > 0) {
-      description.push(`Autosell value: ${this.autosell} meat.`);
+    if (this.item.discardable && (this.item.autosell ?? 0) > 0) {
+      description.push(`Autosell value: ${this.item.autosell} meat.`);
     }
 
     const price = await this.getMallPrice();
@@ -455,32 +462,27 @@ export class Item extends Thing {
       description.push(price);
     }
 
-    if (this.zapGroup) {
-      description.push(await this.formatGroup(this.zapGroup, "zap"));
-    }
-
-    if (this.foldGroup) {
-      description.push(await this.formatGroup(this.foldGroup, "fold"));
-    }
+    description.push(await this.formatGroup(this.zapGroup, "zap"));
+    description.push(await this.formatGroup(this.foldGroup, "fold"));
 
     if (withAddl && this.container) {
       description.push(
         `Enclosed in: ${bold(
-          hyperlink(this.container.name, toWikiLink(this.container.name)),
+          hyperlink(this.container, toWikiLink(this.container)),
         )}`,
-        await this.container?.getDescription(false),
+        // await this.container?.getDescription(false),
       );
     }
 
     if (withAddl && this.contents) {
       description.push(
         `Encloses: ${bold(
-          hyperlink(this.contents.name, toWikiLink(this.contents.name)),
+          hyperlink(this.contents, toWikiLink(this.contents)),
         )}`,
       );
-      description.push(await this.contents?.getDescription(false));
+      // description.push(await this.contents?.getDescription(false));
     }
 
-    return description.join("\n");
+    return description.filter((line) => line !== null).join("\n");
   }
 }

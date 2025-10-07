@@ -6,10 +6,10 @@ export class Thing {
   readonly name: string;
   readonly imageUrl: string;
 
-  constructor(id: number, name: string, imageUrl: string) {
+  constructor(id: number, name: string, image: string) {
     this.id = id;
     this.name = name;
-    this.imageUrl = imageUrl;
+    this.imageUrl = image;
   }
 
   hashcode() {
@@ -32,5 +32,9 @@ export class Thing {
     return this.addImageToEmbed(embed).setDescription(
       await this.getDescription(),
     );
+  }
+
+  getModifiers(): Record<string, string> | null {
+    throw "Implement me";
   }
 }
