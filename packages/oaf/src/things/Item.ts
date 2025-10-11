@@ -124,7 +124,7 @@ export class Item extends Thing {
       .split("_")
       .map((w) => (w === "EPIC" ? w : w.toLowerCase()))
       .join(" ");
-    return quality.charAt(0).toUpperCase() + quality.slice(1).toLowerCase();
+    return quality.charAt(0).toUpperCase() + quality.slice(1);
   }
 
   describeAdventures(
