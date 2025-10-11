@@ -120,10 +120,12 @@ export class Item extends Thing {
     if (!rawQuality || rawQuality === "CHANGING" || rawQuality === "NONE") {
       return "???";
     }
-    return rawQuality
-      .split("_")
-      .map((w) => (w === "EPIC" ? w : titleCase(w)))
-      .join(" ");
+    return titleCase(
+      rawQuality
+        .split("_")
+        .map((w) => (w === "EPIC" ? w : w.toLowerCase()))
+        .join(" "),
+    );
   }
 
   describeAdventures(
