@@ -117,20 +117,13 @@ export class Item extends Thing {
   }
 
   mapQuality(rawQuality: ConsumableQuality | null): string {
-    switch (rawQuality) {
-      case "CRAPPY":
-        return "Crappy";
-      case "DECENT":
-        return "Decent";
-      case "GOOD":
-        return "Good";
-      case "AWESOME":
-        return "Awesome";
-      case "EPIC":
-        return "EPIC";
-      default:
-        return "????";
+    if (!rawQuality || rawQuality === "CHANGING" || rawQuality === "NONE") {
+      return "???";
     }
+    return rawQuality
+      .split("_")
+      .map((w) => (w === "EPIC" ? w : titleCase(w)))
+      .join(" ");
   }
 
   describeAdventures(
