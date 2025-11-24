@@ -25,6 +25,57 @@ export class Monster extends Thing {
     this.monster = monster;
   }
 
+  getPhylumEmoji() {
+    const phylum = this.monster.phylum?.toLowerCase();
+    switch (phylum) {
+      case "beast":
+        return "🐺";
+      case "bug":
+        return "🐛";
+      case "constellation":
+        return "✨";
+      case "construct":
+        return "🤖";
+      case "demon":
+        return "😈";
+      case "dude":
+        return "🙂";
+      case "elemental":
+        return "🌈";
+      case "elf":
+        return "🧝";
+      case "fish":
+        return "🐟";
+      case "goblin":
+        return "👺";
+      case "hippy":
+        return "🌼";
+      case "hobo":
+        return "🎒";
+      case "horror":
+        return "😱";
+      case "humanoid":
+        return "🧍";
+      case "mer-kin":
+        return "🧜";
+      case "orc":
+        return "🧌";
+      case "penguin":
+        return "🐧";
+      case "pirate":
+        return "🏴‍☠️";
+      case "plant":
+        return "🌱";
+      case "slime":
+        return "🦠";
+      case "undead":
+        return "🧟";
+      case "weird":
+        return "🌀";
+    }
+    return "⁉️";
+  }
+
   getModifiers(): Record<string, string> {
     const mods: Record<string, string> = {};
     if (this.monster.wiki) mods["Wiki Name"] = `"${this.monster.wiki}"`;
@@ -134,7 +185,10 @@ export class Monster extends Thing {
       description.push("Scales unusually.");
     }
 
-    if (this.monster.phylum) description.push(`Phylum: ${this.monster.phylum}`);
+    if (this.monster.phylum)
+      description.push(
+        `Phylum: ${this.monster.phylum} ${this.getPhylumEmoji()}`,
+      );
 
     if (this.monster.element)
       description.push(`Element: ${this.monster.element.toLowerCase()}`);
