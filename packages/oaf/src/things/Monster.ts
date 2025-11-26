@@ -76,6 +76,23 @@ export class Monster extends Thing {
     return "⁉️";
   }
 
+  getElementEmoji() {
+    const phylum = this.monster.element?.toLowerCase();
+    switch (phylum) {
+      case "hot":
+        return "🔥";
+      case "cold":
+        return "❄️";
+      case "stench":
+        return "💨";
+      case "spooky":
+        return "💀";
+      case "sleaze":
+        return "🍆";
+    }
+    return "⁉️";
+  }
+
   getModifiers(): Record<string, string> {
     const mods: Record<string, string> = {};
     if (this.monster.wiki) mods["Wiki Name"] = `"${this.monster.wiki}"`;
@@ -191,7 +208,9 @@ export class Monster extends Thing {
       );
 
     if (this.monster.element)
-      description.push(`Element: ${this.monster.element.toLowerCase()}`);
+      description.push(
+        `Element: ${this.monster.element.toLowerCase()} ${this.getElementEmoji()}`,
+      );
 
     if (this.monster.initiative === "10000")
       description.push("Always wins initiative.");

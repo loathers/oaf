@@ -129,7 +129,7 @@ describe("Monster description", () => {
         **Monster**
         (Monster 996)
         Attack: 40 | Defense: 36 | HP: 32
-        Phylum: beast
+        Phylum: beast 🐺
         Can't be copied.
 
         Drops:
@@ -219,8 +219,8 @@ describe("Monster description", () => {
         **Monster**
         (Monster 1768)
         Scales to something weird (min 100, max 11111) | HP: 75% of defense.
-        Phylum: construct
-        Element: stench
+        Phylum: construct 🤖
+        Element: stench 💨
         Always loses initiative.
 
         Drops:
@@ -289,7 +289,7 @@ describe("Monster description", () => {
         **Monster**
         (Monster 1162)
         Scales to your stats plus 20 (min 30, max 200) | HP: 75% of defense.
-        Phylum: beast
+        Phylum: beast 🐺
         Always loses initiative.
         Can't be copied.
 
@@ -415,7 +415,7 @@ describe("Monster description", () => {
         **Monster**
         (Monster -89)
         Scales unusually.
-        Phylum: undead
+        Phylum: undead 🧟
         Can't be copied.
 
         Drops:
@@ -506,7 +506,7 @@ describe("Monster description", () => {
         **Monster**
         (Monster 202)
         Attack: 3 | Defense: 2 | HP: 5
-        Phylum: beast
+        Phylum: beast 🐺
 
         Drops:
         15 (±3) meat
