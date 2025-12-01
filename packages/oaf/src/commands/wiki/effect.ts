@@ -34,9 +34,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  embed
-    .setTitle(effect.name)
-    .setURL(await dataOfLoathingClient.getWikiLink(effect));
+  embed.setTitle(effect.name).setURL(dataOfLoathingClient.getWikiLink(effect));
 
   await effect.addToEmbed(embed);
 

@@ -96,7 +96,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 
   const embed = createEmbed()
     .setTitle(`Standing Offers for ${item.name}`)
-    .setURL(await dataOfLoathingClient.getWikiLink(item))
+    .setURL(dataOfLoathingClient.getWikiLink(item))
     .setDescription(offers.join("\n"))
     .setThumbnail(resolveKoLImage(item.getImagePath()));
 

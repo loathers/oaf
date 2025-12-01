@@ -36,7 +36,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   embed
     .setTitle(monster.name)
-    .setURL(await dataOfLoathingClient.getWikiLink(monster));
+    .setURL(dataOfLoathingClient.getWikiLink(monster));
   await monster.addToEmbed(embed);
 
   await interaction.editReply({

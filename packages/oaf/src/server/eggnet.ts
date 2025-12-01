@@ -52,7 +52,7 @@ export async function eggnet({ monsterId }: Details) {
   const embed = createEmbed();
   embed
     .setTitle(monster.name)
-    .setURL(await dataOfLoathingClient.getWikiLink(monster));
+    .setURL(dataOfLoathingClient.getWikiLink(monster));
   await monster.addToEmbed(embed);
 
   await iotmChannel.send({

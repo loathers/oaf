@@ -17,9 +17,7 @@ export async function embedForItem(id: number) {
   const item = dataOfLoathingClient.items.find((i) => i.id === id);
   if (!item) return null;
   const embed = createEmbed();
-  embed
-    .setTitle(item.name)
-    .setURL(await dataOfLoathingClient.getWikiLink(item));
+  embed.setTitle(item.name).setURL(dataOfLoathingClient.getWikiLink(item));
   await item.addToEmbed(embed);
   return embed;
 }

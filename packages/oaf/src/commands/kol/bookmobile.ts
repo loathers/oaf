@@ -69,7 +69,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (item) {
     item.addImageToEmbed(embed);
-    const link = await dataOfLoathingClient.getWikiLink(item);
+    const link = dataOfLoathingClient.getWikiLink(item);
     if (link) itemInfo = hyperlink(item.name, link);
   }
 

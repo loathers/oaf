@@ -34,9 +34,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  embed
-    .setTitle(skill.name)
-    .setURL(await dataOfLoathingClient.getWikiLink(skill));
+  embed.setTitle(skill.name).setURL(dataOfLoathingClient.getWikiLink(skill));
 
   await skill.addToEmbed(embed);
 

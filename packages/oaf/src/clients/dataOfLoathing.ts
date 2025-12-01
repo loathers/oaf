@@ -10,7 +10,7 @@ import {
   Thing,
 } from "../things/index.js";
 import { getQueryData } from "../things/query.js";
-import { cleanString } from "../utils.js";
+import { cleanString, toWikiLink } from "../utils.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 import { wikiClient } from "./wiki.js";
@@ -175,7 +175,7 @@ export class DataOfLoathingClient {
     const wikiName = this.getWikiName(thing);
     if (!wikiName) return null;
 
-    return `https://wiki.kingdomofloathing.com/${wikiName}`;
+    return toWikiLink(wikiName);
   }
 }
 
