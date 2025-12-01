@@ -22,6 +22,7 @@ export class Thing {
   }
 
   getImagePath() {
+    if (this.imageUrl.includes("/")) return `/${this.imageUrl}`;
     return `/itemimages/${this.imageUrl}`;
   }
 

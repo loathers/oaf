@@ -100,6 +100,7 @@ export class Monster extends Thing {
   }
 
   getImagePath() {
+    if (this.imageUrl.includes("/")) return `/${this.imageUrl}`;
     return `/adventureimages/${this.imageUrl}`;
   }
 
