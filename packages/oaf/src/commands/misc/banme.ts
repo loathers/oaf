@@ -4,7 +4,7 @@ import { discordClient } from "../../clients/discord.js";
 import { config } from "../../config.js";
 
 async function onMessage(message: Message) {
-  if (message.author.bot) return;
+  if (message.author.id === discordClient.user?.id) return;
   const member = message.member;
   if (!member) return;
 
