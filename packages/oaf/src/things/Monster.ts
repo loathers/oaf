@@ -1,7 +1,7 @@
 import { bold, hyperlink } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
-import { toWikiLink } from "../utils.js";
+import { inlineExpression, toWikiLink } from "../utils.js";
 import { Thing } from "./Thing.js";
 import { TData } from "./query.js";
 
@@ -168,7 +168,9 @@ export class Monster extends Thing {
     const scale = this.monster.scaling;
 
     if (atk && atk !== "0" && def && def !== "0" && hp && hp !== "0") {
-      description.push(`Attack: ${atk} | Defense: ${def} | HP: ${hp}`);
+      description.push(
+        `Attack: ${inlineExpression(atk)} | Defense: ${inlineExpression(def)} | HP: ${inlineExpression(hp)}`,
+      );
     } else if (scale !== "0") {
       const scaleDetails: string[] = [];
 
@@ -196,7 +198,7 @@ export class Monster extends Thing {
 
       description.push(
         `Scales to ${scaleDetails.join(" ")} | HP: ${
-          hp && hp !== "0" ? hp : "75% of defense"
+          hp && hp !== "0" ? inlineExpression(hp) : "75% of defense"
         }.`,
       );
     } else {

@@ -2,6 +2,7 @@ import {
   APIEmbedField,
   hideLinkEmbed,
   hyperlink,
+  inlineCode,
   userMention,
 } from "discord.js";
 import { decode } from "html-entities";
@@ -188,4 +189,10 @@ export function englishJoin<T>(v: T[]) {
 
 export function bufferToDataUri(buffer: Buffer) {
   return `data:image/png;base64,${buffer.toString("base64")}`;
+}
+
+export function inlineExpression(value: string) {
+  if (value.startsWith("[") && value.endsWith("]"))
+    return inlineCode(value.slice(1, -1));
+  return value;
 }
