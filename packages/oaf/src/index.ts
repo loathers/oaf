@@ -1,4 +1,4 @@
-import { Events } from "discord.js";
+import { Events, inlineCode, quote } from "discord.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
@@ -99,7 +99,11 @@ async function main() {
     console.log(
       `Received Kmail from ${message.who.id}: "${message.msg.substring(0, 15)}"${message.msg.length > 15 ? "..." : ""}`,
     );
-    if (message.msg.startsWith("GREENBOX:")) await handleGreenboxKmail(message);
+    if (message.msg.startsWith("GREENBOX:"))
+      return await handleGreenboxKmail(message);
+    await discordClient.alert(
+      `Received Kmail from ${inlineCode(`${message.who.name} (#${message.who.id})`)}\n${quote(message.msg)}`,
+    );
   });
 
   console.log("Starting bot.");
