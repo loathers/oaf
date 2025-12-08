@@ -1,4 +1,4 @@
-import { Events, inlineCode, quote } from "discord.js";
+import { blockQuote, Events, inlineCode } from "discord.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
@@ -102,7 +102,7 @@ async function main() {
     if (message.msg.startsWith("GREENBOX:"))
       return await handleGreenboxKmail(message);
     await discordClient.alert(
-      `Received Kmail from ${inlineCode(`${message.who.name} (#${message.who.id})`)}\n${quote(message.msg)}`,
+      `Received Kmail from ${inlineCode(`${message.who.name} (#${message.who.id})`)}\n${blockQuote(message.msg)}`,
     );
   });
 
