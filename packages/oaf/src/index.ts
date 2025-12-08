@@ -1,4 +1,4 @@
-import { blockQuote, Events, inlineCode } from "discord.js";
+import { Events, blockQuote, inlineCode } from "discord.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
