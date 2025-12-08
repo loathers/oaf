@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "async-mutex": "^0.5.0",
-    "css-select": "^5.2.2",
+    "css-select": "^6.0.0",
     "date-fns": "^4.1.0",
     "domhandler": "^5.0.3",
     "domutils": "^3.2.2",
