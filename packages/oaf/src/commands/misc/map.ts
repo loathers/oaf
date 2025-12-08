@@ -79,8 +79,6 @@ async function renderMap(interaction: ChatInputCommandInteraction) {
     </svg>
   `;
 
-  console.log(svg);
-
   const image = await renderSvg(svg);
 
   const attachment = new AttachmentBuilder(image).setName(`map.png`);

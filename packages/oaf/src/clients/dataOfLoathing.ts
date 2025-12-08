@@ -162,7 +162,6 @@ export class DataOfLoathingClient {
     const modifiers = thing.getModifiers();
     if (modifiers && "Wiki Name" in modifiers) {
       const wikiName = modifiers["Wiki Name"];
-      console.log(wikiName);
       if (typeof wikiName !== "string") return null;
       return wikiName.slice(1, -1);
     }

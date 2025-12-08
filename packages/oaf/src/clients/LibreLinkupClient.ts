@@ -53,7 +53,6 @@ export class LibreLinkUpClient {
         user: { id: string };
       };
     };
-    console.log(result);
 
     if (result.status === 2) {
       throw new Error("Invalid credentials");
@@ -75,7 +74,6 @@ export class LibreLinkUpClient {
       headers: this.headers(),
     });
     const result = (await response.json()) as { status: number };
-    console.log(result);
     if (result.status !== 0) {
       throw new Error("New Terms of Use must be accepted");
     }

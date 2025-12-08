@@ -48,8 +48,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Only consider messages from OAF
     if (message.author.id !== getOwnUserId()) continue;
 
-    console.log(message);
-
     // If the message is a slash command interaction, was it was initiated by the user?
     const originator = message.interactionMetadata?.user.id;
     if (originator === interaction.user.id) {
