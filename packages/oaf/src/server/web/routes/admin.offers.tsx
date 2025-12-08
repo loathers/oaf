@@ -1,4 +1,3 @@
-/// <reference types="../../../../remix.env.d.ts" />
 import {
   Table,
   TableContainer,
@@ -8,13 +7,12 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { useLoaderData } from "@remix-run/react";
-import { LoaderFunctionArgs, json } from "@remix-run/server-runtime";
-import React from "react";
+import { data, useLoaderData } from "react-router";
 
 import { prisma } from "../../../clients/database.js";
+import type { Route } from "./+types/admin.offers.js";
 
-export async function loader({ context }: LoaderFunctionArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const offers = await prisma.standingOffer.findMany({
     select: {
       itemId: true,
@@ -28,13 +26,13 @@ export async function loader({ context }: LoaderFunctionArgs) {
     },
   });
 
-  return json({
+  return data({
     offers: offers.map((o) => ({
       ...o,
       price: Number(o.price),
       itemName:
-        context.mafiaDataClient.items.find((i) => i.id === o.itemId)?.name ??
-        "Unknown",
+        context.dataOfLoathingClient.items.find((i) => i.id === o.itemId)
+          ?.name ?? "Unknown",
     })),
   });
 }

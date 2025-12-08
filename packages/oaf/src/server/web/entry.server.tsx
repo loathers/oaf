@@ -1,15 +1,12 @@
 import createEmotionCache from "@emotion/cache";
 import { CacheProvider as EmotionCacheProvider } from "@emotion/react";
 import createEmotionServer from "@emotion/server/create-instance";
-import {
-  type AppLoadContext,
-  type EntryContext,
-  createReadableStreamFromReadable,
-} from "@remix-run/node";
-import { RemixServer } from "@remix-run/react";
+import { createReadableStreamFromReadable } from "@react-router/node";
 import { isbot } from "isbot";
 import React from "react";
 import { renderToPipeableStream } from "react-dom/server";
+import { type AppLoadContext, type EntryContext } from "react-router";
+import { ServerRouter } from "react-router";
 import { PassThrough } from "stream";
 
 const ABORT_DELAY = 5000;
@@ -18,7 +15,7 @@ const handleRequest = (
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext,
+  reactRouterContext: EntryContext,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   loadContext: AppLoadContext,
 ) =>
@@ -27,13 +24,13 @@ const handleRequest = (
         request,
         responseStatusCode,
         responseHeaders,
-        remixContext,
+        reactRouterContext,
       )
     : handleBrowserRequest(
         request,
         responseStatusCode,
         responseHeaders,
-        remixContext,
+        reactRouterContext,
       );
 export default handleRequest;
 
@@ -41,7 +38,7 @@ const handleBotRequest = (
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext,
+  reactRouterContext: EntryContext,
 ) =>
   new Promise((resolve, reject) => {
     let didError = false;
@@ -49,7 +46,7 @@ const handleBotRequest = (
 
     const { pipe, abort } = renderToPipeableStream(
       <EmotionCacheProvider value={emotionCache}>
-        <RemixServer context={remixContext} url={request.url} />
+        <ServerRouter context={reactRouterContext} url={request.url} />
       </EmotionCacheProvider>,
       {
         onAllReady: () => {
@@ -88,7 +85,7 @@ const handleBrowserRequest = (
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext,
+  reactRouterContext: EntryContext,
 ) =>
   new Promise((resolve, reject) => {
     let didError = false;
@@ -96,7 +93,7 @@ const handleBrowserRequest = (
 
     const { pipe, abort } = renderToPipeableStream(
       <EmotionCacheProvider value={emotionCache}>
-        <RemixServer context={remixContext} url={request.url} />
+        <ServerRouter context={reactRouterContext} url={request.url} />
       </EmotionCacheProvider>,
       {
         onShellReady: () => {

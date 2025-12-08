@@ -5,8 +5,9 @@
     "declaration": false,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ES2023"],
+    "lib": ["ES2023", "DOM"],
     "module": "NodeNext",
+    "rootDirs": [".", "./.react-router/types"],
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
@@ -22,8 +23,8 @@
   "include": [
     "src/**/*.ts",
     "vite.config.ts",
-    "remix.env.d.ts",
-    "prisma/**/*.ts"
+    "prisma/**/*.ts",
+    ".react-router/types/**/*"
   ],
   "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 }

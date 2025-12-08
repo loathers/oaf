@@ -1,8 +1,9 @@
-import { redirect } from "@remix-run/server-runtime";
+import { redirect } from "react-router";
 
-import { destroySession, getSession } from "../session.server";
+import { destroySession, getSession } from "../session.server.js";
+import { Route } from "./+types/logout.js";
 
-export async function loader({ request }) {
+export async function loader({ request }: Route.LoaderArgs) {
   const session = await getSession(request.headers.get("cookie"));
   return redirect("/", {
     headers: { "Set-Cookie": await destroySession(session) },

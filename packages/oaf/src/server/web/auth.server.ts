@@ -1,5 +1,5 @@
-import { redirect } from "@remix-run/server-runtime";
 import jwt from "jsonwebtoken";
+import { redirect } from "react-router";
 import { Authenticator } from "remix-auth";
 import { Strategy } from "remix-auth/strategy";
 

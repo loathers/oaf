@@ -1,4 +1,3 @@
-/// <reference types="../../../../remix.env.d.ts" />
 import {
   Alert,
   AlertIcon,
@@ -16,16 +15,13 @@ import {
   Stack,
   Textarea,
 } from "@chakra-ui/react";
-import { useFetcher, useLoaderData } from "@remix-run/react";
-import {
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
-} from "@remix-run/server-runtime";
 import { Message, messageLink } from "discord.js";
 import React, { useEffect, useRef } from "react";
+import { useFetcher, useLoaderData } from "react-router";
 
-import { DiscordClient } from "../../../clients/discord";
-import { authenticate } from "../auth.server";
+import { DiscordClient } from "../../../clients/discord.js";
+import { authenticate } from "../auth.server.js";
+import { Route } from "./+types/admin.pilot.js";
 
 async function fetchChannels(discordClient: DiscordClient) {
   if (!discordClient.guild) return [];
@@ -45,7 +41,7 @@ async function fetchEmoji(discordClient: DiscordClient) {
   }));
 }
 
-export async function loader({ request, context }: LoaderFunctionArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   await authenticate(request);
   const { discordClient } = context;
   return {
@@ -54,7 +50,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   };
 }
 
-export async function action({ request, context }: ActionFunctionArgs) {
+export async function action({ request, context }: Route.ActionArgs) {
   const user = await authenticate(request);
 
   const formData = await request.formData();

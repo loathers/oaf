@@ -1,13 +1,11 @@
-/// <reference types="../../../../remix.env.d.ts" />
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { useFetcher } from "@remix-run/react";
 import { useEffect } from "react";
-import React from "react";
+import { useFetcher } from "react-router";
 
-import { authenticate } from "../auth.server";
-import DiscordMessage from "../components/DiscordMessage";
+import { authenticate } from "../auth.server.js";
+import DiscordMessage from "../components/DiscordMessage.js";
+import { Route } from "./+types/resources.message.js";
 
-export async function loader({ request, context }: LoaderFunctionArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   await authenticate(request);
 
   const url = new URL(request.url);

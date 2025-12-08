@@ -21,7 +21,7 @@ type Props = {
   message: {
     authorAvatar: string;
     authorName: string;
-    createdAt: string;
+    createdAt: Date;
     content: string;
   } | null;
 };
@@ -51,7 +51,7 @@ export default function DiscordMessage({ message }: Props) {
           )}
           {message ? (
             <Text color="#72767d" fontSize="12px">
-              {formatDate(new Date(message.createdAt))}
+              {formatDate(message.createdAt)}
             </Text>
           ) : (
             <SkeletonText

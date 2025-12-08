@@ -1,18 +1,27 @@
-/// <reference types="../../remix.env.d.ts" />
-import { createRequestHandler } from "@remix-run/express";
+import { createRequestHandler } from "@react-router/express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import { StatusCodes } from "http-status-codes";
 import path from "node:path";
 
-import { dataOfLoathingClient } from "../clients/dataOfLoathing.js";
+import {
+  DataOfLoathingClient,
+  dataOfLoathingClient,
+} from "../clients/dataOfLoathing.js";
 import { prisma } from "../clients/database.js";
-import { discordClient } from "../clients/discord.js";
+import { DiscordClient, discordClient } from "../clients/discord.js";
 import { config } from "../config.js";
 import { eggnet } from "./eggnet.js";
 import { samsara } from "./samsara.js";
 import { rollSubs } from "./subs.js";
+
+declare module "react-router" {
+  export interface AppLoadContext {
+    discordClient: DiscordClient;
+    dataOfLoathingClient: DataOfLoathingClient;
+  }
+}
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
@@ -24,7 +33,7 @@ const viteDevServer =
       );
 
 const build = viteDevServer
-  ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
+  ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
   : await import(path.resolve("build/server/index.js"));
 
 function arrayToCsv<T extends object>(data: T[], headers: (keyof T)[]): string {

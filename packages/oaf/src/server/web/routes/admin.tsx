@@ -13,13 +13,13 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { LoaderFunctionArgs } from "@remix-run/node";
-import { Link, Outlet, useLoaderData } from "@remix-run/react";
 import React from "react";
+import { Link, Outlet, useLoaderData } from "react-router";
 
-import { authenticate } from "../auth.server";
+import { authenticate } from "../auth.server.js";
+import { Route } from "./+types/admin.js";
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request }: Route.LoaderArgs) {
   const user = await authenticate(request);
 
   return { user };
