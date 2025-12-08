@@ -15,7 +15,7 @@ async function startTyping(): Promise<void> {
       .filter((ch): ch is TextChannel =>
         Boolean(
           ch instanceof TextChannel &&
-            discordClient.member?.permissionsIn(ch).has("SendMessages"),
+          discordClient.member?.permissionsIn(ch).has("SendMessages"),
         ),
       )
       .forEach((channel) => channel.sendTyping());
