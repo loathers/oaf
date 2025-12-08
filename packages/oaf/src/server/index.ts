@@ -209,7 +209,7 @@ app
     }
   })
   .all(
-    "*",
+    "*path",
     createRequestHandler({
       build,
       getLoadContext: () => ({ discordClient, dataOfLoathingClient }),
