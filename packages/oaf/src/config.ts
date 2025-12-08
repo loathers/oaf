@@ -40,6 +40,10 @@ export const schema = {
   IOTM_CHANNEL_ID: SNOWFLAKE_PATTERN,
   KOL_CHANNEL_ID: SNOWFLAKE_PATTERN,
   UNRESTRICTED_CHANNEL_ID: SNOWFLAKE_PATTERN,
+  BAN_ME_CHANNEL_ID: {
+    type: SNOWFLAKE_PATTERN,
+    optional: true,
+  },
 
   // Subsrolling webhook
   SUBS_ROLLING_TOKEN: String,
