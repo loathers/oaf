@@ -13,7 +13,6 @@ describe("Avatars", () => {
   it("can parse an avatar with a broken url", async () => {
     const page = await loadFixture(__dirname, "showplayer_broken_avatar.html");
     const svg = await generateAvatarSvg(page);
-    console.log(svg);
     expect(svg).toContain(`title="/adventureimages/nopic.gif"`);
   });
 });
