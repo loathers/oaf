@@ -1,2 +1,1 @@
-release: npx prisma migrate deploy
-web: yarn start
+web: cd packages/oaf && npx prisma migrate deploy && npx prisma generate && yarn run build && yarn run start

@@ -1,7 +1,20 @@
 node_modules
-dist
+build
 coverage
+vite.config.*.timestamp-*
+
 .env
 .vscode
 
 *.dump
+
+# Yarn without Zero-Installs
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+.react-router/

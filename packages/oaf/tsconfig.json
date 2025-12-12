@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "declaration": false,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["ES2023", "DOM"],
+    "module": "NodeNext",
+    "rootDirs": [".", "./.react-router/types"],
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "pretty": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "moduleResolution": "NodeNext",
+    "target": "ESNext",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "vite.config.ts",
+    "prisma/**/*.ts",
+    ".react-router/types/**/*"
+  ],
+  "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
+}

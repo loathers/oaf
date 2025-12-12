@@ -1,0 +1,21 @@
+name: OAF
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Enable corepack
+        run: corepack enable
+      - name: Install modules
+        run: yarn install --immutable
+      - name: Generate prisma types
+        run: yarn workspace oaf run prisma generate
+      - name: Run tests
+        run: yarn workspace oaf run test
+      - name: Run type check
+        run: yarn workspace oaf run tsc
