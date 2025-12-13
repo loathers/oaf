@@ -232,7 +232,7 @@ const OAF_ICON = resolveKoLImage("/itemimages/oaf.gif");
 
 export const createEmbed = () =>
   new EmbedBuilder().setFooter({
-    text: "Check out how I work over at https://github.com/loathers/oaf",
+    text: "Help fund our servers! loathers.net/contribute",
     iconURL: OAF_ICON,
   });
 
