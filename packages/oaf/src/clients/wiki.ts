@@ -1,9 +1,7 @@
-import { StatusCodes } from "http-status-codes";
-import { Memoize } from "typescript-memoize";
+import { Memoize, MemoizeExpiring } from "typescript-memoize";
 
 import { config } from "../config.js";
 import { resolveWikiLink } from "../utils.js";
-import { googleSearch } from "./googleSearch.js";
 
 type FoundName = {
   name: string;
@@ -17,6 +15,9 @@ function emoteNamesFromEmotes(emoteString: string) {
     return emoteName ? emoteName[1].replace(/:/g, "") : "";
   });
 }
+
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0";
 
 export class WikiSearchError extends Error {
   step: string;
@@ -39,27 +40,11 @@ export class WikiClient {
     this.googleCustomSearch = googleCustomSearch;
   }
 
-  private async tryWiki(url: string, stage: string) {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      if (response.status === StatusCodes.NOT_FOUND) return null;
-      throw new WikiSearchError(`kolwiki ${stage}`, url);
-    }
-
-    const data = await response.text();
-    if (!response.url.includes("index.php?search=")) {
-      return await this.parseFoundName(response.url, data);
-    }
-
-    return null;
-  }
-
   /**
    * @param url api.php?action=parse...
    */
   private async parseWiki(url: string) {
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: { "User-Agent": UA } });
 
     if (!response.ok) {
       throw new WikiSearchError("kolwiki precise", url);
@@ -92,6 +77,7 @@ export class WikiClient {
     const wikiName = encodeURIComponent(searchTerm).replace(/%20/g, "+");
     const response = await fetch(
       `https://wiki.kingdomofloathing.com/api.php?action=query&list=search&srwhat=${what}&srlimit=1&srsearch=${wikiName}&format=json`,
+      { headers: { "User-Agent": UA } },
     );
 
     if (!response.ok) {
@@ -118,23 +104,6 @@ export class WikiClient {
     );
   }
 
-  private async tryGoogleSearch(searchTerm: string) {
-    if (!this.googleCustomSearch) return null;
-    const { results, error } = await googleSearch(
-      this.googleCustomSearch,
-      searchTerm,
-    );
-
-    if (error) {
-      if (error.status === StatusCodes.NOT_FOUND) return null;
-      throw new WikiSearchError("google");
-    }
-
-    // No results found
-    if (!results.items?.length) return null;
-    return this.parseFoundName(results.items[0].link);
-  }
-
   @Memoize()
   async findName(searchTerm: string): Promise<FoundName | null> {
     if (!searchTerm.length) return null;
@@ -145,13 +114,6 @@ export class WikiClient {
       (await this.tryWikiSearch(clean, "text"))
       // || (await this.tryGoogleSearch(clean))
     );
-  }
-
-  async parseFoundName(url: string, contents?: string) {
-    if (!contents) contents = (await (await fetch(url)).text()) || "";
-    const name = this.nameFromWikiPage(url, contents);
-    const image = this.imageFromWikiPage(contents);
-    return { name, url, image };
   }
 
   nameFromWikiPage(url: string, data: string): string {
@@ -186,6 +148,57 @@ export class WikiClient {
     // As far as I know this is always the first relevant image
     const imageMatch = String(data).match(/src="(\/images\/[^"']*\.gif)/);
     return imageMatch ? resolveWikiLink(imageMatch[1]) : "";
+  }
+
+  @MemoizeExpiring(60 * 60 * 1000) // Cache for 60 minutes
+  async getAllPageTitles() {
+    const request = {
+      action: "query",
+      format: "json",
+      list: "allpages",
+      aplimit: "max",
+    };
+    const results: string[] = [];
+    let lastContinue: Record<string, string> = {};
+
+    while (true) {
+      // Clone original request and apply continuation
+      const params = new URLSearchParams(
+        Object.entries({
+          ...request,
+          ...lastContinue,
+        }).map(([k, v]) => [k, String(v)]),
+      );
+
+      const url = `https://wiki.kingdomofloathing.com/api.php?${params.toString()}`;
+      const response = await fetch(url, { headers: { "User-Agent": UA } });
+      const result = (await response.json()) as {
+        query: { allpages: { title: string }[] };
+        continue: Record<string, string>;
+        error?: string;
+        warnings?: string;
+      };
+
+      if (result.error) {
+        throw new Error(JSON.stringify(result.error));
+      }
+
+      if (result.warnings) {
+        console.warn(result.warnings);
+      }
+
+      if (result.query) {
+        results.push(...result.query.allpages.map((p) => p.title));
+      }
+
+      if (!result.continue) {
+        break;
+      }
+
+      lastContinue = result.continue;
+    }
+
+    return results;
   }
 }
 

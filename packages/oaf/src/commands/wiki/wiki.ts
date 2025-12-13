@@ -1,4 +1,5 @@
 import {
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   DiscordAPIError,
   Events,
@@ -12,7 +13,7 @@ import {
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { blankEmbed, discordClient } from "../../clients/discord.js";
 import { getPissLevel } from "../../clients/iss.js";
-import { WikiSearchError } from "../../clients/wiki.js";
+import { WikiSearchError, wikiClient } from "../../clients/wiki.js";
 import { lf } from "../../utils.js";
 
 const ITEMMATCHER = /\[\[([^[\]]*)\]\]/g;
@@ -24,7 +25,8 @@ export const data = new SlashCommandBuilder()
     option
       .setName("term")
       .setDescription("The term to search for in the wiki.")
-      .setRequired(true),
+      .setRequired(true)
+      .setAutocomplete(true),
   );
 
 async function getWikiReply(query: string) {
@@ -146,4 +148,16 @@ async function onMessage(message: Message) {
 
 export async function init() {
   discordClient.on(Events.MessageCreate, onMessage);
+  await wikiClient.getAllPageTitles();
+}
+
+export async function autocomplete(interaction: AutocompleteInteraction) {
+  const value = interaction.options.getFocused();
+  const pages = await wikiClient.getAllPageTitles();
+  const options = pages
+    .filter((title) => title.toLowerCase().includes(value.toLowerCase()))
+    .sort()
+    .slice(0, 25)
+    .map((title) => ({ name: title, value: title }));
+  await interaction.respond(options);
 }
