@@ -10,6 +10,13 @@ async function onMessage(message: Message) {
   const member = message.member;
   if (!member) return;
 
+  if (message.content.toLowerCase().includes("you can buy")) {
+    await message.reply(
+      "You can buy a salad glove" + ["?", "!"][Math.round(Math.random())],
+    );
+    return;
+  }
+
   if (message.content.match(ITOM_MATCHER)) {
     try {
       await message.react("<:minusone:748016030357520464>");
