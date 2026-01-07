@@ -6,6 +6,7 @@
   "files": [
     "/src"
   ],
+  "repository": "https://github.com/loathers/oaf.git",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
