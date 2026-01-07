@@ -1,4 +1,9 @@
 name: Publish kol.js
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
 on:
   push:
     paths:
@@ -29,7 +34,7 @@ jobs:
           corepack enable
           yarn workspace kol.js install --immutable
           yarn workspace kol.js build
-          yarn workspace kol.js npm publish
+          cd packages/kol.js && npm publish
         env:
           STATUS: ${{ steps.check.outputs.status }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
