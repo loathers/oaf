@@ -1,21 +1,24 @@
 import { Mutex } from "async-mutex";
 import { EventEmitter } from "node:events";
-import TypedEventEmitter, { EventMap } from "typed-emitter";
+import TypedEventEmitter, { type EventMap } from "typed-emitter";
 
 import { sanitiseBlueText, wait } from "./utils/utils.js";
 import { Player } from "./Player.js";
 import { parseLeaderboard } from "./utils/leaderboard.js";
 import {
-  ChatMessage,
-  KmailMessage,
-  KoLChatMessage,
-  KoLKmail,
-  KoLMessage,
+  type ChatMessage,
+  type KmailMessage,
+  type KoLChatMessage,
+  type KoLKmail,
+  type KoLMessage,
   isValidMessage,
 } from "./utils/kmail.js";
 import { PlayerCache } from "./Cache.js";
 import { CookieJar } from "tough-cookie";
-import got, { OptionsOfJSONResponseBody, OptionsOfTextResponseBody } from "got";
+import got, {
+  type OptionsOfJSONResponseBody,
+  type OptionsOfTextResponseBody,
+} from "got";
 
 type TypedEmitter<T extends EventMap> = TypedEventEmitter.default<T>;
 
