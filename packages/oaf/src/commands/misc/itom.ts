@@ -19,7 +19,15 @@ async function onMessage(message: Message) {
 
   if (message.content.match(ITOM_MATCHER)) {
     try {
-      await message.react("<:minusone:748016030357520464>");
+      await message
+        .react("<:minusone:748016030357520464>")
+        .then(
+          undefined,
+          async () =>
+            await message.reply(
+              'How embarassing! It\'s actually spelled "iotm"',
+            ),
+        );
     } catch (error) {
       if (!(error instanceof DiscordAPIError)) throw error;
       if (error.code !== 90001) {
