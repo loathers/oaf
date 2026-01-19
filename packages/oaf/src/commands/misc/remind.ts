@@ -196,7 +196,7 @@ async function checkReminders() {
 
 export async function init() {
   await clearOldReminders();
-  discordClient.on(
+  discordClient.once(
     Events.ClientReady,
     () => void setInterval(checkReminders, milliseconds(CHECK_DURATION)),
   );

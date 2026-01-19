@@ -52,5 +52,5 @@ function listenForAnnouncements() {
 }
 
 export async function init() {
-  discordClient.on(Events.ClientReady, listenForAnnouncements);
+  discordClient.once(Events.ClientReady, listenForAnnouncements);
 }

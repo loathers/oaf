@@ -23,7 +23,7 @@ async function startTyping(): Promise<void> {
 }
 
 export async function init() {
-  discordClient.on(
+  discordClient.once(
     Events.ClientReady,
     () => void setInterval(startTyping, milliseconds(CHECK_DURATION)),
   );

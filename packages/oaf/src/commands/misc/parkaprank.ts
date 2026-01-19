@@ -41,7 +41,7 @@ async function checkAnnounceParka() {
 }
 
 export async function init() {
-  discordClient.on(
+  discordClient.once(
     Events.ClientReady,
     () => void setInterval(checkAnnounceParka, milliseconds(CHECK_DURATION)),
   );

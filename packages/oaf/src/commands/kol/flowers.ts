@@ -201,7 +201,7 @@ async function checkPrices() {
 }
 
 export async function init() {
-  discordClient.on(
+  discordClient.once(
     Events.ClientReady,
     () => void setInterval(checkPrices, milliseconds(CHECK_DURATION)),
   );
