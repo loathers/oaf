@@ -1,12 +1,9 @@
-import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-  hyperlink,
-} from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
+import { embedForItem } from "../wiki/item.js";
 
 export const data = new SlashCommandBuilder()
   .setName("socp")
@@ -48,8 +45,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const [descid, price] = await checkDailySpecial();
 
-  const embed = createEmbed().setTitle(`Skeleton of Crimbo Past`);
-
   const item = dataOfLoathingClient.items.find((i) => i.descid === descid);
 
   if (!item) {
@@ -58,14 +53,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  item.addImageToEmbed(embed);
-  const link = dataOfLoathingClient.getWikiLink(item);
-  const name = link ? hyperlink(item.name, link) : item.name;
+  const embed = createEmbed()
+    .setTitle(`Skeleton of Crimbo Past`)
+    .addFields([
+      { name: "Item", value: item.name },
+      { name: "Price", value: `${numberFormat.format(price)} knucklebones` },
+    ]);
 
-  embed.addFields([
-    { name: "Item", value: name },
-    { name: "Price", value: `${numberFormat.format(price)} knucklebones` },
-  ]);
+  const itemEmbed = await embedForItem(item.id);
 
-  interaction.editReply({ content: null, embeds: [embed] });
+  if (!itemEmbed) {
+    return void (await interaction.editReply(
+      "I've never heard of the daily special item before!",
+    ));
+  }
+
+  interaction.editReply({ content: null, embeds: [embed, itemEmbed] });
 }
