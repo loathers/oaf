@@ -354,6 +354,11 @@ export class Item extends Thing {
     )}\n`;
   }
 
+  getPriceLink(text: string): string {
+    const url = `https://pricegun.loathers.net/item/${this.id}`;
+    return hyperlink(text, url);
+  }
+
   async getMallPrice() {
     if (!this.item.tradeable) return "";
 
@@ -364,23 +369,19 @@ export class Item extends Thing {
       formattedLimitedMallPrice,
     } = await kolClient.getMallPrice(this.id);
 
-    const url = `https://api.aventuristo.net/itemgraph?itemid=${this.id}&timespan=1&noanim=0`;
-
     if (kolClient.isRollover()) {
-      return `Mall Price: ${hyperlink("Can't check, rollover", url)}`;
+      return `Mall Price: ${this.getPriceLink("Can't check, rollover")}`;
     } else if (mallPrice) {
-      let output = `Mall Price: ${hyperlink(
+      let output = `Mall Price: ${this.getPriceLink(
         `${formattedMallPrice} meat`,
-        url,
       )}`;
       if (limitedMallPrice && limitedMallPrice < mallPrice) {
         output += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
       }
       return output;
     } else if (limitedMallPrice) {
-      return `Mall Price: ${hyperlink(
+      return `Mall Price: ${this.getPriceLink(
         `${formattedLimitedMallPrice} meat (only available limited per day)`,
-        url,
       )}`;
     } else {
       return "Mall extinct.";
@@ -424,9 +425,8 @@ export class Item extends Thing {
       } else {
         const cheapest = tradeables[0].item;
         const wikiLink = hyperlink(cheapest.name, toWikiLink(cheapest.name));
-        const mallHistoryLink = hyperlink(
+        const mallHistoryLink = cheapest.getPriceLink(
           `${tradeables[0].price.formattedMinPrice} meat`,
-          `https://api.aventuristo.net/itemgraph?itemid=${cheapest.id}&timespan=1&noanim=0`,
         );
 
         output.push(`(Cheapest: ${wikiLink} @ ${mallHistoryLink})`);

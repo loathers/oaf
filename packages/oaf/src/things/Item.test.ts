@@ -63,7 +63,7 @@ describe("Food", () => {
         7-14 adventures (Average 10.5 adventures, 3.5 per fullness)
 
         Autosell value: 50 meat.
-        Mall Price: [502 meat](https://api.aventuristo.net/itemgraph?itemid=1365&timespan=1&noanim=0)
+        Mall Price: [502 meat](https://pricegun.loathers.net/item/1365)
       `,
     );
   });
@@ -115,7 +115,7 @@ describe("Food", () => {
 
         Gives 5 Adventures of a random positive effect
         Autosell value: 8 meat.
-        Mall Price: [1,995 meat](https://api.aventuristo.net/itemgraph?itemid=9423&timespan=1&noanim=0)
+        Mall Price: [1,995 meat](https://pricegun.loathers.net/item/9423)
       `,
     );
   });
@@ -312,9 +312,9 @@ describe("Foldable", () => {
 
         Maximum HP +10
         Autosell value: 7 meat.
-        Mall Price: [500 meat](https://api.aventuristo.net/itemgraph?itemid=3915&timespan=1&noanim=0)
+        Mall Price: [500 meat](https://pricegun.loathers.net/item/3915)
         Folds into: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet), [turtle wax greaves](https://wiki.kingdomofloathing.com/turtle_wax_greaves)
-        (Cheapest: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet) @ [100 meat](https://api.aventuristo.net/itemgraph?itemid=3916&timespan=1&noanim=0))
+        (Cheapest: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet) @ [100 meat](https://pricegun.loathers.net/item/3916))
       `,
     );
   });
