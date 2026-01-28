@@ -2,7 +2,7 @@ import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
-import { kolClient } from "../../clients/kol.js";
+import { getMallPrice, kolClient } from "../../clients/kol.js";
 import { embedForItem } from "../wiki/item.js";
 
 export const data = new SlashCommandBuilder()
@@ -53,12 +53,26 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     ));
   }
 
+  const fields = [
+    { name: "Item", value: item.name },
+    { name: "Price", value: `${numberFormat.format(price)} knucklebones` },
+  ];
+
+  if (price > 0) {
+    const meatPerKnuckle = item.tradeable
+      ? numberFormat.format(
+          Math.round((await getMallPrice(item.id)).mallPrice / price),
+        )
+      : "♾️";
+    fields.push({
+      name: "Value",
+      value: `${meatPerKnuckle} meat/🦴`,
+    });
+  }
+
   const embed = createEmbed()
     .setTitle(`Skeleton of Crimbo Past`)
-    .addFields([
-      { name: "Item", value: item.name },
-      { name: "Price", value: `${numberFormat.format(price)} knucklebones` },
-    ]);
+    .addFields(fields);
 
   const itemEmbed = await embedForItem(item.id);
 

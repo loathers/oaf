@@ -1,5 +1,5 @@
 export { Player } from "./Player.js";
-export { Client } from "./Client.js";
+export { Client, type MallPrice } from "./Client.js";
 
 export { resolveKoLImage } from "./utils/utils.js";
 export type { KoLMessage } from "./utils/kmail.js";

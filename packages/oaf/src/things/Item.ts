@@ -2,7 +2,7 @@ import { ConsumableQuality } from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
 import { MemoizeExpiring } from "typescript-memoize";
 
-import { kolClient } from "../clients/kol.js";
+import { getMallPrice, kolClient } from "../clients/kol.js";
 import { pluralize, titleCase, toWikiLink } from "../utils.js";
 import { Familiar } from "./Familiar.js";
 import { Thing } from "./Thing.js";
@@ -367,7 +367,7 @@ export class Item extends Thing {
       limitedMallPrice,
       formattedMallPrice,
       formattedLimitedMallPrice,
-    } = await kolClient.getMallPrice(this.id);
+    } = await getMallPrice(this.id);
 
     if (kolClient.isRollover()) {
       return `Mall Price: ${this.getPriceLink("Can't check, rollover")}`;
@@ -412,7 +412,7 @@ export class Item extends Thing {
           .filter((item) => item.item.tradeable)
           .map(async (item) => ({
             item: item,
-            price: await kolClient.getMallPrice(item.id),
+            price: await getMallPrice(item.id),
           })),
       )
     )
