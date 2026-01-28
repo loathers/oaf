@@ -22,7 +22,7 @@ import got, {
 
 type TypedEmitter<T extends EventMap> = TypedEventEmitter.default<T>;
 
-type MallPrice = {
+export type MallPrice = {
   formattedMallPrice: string;
   formattedLimitedMallPrice: string;
   formattedMinPrice: string;
