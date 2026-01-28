@@ -273,33 +273,19 @@ describe("Foldable", () => {
     });
 
     blueText.mockReturnValueOnce({ blueText: "Maximum HP +10" });
-    // Shield
-    mallPrice.mockResolvedValueOnce({
-      formattedMallPrice: "500",
-      mallPrice: 500,
-      minPrice: 500,
-      formattedMinPrice: "500",
-    });
-    // Shield again
-    mallPrice.mockResolvedValueOnce({
-      formattedMallPrice: "500",
-      mallPrice: 500,
-      minPrice: 500,
-      formattedMinPrice: "500",
-    });
-    // Helmet
-    mallPrice.mockResolvedValueOnce({
-      formattedMallPrice: "100",
-      mallPrice: 100,
-      minPrice: 100,
-      formattedMinPrice: "100",
-    });
-    // Greaves
-    mallPrice.mockResolvedValueOnce({
-      formattedMallPrice: "1000",
-      mallPrice: 1000,
-      minPrice: 1000,
-      formattedMinPrice: "1000",
+    mallPrice.mockImplementation((itemId: number) => {
+      const prices: Record<number, number> = {
+        3915: 500, // Shield
+        3916: 100, // Helmet (cheapest)
+        3917: 1000, // Greaves
+      };
+      const price = prices[itemId] ?? 1;
+      return Promise.resolve({
+        formattedMallPrice: String(price),
+        mallPrice: price,
+        minPrice: price,
+        formattedMinPrice: String(price),
+      });
     });
 
     const description = await item.getDescription();
