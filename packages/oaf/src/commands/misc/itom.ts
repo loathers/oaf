@@ -11,31 +11,30 @@ async function onMessage(message: Message) {
   if (!member) return;
 
   if (message.content.toLowerCase().includes("you can buy")) {
-    await message.reply(
+    if (message.content.toLowerCase().includes("you can buy a salad glove")) {
+      return void (await message.reply("You can buy an iPod"));
+    }
+
+    return void (await message.reply(
       "You can buy a salad glove" + ["?", "!"][Math.round(Math.random())],
-    );
-    return;
+    ));
   }
 
-  if (message.content.match(ITOM_MATCHER)) {
-    try {
-      await message
-        .react("<:minusone:748016030357520464>")
-        .then(
-          undefined,
-          async () =>
-            await message.reply(
-              'How embarassing! It\'s actually spelled "iotm"',
-            ),
-        );
-    } catch (error) {
-      if (!(error instanceof DiscordAPIError)) throw error;
-      if (error.code !== 90001) {
-        return void (await discordClient.alert(
-          `Tried to :minusone: a message containing the forbidden string by ${message.author}; received error ${error}.`,
-        ));
-      }
+  if (!message.content.match(ITOM_MATCHER)) return;
+
+  try {
+    await message.react("<:minusone:748016030357520464>");
+  } catch (error) {
+    if (!(error instanceof DiscordAPIError)) throw error;
+    if (error.code !== 90001) {
+      return void (await discordClient.alert(
+        `Tried to :minusone: a message containing the forbidden string by ${message.author}; received error ${error}.`,
+      ));
     }
+
+    return void (await message.reply(
+      'How embarassing! It\'s actually spelled "iotm"',
+    ));
   }
 }
 
