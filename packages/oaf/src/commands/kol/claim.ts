@@ -4,6 +4,7 @@ import {
   Events,
   GuildMember,
   PartialGuildMember,
+  RESTJSONErrorCodes,
   SlashCommandBuilder,
   inlineCode,
 } from "discord.js";
@@ -156,7 +157,10 @@ async function synchroniseRoles(client: Client) {
       const member = await guild.members.fetch(missing.discordId!);
       await member.roles.add(role);
     } catch (error) {
-      if (error instanceof DiscordAPIError && error.code === 10007) {
+      if (
+        error instanceof DiscordAPIError &&
+        error.code === RESTJSONErrorCodes.UnknownMember
+      ) {
         // User has left the guild, remove their verification
         await prisma.player.update({
           where: { playerId: missing.playerId },

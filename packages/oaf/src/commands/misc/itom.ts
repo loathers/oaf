@@ -1,4 +1,9 @@
-import { DiscordAPIError, Events, Message } from "discord.js";
+import {
+  DiscordAPIError,
+  Events,
+  Message,
+  RESTJSONErrorCodes,
+} from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 
@@ -26,7 +31,7 @@ async function onMessage(message: Message) {
     await message.react("<:minusone:748016030357520464>");
   } catch (error) {
     if (!(error instanceof DiscordAPIError)) throw error;
-    if (error.code !== 90001) {
+    if (error.code !== RESTJSONErrorCodes.ReactionWasBlocked) {
       return void (await discordClient.alert(
         `Tried to :minusone: a message containing the forbidden string by ${message.author}; received error ${error}.`,
       ));

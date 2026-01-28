@@ -5,6 +5,7 @@ import {
   Events,
   Message,
   MessageType,
+  RESTJSONErrorCodes,
   SlashCommandBuilder,
   inlineCode,
   userMention,
@@ -101,7 +102,7 @@ async function onMessage(message: Message) {
     await message.react(reaction);
   } catch (error) {
     if (!(error instanceof DiscordAPIError)) throw error;
-    if (error.code !== 90001) {
+    if (error.code !== RESTJSONErrorCodes.ReactionWasBlocked) {
       return void (await discordClient.alert(
         `Tried to react to an old-style wiki search by ${message.author}; received error ${error}.`,
       ));
