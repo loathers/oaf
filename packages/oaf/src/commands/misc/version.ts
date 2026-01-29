@@ -42,9 +42,26 @@ export async function init() {
     discordClient.alert(`${inlineCode("oaf")} started`);
   });
 
-  process.on("SIGTERM", () => {
+  const shutdown = (signal: string) => {
     discordClient
-      .alert(`${inlineCode("oaf")} shutting down`)
+      .alert(`${inlineCode("oaf")} shutting down (${signal})`)
       .then(() => process.exit(0));
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
+
+  process.on("uncaughtException", (err) => {
+    discordClient
+      .alert(`${inlineCode("oaf")} crashed: ${err.message}`)
+      .then(() => process.exit(1));
+  });
+
+  process.on("unhandledRejection", (reason) => {
+    const message =
+      reason instanceof Error ? reason.message : "Unknown rejection";
+    discordClient
+      .alert(`${inlineCode("oaf")} crashed (unhandled rejection): ${message}`)
+      .then(() => process.exit(1));
   });
 }
