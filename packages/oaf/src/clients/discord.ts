@@ -28,6 +28,12 @@ import { isErrorLike, serializeError } from "serialize-error";
 
 import { config } from "../config.js";
 
+function safeStringify(value: unknown): string {
+  return JSON.stringify(value, (_key, v) =>
+    typeof v === "bigint" ? v.toString() : v,
+  );
+}
+
 export type ModalHandler = {
   customId: string;
   handle: (interaction: ModalSubmitInteraction) => Promise<void>;
@@ -181,9 +187,9 @@ export class DiscordClient extends Client {
     const embeds: JSONEncodable<APIEmbed>[] = [];
 
     if (interaction) {
-      let commandRun = interaction.toString();
-      if (commandRun === "[object Object]")
-        commandRun = JSON.stringify(interaction);
+      const commandRun = interaction.isChatInputCommand()
+        ? interaction.toString()
+        : safeStringify(interaction);
       const fields = [
         { name: "Command run", value: commandRun },
         { name: "User", value: userMention(interaction.user.id) },
@@ -203,7 +209,7 @@ export class DiscordClient extends Client {
     if (error && isErrorLike(error)) {
       const fields = Object.entries(serializeError(error)).map(([k, v]) => ({
         name: k,
-        value: codeBlock(JSON.stringify(v)),
+        value: codeBlock(safeStringify(v)),
       }));
       embeds.push(new EmbedBuilder().setTitle("Error").addFields(fields));
     }
