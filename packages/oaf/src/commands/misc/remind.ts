@@ -114,7 +114,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       reminderDate,
       TimestampStyles.RelativeTime,
     )}.`,
-    fetchReply: true,
+    withResponse: true,
   });
 
   await prisma.reminder.create({
@@ -142,9 +142,15 @@ async function clearOldReminders() {
 }
 
 async function checkReminders() {
-  const reminders = await prisma.reminder.findMany({
-    where: { reminderDate: { lte: new Date() }, reminderSent: false },
-  });
+  let reminders;
+  try {
+    reminders = await prisma.reminder.findMany({
+      where: { reminderDate: { lte: new Date() }, reminderSent: false },
+    });
+  } catch {
+    // Database temporarily unavailable, will retry on next interval
+    return;
+  }
 
   for (const reminder of reminders) {
     try {
