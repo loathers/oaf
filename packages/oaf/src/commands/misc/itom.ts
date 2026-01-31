@@ -56,7 +56,7 @@ async function onMessage(message: Message) {
     return void (await message.reply(
       replies
         .map((str, index) => (index ? lowercaseLeadingLetter(str) : str))
-        .join(`${getRandom(joiners)}, `),
+        .join(` ${getRandom(joiners)}, `),
     ));
   }
 }
