@@ -196,3 +196,11 @@ export function inlineExpression(value: string) {
     return inlineCode(value.slice(1, -1));
   return value;
 }
+
+export function getRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export function lowercaseLeadingLetter(str: string): string {
+  return `${str[0].toLowerCase()}${str.slice(1)}`;
+}
