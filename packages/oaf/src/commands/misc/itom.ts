@@ -6,6 +6,7 @@ import {
 } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
+import { getRandom, lowercaseLeadingLetter } from "../../utils.js";
 
 const ITOM_MATCHER = /(?:\W|^)(ito(m|y)s?)(?:[^a-z]|$)/i;
 
@@ -37,27 +38,25 @@ async function onMessage(message: Message) {
         ));
       }
 
-      replies.push('How embarrassing! It\'s actually spelled "iotm."');
+      replies.push(
+        `How ${getRandom(["embarrassing", "gauche", "passé", "foolhardy"])}! It's actually spelled "iotm."`,
+      );
     }
   }
 
   if (message.content.toLowerCase().includes("you can buy")) {
     if (message.content.toLowerCase().includes("you can buy a salad glove")) {
-      replies.push("You can buy an iPod");
+      replies.push("You can buy an iPod.");
     } else {
-      replies.push(
-        "You can buy a salad glove" + ["?", "!"][Math.round(Math.random())],
-      );
+      replies.push("You can buy a salad glove" + getRandom(["!", "?"]));
     }
   }
 
   if (replies.length) {
     return void (await message.reply(
       replies
-        .map((str, index) =>
-          index ? `${str[0].toLowerCase()}${str.slice(1)}` : str,
-        )
-        .join(`${joiners[Math.floor(Math.random() * joiners.length)]}, `),
+        .map((str, index) => (index ? lowercaseLeadingLetter(str) : str))
+        .join(`${getRandom(joiners)}, `),
     ));
   }
 }
