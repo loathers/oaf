@@ -206,12 +206,20 @@ export class DiscordClient extends Client {
       );
     }
 
-    if (error && isErrorLike(error)) {
-      const fields = Object.entries(serializeError(error)).map(([k, v]) => ({
-        name: k,
-        value: codeBlock(safeStringify(v)),
-      }));
-      embeds.push(new EmbedBuilder().setTitle("Error").addFields(fields));
+    if (error !== undefined) {
+      if (isErrorLike(error)) {
+        const fields = Object.entries(serializeError(error)).map(([k, v]) => ({
+          name: k,
+          value: codeBlock(safeStringify(v)),
+        }));
+        embeds.push(new EmbedBuilder().setTitle("Error").addFields(fields));
+      } else {
+        embeds.push(
+          new EmbedBuilder()
+            .setTitle("Error")
+            .setDescription(codeBlock(safeStringify(error))),
+        );
+      }
     }
 
     const alert = {
