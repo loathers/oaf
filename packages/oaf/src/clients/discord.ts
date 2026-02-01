@@ -4,6 +4,7 @@ import {
   Client,
   Collection,
   CommandInteraction,
+  DiscordAPIError,
   EmbedBuilder,
   Events,
   GatewayIntentBits,
@@ -15,6 +16,7 @@ import {
   ModalSubmitInteraction,
   Partials,
   REST,
+  RESTJSONErrorCodes,
   RESTPostAPIApplicationCommandsJSONBody,
   Routes,
   SendableChannels,
@@ -145,6 +147,14 @@ export class DiscordClient extends Client {
         try {
           await command.autocomplete?.(interaction);
         } catch (error) {
+          // "Unknown interaction" errors are expected during autocomplete when
+          // the user types faster than we can respond or moves on
+          if (
+            error instanceof DiscordAPIError &&
+            error.code === RESTJSONErrorCodes.UnknownInteraction
+          ) {
+            return;
+          }
           await this.alert(
             "Encountered error during autocomplete",
             interaction,
