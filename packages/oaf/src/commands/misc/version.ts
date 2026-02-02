@@ -2,11 +2,27 @@ import {
   ChatInputCommandInteraction,
   Events,
   SlashCommandBuilder,
+  codeBlock,
   inlineCode,
 } from "discord.js";
 import ms from "pretty-ms";
 
 import { createEmbed, discordClient } from "../../clients/discord.js";
+
+function describeError(error: unknown): string {
+  if (error instanceof AggregateError) {
+    const inner = error.errors
+      .map((e, i) => `${i + 1}. ${e instanceof Error ? e.message : String(e)}`)
+      .join("\n");
+    return `${error.message}\n${codeBlock(inner)}`;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
+}
 
 let START_TIME = 0;
 
@@ -53,15 +69,21 @@ export async function init() {
 
   process.on("uncaughtException", (err) => {
     discordClient
-      .alert(`${inlineCode("oaf")} crashed: ${err.message}`)
+      .alert(
+        `${inlineCode("oaf")} crashed: ${describeError(err)}`,
+        undefined,
+        err,
+      )
       .then(() => process.exit(1));
   });
 
   process.on("unhandledRejection", (reason) => {
-    const message =
-      reason instanceof Error ? reason.message : "Unknown rejection";
     discordClient
-      .alert(`${inlineCode("oaf")} crashed (unhandled rejection): ${message}`)
+      .alert(
+        `${inlineCode("oaf")} crashed (unhandled rejection): ${describeError(reason)}`,
+        undefined,
+        reason,
+      )
       .then(() => process.exit(1));
   });
 }
