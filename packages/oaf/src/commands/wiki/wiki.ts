@@ -64,7 +64,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 const trim = (message: string) =>
-  message.replace(/^[*_\s]+/, "").replace(/[*_\s]+$/, "");
+  message
+    .replace(/^[*_\s\u200B-\u200F\uFEFF]+/, "")
+    .replace(/[*_\s\u200B-\u200F\uFEFF]+$/, "");
 
 async function onMessage(message: Message) {
   if (message.author.bot) return;
