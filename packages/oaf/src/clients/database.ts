@@ -3,6 +3,8 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { config } from "../config.js";
 
 function getDatasourceUrl() {
+  if (!config.DATABASE_URL) return undefined;
+
   const url = new URL(config.DATABASE_URL);
 
   // Add connection retry/timeout params if not already set
