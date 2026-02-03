@@ -188,9 +188,6 @@ async function removeVerification(member: GuildMember | PartialGuildMember) {
     data: { discordId: null },
   });
 
-  const role = await member.guild.roles.fetch(config.VERIFIED_ROLE_ID);
-  if (role) await member.roles.remove(role);
-
   await discordClient.alert(
     `${member.user.username} has just left the server, so we removed their verification to player account ${player.playerName} (#${player.playerId})`,
   );
