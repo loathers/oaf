@@ -29,7 +29,7 @@ let checkedFamiliars = false;
 let hasFamiliar = false;
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  interaction.deferReply();
+  await interaction.deferReply();
 
   if (!checkedFamiliars) {
     const fams = await kolClient.getFamiliars();
