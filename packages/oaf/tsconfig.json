@@ -7,7 +7,7 @@
     "forceConsistentCasingInFileNames": true,
     "lib": ["ES2023", "DOM"],
     "module": "NodeNext",
-    "rootDirs": [".", "./.react-router/types"],
+    "rootDirs": ["."],
     "noEmit": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
@@ -24,8 +24,7 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "vite.config.ts",
-    "prisma/**/*.ts",
-    ".react-router/types/**/*"
+    "prisma/**/*.ts"
   ],
   "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 }

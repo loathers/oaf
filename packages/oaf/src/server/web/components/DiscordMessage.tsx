@@ -1,12 +1,4 @@
-import {
-  Avatar,
-  HStack,
-  SkeletonCircle,
-  SkeletonText,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
-import React from "react";
+import { useEffect, useState } from "react";
 
 const formatDate = (d: Date) => {
   const days = Math.ceil(
@@ -17,57 +9,75 @@ const formatDate = (d: Date) => {
   } ${d.toLocaleTimeString(undefined, { timeStyle: "short" })}`;
 };
 
+type MessageData = {
+  authorAvatar: string;
+  authorName: string;
+  createdAt: string;
+  content: string;
+};
+
 type Props = {
-  message: {
-    authorAvatar: string;
-    authorName: string;
-    createdAt: Date;
-    content: string;
-  } | null;
+  message: MessageData | null;
 };
 
 export default function DiscordMessage({ message }: Props) {
   return (
-    <HStack
-      bg="#32353b"
-      color="#dcddde"
-      fontSize="0.9em"
-      p={2}
-      borderRadius={10}
-      whiteSpace="normal"
-      alignItems="start"
-    >
+    <div className="discord-message">
       {message ? (
-        <Avatar src={message.authorAvatar} size="md" />
+        <img
+          className="dm-avatar"
+          src={message.authorAvatar}
+          alt={message.authorName}
+        />
       ) : (
-        <SkeletonCircle size="10" />
+        <div className="skeleton skeleton-circle" />
       )}
-      <Stack>
-        <HStack>
+      <div className="dm-body">
+        <div className="dm-header">
           {message ? (
-            <Text color="#ffffff">{message.authorName}</Text>
+            <span className="dm-author">{message.authorName}</span>
           ) : (
-            <SkeletonText startColor="#ffffff" noOfLines={1} minWidth="100px" />
+            <span className="skeleton skeleton-text" />
           )}
           {message ? (
-            <Text color="#72767d" fontSize="12px">
-              {formatDate(message.createdAt)}
-            </Text>
+            <span className="dm-date">
+              {formatDate(new Date(message.createdAt))}
+            </span>
           ) : (
-            <SkeletonText
-              startColor="#72767d"
-              noOfLines={1}
-              minWidth="30px"
-              fontSize="12px"
-            />
+            <span className="skeleton skeleton-text" style={{ width: 60 }} />
           )}
-        </HStack>
+        </div>
         {message ? (
-          <Text color="#dcddde">{message.content}</Text>
+          <span className="dm-content">{message.content}</span>
         ) : (
-          <SkeletonText startColor="#dcddde" noOfLines={3} />
+          <span className="skeleton skeleton-text-wide" />
         )}
-      </Stack>
-    </HStack>
+      </div>
+    </div>
   );
+}
+
+type DynamicProps = {
+  guildId: string;
+  channelId: string;
+  messageId: string;
+};
+
+export function DynamicDiscordMessage({
+  guildId,
+  channelId,
+  messageId,
+}: DynamicProps) {
+  const [message, setMessage] = useState<MessageData | null>(null);
+
+  useEffect(() => {
+    fetch(
+      `/api/resources/message?guildId=${guildId}&channelId=${channelId}&messageId=${messageId}`,
+    )
+      .then((r) => r.json() as Promise<{ message: MessageData | null }>)
+      .then((data) => setMessage(data.message))
+      .catch(() => {});
+  }, [guildId, channelId, messageId]);
+
+  return <DiscordMessage message={message} />;
 }

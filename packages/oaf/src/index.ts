@@ -33,7 +33,9 @@ function isModalHandler(value: object): value is ModalHandler {
 }
 
 function isInteractionHandler(value: object): value is InteractionHandler {
-  return "init" in value && typeof (value as InteractionHandler).init === "function";
+  return (
+    "init" in value && typeof (value as InteractionHandler).init === "function"
+  );
 }
 
 async function registerHandler(imported: unknown): Promise<boolean> {

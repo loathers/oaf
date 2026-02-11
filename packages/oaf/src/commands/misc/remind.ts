@@ -82,10 +82,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     interaction.options.getString("reminder") || "Time's up!";
 
   if (reminderText.length > 127) {
-    return void await interaction.reply({
+    return void (await interaction.reply({
       content: "Maximum reminder length is 128 characters.",
       ephemeral: true,
-    });
+    }));
   }
 
   const duration = parseDuration(when);
@@ -203,6 +203,10 @@ export async function init() {
   await clearOldReminders();
   discordClient.once(
     Events.ClientReady,
-    () => void setInterval(() => void checkReminders(), milliseconds(CHECK_DURATION)),
+    () =>
+      void setInterval(
+        () => void checkReminders(),
+        milliseconds(CHECK_DURATION),
+      ),
   );
 }

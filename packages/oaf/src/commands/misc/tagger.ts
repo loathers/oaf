@@ -38,7 +38,9 @@ async function getExistingTagForMessage(message: Message<true>) {
 
 export async function execute(interaction: ContextMenuCommandInteraction) {
   if (!interaction.isMessageContextMenuCommand())
-    throw new Error("Somehow you're trying to tag something that isn't a message");
+    throw new Error(
+      "Somehow you're trying to tag something that isn't a message",
+    );
 
   if (!interaction.inCachedGuild()) {
     throw new Error("This can only be done in guild");

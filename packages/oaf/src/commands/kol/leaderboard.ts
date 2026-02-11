@@ -222,7 +222,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const leaderboard = await kolClient.getLeaderboard(board);
   if (!leaderboard || leaderboard.name === "Weird Leaderboards") {
-    await interaction.editReply("I don't think that's a real leaderboard, sorry.");
+    await interaction.editReply(
+      "I don't think that's a real leaderboard, sorry.",
+    );
     return;
   }
 

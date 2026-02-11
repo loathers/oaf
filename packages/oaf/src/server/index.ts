@@ -1,27 +1,30 @@
-import { createRequestHandler } from "@react-router/express";
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import { StatusCodes } from "http-status-codes";
+import fs from "node:fs";
 import path from "node:path";
 
-import {
-  DataOfLoathingClient,
-  dataOfLoathingClient,
-} from "../clients/dataOfLoathing.js";
+import { dataOfLoathingClient } from "../clients/dataOfLoathing.js";
 import { prisma } from "../clients/database.js";
-import { DiscordClient, discordClient } from "../clients/discord.js";
 import { config } from "../config.js";
+import {
+  authRouter,
+  loginHandler,
+  logoutHandler,
+  requireAuth,
+} from "./api/auth.js";
+import { messageRouter } from "./api/message.js";
+import { offersRouter } from "./api/offers.js";
+import { pilotRouter } from "./api/pilot.js";
+import { raffleRouter } from "./api/raffle.js";
+import { tagsRouter } from "./api/tags.js";
+import { userRouter } from "./api/user.js";
+import { verifiedRouter } from "./api/verified.js";
 import { eggnet, eggnetNewUnlockSchema } from "./eggnet.js";
 import { samsara, samsaraRecordsSchema } from "./samsara.js";
 import { rollSubs } from "./subs.js";
-
-declare module "react-router" {
-  export interface AppLoadContext {
-    discordClient: DiscordClient;
-    dataOfLoathingClient: DataOfLoathingClient;
-  }
-}
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
@@ -29,26 +32,15 @@ const viteDevServer =
     : await import("vite").then((vite) =>
         vite.createServer({
           server: { middlewareMode: true },
+          appType: "custom",
         }),
       );
 
-const build = viteDevServer
-  ? () =>
-      viteDevServer.ssrLoadModule(
-        "virtual:react-router/server-build",
-      )
-  : () => import(path.resolve("build/server/index.js"));
-
 function arrayToCsv<T extends object>(data: T[], headers: (keyof T)[]): string {
-  // Create the header row based on the provided order
   const headerRow = headers.join(",");
-
-  // Map each object to a CSV row based on the header order
   const rows = data.map((item) =>
     headers.map((header) => JSON.stringify(item[header] ?? "")).join(","),
   );
-
-  // Combine the header row and data rows into a single CSV string
   return [headerRow, ...rows].join("\n");
 }
 
@@ -56,12 +48,14 @@ const app = express();
 
 app
   .use(cors())
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  .use(cookieParser())
   .use(
     viteDevServer ? viteDevServer.middlewares : express.static("build/client"),
   )
   .use(bodyParser.json())
-  .get("/favicon.ico", (req, res) => void res.send())
-  .get("/verified.json", async (req, res) => {
+  .get("/favicon.ico", (_req, res) => void res.send())
+  .get("/verified.json", async (_req, res) => {
     const verified = await prisma.player.findMany({
       where: { discordId: { not: null } },
       select: {
@@ -73,7 +67,7 @@ app
       .set("Content-Type", "application/json")
       .send(verified.map((p) => p.playerId));
   })
-  .get("/raffle.csv", async (req, res) => {
+  .get("/raffle.csv", async (_req, res) => {
     const raffles = (
       await prisma.raffle.findMany({
         orderBy: { gameday: "asc" },
@@ -236,13 +230,32 @@ app
       throw e;
     }
   })
-  .all(
-    "*path",
-    createRequestHandler({
-      build,
-      getLoadContext: () => ({ discordClient, dataOfLoathingClient }),
-    }),
-  );
+  // Auth routes
+  .get("/login", loginHandler)
+  .get("/logout", logoutHandler)
+  .use("/api/auth", authRouter)
+  // Admin API routes (require auth)
+  .use("/api/admin/offers", requireAuth, offersRouter)
+  .use("/api/admin/pilot", requireAuth, pilotRouter)
+  .use("/api/admin/tags", requireAuth, tagsRouter)
+  .use("/api/admin/verified", requireAuth, verifiedRouter)
+  .use("/api/admin/raffle", requireAuth, raffleRouter)
+  // Resource API routes (require auth)
+  .use("/api/resources/message", requireAuth, messageRouter)
+  .use("/api/resources/user", requireAuth, userRouter)
+  // SPA fallback
+  .get("*path", async (req, res) => {
+    if (viteDevServer) {
+      const html = fs.readFileSync(
+        path.resolve("src/server/web/index.html"),
+        "utf-8",
+      );
+      const transformed = await viteDevServer.transformIndexHtml(req.url, html);
+      res.set("Content-Type", "text/html").send(transformed);
+    } else {
+      res.sendFile(path.resolve("build/client/index.html"));
+    }
+  });
 
 export const startApiServer = () =>
   app.listen(config.PORT, () =>

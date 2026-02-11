@@ -1,8 +1,13 @@
-import { reactRouter } from "@react-router/dev/vite";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   logLevel: "warn",
   clearScreen: false,
-  plugins: [reactRouter()],
+  root: "src/server/web",
+  build: {
+    outDir: "../../../build/client",
+    emptyOutDir: true,
+  },
+  plugins: [react()],
 });

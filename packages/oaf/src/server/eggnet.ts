@@ -18,7 +18,9 @@ async function getNextMonster() {
   return [Number(closest[0]), closest[1]] as const;
 }
 
-export async function eggnet({ monsterId }: z.infer<typeof eggnetNewUnlockSchema>) {
+export async function eggnet({
+  monsterId,
+}: z.infer<typeof eggnetNewUnlockSchema>) {
   const guild = await discordClient.guilds.fetch(config.GUILD_ID);
   const iotmChannel = guild?.channels.cache.get(config.IOTM_CHANNEL_ID);
 
