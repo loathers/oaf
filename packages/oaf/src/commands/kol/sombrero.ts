@@ -22,11 +22,11 @@ export const data = new SlashCommandBuilder()
       .setRequired(true),
   );
 
-export function execute(interaction: ChatInputCommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
   const ml = interaction.options.getInteger("ml", true);
 
-  interaction.reply(
+  await interaction.reply(
     `A ${weight}lb sombrero with ${ml} ML provides +${sombreroSubstats(
       weight,
       ml,

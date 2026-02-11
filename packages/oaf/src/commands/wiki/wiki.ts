@@ -106,7 +106,7 @@ async function onMessage(message: Message) {
     if (!(error instanceof DiscordAPIError)) throw error;
     if (error.code !== RESTJSONErrorCodes.ReactionWasBlocked) {
       return void (await discordClient.alert(
-        `Tried to react to an old-style wiki search by ${message.author}; received error ${error}.`,
+        `Tried to react to an old-style wiki search by ${message.author.toString()}; received error ${error}.`,
       ));
     }
 
@@ -150,7 +150,7 @@ async function onMessage(message: Message) {
 }
 
 export async function init() {
-  discordClient.on(Events.MessageCreate, onMessage);
+  discordClient.on(Events.MessageCreate, (message) => void onMessage(message));
   await wikiClient.getAllPageTitles();
 }
 

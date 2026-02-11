@@ -17,8 +17,8 @@ export class Thing {
     return `${this.constructor.name.replace(/^_*/, "")}:${this.id}`;
   }
 
-  async getDescription(): Promise<string> {
-    throw "Implement me";
+  getDescription(): Promise<string> {
+    throw new Error("Implement me");
   }
 
   getImagePath() {
@@ -37,6 +37,6 @@ export class Thing {
   }
 
   getModifiers(): Record<string, string> | null {
-    throw "Implement me";
+    throw new Error("Implement me");
   }
 }

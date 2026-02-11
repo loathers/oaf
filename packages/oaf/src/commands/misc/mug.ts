@@ -79,7 +79,7 @@ let _letters: (Buffer | undefined)[] | null = null;
 async function getLetters() {
   if (!_letters) {
     _letters = await Promise.all(
-      CHARACTER_IMAGES.map((p) =>
+      CHARACTER_IMAGES.map(async (p) =>
         p
           ? fetch(resolveKoLImage(`/otherimages/${p}.gif`))
               .then((r) => r.arrayBuffer())

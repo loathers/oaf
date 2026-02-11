@@ -13,10 +13,10 @@ export const data = new SlashCommandBuilder()
       .setMinValue(1),
   );
 
-export function execute(interaction: ChatInputCommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
 
-  interaction.reply(
+  await interaction.reply(
     `A ${weight}lb volleyball provides +${
       2 + 0.2 * weight
     } substats per combat.`,

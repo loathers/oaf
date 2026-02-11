@@ -82,5 +82,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  interaction.editReply({ content: null, embeds: [embed, itemEmbed] });
+  await interaction.editReply({ content: null, embeds: [embed, itemEmbed] });
 }

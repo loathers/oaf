@@ -76,31 +76,33 @@ export const data = new SlashCommandBuilder()
     "Get the current status of all monitored Dreadsylvania instances.",
   );
 
-export async function init() {
-  kolClient.on("rollover", async () => {
-    const { messages, pingableClans } = await constructDreadStatusMessage();
-    const channel = discordClient.guild?.channels.cache.get(
-      config.DUNGEON_CHANNEL_ID,
-    );
-    if (!channel?.isTextBased()) {
-      discordClient.alert("No clan dungeon channel found");
-    } else {
-      channel.send({
-        ...(pingableClans.length
-          ? {
-              content: `${roleMention(config.DUNGEON_MASTER_ROLE_ID)}, looks like ${pingableClans.join(" and ")} ${pingableClans.length === 1 ? "is" : "are"} ready to rock (and roll).`,
-            }
-          : {}),
-        embeds: [
-          {
-            title: "Dread Status",
-            description: messages.join("\n"),
+export function init() {
+  kolClient.on("rollover", () => {
+    void (async () => {
+      const { messages, pingableClans } = await constructDreadStatusMessage();
+      const channel = discordClient.guild?.channels.cache.get(
+        config.DUNGEON_CHANNEL_ID,
+      );
+      if (!channel?.isTextBased()) {
+        await discordClient.alert("No clan dungeon channel found");
+      } else {
+        await channel.send({
+          ...(pingableClans.length
+            ? {
+                content: `${roleMention(config.DUNGEON_MASTER_ROLE_ID)}, looks like ${pingableClans.join(" and ")} ${pingableClans.length === 1 ? "is" : "are"} ready to rock (and roll).`,
+              }
+            : {}),
+          embeds: [
+            {
+              title: "Dread Status",
+              description: messages.join("\n"),
+            },
+          ],
+          allowedMentions: {
+            roles: [config.DUNGEON_MASTER_ROLE_ID],
           },
-        ],
-        allowedMentions: {
-          roles: [config.DUNGEON_MASTER_ROLE_ID],
-        },
-      });
-    }
+        });
+      }
+    })();
   });
 }

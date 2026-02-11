@@ -27,7 +27,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const member = interaction.member;
 
   if (!member) {
-    interaction.reply({
+    await interaction.reply({
       content: "You have to perform this action from within a Guild.",
       ephemeral: true,
     });
@@ -37,7 +37,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const roleManager = member.roles as GuildMemberRoleManager;
 
   if (!PERMITTED_ROLE_IDS.some((r) => roleManager.cache.has(r))) {
-    interaction.reply({
+    await interaction.reply({
       content: "You are not permitted to edit clan whitelists.",
       ephemeral: true,
     });
@@ -66,7 +66,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await kolClient.addToWhitelist(player.playerId, clan.id);
   }
 
-  interaction.editReply({
+  await interaction.editReply({
     content: `Added player ${player.playerName} (#${player.playerId}) to all managed clan whitelists.`,
   });
 }

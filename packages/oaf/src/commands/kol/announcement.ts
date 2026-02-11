@@ -20,37 +20,39 @@ function isUpdatesMessage(message: KoLMessage) {
 }
 
 function listenForAnnouncements() {
-  kolClient.on("system", async (systemMessage) => {
-    if (!isAnnouncement(systemMessage)) return;
+  kolClient.on("system", (systemMessage) => {
+    void (async () => {
+      if (!isAnnouncement(systemMessage)) return;
 
-    const announcement = isUpdatesMessage(systemMessage)
-      ? (await kolClient.getUpdates())[0]
-      : systemMessage.msg;
+      const announcement = isUpdatesMessage(systemMessage)
+        ? (await kolClient.getUpdates())[0]
+        : systemMessage.msg;
 
-    const guild = await discordClient.guilds.fetch(config.GUILD_ID);
-    const announcementChannel = guild?.channels.cache.get(
-      config.ANNOUNCEMENTS_CHANNEL_ID,
-    );
+      const guild = await discordClient.guilds.fetch(config.GUILD_ID);
+      const announcementChannel = guild?.channels.cache.get(
+        config.ANNOUNCEMENTS_CHANNEL_ID,
+      );
 
-    if (!announcementChannel?.isTextBased()) {
-      await discordClient.alert("No valid announcement channel");
-      return;
-    }
+      if (!announcementChannel?.isTextBased()) {
+        await discordClient.alert("No valid announcement channel");
+        return;
+      }
 
-    const message = await announcementChannel.send({
-      content: dedent`
-        New announcement posted to KoL chat!
-        ${blockQuote(announcement)}
-      `,
-    });
+      const message = await announcementChannel.send({
+        content: dedent`
+          New announcement posted to KoL chat!
+          ${blockQuote(announcement)}
+        `,
+      });
 
-    await message.startThread({
-      name: `Discussion for announcement`,
-      autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
-    });
+      await message.startThread({
+        name: `Discussion for announcement`,
+        autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+      });
+    })();
   });
 }
 
-export async function init() {
+export function init() {
   discordClient.once(Events.ClientReady, listenForAnnouncements);
 }

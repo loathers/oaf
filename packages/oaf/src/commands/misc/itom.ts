@@ -34,7 +34,7 @@ async function onMessage(message: Message) {
       if (!(error instanceof DiscordAPIError)) throw error;
       if (error.code !== RESTJSONErrorCodes.ReactionWasBlocked) {
         return void (await discordClient.alert(
-          `Tried to :minusone: a message containing the forbidden string by ${message.author}; received error ${error}.`,
+          `Tried to :minusone: a message containing the forbidden string by ${message.author.toString()}; received error ${error}.`,
         ));
       }
 
@@ -61,6 +61,6 @@ async function onMessage(message: Message) {
   }
 }
 
-export async function init() {
-  discordClient.on(Events.MessageCreate, onMessage);
+export function init() {
+  discordClient.on(Events.MessageCreate, (message) => void onMessage(message));
 }

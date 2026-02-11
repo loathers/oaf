@@ -39,7 +39,10 @@ export class Skill extends Thing {
   }
 
   getModifiers(): Record<string, string> {
-    return this.skill.skillModifierBySkill?.modifiers ?? {};
+    return (this.skill.skillModifierBySkill?.modifiers ?? {}) as Record<
+      string,
+      string
+    >;
   }
 
   @Memoize()

@@ -31,7 +31,7 @@ import { isErrorLike, serializeError } from "serialize-error";
 import { config } from "../config.js";
 
 function safeStringify(value: unknown): string {
-  return JSON.stringify(value, (_key, v) =>
+  return JSON.stringify(value, (_key, v: unknown) =>
     typeof v === "bigint" ? v.toString() : v,
   );
 }
@@ -85,14 +85,16 @@ export class DiscordClient extends Client {
     this.clientId = clientId;
     this.token = token;
 
-    this.on(Events.InteractionCreate, async (interaction) =>
-      this.handleInteraction(interaction),
-    );
+    this.on(Events.InteractionCreate, (interaction) => {
+      void this.handleInteraction(interaction);
+    });
 
-    this.on(Events.ClientReady, async (client) => {
-      const channel = await client.channels.fetch(alertsChannelId);
-      if (!channel?.isSendable()) return;
-      await this.initAlertsChannel(channel);
+    this.on(Events.ClientReady, (client) => {
+      void (async () => {
+        const channel = await client.channels.fetch(alertsChannelId);
+        if (!channel?.isSendable()) return;
+        await this.initAlertsChannel(channel);
+      })();
     });
   }
 
@@ -180,7 +182,7 @@ export class DiscordClient extends Client {
   async alert(
     description: string,
     interaction?: Interaction,
-    error?: Error | unknown,
+    error?: unknown,
   ) {
     if (!interaction) {
       console.warn(description);
@@ -248,7 +250,7 @@ export class DiscordClient extends Client {
   }
 
   start(): void {
-    this.login();
+    void this.login();
   }
 }
 

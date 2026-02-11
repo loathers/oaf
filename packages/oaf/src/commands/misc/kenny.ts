@@ -44,15 +44,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ));
     }
 
-    interaction.editReply(
+    await interaction.editReply(
       `Kenny's blood glucose 🩸 was ${latest.value}mg/dL ${time(
         latest.date,
         TimestampStyles.RelativeTime,
       )}. ${makeComment({ isHigh: latest.value >= KENNY_TOO_HIGH, isLow: latest.value <= KENNY_TOO_LOW })}`,
     );
   } catch (error) {
-    discordClient.alert(
-      `Kenny cyborg implant error: ${error}`,
+    await discordClient.alert(
+      `Kenny cyborg implant error: ${JSON.stringify(error)}`,
       interaction,
       error,
     );
