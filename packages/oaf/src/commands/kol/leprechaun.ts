@@ -15,10 +15,10 @@ export const data = new SlashCommandBuilder()
       .setMinValue(1),
   );
 
-export function execute(interaction: ChatInputCommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
 
-  interaction.reply(
+  await interaction.reply(
     `A ${weight}lb leprechaun provides +${(2 * toDrop(weight)).toFixed(
       2,
     )}% meat drop. ` +

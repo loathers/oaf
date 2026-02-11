@@ -222,12 +222,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const leaderboard = await kolClient.getLeaderboard(board);
   if (!leaderboard || leaderboard.name === "Weird Leaderboards") {
-    interaction.editReply("I don't think that's a real leaderboard, sorry.");
+    await interaction.editReply("I don't think that's a real leaderboard, sorry.");
     return;
   }
 
   if (leaderboard.boards.length === 0) {
-    interaction.editReply({
+    await interaction.editReply({
       content: null,
       embeds: [
         createEmbed()
@@ -240,7 +240,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  interaction.editReply({
+  await interaction.editReply({
     content: null,
     embeds: [
       createEmbed()

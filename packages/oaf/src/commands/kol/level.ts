@@ -20,12 +20,12 @@ export const data = new SlashCommandBuilder()
       .setMaxValue(255),
   );
 
-export function execute(interaction: ChatInputCommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const level = clamp(interaction.options.getInteger("level", true), 1, 255);
 
   const { mainstat, substat } = fromLevel(level);
 
-  interaction.reply(
+  await interaction.reply(
     `Level ${level}${
       level === 255 ? " (the maximum)" : ""
     } requires ${mainstat.toLocaleString()} mainstat or ${substat.toLocaleString()} total substats.`,

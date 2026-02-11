@@ -15,7 +15,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   const drop = interaction.options.getNumber("droprate", true);
 
-  interaction.reply(
+  await interaction.reply(
     `A ${drop.toFixed(1)}% drop requires a +${
       Math.ceil(10000 / drop) - 100
     }% item drop bonus to cap.`,

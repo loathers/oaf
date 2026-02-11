@@ -24,34 +24,50 @@ async function* walk(dir: string): AsyncGenerator<string> {
   }
 }
 
+function isCommandHandler(value: object): value is CommandHandler {
+  return "data" in value && "execute" in value;
+}
+
+function isModalHandler(value: object): value is ModalHandler {
+  return "customId" in value && "handle" in value;
+}
+
+function isInteractionHandler(value: object): value is InteractionHandler {
+  return "init" in value && typeof (value as InteractionHandler).init === "function";
+}
+
+async function registerHandler(imported: unknown): Promise<boolean> {
+  if (typeof imported !== "object" || imported === null) return false;
+
+  let handled = false;
+
+  if (isCommandHandler(imported)) {
+    discordClient.commands.set(imported.data.name, imported);
+    handled = true;
+  }
+
+  if (isModalHandler(imported)) {
+    discordClient.modals.set(imported.customId, imported);
+    handled = true;
+  }
+
+  if (isInteractionHandler(imported)) {
+    await imported.init();
+    handled = true;
+  }
+
+  return handled;
+}
+
 async function loadSlashCommands() {
   const commandsPath = url.fileURLToPath(
     new URL("./commands", import.meta.url),
   );
   for await (const filePath of walk(commandsPath)) {
     if (!/\/[^_][^/]*(?<!\.test)\.(ts|js)$/.test(filePath)) continue;
-    let handled = false;
-    const command: CommandHandler | ModalHandler | InteractionHandler =
-      await import(filePath);
+    const command: unknown = await import(filePath);
 
-    if ("data" in command) {
-      if ("execute" in command) {
-        discordClient.commands.set(command.data.name, command);
-      }
-      handled = true;
-    }
-
-    if ("customId" in command) {
-      discordClient.modals.set(command.customId, command);
-      handled = true;
-    }
-
-    if ("init" in command && command.init) {
-      await command.init();
-      handled = true;
-    }
-
-    if (!handled) {
+    if (!(await registerHandler(command))) {
       await discordClient.alert(
         `Unusable file found in command directory ${filePath}`,
       );
@@ -77,7 +93,7 @@ async function main() {
   await loadSlashCommands();
 
   // Start chatbot
-  kolClient.startChatBot();
+  await kolClient.startChatBot();
 
   // Tell us when you're online!
   discordClient.on(Events.ClientReady, ({ user }) => {
@@ -85,7 +101,7 @@ async function main() {
   });
 
   // Register message logger
-  discordClient.on(Events.MessageCreate, async (message) => {
+  discordClient.on(Events.MessageCreate, (message) => {
     if (message.content.length === 0) return;
     console.log(
       `[${new Date(message.createdTimestamp).toLocaleTimeString()}]`,
@@ -95,19 +111,21 @@ async function main() {
     );
   });
 
-  kolClient.on("kmail", async (message) => {
-    console.log(
-      `Received Kmail from ${message.who.id}: "${message.msg.substring(0, 15)}"${message.msg.length > 15 ? "..." : ""}`,
-    );
-    if (message.msg.startsWith("GREENBOX:"))
-      return await handleGreenboxKmail(message);
-    await discordClient.alert(
-      `Received Kmail from ${inlineCode(`${message.who.name} (#${message.who.id})`)}\n${blockQuote(message.msg)}`,
-    );
+  kolClient.on("kmail", (message) => {
+    void (async () => {
+      console.log(
+        `Received Kmail from ${message.who.id}: "${message.msg.substring(0, 15)}"${message.msg.length > 15 ? "..." : ""}`,
+      );
+      if (message.msg.startsWith("GREENBOX:"))
+        return await handleGreenboxKmail(message);
+      await discordClient.alert(
+        `Received Kmail from ${inlineCode(`${message.who.name} (#${message.who.id})`)}\n${blockQuote(message.msg)}`,
+      );
+    })();
   });
 
   console.log("Starting bot.");
   discordClient.start();
 }
 
-main();
+await main();

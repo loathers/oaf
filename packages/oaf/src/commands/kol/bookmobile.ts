@@ -46,7 +46,7 @@ export function parseBookMobile(page: string) {
 const numberFormat = new Intl.NumberFormat();
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  interaction.deferReply();
+  await interaction.deferReply();
 
   const page = await visitBookMobile();
 
@@ -79,5 +79,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     { name: "Current price", value: `${numberFormat.format(info.price)} 🥩` },
   ]);
 
-  interaction.editReply({ content: null, embeds: [embed] });
+  await interaction.editReply({ content: null, embeds: [embed] });
 }

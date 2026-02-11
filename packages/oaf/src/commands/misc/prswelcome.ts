@@ -52,7 +52,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const url = `https://github.com/${org}/${capitalizedProject}/pulls`;
 
-  interaction.reply({
+  await interaction.reply({
     content: url,
     allowedMentions: {
       parse: [],

@@ -15,7 +15,7 @@ export async function renderSvg(svg: string) {
 
     if (timeout !== null) clearTimeout(timeout);
     timeout = setTimeout(() => {
-      converter?.close();
+      void converter?.close();
       timeout = null;
     }, 60000);
   }

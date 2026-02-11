@@ -15,10 +15,10 @@ export const data = new SlashCommandBuilder()
       .setMinValue(0.1),
   );
 
-export function execute(interaction: ChatInputCommandInteraction): void {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const itemDrop = interaction.options.getNumber("itemdrop", true);
 
-  interaction.reply(
+  await interaction.reply(
     `To get ${itemDrop}% item drop from a fairy, ` +
       `it should be weigh at least ${toWeight(itemDrop).toFixed(1)} lbs, ` +
       `or be a Jumpsuited Hounddog that weighs at least ${toWeight(

@@ -33,7 +33,10 @@ export class Effect extends Thing {
   }
 
   getModifiers(): Record<string, string> {
-    return this.effect.effectModifierByEffect?.modifiers ?? {};
+    return (this.effect.effectModifierByEffect?.modifiers ?? {}) as Record<
+      string,
+      string
+    >;
   }
 
   describePizzaCompatibility() {

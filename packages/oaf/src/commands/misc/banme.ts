@@ -23,7 +23,7 @@ async function onMessage(message: Message) {
   }
 }
 
-export async function init() {
+export function init() {
   if (!config.BAN_ME_CHANNEL_ID) return;
-  discordClient.on(Events.MessageCreate, onMessage);
+  discordClient.on(Events.MessageCreate, (message) => void onMessage(message));
 }

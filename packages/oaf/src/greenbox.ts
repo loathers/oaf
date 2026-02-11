@@ -39,7 +39,7 @@ async function update(
     await discordClient.alert(
       "Error processing greenbox submission",
       undefined,
-      `Failed to update greenbox for player ${playerId}: ${error}`,
+      `Failed to update greenbox for player ${playerId}: ${String(error)}`,
     );
     await kolClient.kmail(
       playerId,
@@ -60,7 +60,7 @@ async function wipe(playerId: number) {
     await discordClient.alert(
       "Error processing greenbox wipe request",
       undefined,
-      `Failed to wipe greenbox for player ${playerId}: ${error}`,
+      `Failed to wipe greenbox for player ${playerId}: ${String(error)}`,
     );
     await kolClient.kmail(
       playerId,

@@ -7,7 +7,7 @@ const client = new LightstreamerClient(
 client.connectionOptions.setSlowingEnabled(false);
 
 export async function getPissLevel() {
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     const sub = new Subscription("MERGE", ["NODE3000005"], ["Value"]);
     sub.setRequestedSnapshot("yes");
 
@@ -18,10 +18,10 @@ export async function getPissLevel() {
         client.disconnect();
         resolve(val);
       },
-      onSubscriptionError: (error) => {
+      onSubscriptionError: (code: number, message: string) => {
         client.unsubscribe(sub);
         client.disconnect();
-        reject(error);
+        reject(new Error(`Subscription error ${code}: ${message}`));
       },
     });
 

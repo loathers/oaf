@@ -17,7 +17,7 @@ export const data = new SlashCommandBuilder()
       .setMinValue(1),
   );
 
-export function execute(interaction: ChatInputCommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const substat = interaction.options.getInteger("substat", true);
 
   const { level, mainstat } = fromSubstat(substat);
@@ -36,5 +36,5 @@ export function execute(interaction: ChatInputCommandInteraction) {
     } required to reach level ${next.level}.`;
   }
 
-  interaction.reply(reply);
+  await interaction.reply(reply);
 }

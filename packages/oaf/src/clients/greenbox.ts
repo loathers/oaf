@@ -25,7 +25,7 @@ export class GreenboxClient {
       },
     );
 
-    const result = await response.json();
+    const result: unknown = await response.json();
 
     if (!response.ok) {
       throw result;
@@ -44,7 +44,7 @@ export class GreenboxClient {
       },
     );
 
-    const result = await response.json();
+    const result: unknown = await response.json();
 
     if (!response.ok) {
       throw result;

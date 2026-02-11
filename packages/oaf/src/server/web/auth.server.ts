@@ -33,9 +33,9 @@ class TokenStrategy<User> extends Strategy<User, { token: string }> {
 }
 
 authenticator.use(
-  new TokenStrategy<User>(async ({ token }) => {
+  new TokenStrategy<User>( ({ token }) => {
     const { data } = jwt.verify(token, config.SALT) as { data: User };
-    return data;
+    return Promise.resolve(data);
   }),
   "token",
 );
@@ -44,6 +44,7 @@ export async function authenticate(request: Request) {
   const session = await getSession(request.headers.get("cookie"));
   const user = session.get("user") as User;
   if (user) return user;
+  // eslint-disable-next-line @typescript-eslint/only-throw-error
   throw redirect("/", {
     headers: { "Set-Cookie": await commitSession(session) },
   });

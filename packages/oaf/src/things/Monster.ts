@@ -229,6 +229,6 @@ export class Monster extends Thing {
       description.push("", drops);
     }
 
-    return description.join("\n");
+    return Promise.resolve(description.join("\n"));
   }
 }

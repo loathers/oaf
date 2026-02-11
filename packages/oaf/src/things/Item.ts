@@ -97,7 +97,10 @@ export class Item extends Thing {
   }
 
   getModifiers(): Record<string, string> {
-    return this.item.itemModifierByItem?.modifiers ?? {};
+    return (this.item.itemModifierByItem?.modifiers ?? {}) as Record<
+      string,
+      string
+    >;
   }
 
   get descid() {

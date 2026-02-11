@@ -23,7 +23,7 @@ import { DiscordClient } from "../../../clients/discord.js";
 import { authenticate } from "../auth.server.js";
 import { Route } from "./+types/admin.pilot.js";
 
-async function fetchChannels(discordClient: DiscordClient) {
+function fetchChannels(discordClient: DiscordClient) {
   if (!discordClient.guild) return [];
 
   return [...discordClient.guild.channels.cache.values()]
@@ -31,7 +31,7 @@ async function fetchChannels(discordClient: DiscordClient) {
     .map((c) => ({ name: c.name, id: c.id }));
 }
 
-async function fetchEmoji(discordClient: DiscordClient) {
+function fetchEmoji(discordClient: DiscordClient) {
   if (!discordClient.guild) return [];
 
   return [...discordClient.guild.emojis.cache.values()].map((e) => ({
@@ -45,8 +45,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   await authenticate(request);
   const { discordClient } = context;
   return {
-    channels: await fetchChannels(discordClient),
-    emoji: await fetchEmoji(discordClient),
+    channels: fetchChannels(discordClient),
+    emoji: fetchEmoji(discordClient),
   };
 }
 

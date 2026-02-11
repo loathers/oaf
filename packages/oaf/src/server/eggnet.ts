@@ -1,12 +1,13 @@
 import { hyperlink } from "discord.js";
+import * as z from "zod";
 
 import { dataOfLoathingClient } from "../clients/dataOfLoathing.js";
 import { createEmbed, discordClient } from "../clients/discord.js";
 import { config } from "../config.js";
 
-type Details = {
-  monsterId: number;
-};
+export const eggnetNewUnlockSchema = z.object({
+  monsterId: z.number(),
+});
 
 async function getNextMonster() {
   const response = await fetch("https://eggnet.loathers.net/status");
@@ -17,7 +18,7 @@ async function getNextMonster() {
   return [Number(closest[0]), closest[1]] as const;
 }
 
-export async function eggnet({ monsterId }: Details) {
+export async function eggnet({ monsterId }: z.infer<typeof eggnetNewUnlockSchema>) {
   const guild = await discordClient.guilds.fetch(config.GUILD_ID);
   const iotmChannel = guild?.channels.cache.get(config.IOTM_CHANNEL_ID);
 

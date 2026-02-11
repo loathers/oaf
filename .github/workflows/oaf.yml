@@ -17,5 +17,7 @@ jobs:
         run: yarn workspace oaf run prisma generate
       - name: Run tests
         run: yarn workspace oaf run test
+      - name: Generate react-router types
+        run: yarn workspace oaf run react-router typegen
       - name: Run type check
         run: yarn workspace oaf run tsc

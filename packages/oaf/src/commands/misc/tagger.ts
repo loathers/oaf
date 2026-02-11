@@ -38,10 +38,10 @@ async function getExistingTagForMessage(message: Message<true>) {
 
 export async function execute(interaction: ContextMenuCommandInteraction) {
   if (!interaction.isMessageContextMenuCommand())
-    throw "Somehow you're trying to tag something that isn't a message";
+    throw new Error("Somehow you're trying to tag something that isn't a message");
 
   if (!interaction.inCachedGuild()) {
-    throw "This can only be done in guild";
+    throw new Error("This can only be done in guild");
   }
 
   const roleToCompare = await interaction.guild.roles.fetch(
@@ -49,7 +49,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
   );
 
   if (!roleToCompare) {
-    throw "Comparison role does not exist for tagging permissions";
+    throw new Error("Comparison role does not exist for tagging permissions");
   }
 
   const highestRole = interaction.member.roles.highest;

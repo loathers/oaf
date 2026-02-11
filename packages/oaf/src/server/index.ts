@@ -12,8 +12,8 @@ import {
 import { prisma } from "../clients/database.js";
 import { DiscordClient, discordClient } from "../clients/discord.js";
 import { config } from "../config.js";
-import { eggnet } from "./eggnet.js";
-import { samsara } from "./samsara.js";
+import { eggnet, eggnetNewUnlockSchema } from "./eggnet.js";
+import { samsara, samsaraRecordsSchema } from "./samsara.js";
 import { rollSubs } from "./subs.js";
 
 declare module "react-router" {
@@ -33,8 +33,11 @@ const viteDevServer =
       );
 
 const build = viteDevServer
-  ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
-  : await import(path.resolve("build/server/index.js"));
+  ? () =>
+      viteDevServer.ssrLoadModule(
+        "virtual:react-router/server-build",
+      )
+  : () => import(path.resolve("build/server/index.js"));
 
 function arrayToCsv<T extends object>(data: T[], headers: (keyof T)[]): string {
   // Create the header row based on the provided order
@@ -179,8 +182,16 @@ app
         .status(StatusCodes.FORBIDDEN)
         .json({ error: "Invalid token" });
 
+    const body = samsaraRecordsSchema.safeParse(req.body);
+
+    if (!body.success) {
+      return void res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "Invalid body" });
+    }
+
     try {
-      await samsara(req.body);
+      await samsara(body.data);
       return void res.status(StatusCodes.OK).json({ success: "true" });
     } catch (e) {
       if (e instanceof Error) {
@@ -204,8 +215,16 @@ app
         .status(StatusCodes.FORBIDDEN)
         .json({ error: "Invalid token" });
 
+    const body = eggnetNewUnlockSchema.safeParse(req.body);
+
+    if (!body.success) {
+      return void res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "Invalid body" });
+    }
+
     try {
-      await eggnet(req.body);
+      await eggnet(body.data);
       return void res.status(StatusCodes.OK).json({ success: "true" });
     } catch (e) {
       if (e instanceof Error) {

@@ -33,7 +33,7 @@ export async function rollSubs() {
   }
 
   const subRollEmoji =
-    guild.emojis.cache.find((e) => e.name === "subsRolling") ?? "";
+    guild.emojis.cache.find((e) => e.name === "subsRolling")?.toString() ?? "";
 
   const message = await iotmChannel.send({
     content: `🚨${subRollEmoji} Attention ${roleMention(

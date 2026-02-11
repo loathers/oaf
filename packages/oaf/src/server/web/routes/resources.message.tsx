@@ -49,7 +49,7 @@ export function DynamicDiscordMessage({
   const messageFetcher = useFetcher<typeof loader>();
 
   useEffect(() => {
-    messageFetcher.submit(
+    void messageFetcher.submit(
       { guildId, channelId, messageId },
       { method: "GET", action: "/resources/message" },
     );

@@ -32,7 +32,7 @@ export function DiscordUser({ id }: Props) {
   const userFetcher = useFetcher<typeof loader>();
 
   useEffect(() => {
-    userFetcher.submit({ id }, { method: "GET", action: "/resources/user" });
+    void userFetcher.submit({ id }, { method: "GET", action: "/resources/user" });
   }, [id]);
 
   const user = userFetcher.data?.user;

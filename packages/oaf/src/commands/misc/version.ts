@@ -46,20 +46,20 @@ function getVersionEmbed() {
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  interaction.reply({
+  await interaction.reply({
     embeds: [getVersionEmbed()],
     ephemeral: true,
   });
 }
 
-export async function init() {
-  discordClient.on(Events.ClientReady, async () => {
+export function init() {
+  discordClient.on(Events.ClientReady, () => {
     START_TIME = Date.now();
-    discordClient.alert(`${inlineCode("oaf")} started`);
+    void discordClient.alert(`${inlineCode("oaf")} started`);
   });
 
   const shutdown = (signal: string) => {
-    discordClient
+    void discordClient
       .alert(`${inlineCode("oaf")} shutting down (${signal})`)
       .then(() => process.exit(0));
   };
@@ -68,7 +68,7 @@ export async function init() {
   process.on("SIGINT", () => shutdown("SIGINT"));
 
   process.on("uncaughtException", (err) => {
-    discordClient
+    void discordClient
       .alert(
         `${inlineCode("oaf")} crashed: ${describeError(err)}`,
         undefined,
@@ -78,7 +78,7 @@ export async function init() {
   });
 
   process.on("unhandledRejection", (reason) => {
-    discordClient
+    void discordClient
       .alert(
         `${inlineCode("oaf")} crashed (unhandled rejection): ${describeError(reason)}`,
         undefined,

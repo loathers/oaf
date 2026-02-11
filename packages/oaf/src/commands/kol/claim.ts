@@ -193,20 +193,22 @@ async function removeVerification(member: GuildMember | PartialGuildMember) {
   );
 }
 
-export async function init() {
-  kolClient.on("whisper", async (whisper) => {
-    if (whisper.msg.trim() !== "claim") return;
+export function init() {
+  kolClient.on("whisper", (whisper) => {
+    void (async () => {
+      if (whisper.msg.trim() !== "claim") return;
 
-    const playerId = whisper.who.id;
+      const playerId = whisper.who.id;
 
-    const token = oauf.generatePlayer(playerId);
+      const token = oauf.generatePlayer(playerId);
 
-    await kolClient.whisper(
-      playerId,
-      `Your token is ${token} (expires in ${totp.timeRemaining()} seconds)`,
-    );
+      await kolClient.whisper(
+        playerId,
+        `Your token is ${token} (expires in ${totp.timeRemaining()} seconds)`,
+      );
+    })();
   });
 
-  discordClient.on(Events.ClientReady, synchroniseRoles);
-  discordClient.on(Events.GuildMemberRemove, removeVerification);
+  discordClient.on(Events.ClientReady, (client) => void synchroniseRoles(client));
+  discordClient.on(Events.GuildMemberRemove, (member) => void removeVerification(member));
 }

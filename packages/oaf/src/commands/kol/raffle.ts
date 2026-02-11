@@ -59,7 +59,7 @@ async function trackRaffle(
   await prisma.raffle.create({
     data: {
       gameday: raffle.gameday,
-      firstPrize: raffle.today.first!,
+      firstPrize: raffle.today.first,
       secondPrize: raffle.today.second!,
       messageId: messageId,
     },
@@ -161,7 +161,7 @@ async function getRaffleChannel() {
   return raffleChannel;
 }
 
-async function renderWinners(raffle: Raffle, members: Player[]) {
+function renderWinners(raffle: Raffle, members: Player[]) {
   const renderWinner = (p: KoLPlayer) =>
     formatPlayer(members.find((m) => m.playerId === p.id) ?? p, p.id);
 
@@ -180,7 +180,7 @@ async function sendRaffleMessage(raffle: Raffle) {
   const winningMembers = await getWinners(raffle);
   const alertable = await getAlertableWinners(winningMembers);
 
-  const winners = await renderWinners(raffle, winningMembers);
+  const winners = renderWinners(raffle, winningMembers);
 
   return await raffleChannel.send({
     content: `${heading("Raffle Winners")}\n\n${winners.join("\n")}`,
@@ -199,6 +199,6 @@ async function onRollover() {
   await trackRaffle(raffle, message.id);
 }
 
-export async function init() {
-  kolClient.on("rollover", onRollover);
+export function init() {
+  kolClient.on("rollover", () => void onRollover());
 }

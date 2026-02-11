@@ -3,9 +3,8 @@ import { CacheProvider as EmotionCacheProvider } from "@emotion/react";
 import createEmotionServer from "@emotion/server/create-instance";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { isbot } from "isbot";
-import React from "react";
 import { renderToPipeableStream } from "react-dom/server";
-import { type AppLoadContext, type EntryContext } from "react-router";
+import { type EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { PassThrough } from "stream";
 
@@ -16,8 +15,6 @@ const handleRequest = (
   responseStatusCode: number,
   responseHeaders: Headers,
   reactRouterContext: EntryContext,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  loadContext: AppLoadContext,
 ) =>
   isbot(request.headers.get("user-agent"))
     ? handleBotRequest(
@@ -51,7 +48,7 @@ const handleBotRequest = (
       {
         onAllReady: () => {
           const reactBody = new PassThrough();
-          const emotionServer = createEmotionServer(emotionCache);
+          const emotionServer = createEmotionServer(emotionCache as unknown as Parameters<typeof createEmotionServer>[0]);
 
           const bodyWithStyles = emotionServer.renderStylesToNodeStream();
           reactBody.pipe(bodyWithStyles);
@@ -68,7 +65,7 @@ const handleBotRequest = (
           pipe(reactBody);
         },
         onShellError: (error: unknown) => {
-          reject(error);
+          reject(error instanceof Error ? error : new Error(String(error)));
         },
         onError: (error: unknown) => {
           didError = true;
@@ -98,7 +95,7 @@ const handleBrowserRequest = (
       {
         onShellReady: () => {
           const reactBody = new PassThrough();
-          const emotionServer = createEmotionServer(emotionCache);
+          const emotionServer = createEmotionServer(emotionCache as unknown as Parameters<typeof createEmotionServer>[0]);
 
           const bodyWithStyles = emotionServer.renderStylesToNodeStream();
           reactBody.pipe(bodyWithStyles);
@@ -115,7 +112,7 @@ const handleBrowserRequest = (
           pipe(reactBody);
         },
         onShellError: (error: unknown) => {
-          reject(error);
+          reject(error instanceof Error ? error : new Error(String(error)));
         },
         onError: (error: unknown) => {
           didError = true;

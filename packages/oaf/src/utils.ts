@@ -182,9 +182,7 @@ export function ensureArray<T>(v: T | T[]) {
 }
 
 export function englishJoin<T>(v: T[]) {
-  return `${v.length > 1 ? `${v.slice(0, -1).join(", ")} and ` : ""}${v.slice(
-    -1,
-  )}`;
+  return `${v.length > 1 ? `${v.slice(0, -1).join(", ")} and ` : ""}${v.slice(-1).join("")}`;
 }
 
 export function bufferToDataUri(buffer: Buffer) {

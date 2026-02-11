@@ -52,10 +52,10 @@ export const data = new SlashCommandBuilder()
       .setRequired(false),
   );
 
-export function execute(interaction: ChatInputCommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const question = interaction.options.getString("asktheorb");
 
-  interaction.reply({
+  await interaction.reply({
     content: `${question ? `"${question}", you ask.\n` : ""}${inlineCode(
       "oaf",
     )} gazes into the mini crystal ball. "${

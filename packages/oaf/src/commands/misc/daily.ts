@@ -7,7 +7,7 @@ import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import { englishJoin, formatPlayer } from "../../utils.js";
 
-Array.prototype.toSorted = function (compareFn) {
+Array.prototype.toSorted = function <T>(this: T[], compareFn?: (a: T, b: T) => number) {
   return [...this].sort(compareFn);
 };
 
@@ -60,6 +60,6 @@ async function onRollover() {
   });
 }
 
-export async function init() {
-  kolClient.on("rollover", onRollover);
+export function init() {
+  kolClient.on("rollover", () => void onRollover());
 }

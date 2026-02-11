@@ -32,7 +32,7 @@ export async function loader() {
 
 function formatWinners(
   winners: {
-    tickets;
+    tickets: number;
     player: { playerName: string; playerId: number; discordId?: string | null };
   }[],
 ) {
