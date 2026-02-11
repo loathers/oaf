@@ -21,19 +21,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const member = interaction.member;
 
   if (!member) {
-    return void await interaction.reply({
+    return void (await interaction.reply({
       content: "You have to perform this action from within a Guild.",
       ephemeral: true,
-    });
+    }));
   }
 
   const roleManager = member.roles as GuildMemberRoleManager;
 
   if (!roleManager.cache.has(config.EXTENDED_TEAM_ROLE_ID)) {
-    return void await interaction.reply({
+    return void (await interaction.reply({
       content: "You are not permitted to rename me, your beloved O.A.F.",
       ephemeral: true,
-    });
+    }));
   }
 
   const name = interaction.options.getString("name", true);
@@ -51,10 +51,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await discordClient.alert(
       `${interaction.user.username} tried to change O.A.F.'s name to ${name}, but failed!`,
     );
-    return void await interaction.reply({
+    return void (await interaction.reply({
       content: "Sorry, that command didn't work. My name is still my name.",
       ephemeral: true,
-    });
+    }));
   }
 
   return void (await interaction.reply({

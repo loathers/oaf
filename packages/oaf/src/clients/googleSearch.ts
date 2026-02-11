@@ -1,4 +1,5 @@
 import { StatusCodes } from "http-status-codes";
+
 import { config } from "../config.js";
 
 type SearchResponse = {
@@ -19,7 +20,10 @@ export async function googleSearch(context: string, query: string) {
   if (!response.ok)
     return {
       results: [],
-      error: { statusText: response.statusText, status: response.status as StatusCodes },
+      error: {
+        statusText: response.statusText,
+        status: response.status as StatusCodes,
+      },
     };
 
   return { results: (await response.json()) as SearchResponse, error: null };

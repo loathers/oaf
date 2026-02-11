@@ -179,11 +179,7 @@ export class DiscordClient extends Client {
     }
   }
 
-  async alert(
-    description: string,
-    interaction?: Interaction,
-    error?: unknown,
-  ) {
+  async alert(description: string, interaction?: Interaction, error?: unknown) {
     if (!interaction) {
       console.warn(description);
     } else if (error) {

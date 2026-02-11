@@ -274,10 +274,8 @@ export class Familiar extends Thing {
   }
 
   getModifiers(): Record<string, string> {
-    return (this.familiar.familiarModifierByFamiliar?.modifiers ?? {}) as Record<
-      string,
-      string
-    >;
+    return (this.familiar.familiarModifierByFamiliar?.modifiers ??
+      {}) as Record<string, string>;
   }
 
   private classify(): string {

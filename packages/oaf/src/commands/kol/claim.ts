@@ -209,6 +209,12 @@ export function init() {
     })();
   });
 
-  discordClient.on(Events.ClientReady, (client) => void synchroniseRoles(client));
-  discordClient.on(Events.GuildMemberRemove, (member) => void removeVerification(member));
+  discordClient.on(
+    Events.ClientReady,
+    (client) => void synchroniseRoles(client),
+  );
+  discordClient.on(
+    Events.GuildMemberRemove,
+    (member) => void removeVerification(member),
+  );
 }

@@ -20,13 +20,14 @@ async function startTyping() {
           discordClient.member?.permissionsIn(ch).has("SendMessages"),
         ),
       )
-      .map((channel) => channel.sendTyping())
+      .map((channel) => channel.sendTyping()),
   );
 }
 
 export function init() {
   discordClient.once(
     Events.ClientReady,
-    () => void setInterval(() => void startTyping(), milliseconds(CHECK_DURATION)),
+    () =>
+      void setInterval(() => void startTyping(), milliseconds(CHECK_DURATION)),
   );
 }
