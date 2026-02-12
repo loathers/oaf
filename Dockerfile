@@ -18,7 +18,6 @@ RUN corepack enable
 
 # Copy package manifests first for better layer caching
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn .yarn
 COPY packages/oaf/package.json packages/oaf/
 COPY packages/kol.js/package.json packages/kol.js/
 
