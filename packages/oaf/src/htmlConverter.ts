@@ -4,7 +4,7 @@ export async function renderHtml(
   html: string,
   { width = 800, height = 600 } = {},
 ) {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({ args: ["--no-sandbox"] });
   const page = await browser.newPage();
 
   await page.setViewport({ width, height, deviceScaleFactor: 2 });
