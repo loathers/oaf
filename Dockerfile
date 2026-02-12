@@ -32,4 +32,5 @@ RUN yarn workspace oaf prisma generate
 RUN yarn workspace oaf build
 
 # Run migrations then start
-CMD npx prisma migrate deploy --schema packages/oaf/prisma/schema.prisma && node --import tsx ./packages/oaf/src/index.ts
+WORKDIR /app/packages/oaf
+CMD npx prisma migrate deploy && node --import tsx ./src/index.ts
