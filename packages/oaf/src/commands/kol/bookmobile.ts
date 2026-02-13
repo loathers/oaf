@@ -64,7 +64,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const embed = createEmbed().setTitle(`The Bookmobile`);
 
-  const item = dataOfLoathingClient.items.find((i) => i.name === info.title);
+  const item = dataOfLoathingClient.findThingByName(info.title);
   let itemInfo = info.title;
 
   if (item) {

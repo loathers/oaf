@@ -14,7 +14,7 @@ export const data = new SlashCommandBuilder()
   .addIntegerOption(itemOption());
 
 export async function embedForItem(id: number) {
-  const item = dataOfLoathingClient.items.find((i) => i.id === id);
+  const item = dataOfLoathingClient.findItemById(id);
   if (!item) return null;
   const embed = createEmbed();
   embed.setTitle(item.name).setURL(dataOfLoathingClient.getWikiLink(item));

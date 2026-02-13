@@ -142,7 +142,7 @@ function renderWinners(raffle: Raffle, members: Player[]) {
 
   return raffle.yesterday.map((winner) => {
     const itemName =
-      dataOfLoathingClient.items.find((i) => i.id === winner.item)?.name ??
+      dataOfLoathingClient.findItemById(winner.item)?.name ??
       `Unknown item (#${winner.item})`;
     return `${winner.place === 1 ? "🥇" : "🥈"} - ${bold(itemName)} won by ${renderWinner(winner.player)} (with ${numberFormat.format(winner.tickets)} tickets)`;
   });

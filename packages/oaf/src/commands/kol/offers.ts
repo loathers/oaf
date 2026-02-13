@@ -68,7 +68,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  const item = dataOfLoathingClient.items.find((i) => i.id === itemId);
+  const item = dataOfLoathingClient.findItemById(itemId);
 
   if (!item) {
     return void (await interaction.editReply(`That item does not exist.`));
@@ -115,7 +115,7 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  const item = dataOfLoathingClient.items.find((i) => i.id === itemId);
+  const item = dataOfLoathingClient.findItemById(itemId);
 
   if (!item) {
     return void (await interaction.editReply(`That item does not exist.`));
