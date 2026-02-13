@@ -175,11 +175,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const { players, participation: allParticipation } =
       await getPlayersWithRaidParticipation();
 
+    const participationByPlayer = Map.groupBy(
+      allParticipation,
+      (r) => r.playerId,
+    );
+
     const playersWithParticipation = players.map((p) => ({
       ...p,
-      raidParticipation: allParticipation.filter(
-        (r) => r.playerId === p.playerId,
-      ),
+      raidParticipation: participationByPlayer.get(p.playerId) ?? [],
     }));
 
     const participation = mergeParticipation(

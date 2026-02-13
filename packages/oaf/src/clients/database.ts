@@ -323,13 +323,14 @@ export async function upsertOffer(
   itemId: number,
   price: number,
 ) {
+  const now = new Date();
   await db
     .insertInto("StandingOffer")
-    .values({ buyerId, itemId, price, offeredAt: new Date() })
+    .values({ buyerId, itemId, price, offeredAt: now })
     .onConflict((oc) =>
       oc.columns(["buyerId", "itemId"]).doUpdateSet({
         price,
-        offeredAt: new Date(),
+        offeredAt: now,
       }),
     )
     .execute();
@@ -531,28 +532,28 @@ export async function getRafflesWithWinners() {
     .selectAll("Player")
     .execute();
 
+  const winsByGameday = Map.groupBy(wins, (w) => w.gameday);
+
   return raffles.map((r) => ({
     ...r,
-    winners: wins
-      .filter((w) => w.gameday === r.gameday)
-      .map((w) => ({
-        gameday: w.gameday,
+    winners: (winsByGameday.get(r.gameday) ?? []).map((w) => ({
+      gameday: w.gameday,
+      playerId: w.playerId,
+      place: w.place,
+      tickets: w.tickets,
+      player: {
         playerId: w.playerId,
-        place: w.place,
-        tickets: w.tickets,
-        player: {
-          playerId: w.playerId,
-          playerName: w.playerName,
-          accountCreationDate: w.accountCreationDate,
-          doneWithSkills: w.doneWithSkills,
-          brainiac: w.brainiac,
-          discordId: w.discordId,
-          latitude: w.latitude,
-          longitude: w.longitude,
-          thiccEntered: w.thiccEntered,
-          thiccGifteeId: w.thiccGifteeId,
-        },
-      })),
+        playerName: w.playerName,
+        accountCreationDate: w.accountCreationDate,
+        doneWithSkills: w.doneWithSkills,
+        brainiac: w.brainiac,
+        discordId: w.discordId,
+        latitude: w.latitude,
+        longitude: w.longitude,
+        thiccEntered: w.thiccEntered,
+        thiccGifteeId: w.thiccGifteeId,
+      },
+    })),
   }));
 }
 
@@ -575,15 +576,15 @@ export async function getRafflesForCsv() {
     ])
     .execute();
 
+  const winsByGameday = Map.groupBy(wins, (w) => w.gameday);
+
   return raffles.map((r) => ({
     ...r,
-    winners: wins
-      .filter((w) => w.gameday === r.gameday)
-      .map((w) => ({
-        place: w.place,
-        tickets: w.tickets,
-        player: { playerId: w.playerId, playerName: w.playerName },
-      })),
+    winners: (winsByGameday.get(r.gameday) ?? []).map((w) => ({
+      place: w.place,
+      tickets: w.tickets,
+      player: { playerId: w.playerId, playerName: w.playerName },
+    })),
   }));
 }
 
@@ -683,12 +684,10 @@ export async function getTriggeredAlerts(prices: {
       "Player.playerName",
       "Player.discordId",
     ])
-    .where((eb) =>
-      eb.or([
-        eb("FlowerPriceAlert.price", "<=", prices.red),
-        eb("FlowerPriceAlert.price", "<=", prices.white),
-        eb("FlowerPriceAlert.price", "<=", prices.blue),
-      ]),
+    .where(
+      "FlowerPriceAlert.price",
+      "<=",
+      Math.max(prices.red, prices.white, prices.blue),
     )
     .execute();
 }

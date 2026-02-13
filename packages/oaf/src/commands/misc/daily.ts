@@ -7,13 +7,6 @@ import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { englishJoin, formatPlayer } from "../../utils.js";
 
-Array.prototype.toSorted = function <T>(
-  this: T[],
-  compareFn?: (a: T, b: T) => number,
-) {
-  return [...this].sort(compareFn);
-};
-
 async function createBirthdayMessage() {
   const result = await getBirthdays();
   const birthdays = result.rows;
