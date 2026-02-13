@@ -5,7 +5,14 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { prisma } from "../../clients/database.js";
+import {
+  createFlowerPrices,
+  deleteFlowerAlert,
+  findPlayerByDiscordId,
+  getLatestFlowerPrices,
+  getTriggeredAlerts,
+  upsertFlowerAlert,
+} from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 
@@ -122,9 +129,7 @@ async function manageAlerts(interaction: ChatInputCommandInteraction) {
 
   const price = interaction.options.getInteger("price", true);
 
-  const player = await prisma.player.findFirst({
-    where: { discordId: interaction.user.id },
-  });
+  const player = await findPlayerByDiscordId(interaction.user.id);
 
   if (!player) {
     return void (await interaction.editReply(
@@ -133,17 +138,11 @@ async function manageAlerts(interaction: ChatInputCommandInteraction) {
   }
 
   if (price === 0) {
-    await prisma.flowerPriceAlert.deleteMany({
-      where: { playerId: player.playerId },
-    });
+    await deleteFlowerAlert(player.playerId);
     return void (await interaction.editReply("Removed your price alert."));
   }
 
-  await prisma.flowerPriceAlert.upsert({
-    where: { playerId: player.playerId },
-    update: { price },
-    create: { playerId: player.playerId, price },
-  });
+  await upsertFlowerAlert(player.playerId, price);
 
   return await interaction.editReply(
     `You will be alerted when the price of a tulip is at or above ${numberFormat.format(price)} meat.`,
@@ -155,9 +154,7 @@ async function checkPrices() {
   const prices = parsePrices(page);
   if (!prices) return null;
 
-  const lastPrices = await prisma.flowerPrices.findFirst({
-    orderBy: { createdAt: "desc" },
-  });
+  const lastPrices = await getLatestFlowerPrices();
 
   // Return if we already have these prices
   if (
@@ -168,28 +165,13 @@ async function checkPrices() {
   )
     return prices;
 
-  await prisma.flowerPrices.create({
-    data: {
-      red: prices.red,
-      white: prices.white,
-      blue: prices.blue,
-    },
-  });
+  await createFlowerPrices(prices);
 
-  const alertees = await prisma.flowerPriceAlert.findMany({
-    where: {
-      OR: [
-        { price: { lte: prices.red } },
-        { price: { lte: prices.white } },
-        { price: { lte: prices.blue } },
-      ],
-    },
-    select: { player: true, price: true },
-  });
+  const alertees = await getTriggeredAlerts(prices);
 
-  for (const { price, player } of alertees) {
-    if (!player.discordId) continue;
-    const user = await discordClient.users.fetch(player.discordId);
+  for (const { price, discordId } of alertees) {
+    if (!discordId) continue;
+    const user = await discordClient.users.fetch(discordId);
     const channel = await user.createDM();
     await channel.send({
       content: `🌷 You are receiving this alert because you asked me to notify you when a tulip is redeemable for ${price} or higher.`,

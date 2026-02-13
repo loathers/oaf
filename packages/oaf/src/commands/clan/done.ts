@@ -4,7 +4,7 @@ import {
   italic,
 } from "discord.js";
 
-import { prisma } from "../../clients/database.js";
+import { setPlayerDoneWithSkills } from "../../clients/database.js";
 import { identifyPlayer } from "../_player.js";
 
 export const data = new SlashCommandBuilder()
@@ -38,15 +38,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const [player] = identification;
 
-  await prisma.player.upsert({
-    where: { playerId: player.id },
-    create: {
-      playerId: player.id,
-      playerName: player.name,
-      doneWithSkills,
-    },
-    update: { doneWithSkills },
-  });
+  await setPlayerDoneWithSkills(player.id, player.name, doneWithSkills);
 
   await interaction.editReply(
     `${doneWithSkills ? "Added" : "Removed"} user ${italic(player.name)} ${

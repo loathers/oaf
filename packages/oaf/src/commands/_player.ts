@@ -1,7 +1,6 @@
-import type { Prisma } from "@prisma/client";
 import { Player } from "kol.js";
 
-import { prisma } from "../clients/database.js";
+import { findPlayerWithRaffleWins } from "../clients/database.js";
 import { kolClient } from "../clients/kol.js";
 
 export function validPlayerIdentifier(identifier: string) {
@@ -10,14 +9,11 @@ export function validPlayerIdentifier(identifier: string) {
   return /^([a-zA-Z][a-zA-Z0-9_ ]{2,29})|[0-9]+$/.test(identifier);
 }
 
-export async function findPlayer(where: Prisma.PlayerWhereInput) {
-  const player = await prisma.player.findFirst({
-    where,
-    include: {
-      raffleWins: true,
-    },
-  });
-  return player ?? null;
+export async function findPlayer(where: {
+  playerId?: number;
+  discordId?: string;
+}) {
+  return await findPlayerWithRaffleWins(where);
 }
 
 type FoundPlayer = Awaited<ReturnType<typeof findPlayer>>;

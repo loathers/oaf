@@ -5,7 +5,7 @@
     "declaration": false,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["ES2023", "DOM"],
+    "lib": ["ES2024", "DOM"],
     "module": "NodeNext",
     "rootDirs": ["."],
     "noEmit": true,
@@ -24,7 +24,8 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "vite.config.ts",
-    "prisma/**/*.ts"
+    "migrations/**/*.ts",
+    "kysely.config.ts"
   ],
   "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 }

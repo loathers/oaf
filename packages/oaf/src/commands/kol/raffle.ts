@@ -1,4 +1,3 @@
-import { Player } from "@prisma/client";
 import {
   ChatInputCommandInteraction,
   MessageFlags,
@@ -10,10 +9,16 @@ import {
 import { Player as KoLPlayer } from "kol.js";
 
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
-import { prisma } from "../../clients/database.js";
+import {
+  createRaffle,
+  createRaffleWin,
+  findRaffle,
+  getPlayersByIdsWithDiscord,
+} from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
+import type { Player } from "../../database-types.js";
 import { formatPlayer } from "../../utils.js";
 import { embedForItem } from "../wiki/item.js";
 
@@ -28,9 +33,7 @@ type Raffle = Awaited<ReturnType<typeof kolClient.getRaffle>>;
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
   const { daynumber } = (await kolClient.fetchStatus()) ?? { daynumber: "0" };
-  const raffle = await prisma.raffle.findUnique({
-    where: { gameday: Number(daynumber) },
-  });
+  const raffle = await findRaffle(Number(daynumber));
 
   if (!raffle) {
     // If the rollover post didn't work for whatever reason, just run it now
@@ -56,49 +59,24 @@ async function trackRaffle(
   }
 
   // Add today to the database
-  await prisma.raffle.create({
-    data: {
-      gameday: raffle.gameday,
-      firstPrize: raffle.today.first,
-      secondPrize: raffle.today.second!,
-      messageId: messageId,
-    },
+  await createRaffle({
+    gameday: raffle.gameday,
+    firstPrize: raffle.today.first,
+    secondPrize: raffle.today.second!,
+    messageId: messageId,
   });
 
   // Update yesterday's winners
   for (const winner of raffle.yesterday) {
-    await prisma.raffleWins.create({
-      data: {
-        raffle: {
-          connectOrCreate: {
-            where: {
-              gameday: raffle.gameday - 1,
-            },
-            create: {
-              gameday: raffle.gameday - 1,
-              firstPrize:
-                raffle.yesterday.find((w) => w.place === 1)?.item ?? 0,
-              secondPrize:
-                raffle.yesterday.find((w) => w.place === 2)?.item ?? 0,
-              messageId: "",
-            },
-          },
-        },
-        player: {
-          connectOrCreate: {
-            where: {
-              playerId: winner.player.id,
-            },
-            create: {
-              playerId: winner.player.id,
-              playerName: winner.player.name,
-              accountCreationDate: winner.player.createdDate,
-            },
-          },
-        },
-        tickets: winner.tickets,
-        place: winner.place,
-      },
+    await createRaffleWin({
+      gameday: raffle.gameday - 1,
+      firstPrize: raffle.yesterday.find((w) => w.place === 1)?.item ?? 0,
+      secondPrize: raffle.yesterday.find((w) => w.place === 2)?.item ?? 0,
+      playerId: winner.player.id,
+      playerName: winner.player.name,
+      accountCreationDate: winner.player.createdDate,
+      tickets: winner.tickets,
+      place: winner.place,
     });
   }
 }
@@ -132,12 +110,9 @@ async function buildRaffleEmbeds(raffle: Raffle) {
 }
 
 async function getWinners(raffle: Raffle) {
-  return await prisma.player.findMany({
-    where: {
-      playerId: { in: raffle.yesterday.map((prize) => prize.player.id) },
-      discordId: { not: null },
-    },
-  });
+  return await getPlayersByIdsWithDiscord(
+    raffle.yesterday.map((prize) => prize.player.id),
+  );
 }
 
 async function getAlertableWinners(players: Player[]) {

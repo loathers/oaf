@@ -1,10 +1,10 @@
 import { Router } from "express";
 
-import { prisma } from "../../clients/database.js";
+import { getAllTags } from "../../clients/database.js";
 
 export const tagsRouter = Router();
 
 tagsRouter.get("/", async (_req, res) => {
-  const tags = await prisma.tag.findMany({});
+  const tags = await getAllTags();
   res.json({ tags });
 });

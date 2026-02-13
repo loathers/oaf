@@ -7,7 +7,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { dataOfLoathingClient } from "../clients/dataOfLoathing.js";
-import { prisma } from "../clients/database.js";
+import { getRafflesForCsv, getVerifiedPlayerIds } from "../clients/database.js";
 import { config } from "../config.js";
 import {
   authRouter,
@@ -55,36 +55,12 @@ app
   .use(bodyParser.json())
   .get("/favicon.ico", (_req, res) => void res.send())
   .get("/verified.json", async (_req, res) => {
-    const verified = await prisma.player.findMany({
-      where: { discordId: { not: null } },
-      select: {
-        playerId: true,
-      },
-    });
+    const verified = await getVerifiedPlayerIds();
 
-    return void res
-      .set("Content-Type", "application/json")
-      .send(verified.map((p) => p.playerId));
+    return void res.set("Content-Type", "application/json").send(verified);
   })
   .get("/raffle.csv", async (_req, res) => {
-    const raffles = (
-      await prisma.raffle.findMany({
-        orderBy: { gameday: "asc" },
-        select: {
-          gameday: true,
-          messageId: true,
-          firstPrize: true,
-          secondPrize: true,
-          winners: {
-            select: {
-              player: { select: { playerId: true, playerName: true } },
-              place: true,
-              tickets: true,
-            },
-          },
-        },
-      })
-    ).map(({ winners, ...r }) => {
+    const raffles = (await getRafflesForCsv()).map(({ winners, ...r }) => {
       const firstPrize = dataOfLoathingClient.items.find(
         (i) => i.id === r.firstPrize,
       );

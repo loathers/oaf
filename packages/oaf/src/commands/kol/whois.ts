@@ -9,7 +9,7 @@ import {
   time,
 } from "discord.js";
 
-import { prisma } from "../../clients/database.js";
+import { upsertPlayerInfo } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { greenboxClient } from "../../clients/greenbox.js";
 import { snapshotClient } from "../../clients/snapshot.js";
@@ -136,18 +136,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   // Use this opportunity to either
   // a) learn about a new player for our database, or
   // b) update player names either from name changes or capitalization changes
-  await prisma.player.upsert({
-    where: { playerId: player.id },
-    update: {
-      playerName: player.name,
-      accountCreationDate: player.createdDate,
-    },
-    create: {
-      playerId: player.id,
-      playerName: player.name,
-      accountCreationDate: player.createdDate,
-    },
-  });
+  await upsertPlayerInfo(player.id, player.name, player.createdDate);
 
   if (knownPlayer?.discordId) {
     fields.push({

@@ -12,7 +12,10 @@ import {
 } from "discord.js";
 import { dedent } from "ts-dedent";
 
-import { prisma } from "../../clients/database.js";
+import {
+  findPlayerByDiscordId,
+  updatePlayersByDiscordId,
+} from "../../clients/database.js";
 
 export const data = new SlashCommandBuilder()
   .setName("thicc")
@@ -65,7 +68,7 @@ const ABOUT_EMBED = new EmbedBuilder().setTitle("THICC 2023")
         4. You will in turn receive your giftee's Discord username, IGN and address.
         5. Go out and get or make your gift, and send it so that it arrives before Crimbo!
         6. ${GAUSIE} will send you one million meat for participation, because he loves you.
-        
+
         ${bold(underscore("F.A.Q."))}
         * ${italic(
           "What if I don't want to send someone my address?",
@@ -95,7 +98,7 @@ async function about(interaction: ChatInputCommandInteraction) {
 
 async function enter(interaction: ChatInputCommandInteraction) {
   const discordId = interaction.user.id;
-  const player = await prisma.player.findFirst({ where: { discordId } });
+  const player = await findPlayerByDiscordId(discordId);
 
   if (!player) {
     return void (await interaction.editReply(
@@ -111,10 +114,7 @@ async function enter(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  await prisma.player.updateMany({
-    where: { discordId },
-    data: { thiccEntered: true },
-  });
+  await updatePlayersByDiscordId(discordId, { thiccEntered: true });
 
   return void (await interaction.editReply(
     "You have entered THICC! Thanks for gifting!",
@@ -123,7 +123,7 @@ async function enter(interaction: ChatInputCommandInteraction) {
 
 async function withdraw(interaction: ChatInputCommandInteraction) {
   const discordId = interaction.user.id;
-  const player = await prisma.player.findFirst({ where: { discordId } });
+  const player = await findPlayerByDiscordId(discordId);
 
   if (!player?.thiccEntered) {
     return void (await interaction.editReply(
@@ -137,10 +137,7 @@ async function withdraw(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  await prisma.player.updateMany({
-    where: { discordId },
-    data: { thiccEntered: false },
-  });
+  await updatePlayersByDiscordId(discordId, { thiccEntered: false });
 
   return void (await interaction.editReply(
     "You have withdrawn from THICC! Sorry to see you go.",

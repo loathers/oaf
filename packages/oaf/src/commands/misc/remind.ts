@@ -18,7 +18,12 @@ import {
 } from "discord.js";
 import { dedent } from "ts-dedent";
 
-import { prisma } from "../../clients/database.js";
+import {
+  createReminder,
+  deleteOldSentReminders,
+  getDueReminders,
+  markReminderSent,
+} from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 
 const CHECK_DURATION: Duration = { seconds: 10 };
@@ -116,36 +121,27 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     withResponse: true,
   });
 
-  await prisma.reminder.create({
-    data: {
-      guildId: interaction.guildId,
-      channelId: interaction.channelId,
-      userId: interaction.user.id,
-      interactionReplyId: reply.interaction.id,
-      messageContents: reminderText,
-      reminderDate,
-    },
+  await createReminder({
+    guildId: interaction.guildId,
+    channelId: interaction.channelId,
+    userId: interaction.user.id,
+    interactionReplyId: reply.interaction.id,
+    messageContents: reminderText,
+    reminderDate,
   });
 }
 
 async function clearOldReminders() {
-  const deleted = await prisma.reminder.deleteMany({
-    where: {
-      reminderSent: true,
-      reminderDate: { lt: sub(new Date(), { days: 30 }) },
-    },
-  });
-  if (deleted.count > 0) {
-    await discordClient.alert(`Cleared ${deleted.count} old sent reminder(s)`);
+  const count = await deleteOldSentReminders(sub(new Date(), { days: 30 }));
+  if (count > 0) {
+    await discordClient.alert(`Cleared ${count} old sent reminder(s)`);
   }
 }
 
 async function checkReminders() {
   let reminders;
   try {
-    reminders = await prisma.reminder.findMany({
-      where: { reminderDate: { lte: new Date() }, reminderSent: false },
-    });
+    reminders = await getDueReminders();
   } catch {
     // Database temporarily unavailable, will retry on next interval
     return;
@@ -192,10 +188,7 @@ async function checkReminders() {
       );
     }
 
-    await prisma.reminder.update({
-      where: { id: reminder.id },
-      data: { reminderSent: true },
-    });
+    await markReminderSent(reminder.id);
   }
 }
 
