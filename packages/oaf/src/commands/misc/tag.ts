@@ -7,7 +7,7 @@ import {
   messageLink,
 } from "discord.js";
 
-import { prisma } from "../../clients/database.js";
+import { findTagByName, getAllTagNames } from "../../clients/database.js";
 
 export const data = new SlashCommandBuilder()
   .setName("tag")
@@ -27,7 +27,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  const tag = await prisma.tag.findUnique({ where: { tag: tagName } });
+  const tag = await findTagByName(tagName);
 
   if (!tag) {
     await interaction.editReply(`No tag was found matching ${bold(tagName)}`);
@@ -45,11 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 let TAG_CACHE: string[] = [];
 
 export async function init() {
-  TAG_CACHE = (
-    await prisma.tag.findMany({
-      select: { tag: true },
-    })
-  ).map((t) => t.tag);
+  TAG_CACHE = await getAllTagNames();
 }
 
 export async function autocomplete(interaction: AutocompleteInteraction) {

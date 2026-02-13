@@ -1,10 +1,10 @@
-import { Player } from "@prisma/client";
 import { heading } from "discord.js";
 
-import { prisma } from "../../clients/database.js";
+import { getBirthdays } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
+import type { Player } from "../../database-types.js";
 import { englishJoin, formatPlayer } from "../../utils.js";
 
 Array.prototype.toSorted = function <T>(
@@ -15,9 +15,8 @@ Array.prototype.toSorted = function <T>(
 };
 
 async function createBirthdayMessage() {
-  const birthdays = await prisma.$queryRaw<
-    Player[]
-  >`SELECT * FROM "Player" WHERE "discordId" IS NOT NULL AND EXTRACT(MONTH FROM "accountCreationDate") = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(DAY FROM "accountCreationDate") = EXTRACT(DAY FROM CURRENT_DATE)`;
+  const result = await getBirthdays();
+  const birthdays = result.rows;
 
   if (birthdays.length === 0) return null;
 

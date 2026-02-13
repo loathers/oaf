@@ -1,7 +1,11 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Player } from "kol.js";
 
-import { prisma } from "../../clients/database.js";
+import {
+  createRaidsWithParticipation,
+  getParsedRaidIds,
+  getPlayersWithRaidParticipation,
+} from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import {
@@ -102,20 +106,22 @@ export function getParticipationFromRaidLog(raidLog: string) {
 }
 
 async function parseLogs() {
-  const parsedRaids = (
-    await prisma.raid.findMany({ select: { id: true } })
-  ).map(({ id }) => id);
+  const parsedRaids = await getParsedRaidIds();
 
-  const knownPlayers = (
-    await prisma.player.findMany({
-      select: {
-        playerId: true,
-      },
-    })
-  ).map(({ playerId }) => playerId);
+  const { players } = await getPlayersWithRaidParticipation();
+  const knownPlayerIds = players.map((p) => p.playerId);
 
   // Determine all the raid ids that are yet to be passed
-  const updates = [];
+  const raidUpdates: {
+    id: number;
+    clanId: number;
+    participation: {
+      playerId: number;
+      playerName: string;
+      skills: number;
+      kills: number;
+    }[];
+  }[] = [];
 
   for (const clan of DREAD_CLANS) {
     const raids = (await getMissingRaidLogs(clan.id, parsedRaids)).filter(
@@ -137,38 +143,25 @@ async function parseLogs() {
         Object.values(
           mergeParticipation({}, ...getParticipationFromRaidLog(log)),
         ).map(async ({ playerId, skills, kills }) => ({
+          playerId,
+          playerName:
+            (!knownPlayerIds.includes(playerId) &&
+              (await Player.getNameFromId(kolClient, playerId))) ||
+            "Unknown",
           skills,
           kills,
-          player: {
-            connectOrCreate: {
-              where: { playerId },
-              create: {
-                playerId,
-                playerName:
-                  (!knownPlayers.includes(playerId) &&
-                    (await Player.getNameFromId(kolClient, playerId))) ||
-                  "Unknown",
-              },
-            },
-          },
         })),
       );
 
-      updates.push(
-        prisma.raid.create({
-          data: {
-            id,
-            clanId: clan.id,
-            participation: {
-              create: participation,
-            },
-          },
-        }),
-      );
+      raidUpdates.push({
+        id,
+        clanId: clan.id,
+        participation,
+      });
     }
   }
 
-  await prisma.$transaction(updates);
+  await createRaidsWithParticipation(raidUpdates);
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -179,19 +172,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     await parseLogs();
 
-    const players = await prisma.player.findMany({
-      select: {
-        playerId: true,
-        playerName: true,
-        discordId: true,
-        doneWithSkills: true,
-        raidParticipation: true,
-      },
-    });
+    const { players, participation: allParticipation } =
+      await getPlayersWithRaidParticipation();
+
+    const playersWithParticipation = players.map((p) => ({
+      ...p,
+      raidParticipation: allParticipation.filter(
+        (r) => r.playerId === p.playerId,
+      ),
+    }));
 
     const participation = mergeParticipation(
       {},
-      ...players
+      ...playersWithParticipation
         .map((p) => p.raidParticipation.map((r) => ({ [p.playerId]: r })))
         .flat(),
       ...(await getParticipationFromCurrentRaid()),
@@ -218,7 +211,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ));
     }
 
-    const skillsOwed = players
+    const skillsOwed = playersWithParticipation
       .filter(
         (player) =>
           player.doneWithSkills !== true && player.raidParticipation.length > 0,

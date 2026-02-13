@@ -24,7 +24,8 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "vite.config.ts",
-    "prisma/**/*.ts"
+    "migrations/**/*.ts",
+    "kysely.config.ts"
   ],
   "isolatedModules": true /* Transpile each file as a separate module (similar to 'ts.transpileModule'). */
 }

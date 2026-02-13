@@ -4,7 +4,7 @@ import {
   italic,
 } from "discord.js";
 
-import { prisma } from "../../clients/database.js";
+import { setPlayerBrainiac } from "../../clients/database.js";
 import { identifyPlayer } from "../_player.js";
 
 export const data = new SlashCommandBuilder()
@@ -40,15 +40,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const [player] = identification;
 
-  await prisma.player.upsert({
-    where: { playerId: player.id },
-    create: {
-      playerId: player.id,
-      playerName: player.name,
-      brainiac: available,
-    },
-    update: { brainiac: available },
-  });
+  await setPlayerBrainiac(player.id, player.name, available);
 
   await interaction.editReply(
     `${available ? "Added" : "Removed"} user ${italic(player.name)} ${

@@ -9,7 +9,10 @@ import { fileURLToPath } from "node:url";
 import proj4 from "proj4";
 import { dedent } from "ts-dedent";
 
-import { prisma } from "../../clients/database.js";
+import {
+  getMapPositions,
+  updatePlayersByDiscordId,
+} from "../../clients/database.js";
 import { renderSvg } from "../../svgConverter.js";
 import { bufferToDataUri } from "../../utils.js";
 
@@ -59,10 +62,7 @@ const MAP = bufferToDataUri(
 async function renderMap(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  const positions = await prisma.player.findMany({
-    where: { latitude: { not: null }, longitude: { not: null } },
-    select: { latitude: true, longitude: true },
-  });
+  const positions = await getMapPositions();
 
   const coords = positions.map(({ longitude, latitude }) =>
     longLatToRobinson(longitude!, latitude!),
@@ -89,9 +89,9 @@ async function renderMap(interaction: ChatInputCommandInteraction) {
 async function removeLocation(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: true });
 
-  await prisma.player.updateMany({
-    where: { discordId: interaction.user.id },
-    data: { latitude: null, longitude: null },
+  await updatePlayersByDiscordId(interaction.user.id, {
+    latitude: null,
+    longitude: null,
   });
 
   return void interaction.editReply(
@@ -132,9 +132,9 @@ async function addLocation(
 
   const { lat, lon, display_name: displayName } = results[0];
 
-  const { count } = await prisma.player.updateMany({
-    where: { discordId: interaction.user.id },
-    data: { latitude: parseFloat(lat), longitude: parseFloat(lon) },
+  const count = await updatePlayersByDiscordId(interaction.user.id, {
+    latitude: parseFloat(lat),
+    longitude: parseFloat(lon),
   });
 
   if (count === 0) {

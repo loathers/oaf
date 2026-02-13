@@ -6,7 +6,13 @@ import {
 import { resolveKoLImage } from "kol.js";
 
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
-import { isRecordNotFoundError, prisma } from "../../clients/database.js";
+import {
+  countBetterOffers,
+  deleteOffer,
+  findPlayerByDiscordId,
+  getTopOffersForItem,
+  upsertOffer,
+} from "../../clients/database.js";
 import { createEmbed } from "../../clients/discord.js";
 import { formatPlayer } from "../../utils.js";
 import { itemAutocomplete, itemOption } from "../_options.js";
@@ -74,18 +80,9 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  const offers = (
-    await prisma.standingOffer.findMany({
-      where: { itemId: item.id, buyer: { discordId: { not: null } } },
-      take: 10,
-      orderBy: [{ price: "desc" }, { offeredAt: "asc" }],
-      include: {
-        buyer: true,
-      },
-    })
-  ).map(
-    ({ buyer, price }) =>
-      `${formatPlayer(buyer)} buys at ${numberFormat.format(price)} meat`,
+  const offers = (await getTopOffersForItem(item.id, 10)).map(
+    (offer) =>
+      `${formatPlayer(offer)} buys at ${numberFormat.format(offer.price)} meat`,
   );
 
   if (offers.length === 0) {
@@ -110,9 +107,7 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
   const itemId = interaction.options.getInteger("item", true);
   const price = interaction.options.getInteger("price", true);
 
-  const buyer = await prisma.player.findFirst({
-    where: { discordId: interaction.user.id },
-  });
+  const buyer = await findPlayerByDiscordId(interaction.user.id);
 
   if (!buyer) {
     return void (await interaction.editReply(
@@ -133,18 +128,10 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
   }
 
   if (price === 0) {
-    try {
-      await prisma.standingOffer.delete({
-        where: {
-          buyerId_itemId: {
-            buyerId: buyer.playerId,
-            itemId,
-          },
-        },
-      });
+    const deleted = await deleteOffer(buyer.playerId, itemId);
+    if (deleted) {
       await interaction.editReply("Offer removed.");
-    } catch (error) {
-      if (!isRecordNotFoundError(error)) throw error;
+    } else {
       await interaction.editReply(
         "You don't have an active offer for that item. Please first make an offer so you can enjoy the feeling of removing it.",
       );
@@ -153,30 +140,9 @@ async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  await prisma.standingOffer.upsert({
-    where: {
-      buyerId_itemId: {
-        buyerId: buyer.playerId,
-        itemId,
-      },
-    },
-    update: {
-      price,
-      offeredAt: new Date(),
-    },
-    create: {
-      buyerId: buyer.playerId,
-      itemId,
-      price,
-    },
-  });
+  await upsertOffer(buyer.playerId, itemId, price);
 
-  const betterOffers = await prisma.standingOffer.count({
-    where: {
-      itemId,
-      price: { gt: price },
-    },
-  });
+  const betterOffers = await countBetterOffers(itemId, price);
 
   await interaction.editReply(
     `Offer posted successfully (currently beaten by ${betterOffers.toLocaleString()} offer(s))`,

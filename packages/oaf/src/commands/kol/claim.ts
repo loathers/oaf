@@ -11,7 +11,13 @@ import {
 import { Client } from "discord.js";
 import { totp } from "otplib";
 
-import { prisma } from "../../clients/database.js";
+import {
+  claimPlayer,
+  clearDiscordId,
+  findPlayerByDiscordId,
+  getVerifiedPlayers,
+  setPlayerDiscordId,
+} from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
@@ -85,25 +91,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const discordId = interaction.user.id;
 
-  const previouslyClaimed = await prisma.player.updateMany({
-    where: { discordId },
-    data: { discordId: null },
-  });
+  const previouslyClaimedCount = await clearDiscordId(discordId);
 
-  await prisma.player.upsert({
-    where: { playerId },
-    update: {
-      discordId,
-      playerName: player.name,
-      accountCreationDate: player.createdDate,
-    },
-    create: {
-      playerName: player.name,
-      discordId: interaction.user.id,
-      playerId,
-      accountCreationDate: player.createdDate,
-    },
-  });
+  await claimPlayer(playerId, player.name, discordId, player.createdDate);
 
   const guild =
     interaction.guild || (await discordClient.guilds.fetch(config.GUILD_ID));
@@ -115,7 +105,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const previous =
-    previouslyClaimed.count > 0
+    previouslyClaimedCount > 0
       ? " Any previous link will have been removed."
       : "";
 
@@ -138,9 +128,7 @@ async function synchroniseRoles(client: Client) {
     return;
   }
 
-  const playersWithDiscordId = await prisma.player.findMany({
-    where: { discordId: { not: null } },
-  });
+  const playersWithDiscordId = await getVerifiedPlayers();
   for (const member of role.members.values()) {
     const index = playersWithDiscordId.findIndex(
       (p) => p.discordId === member.user.id,
@@ -162,10 +150,7 @@ async function synchroniseRoles(client: Client) {
         error.code === RESTJSONErrorCodes.UnknownMember
       ) {
         // User has left the guild, remove their verification
-        await prisma.player.update({
-          where: { playerId: missing.playerId },
-          data: { discordId: null },
-        });
+        await setPlayerDiscordId(missing.playerId, null);
         await discordClient.alert(
           `Whomever was verified to player account ${missing.playerName} (#${missing.playerId}) left the server at some point, removing their verification`,
         );
@@ -177,16 +162,11 @@ async function synchroniseRoles(client: Client) {
 }
 
 async function removeVerification(member: GuildMember | PartialGuildMember) {
-  const player = await prisma.player.findFirst({
-    where: { discordId: member.id },
-  });
+  const player = await findPlayerByDiscordId(member.id);
 
   if (!player) return;
 
-  await prisma.player.update({
-    where: { playerId: player.playerId },
-    data: { discordId: null },
-  });
+  await setPlayerDiscordId(player.playerId, null);
 
   await discordClient.alert(
     `${member.user.username} has just left the server, so we removed their verification to player account ${player.playerName} (#${player.playerId})`,
