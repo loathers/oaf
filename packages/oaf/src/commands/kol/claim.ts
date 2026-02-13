@@ -1,3 +1,6 @@
+import { base32 } from "@otplib/plugin-base32-scure";
+import { crypto } from "@otplib/plugin-crypto-node";
+import { generate, getRemainingTime, verify } from "@otplib/totp";
 import {
   ChatInputCommandInteraction,
   DiscordAPIError,
@@ -9,7 +12,6 @@ import {
   inlineCode,
 } from "discord.js";
 import { Client } from "discord.js";
-import { totp } from "otplib";
 
 import { prisma } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
@@ -22,27 +24,30 @@ const intDiv = (num: number, div: number) =>
   [Math.floor(num / div), num % div] as [quotient: number, remainder: number];
 const playerSecret = (playerId: number) => `${config.SALT}-${playerId}`;
 
-const oauf = Object.assign(
-  totp,
-  { options: { ...totp.options, step: 2 * 60 } },
-  {
-    generatePlayer: (playerId: number) =>
-      Number(`${playerId}${oauf.generate(playerSecret(playerId))}`).toString(
-        16,
-      ),
-    checkPlayer: (token: string) => {
-      const decoded = parseInt(token, 16);
-      const [playerId, totpToken] = intDiv(decoded, 1e6);
-      return [
-        playerId,
-        oauf.check(
-          totpToken.toString().padStart(6, "0"),
-          playerSecret(playerId),
-        ),
-      ] as [playerId: number, valid: boolean];
-    },
-  },
-);
+const TOTP_PERIOD = 120;
+
+async function generatePlayer(playerId: number) {
+  const token = await generate({
+    secret: playerSecret(playerId),
+    period: TOTP_PERIOD,
+    crypto,
+    base32,
+  });
+  return Number(`${playerId}${token}`).toString(16);
+}
+
+async function checkPlayer(token: string) {
+  const decoded = parseInt(token, 16);
+  const [playerId, totpToken] = intDiv(decoded, 1e6);
+  const verification = await verify({
+    secret: playerSecret(playerId),
+    token: totpToken.toString().padStart(6, "0"),
+    epochTolerance: [TOTP_PERIOD, 0],
+    crypto,
+    base32,
+  });
+  return [playerId, verification.valid] as [playerId: number, valid: boolean];
+}
 
 export const data = new SlashCommandBuilder()
   .setName("claim")
@@ -67,7 +72,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const [playerId, valid] = oauf.checkPlayer(token);
+  const [playerId, valid] = await checkPlayer(token);
 
   if (!valid) {
     await interaction.reply({
@@ -200,11 +205,11 @@ export function init() {
 
       const playerId = whisper.who.id;
 
-      const token = oauf.generatePlayer(playerId);
+      const token = await generatePlayer(playerId);
 
       await kolClient.whisper(
         playerId,
-        `Your token is ${token} (expires in ${totp.timeRemaining()} seconds)`,
+        `Your token is ${token} (expires in ${getRemainingTime(undefined, TOTP_PERIOD)} seconds)`,
       );
     })();
   });
