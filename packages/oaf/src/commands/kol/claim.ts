@@ -26,13 +26,14 @@ import { config } from "../../config.js";
 
 const OAF_USER = config.KOL_USER.replaceAll(" ", "_");
 
-const intDiv = (num: number, div: number) =>
+export const intDiv = (num: number, div: number) =>
   [Math.floor(num / div), num % div] as [quotient: number, remainder: number];
-const playerSecret = (playerId: number) => `${config.SALT}-${playerId}`;
+export const playerSecret = (playerId: number) =>
+  `${config.SALT}-${playerId}`.padEnd(16, "0");
 
 const TOTP_PERIOD = 120;
 
-async function generatePlayer(playerId: number) {
+export async function generatePlayer(playerId: number) {
   const token = await generate({
     secret: playerSecret(playerId),
     period: TOTP_PERIOD,
@@ -42,7 +43,7 @@ async function generatePlayer(playerId: number) {
   return Number(`${playerId}${token}`).toString(16);
 }
 
-async function checkPlayer(input: string) {
+export async function checkPlayer(input: string) {
   const decoded = parseInt(input, 16);
   const [playerId, token] = intDiv(decoded, 1e6);
   const verification = await verify({
