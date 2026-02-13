@@ -1223,6 +1223,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@otplib/core@npm:13.2.1":
+  version: 13.2.1
+  resolution: "@otplib/core@npm:13.2.1"
+  checksum: 10c0/c5864c9e07480060d7c0cc22dc2ca92da150ac3d25771e27a00b25b2da053e229d230133a7947023ec1e45638ca5c517324cf12c4a6d21df67a7b2091ad55fe3
+  languageName: node
+  linkType: hard
+
 "@otplib/core@npm:13.3.0, @otplib/core@npm:^13.3.0":
   version: 13.3.0
   resolution: "@otplib/core@npm:13.3.0"
@@ -1240,13 +1247,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@otplib/plugin-base32-scure@npm:^13.3.0":
-  version: 13.3.0
-  resolution: "@otplib/plugin-base32-scure@npm:13.3.0"
+"@otplib/plugin-base32-alt@npm:^13.2.1":
+  version: 13.2.1
+  resolution: "@otplib/plugin-base32-alt@npm:13.2.1"
   dependencies:
-    "@otplib/core": "npm:13.3.0"
-    "@scure/base": "npm:^2.0.0"
-  checksum: 10c0/bf710ca89a5beaf577b8a370df25c976d22bc2c153c155f9857edc4559a60b1777155868aaea642bbea416b8f083154c34699c78d4bb17a4cac3b463beec4980
+    "@otplib/core": "npm:13.2.1"
+  checksum: 10c0/0516ad42c519e0987413da18664ea2ffb2e735daddc91c555a20bc50b740b8113c817cff64a219d8a1e8f755cf2c15f51d47e014284d8c34a733ea213f120d04
   languageName: node
   linkType: hard
 
@@ -1509,13 +1515,6 @@ __metadata:
   version: 3.5.3
   resolution: "@sapphire/snowflake@npm:3.5.3"
   checksum: 10c0/361b6a3e16eea4eb48b2608005ce397d4163065ccd84077059a0f609b97fb9cc52a173d7a64bbfce6f5d1e77be0f9704fd72ef64683a3dc7e455e9b4a1c90db1
-  languageName: node
-  linkType: hard
-
-"@scure/base@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "@scure/base@npm:2.0.0"
-  checksum: 10c0/7d999c7bebf053bb49cb706fdc6c5366737cff0f7f7518f52d32d7f7ad7b898904f03673648a2af5c4f22396f5c05f1d8bddbf010d6595052d07ba8163d506ad
   languageName: node
   linkType: hard
 
@@ -5559,7 +5558,7 @@ __metadata:
   dependencies:
     "@eslint/js": "npm:^9"
     "@otplib/core": "npm:^13.3.0"
-    "@otplib/plugin-base32-scure": "npm:^13.3.0"
+    "@otplib/plugin-base32-alt": "npm:^13.2.1"
     "@otplib/plugin-crypto-node": "npm:^13.3.0"
     "@otplib/totp": "npm:^13.3.0"
     "@trivago/prettier-plugin-sort-imports": "npm:^6.0.2"

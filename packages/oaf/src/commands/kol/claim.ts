@@ -1,4 +1,4 @@
-import { base32 } from "@otplib/plugin-base32-scure";
+import { bypassAsString } from "@otplib/plugin-base32-alt";
 import { crypto } from "@otplib/plugin-crypto-node";
 import { generate, getRemainingTime, verify } from "@otplib/totp";
 import {
@@ -37,20 +37,21 @@ async function generatePlayer(playerId: number) {
     secret: playerSecret(playerId),
     period: TOTP_PERIOD,
     crypto,
-    base32,
+    base32: bypassAsString,
   });
   return Number(`${playerId}${token}`).toString(16);
 }
 
-async function checkPlayer(token: string) {
-  const decoded = parseInt(token, 16);
-  const [playerId, totpToken] = intDiv(decoded, 1e6);
+async function checkPlayer(input: string) {
+  const decoded = parseInt(input, 16);
+  const [playerId, token] = intDiv(decoded, 1e6);
   const verification = await verify({
     secret: playerSecret(playerId),
-    token: totpToken.toString().padStart(6, "0"),
+    token: token.toString().padStart(6, "0"),
+    period: TOTP_PERIOD,
     epochTolerance: [TOTP_PERIOD, 0],
     crypto,
-    base32,
+    base32: bypassAsString,
   });
   return [playerId, verification.valid] as [playerId: number, valid: boolean];
 }
@@ -189,7 +190,7 @@ export function init() {
 
       await kolClient.whisper(
         playerId,
-        `Your token is ${token} (expires in ${getRemainingTime(undefined, TOTP_PERIOD)} seconds)`,
+        `Your token is ${token} (expires in ${getRemainingTime(undefined, TOTP_PERIOD) + 120} seconds)`,
       );
     })();
   });
