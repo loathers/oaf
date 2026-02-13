@@ -1,0 +1,305 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  line-height: 1.5;
+  color: #1a202c;
+  background: #f7fafc;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Header */
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.admin-header h1 {
+  font-size: 1.5rem;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.nav-links {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.nav-links a {
+  color: #3182ce;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.nav-links a:hover {
+  text-decoration: underline;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1rem 0;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #718096;
+}
+
+td.numeric {
+  text-align: right;
+}
+
+th.numeric {
+  text-align: right;
+}
+
+/* Forms */
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+}
+
+select,
+input,
+textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.message-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: start;
+}
+
+.message-row textarea {
+  flex: 1;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  background: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+button:hover {
+  background: #2b6cb0;
+}
+
+button.emoji-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  background: #edf2f7;
+  color: #1a202c;
+  flex-shrink: 0;
+}
+
+button.emoji-btn:hover {
+  background: #e2e8f0;
+}
+
+/* Emoji picker */
+.emoji-picker {
+  position: relative;
+  display: inline-block;
+}
+
+.emoji-grid {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 200px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.emoji-grid button {
+  background: none;
+  padding: 2px;
+  margin: 0;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+}
+
+.emoji-grid button:hover {
+  background: #edf2f7;
+}
+
+.emoji-grid img {
+  width: 30px;
+  height: 30px;
+}
+
+/* Alerts */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.alert-success {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.alert-error {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+/* Discord message embed */
+.discord-message {
+  background: #32353b;
+  color: #dcddde;
+  font-size: 0.9em;
+  padding: 0.5rem;
+  border-radius: 10px;
+  display: flex;
+  gap: 0.5rem;
+  align-items: start;
+  white-space: normal;
+}
+
+.discord-message .dm-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.discord-message .dm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.discord-message .dm-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.discord-message .dm-author {
+  color: #ffffff;
+}
+
+.discord-message .dm-date {
+  color: #72767d;
+  font-size: 12px;
+}
+
+.discord-message .dm-content {
+  color: #dcddde;
+}
+
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, #3a3d44 25%, #44474e 50%, #3a3d44 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-text {
+  height: 1em;
+  width: 100px;
+}
+
+.skeleton-text-wide {
+  height: 1em;
+  width: 200px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+code {
+  background: #edf2f7;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}

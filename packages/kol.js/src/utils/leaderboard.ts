@@ -1,5 +1,7 @@
-import xpath, { select } from "xpath";
-import { DOMParser, MIME_TYPE } from "@xmldom/xmldom";
+import { selectAll, selectOne } from "css-select";
+import { parseDocument } from "htmlparser2";
+import { Element, Document, isComment, Text } from "domhandler";
+import { innerText } from "domutils";
 
 export type LeaderboardInfo = {
   name: string;
@@ -13,69 +15,63 @@ export type SubboardInfo = {
 };
 
 type RunInfo = {
-  player: string;
+  playerName: string;
+  playerId: number;
   days: string;
   turns: string;
 };
 
-const parser = new DOMParser({
-  onError: (level, message) => {
-    if (level === "fatalError") console.error(message);
-  },
-});
-
-const selectMulti = (expression: string, node: Node) => {
-  const selection = select(expression, node);
-  if (Array.isArray(selection)) return selection;
-  return selection instanceof Node ? [selection] : [];
-};
+const blankNode = new Text("");
 
 export function parseLeaderboard(page: string): LeaderboardInfo {
-  const doc = parser.parseFromString(page, MIME_TYPE.HTML);
-  // @ts-expect-error see https://github.com/xmldom/xmldom/issues/724
-  const [board, ...boards] = selectMulti("//table", doc);
+  const doc = parseDocument(page);
+  const [container, ...boards] = selectAll("table", doc);
 
   return {
-    name: selectMulti(".//text()", board.firstChild!)
-      .map((node) => node.nodeValue)
-      .join("")
+    name: innerText(selectOne("tr", container) ?? blankNode)
       .replace(/\s+/g, " ")
       .trim(),
     boards: boards
       .slice(1)
-      .filter(
-        (board) =>
-          selectMulti("./tr//text()", board)[0]?.nodeValue?.match(
-            /^((Fast|Funn|B)est|Most (Goo|Elf))/,
-          ) && selectMulti("./tr", board).length > 1,
-      )
+      .filter((board) => {
+        if (selectAll(":scope > tr, :scope > tbody > tr", board).length <= 1)
+          return false;
+        const text = innerText(selectOne("tr", board) ?? blankNode);
+        return text.match(/^((Fast|Funn|B)est|Most (Goo|Elf))/);
+      })
       .map((subboard) => {
-        const rows = selectMulti("./tr", subboard);
+        const rows = selectAll("tr", subboard);
 
         return {
-          name: (selectMulti(".//text()", rows[0])[0]?.nodeValue || "").trim(),
-          runs: selectMulti("./td//tr", rows[1])
+          name: innerText(rows[0]),
+          runs: selectAll("td tr", rows[1])
             .slice(2)
             .map((node) => {
-              const rowText = selectMulti(".//text()", node).map((text) =>
-                text.toString().replace(/&amp;nbsp;/g, ""),
+              const rowText = selectAll("td", node).map((col) =>
+                innerText(col).replace(/&amp;nbsp;/g, ""),
               );
+              const playerLink = (selectOne("a", node) as Element | null)
+                ?.attribs.href;
               const hasTwoNumbers = !!parseInt(rowText[rowText.length - 2]);
               return {
-                player: rowText
+                playerName: rowText
                   .slice(0, rowText.length - (hasTwoNumbers ? 2 : 1))
                   .join("")
                   .trim()
                   .toString(),
+                playerId: Number(
+                  playerLink?.substring(playerLink.indexOf("who=") + 4) ?? "0",
+                ),
                 days: hasTwoNumbers
                   ? rowText[rowText.length - 2].toString() || "0"
                   : "",
                 turns: rowText[rowText.length - 1].toString() || "0",
               };
             }),
-          updated: xpath.isComment(subboard.nextSibling)
-            ? new Date(subboard.nextSibling.data.slice(9, -1))
-            : null,
+          updated:
+            subboard.nextSibling && isComment(subboard.nextSibling)
+              ? new Date(subboard.nextSibling.data.slice(9, -1))
+              : null,
         };
       }),
   };

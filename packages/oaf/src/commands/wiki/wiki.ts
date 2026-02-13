@@ -1,15 +1,19 @@
 import {
+  AutocompleteInteraction,
   ChatInputCommandInteraction,
   DiscordAPIError,
   Events,
   Message,
   MessageType,
+  RESTJSONErrorCodes,
   SlashCommandBuilder,
   inlineCode,
   userMention,
 } from "discord.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { blankEmbed, discordClient } from "../../clients/discord.js";
+import { getPissLevel } from "../../clients/iss.js";
 import { WikiSearchError, wikiClient } from "../../clients/wiki.js";
 import { lf } from "../../utils.js";
 
@@ -22,14 +26,15 @@ export const data = new SlashCommandBuilder()
     option
       .setName("term")
       .setDescription("The term to search for in the wiki.")
-      .setRequired(true),
+      .setRequired(true)
+      .setAutocomplete(true),
   );
 
-async function getWikiReply(item: string) {
+async function getWikiReply(query: string) {
   try {
-    const embed = await wikiClient.getEmbed(item);
+    const embed = await dataOfLoathingClient.getEmbed(query);
     if (!embed) {
-      return blankEmbed(`"${item}" wasn't found. Please refine your search.`);
+      return blankEmbed(`"${query}" wasn't found. Please refine your search.`);
     }
 
     return embed;
@@ -59,7 +64,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 const trim = (message: string) =>
-  message.replace(/^[*_\s]+/, "").replace(/[*_\s]+$/, "");
+  message
+    .replace(/^[*_\s\u200B-\u200F\uFEFF]+/, "")
+    .replace(/[*_\s\u200B-\u200F\uFEFF]+$/, "");
 
 async function onMessage(message: Message) {
   if (message.author.bot) return;
@@ -73,7 +80,7 @@ async function onMessage(message: Message) {
 
   if (queries.length === 0) return;
 
-  let slashNote = "";
+  let preamble = "";
   let reaction;
   if (
     matches.length > 0 &&
@@ -86,7 +93,7 @@ async function onMessage(message: Message) {
     }
 
     reaction = "<:kol_mad:516763545657016320>";
-    slashNote = `Remember, for this query you could have just run ${inlineCode(
+    preamble += `Remember, for this query you could have just run ${inlineCode(
       `/wiki ${matches[0][1]}`,
     )}\n\n`;
   } else {
@@ -97,9 +104,9 @@ async function onMessage(message: Message) {
     await message.react(reaction);
   } catch (error) {
     if (!(error instanceof DiscordAPIError)) throw error;
-    if (error.code !== 90001) {
+    if (error.code !== RESTJSONErrorCodes.ReactionWasBlocked) {
       return void (await discordClient.alert(
-        `Tried to react to an old-style wiki search by ${message.author}; received error ${error}.`,
+        `Tried to react to an old-style wiki search by ${message.author.toString()}; received error ${error}.`,
       ));
     }
 
@@ -118,8 +125,12 @@ async function onMessage(message: Message) {
     });
   }
 
+  if (Math.random() < 0.05) {
+    preamble += `The ISS piss tank is currently ${await getPissLevel()}% full. `;
+  }
+
   const searchingMessage = await message.reply({
-    content: `${slashNote}${userMention(
+    content: `${preamble}${userMention(
       member.id,
     )} is searching for ${lf.format(considered.map((q) => `"${q}"`))}...`,
     allowedMentions: { parse: [], repliedUser: false },
@@ -130,7 +141,7 @@ async function onMessage(message: Message) {
   );
 
   await searchingMessage.edit({
-    content: `${slashNote}${userMention(member.id)} searched for...`,
+    content: `${preamble}${userMention(member.id)} searched for...`,
     embeds,
     allowedMentions: {
       parse: [],
@@ -139,5 +150,17 @@ async function onMessage(message: Message) {
 }
 
 export async function init() {
-  discordClient.on(Events.MessageCreate, onMessage);
+  discordClient.on(Events.MessageCreate, (message) => void onMessage(message));
+  await wikiClient.getAllPageTitles();
+}
+
+export async function autocomplete(interaction: AutocompleteInteraction) {
+  const value = interaction.options.getFocused();
+  const pages = await wikiClient.getAllPageTitles();
+  const options = pages
+    .filter((title) => title.toLowerCase().includes(value.toLowerCase()))
+    .sort()
+    .slice(0, 25)
+    .map((title) => ({ name: title, value: title }));
+  await interaction.respond(options);
 }

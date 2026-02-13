@@ -1,48 +1,61 @@
+import { bypassAsString } from "@otplib/plugin-base32-alt";
+import { crypto } from "@otplib/plugin-crypto-node";
+import { generate, getRemainingTime, verify } from "@otplib/totp";
 import {
   ChatInputCommandInteraction,
+  Client,
+  DiscordAPIError,
   Events,
-  Guild,
   GuildMember,
   Message,
+  PartialGuildMember,
+  RESTJSONErrorCodes,
   SlashCommandBuilder,
   inlineCode,
 } from "discord.js";
-import { Client } from "discord.js";
-import { Player } from "kol.js";
-import { totp } from "otplib";
 
-import { prisma } from "../../clients/database.js";
+import {
+  claimPlayer,
+  clearDiscordId,
+  findPlayerByDiscordId,
+  getVerifiedPlayers,
+  setPlayerDiscordId,
+} from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 
 const OAF_USER = config.KOL_USER.replaceAll(" ", "_");
 
-const intDiv = (num: number, div: number) =>
+export const intDiv = (num: number, div: number) =>
   [Math.floor(num / div), num % div] as [quotient: number, remainder: number];
-const playerSecret = (playerId: number) => `${config.SALT}-${playerId}`;
+export const playerSecret = (playerId: number) =>
+  `${config.SALT}-${playerId}`.padEnd(16, "0");
 
-const oauf = Object.assign(
-  totp,
-  { options: { ...totp.options, step: 2 * 60 } },
-  {
-    generatePlayer: (playerId: number) =>
-      Number(`${playerId}${oauf.generate(playerSecret(playerId))}`).toString(
-        16,
-      ),
-    checkPlayer: (token: string) => {
-      const decoded = parseInt(token, 16);
-      const [playerId, totpToken] = intDiv(decoded, 1e6);
-      return [
-        playerId,
-        oauf.check(
-          totpToken.toString().padStart(6, "0"),
-          playerSecret(playerId),
-        ),
-      ] as [playerId: number, valid: boolean];
-    },
-  },
-);
+const TOTP_PERIOD = 120;
+
+const totpOptions = (playerId: number) => ({
+  secret: playerSecret(playerId),
+  period: TOTP_PERIOD,
+  crypto,
+  base32: bypassAsString,
+});
+
+export async function generatePlayer(playerId: number) {
+  const token = await generate(totpOptions(playerId));
+  return Number(`${playerId}${token}`).toString(16);
+}
+
+export async function checkPlayer(input: string) {
+  const decoded = parseInt(input, 16);
+  const [playerId, token] = intDiv(decoded, 1e6);
+  const verification = await verify({
+    ...totpOptions(playerId),
+    token: token.toString().padStart(6, "0"),
+    epochTolerance: [TOTP_PERIOD, 0],
+  });
+  return [playerId, verification.valid] as [playerId: number, valid: boolean];
+}
 
 export const data = new SlashCommandBuilder()
   .setName("claim")
@@ -54,40 +67,36 @@ export const data = new SlashCommandBuilder()
       .setRequired(false),
   );
 
-async function updatePlayerVerification(
-  player: Player<true>,
-  playerId: number,
+async function processClaim(
+  token: string,
   discordId: string,
-  guild: Guild,
   member: GuildMember,
-): Promise<boolean> {
-  const previouslyClaimed = await prisma.player.updateMany({
-    where: { discordId },
-    data: { discordId: null },
-  });
+): Promise<string | null> {
+  const [playerId, valid] = await checkPlayer(token);
 
-  await prisma.player.upsert({
-    where: { playerId },
-    update: {
-      discordId,
-      playerName: player.name,
-      accountCreationDate: player.createdDate,
-    },
-    create: {
-      playerName: player.name,
-      discordId,
-      playerId,
-      accountCreationDate: player.createdDate,
-    },
-  });
+  if (!valid) {
+    return `That code is invalid. Hopefully it timed out and you're not being a naughty little ${member.user.username}`;
+  }
 
-  const role = await guild.roles.fetch(config.VERIFIED_ROLE_ID);
+  const player = await kolClient.players.fetch(playerId, true);
+
+  if (!player) return null;
+
+  const previouslyClaimedCount = await clearDiscordId(discordId);
+  await claimPlayer(playerId, player.name, discordId, player.createdDate);
+
+  const role = await member.guild.roles.fetch(config.VERIFIED_ROLE_ID);
 
   if (role) {
     await member.roles.add(role);
   }
 
-  return previouslyClaimed.count > 0;
+  const previous =
+    previouslyClaimedCount > 0
+      ? " Any previous link will have been removed."
+      : "";
+
+  return `Your Discord account has been successfully linked with ${inlineCode(`${player.name} (#${player.id})`)}.${previous}`;
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -103,44 +112,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const [playerId, valid] = oauf.checkPlayer(token);
-
-  if (!valid) {
-    await interaction.reply({
-      content: `That code is invalid. Hopefully it timed out and you're not being a naughty little ${interaction.user.username}`,
-      ephemeral: true,
-    });
-    return;
-  }
-
   await interaction.deferReply({ ephemeral: true });
 
-  const player = await kolClient.players.fetch(playerId, true);
-
-  if (!player) return;
-
-  const discordId = interaction.user.id;
   const guild =
     interaction.guild || (await discordClient.guilds.fetch(config.GUILD_ID));
   const member = await guild.members.fetch(interaction.user.id);
 
-  const previouslyClaimed = await updatePlayerVerification(
-    player,
-    playerId,
-    discordId,
-    guild,
-    member,
-  );
+  const result = await processClaim(token, interaction.user.id, member);
 
-  const previous = previouslyClaimed
-    ? " Any previous link will have been removed."
-    : "";
-
-  await interaction.editReply(
-    `Your Discord account has been successfully linked with ${inlineCode(
-      `${player.name} (#${player.id})`,
-    )}.${previous}`,
-  );
+  if (result) {
+    await interaction.editReply(result);
+  }
 }
 
 async function synchroniseRoles(client: Client) {
@@ -155,30 +137,41 @@ async function synchroniseRoles(client: Client) {
     return;
   }
 
-  const playersWithDiscordId = await prisma.player.findMany({
-    where: { discordId: { not: null } },
-  });
-  const expectedMembers = playersWithDiscordId.map((p) => p.discordId!);
-
+  const playersWithDiscordId = await getVerifiedPlayers();
   for (const member of role.members.values()) {
-    const index = expectedMembers.indexOf(member.user.id);
+    const index = playersWithDiscordId.findIndex(
+      (p) => p.discordId === member.user.id,
+    );
     if (index < 0) {
       await member.roles.remove(role);
     } else {
-      expectedMembers.splice(index, 1);
+      playersWithDiscordId.splice(index, 1);
     }
   }
 
-  for (const missing of expectedMembers) {
-    // Catch cases where user has left the guild
-    const member = await guild.members.fetch(missing).catch(() => null);
-    if (member) await member.roles.add(role);
+  for (const missing of playersWithDiscordId) {
+    try {
+      const member = await guild.members.fetch(missing.discordId!);
+      await member.roles.add(role);
+    } catch (error) {
+      if (
+        error instanceof DiscordAPIError &&
+        error.code === RESTJSONErrorCodes.UnknownMember
+      ) {
+        // User has left the guild, remove their verification
+        await setPlayerDiscordId(missing.playerId, null);
+        await discordClient.alert(
+          `Whomever was verified to player account ${missing.playerName} (#${missing.playerId}) left the server at some point, removing their verification`,
+        );
+        continue;
+      }
+      throw error;
+    }
   }
 }
 
 async function onMessage(message: Message) {
   if (message.author.bot) return;
-  if (!("send" in message.channel)) return;
   const member = message.member;
   if (!member) return;
 
@@ -187,60 +180,66 @@ async function onMessage(message: Message) {
   const token = message.content.slice(opening.length);
   if (!token) return;
 
-  const reply = await message.reply(
-    "Looks like you accidentally failed to send this as a slash command. Don't worry, I'll do my best with what you've given me.",
-  );
-
-  const [playerId, valid] = oauf.checkPlayer(token);
-  if (!valid) {
-    return void (await reply.edit(
-      `That code is invalid. Hopefully it timed out and you're not being a naughty little ${message.member.user.username}`,
-    ));
+  let deleted = true;
+  try {
+    await message.delete();
+  } catch {
+    deleted = false;
   }
 
-  const player = await kolClient.players.fetch(playerId, true);
+  const dm = await member.user.createDM();
 
-  if (!player) {
-    return void (await reply.edit(
-      "Unable to find the player associated with that token. Sorry, we did our best.",
-    ));
-  }
+  const deleteStatus = deleted
+    ? "I've deleted it"
+    : `I tried to delete it but couldn't — you should [delete it yourself](${message.url})`;
 
-  const discordId = message.member.user.id;
-  const guild =
-    member.guild || (await discordClient.guilds.fetch(config.GUILD_ID));
-
-  const previouslyClaimed = await updatePlayerVerification(
-    player,
-    playerId,
-    discordId,
-    guild,
-    member,
+  await dm.send(
+    `Looks like you accidentally sent your claim token as a plain message. ${deleteStatus}. I'll do my best with what you've given me.`,
   );
 
-  const previous = previouslyClaimed
-    ? " Any previous link will have been removed."
-    : "";
+  const result = await processClaim(token, member.user.id, member);
 
-  return void (await reply.edit(
-    `Your discord account has been successfully linked with ${inlineCode(`${player.name} (#${player.id})`)}.${previous}`,
-  ));
+  await dm.send(
+    result ??
+      "Unable to find the player associated with that token. Try again, and remember to use the /claim slash command next time rather than sending a message. You can always use slash commands with me in our DM here!",
+  );
 }
 
-export async function init() {
-  kolClient.on("whisper", async (whisper) => {
-    if (whisper.msg.trim() !== "claim") return;
+async function removeVerification(member: GuildMember | PartialGuildMember) {
+  const player = await findPlayerByDiscordId(member.id);
 
-    const playerId = whisper.who.id;
+  if (!player) return;
 
-    const token = oauf.generatePlayer(playerId);
+  await setPlayerDiscordId(player.playerId, null);
 
-    await kolClient.whisper(
-      playerId,
-      `Your token is ${token} (expires in ${totp.timeRemaining()} seconds)`,
-    );
+  await discordClient.alert(
+    `${member.user.username} has just left the server, so we removed their verification to player account ${player.playerName} (#${player.playerId})`,
+  );
+}
+
+export function init() {
+  kolClient.on("whisper", (whisper) => {
+    void (async () => {
+      if (whisper.msg.trim() !== "claim") return;
+
+      const playerId = whisper.who.id;
+
+      const token = await generatePlayer(playerId);
+
+      await kolClient.whisper(
+        playerId,
+        `Your token is ${token} (expires in ${getRemainingTime(undefined, TOTP_PERIOD) + 120} seconds)`,
+      );
+    })();
   });
 
-  discordClient.on(Events.ClientReady, synchroniseRoles);
-  discordClient.on(Events.MessageCreate, onMessage);
+  discordClient.once(
+    Events.ClientReady,
+    (client) => void synchroniseRoles(client),
+  );
+  discordClient.on(
+    Events.GuildMemberRemove,
+    (member) => void removeVerification(member),
+  );
+  discordClient.on(Events.MessageCreate, (message) => void onMessage(message));
 }

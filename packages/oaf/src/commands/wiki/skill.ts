@@ -4,8 +4,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
-import { wikiClient } from "../../clients/wiki.js";
 
 export const data = new SlashCommandBuilder()
   .setName("skill")
@@ -22,7 +22,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const skillId = interaction.options.getNumber("skill", true);
   await interaction.deferReply();
 
-  const skill = wikiClient.skills.find((i) => i.id === skillId);
+  const skill = dataOfLoathingClient.skills.find((i) => i.id === skillId);
 
   const embed = createEmbed();
 
@@ -34,7 +34,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  embed.setTitle(skill.name).setURL(await wikiClient.getWikiLink(skill));
+  embed.setTitle(skill.name).setURL(dataOfLoathingClient.getWikiLink(skill));
 
   await skill.addToEmbed(embed);
 
@@ -48,7 +48,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 export async function autocomplete(interaction: AutocompleteInteraction) {
   const focusedValue = interaction.options.getFocused();
 
-  const filtered = wikiClient.skills
+  const filtered = dataOfLoathingClient.skills
     .map(({ name, id }) => ({ name, value: id }))
     .filter(({ name }) =>
       name.toLowerCase().includes(focusedValue.toLowerCase()),

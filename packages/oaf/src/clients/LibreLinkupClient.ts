@@ -1,3 +1,4 @@
+import { sha256 } from "js-sha256";
 import path from "node:path";
 
 type Patient = {
@@ -16,6 +17,7 @@ export class LibreLinkUpClient {
   isPatient: IsPatientPredicate;
 
   token?: string;
+  accountId?: string;
   patientId?: string;
 
   constructor(email: string, password: string, isPatient: IsPatientPredicate) {
@@ -31,7 +33,8 @@ export class LibreLinkUpClient {
       connection: "Keep-Alive",
       "content-type": "application/json",
       product: "llu.android",
-      version: "4.7.0",
+      version: "4.12.0",
+      ...(this.accountId ? { "account-id": sha256(this.accountId) } : {}),
       ...(this.token ? { authorization: `Bearer ${this.token}` } : {}),
     };
   }
@@ -44,7 +47,11 @@ export class LibreLinkUpClient {
     });
     const result = (await response.json()) as {
       status: number;
-      data: { authTicket: { token: string } };
+      data: {
+        authTicket: { token: string };
+        step: { type: "tou" | "unknown" };
+        user: { id: string };
+      };
     };
 
     if (result.status === 2) {
@@ -52,7 +59,24 @@ export class LibreLinkUpClient {
     }
 
     this.token = result.data.authTicket.token;
+    this.accountId = result.data.user.id;
+
+    if (result.status === 4) {
+      await this.acceptTerms();
+    }
+
     await this.discoverPatientId();
+  }
+
+  async acceptTerms() {
+    const response = await fetch(path.join(this.baseUrl, `/auth/login`), {
+      method: "POST",
+      headers: this.headers(),
+    });
+    const result = (await response.json()) as { status: number };
+    if (result.status !== 0) {
+      throw new Error("New Terms of Use must be accepted");
+    }
   }
 
   async discoverPatientId() {
@@ -60,6 +84,10 @@ export class LibreLinkUpClient {
       headers: this.headers(),
     });
     const patients = (await response.json()) as { data: Patient[] };
+    if (!("data" in patients))
+      throw new Error(
+        `Patients does not contain \`data\` attribute! Instead, it looks like ${JSON.stringify(patients)}`,
+      );
     if (!patients.data.length)
       throw new Error("No patients connected to this account.");
     const patient = patients.data.find(this.isPatient) || patients.data[0];

@@ -1,25 +1,29 @@
 import { Mutex } from "async-mutex";
 import { EventEmitter } from "node:events";
-import TypedEventEmitter, { EventMap } from "typed-emitter";
+import TypedEventEmitter, { type EventMap } from "typed-emitter";
 
 import { sanitiseBlueText, wait } from "./utils/utils.js";
 import { Player } from "./Player.js";
 import { parseLeaderboard } from "./utils/leaderboard.js";
 import {
-  ChatMessage,
-  KmailMessage,
-  KoLChatMessage,
-  KoLKmail,
-  KoLMessage,
+  type ChatMessage,
+  type KmailMessage,
+  type KoLChatMessage,
+  type KoLKmail,
+  type KoLMessage,
   isValidMessage,
+  parseKmailMessage,
 } from "./utils/kmail.js";
 import { PlayerCache } from "./Cache.js";
 import { CookieJar } from "tough-cookie";
-import got, { OptionsOfJSONResponseBody, OptionsOfTextResponseBody } from "got";
+import got, {
+  type OptionsOfJSONResponseBody,
+  type OptionsOfTextResponseBody,
+} from "got";
 
 type TypedEmitter<T extends EventMap> = TypedEventEmitter.default<T>;
 
-type MallPrice = {
+export type MallPrice = {
   formattedMallPrice: string;
   formattedLimitedMallPrice: string;
   formattedMinPrice: string;
@@ -29,7 +33,7 @@ type MallPrice = {
 };
 
 type Events = {
-  kmail: (message: KoLMessage) => void;
+  kmail: (message: KmailMessage) => void;
   whisper: (message: KoLMessage) => void;
   system: (message: KoLMessage) => void;
   public: (message: KoLMessage) => void;
@@ -40,6 +44,17 @@ type Familiar = {
   id: number;
   name: string;
   image: string;
+};
+
+type ApiStatus = {
+  /** number of ascensions */
+  ascensions: string;
+  /** number of turns played */
+  turnsplayed: string;
+  /** kol game day number */
+  daynumber: string;
+  /** session password */
+  pwd: string;
 };
 
 export class Client extends (EventEmitter as unknown as new () => TypedEmitter<Events>) {
@@ -135,7 +150,7 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
     try {
-      await this.session
+      const result = await this.session
         .post("login.php", {
           form: {
             loggingin: "Yup.",
@@ -146,6 +161,10 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
           },
         })
         .text();
+
+      if (Client.#rolloverPattern.test(result)) {
+        throw new Error("It's rollover!");
+      }
 
       if (!(await this.checkLoggedIn())) return false;
 
@@ -181,11 +200,11 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     }
   }
 
+  static #rolloverPattern =
+    /The system is currently down for nightly maintenance/;
+
   async #checkForRollover() {
-    const isRollover =
-      /The system is currently down for nightly maintenance/.test(
-        await this.fetchText("/"),
-      );
+    const isRollover = Client.#rolloverPattern.test(await this.fetchText(""));
 
     if (this.#isRollover && !isRollover) {
       // Set the post-rollover latch so the bot can react on next log in.
@@ -196,7 +215,7 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
 
     if (this.#isRollover) {
       // Rollover appears to be in progress. Check again in one minute.
-      setTimeout(() => this.#checkForRollover(), 60000);
+      setTimeout(() => this.#checkForRollover(), 60_000);
     }
   }
 
@@ -251,6 +270,14 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
       });
   }
 
+  async fetchStatus(): Promise<ApiStatus | null> {
+    const api = await this.fetchJson<ApiStatus>("api.php", {
+      searchParams: { what: "status", for: `${this.#username} bot` },
+    });
+
+    return api;
+  }
+
   async fetchKmails(): Promise<KmailMessage[]> {
     const kmails = await this.fetchJson<KoLKmail[]>("api.php", {
       searchParams: {
@@ -265,8 +292,8 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
       id: Number(msg.id),
       type: "kmail" as const,
       who: new Player(this, Number(msg.fromid), msg.fromname),
-      msg: msg.message,
       time: new Date(Number(msg.azunixtime) * 1000),
+      ...parseKmailMessage(msg.message, msg.type),
     }));
   }
 
@@ -303,6 +330,15 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
         },
       },
     );
+  }
+
+  async getUpdates() {
+    const result = await this.sendChat("/updates");
+    return [
+      ...(result?.output.matchAll(
+        /<p><b>[A-za-z]+ \d+<\/b> - (.*?)(?=<p>(?:<b>|<hr>))/g,
+      ) ?? []),
+    ].map((m) => m[1]);
   }
 
   async useChatMacro(macro: string) {
@@ -542,17 +578,36 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     );
     const yesterday = await Promise.all(
       winners
-        ? [...winners].map(async (w) => ({
+        ? [...winners].map(async (w, i) => ({
             player: new Player(this, Number(w[2]), w[1]),
             item: await this.descIdToId(Number(w[3])),
             tickets: Number(w[4].replace(",", "")),
+            place: Math.min(i + 1, 2),
           }))
         : [],
     );
 
+    const { daynumber } = (await this.fetchStatus()) ?? { daynumber: "0" };
+
     return {
       today: { first, second },
       yesterday,
+      gameday: Number(daynumber),
     };
+  }
+
+  async getStandard(date?: Date) {
+    if (!date) {
+      date = new Date();
+      date.setFullYear(date.getFullYear() - 2);
+      date.setMonth(0);
+      date.setDate(2);
+    }
+
+    const formattedDate = date.toISOString().split("T")[0];
+
+    return await this.fetchText("standard.php", {
+      searchParams: { date: formattedDate },
+    });
   }
 }

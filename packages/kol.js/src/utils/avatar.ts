@@ -1,7 +1,10 @@
-import { parse } from "node-html-parser";
-import { resolveKoLImage } from "./utils.js";
+import { selectAll, selectOne } from "css-select";
+import { parseDocument } from "htmlparser2";
+import { Element } from "domhandler";
 import { imageSize } from "image-size";
 import { dedent } from "ts-dedent";
+
+import { resolveKoLImage } from "./utils.js";
 
 export async function generateAvatarSvg(profile: string) {
   const header = profile.match(
@@ -11,33 +14,49 @@ export async function generateAvatarSvg(profile: string) {
 
   if (!blockHtml) return null;
 
-  const block = parse(blockHtml).querySelector("div");
+  const document = parseDocument(blockHtml);
+  const block = selectOne("div", document) as Element | null;
 
   if (!block) return null;
 
   const ocrsColour =
-    ["gold", "red"].find((k) => block.classList.contains(k)) ?? "black";
+    ["gold", "red"].find((k) => block.attribs.class.includes(k)) ?? "black";
 
   const images = [];
 
-  for (const imgElement of block.querySelectorAll("img")) {
-    const src = imgElement.getAttribute("src");
+  for (const imgElement of selectAll("img", block)) {
+    const src = imgElement.attribs.src;
     if (!src) continue;
 
-    const result = await fetch(resolveKoLImage(src));
+    let name = src;
+    let result = await fetch(resolveKoLImage(src));
+    let replaced = false;
+
+    if (!result.ok) {
+      // If this is some decoration that failed, just skip it
+      if (images.length > 0) continue;
+      // Otherwise let's use nopic
+      name = "/adventureimages/nopic.gif";
+      result = await fetch(resolveKoLImage(name));
+      replaced = true;
+    }
+
     const buffer = Buffer.from(await result.arrayBuffer());
 
-    const { width = 0, height = 0 } = imageSize(buffer);
+    const { width = 0, height = 0 } = !replaced
+      ? imageSize(buffer)
+      : { width: 60, height: 100 };
 
     const href = `data:image/png;base64,${buffer.toString("base64")}`;
 
-    const style = imgElement.getAttribute("style");
+    const style = imgElement.attribs.style;
 
     const top = Number(style?.match(/top: ?(-?\d+)px/i)?.[1] || "0");
     const left = Number(style?.match(/left: ?(-?\d+)px/i)?.[1] || "0");
     const rotate = Number(style?.match(/rotate\((-?\d+)deg\)/)?.[1] || "0");
 
     images.push({
+      name,
       href,
       top,
       left,
@@ -72,6 +91,7 @@ export async function generateAvatarSvg(profile: string) {
           (i) =>
             dedent`
               <image
+                title="${i.name}"
                 filter="url(#colorMask)"
                 href="${i.href}"
                 width="${i.width}"

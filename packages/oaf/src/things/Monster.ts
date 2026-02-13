@@ -1,129 +1,159 @@
 import { bold, hyperlink } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
-import { cleanString, notNull, toWikiLink } from "../utils.js";
+import { inlineExpression, toWikiLink } from "../utils.js";
 import { Thing } from "./Thing.js";
+import { TData } from "./query.js";
 
-export type Drop = {
-  item: string;
-  droprate: number;
-  attributes: {
-    pickpocketOnly: boolean;
-    noPickpocket: boolean;
-    conditional: boolean;
-    fixedRate: boolean;
-    accordion: boolean;
-  };
-};
-
-export function convertToDrop(drop: string): Drop | null {
-  const dropMatch = drop.match(
-    /^(?<item>.+) \((?<attributes>[a-z]*)(?<droprate>[\d]+)\)$/,
-  );
-  if (!dropMatch?.groups) return null;
-
-  const { item, attributes, droprate } = dropMatch.groups;
-
-  return {
-    item,
-    droprate: parseInt(droprate || "0"),
-    attributes: {
-      pickpocketOnly: attributes.includes("p"),
-      noPickpocket: attributes.includes("n"),
-      conditional: attributes.includes("c"),
-      fixedRate: attributes.includes("f"),
-      accordion: attributes.includes("a"),
-    },
-  };
-}
+export type TMonster = NonNullable<
+  NonNullable<TData["allMonsters"]>["nodes"][number]
+>;
 
 export class Monster extends Thing {
   static is(thing?: Thing | null): thing is Monster {
     return !!thing && thing instanceof Monster;
   }
 
-  static from(line: string): Monster {
-    const parts = line.split(/\t/);
-    if (parts.length < 4) throw "Invalid data";
+  private monster: TMonster;
 
-    return new Monster(
-      cleanString(parts[0]),
-      parseInt(parts[1]),
-      parts[2].split(",")[0],
-      parts[3],
-      parts[4]
-        ? parts
-            .slice(4)
-            .map((drop) => convertToDrop(cleanString(drop)))
-            .filter(notNull)
-            .sort((a, b) => b.droprate - a.droprate)
-        : [],
+  constructor(monster: TMonster) {
+    super(
+      monster.id,
+      monster.name,
+      monster.image.filter((i) => i !== null)[0] || "nopic.gif",
     );
+    this.monster = monster;
   }
 
-  readonly parameters: string;
-  readonly drops: Drop[];
+  getPhylumEmoji() {
+    const phylum = this.monster.phylum?.toLowerCase();
+    switch (phylum) {
+      case "beast":
+        return "🐺";
+      case "bug":
+        return "🐛";
+      case "constellation":
+        return "✨";
+      case "construct":
+        return "🤖";
+      case "demon":
+        return "😈";
+      case "dude":
+        return "🙂";
+      case "elemental":
+        return "🌈";
+      case "elf":
+        return "🧝";
+      case "fish":
+        return "🐟";
+      case "goblin":
+        return "👺";
+      case "hippy":
+        return "🌼";
+      case "hobo":
+        return "🎒";
+      case "horror":
+        return "😱";
+      case "humanoid":
+        return "🧍";
+      case "mer-kin":
+        return "🧜";
+      case "orc":
+        return "🧌";
+      case "penguin":
+        return "🐧";
+      case "pirate":
+        return "🏴‍☠️";
+      case "plant":
+        return "🌱";
+      case "slime":
+        return "🦠";
+      case "undead":
+        return "🧟";
+      case "weird":
+        return "🌀";
+    }
+    return "⁉️";
+  }
 
-  constructor(
-    name: string,
-    id: number,
-    imageUrl: string,
-    parameters: string,
-    drops: Drop[],
-  ) {
-    super(id, name, imageUrl);
-    this.parameters = parameters;
-    this.drops = drops;
+  getElementEmoji() {
+    const phylum = this.monster.element?.toLowerCase();
+    switch (phylum) {
+      case "hot":
+        return "🔥";
+      case "cold":
+        return "❄️";
+      case "stench":
+        return "💨";
+      case "spooky":
+        return "💀";
+      case "sleaze":
+        return "🍆";
+    }
+    return "⁉️";
+  }
+
+  getModifiers(): Record<string, string> {
+    const mods: Record<string, string> = {};
+    if (this.monster.wiki) mods["Wiki Name"] = `"${this.monster.wiki}"`;
+    return mods;
   }
 
   getImagePath() {
+    if (this.imageUrl.includes("/")) return `/${this.imageUrl}`;
     return `/adventureimages/${this.imageUrl}`;
   }
 
   private getDropsDescription() {
-    const meatMatcher = this.parameters.match(/Meat: (?<meat>[\d]+)/);
+    const meat = this.monster.meat;
+    const drops =
+      this.monster.monsterDropsByMonster?.nodes.filter((d) => d !== null) ?? [];
 
-    if (!this.drops.length && !meatMatcher) return null;
+    if (!drops.length && !meat) return null;
 
     const description = ["Drops:"];
 
-    if (meatMatcher) {
-      const meat = parseInt(meatMatcher[1]);
+    if (meat) {
       description.push(`${meat} (±${Math.floor(meat * 0.2)}) meat`);
     }
 
-    const drops = new Map<string, number>();
+    const dropDescriptions = new Map<string, number>();
 
-    for (const drop of this.drops) {
+    for (const drop of drops) {
+      const item = drop.itemByItem?.name;
+      if (!item) continue;
       const dropDetails: string[] = [];
-      if (drop.attributes.accordion) {
+      if (drop.category === "A") {
         dropDetails.push("Stealable accordion");
       } else {
-        dropDetails.push(drop.droprate > 0 ? `${drop.droprate}%` : "Sometimes");
-        if (drop.attributes.pickpocketOnly) dropDetails.push("pickpocket only");
-        if (drop.attributes.noPickpocket) dropDetails.push("can't be stolen");
-        if (drop.attributes.conditional) dropDetails.push("conditional");
-        if (drop.attributes.fixedRate)
+        dropDetails.push(drop.rate > 0 ? `${drop.rate}%` : "Sometimes");
+        if (drop.category === "P") dropDetails.push("pickpocket only");
+        if (drop.category === "N") dropDetails.push("can't be stolen");
+        if (drop.category === "C") dropDetails.push("conditional");
+        if (drop.category === "F")
           dropDetails.push("unaffected by item drop modifiers");
       }
 
       const dropDescription = `${hyperlink(
-        drop.item,
-        toWikiLink(drop.item),
+        item,
+        toWikiLink(item),
       )} (${dropDetails.join(", ")})`;
 
-      drops.set(dropDescription, (drops.get(dropDescription) || 0) + 1);
+      dropDescriptions.set(
+        dropDescription,
+        (dropDescriptions.get(dropDescription) || 0) + 1,
+      );
     }
 
     description.push(
-      ...[...drops.entries()]
+      ...[...dropDescriptions.entries()]
         .slice(0, 10)
         .map(
           ([drop, quantity]) => `${quantity > 1 ? `${quantity}x ` : ""}${drop}`,
         ),
     );
 
-    if (drops.size > 10) description.push("...and more.");
+    if (dropDescriptions.size > 10) description.push("...and more.");
 
     return description.join("\n");
   }
@@ -132,73 +162,73 @@ export class Monster extends Thing {
   async getDescription(): Promise<string> {
     const description = [bold("Monster"), `(Monster ${this.id})`];
 
-    const atk = this.parameters.match(/Atk: (?<atk>-?[\d]+)/);
-    const def = this.parameters.match(/Def: (?<def>-?[\d]+)/);
-    const hp = this.parameters.match(/HP: (?<hp>-?[\d]+)/);
-    const scaleMatcher = this.parameters.match(
-      /Scale: (?<scale>(-?[\d]|\[.*?\])+)/,
-    );
+    const atk = this.monster.attack;
+    const def = this.monster.defence;
+    const hp = this.monster.hp;
+    const scale = this.monster.scaling;
 
-    if (atk && def && hp) {
-      description.push(`Attack: ${atk[1]} | Defense: ${def[1]} | HP: ${hp[1]}`);
-    } else if (scaleMatcher) {
+    if (atk && atk !== "0" && def && def !== "0" && hp && hp !== "0") {
+      description.push(
+        `Attack: ${inlineExpression(atk)} | Defense: ${inlineExpression(def)} | HP: ${inlineExpression(hp)}`,
+      );
+    } else if (scale !== "0") {
       const scaleDetails: string[] = [];
 
-      const scale = Number(scaleMatcher[1]);
+      const scaleNum = Number(scale);
 
-      if (Number.isNaN(scale)) {
+      if (Number.isNaN(scaleNum)) {
         scaleDetails.push("something weird");
       } else {
         scaleDetails.push(
           "your stats",
-          scale >= 0 ? "plus" : "minus",
-          Math.abs(scale).toString(),
+          scaleNum >= 0 ? "plus" : "minus",
+          Math.abs(scaleNum).toString(),
         );
       }
 
       const scaleBounds: string[] = [];
 
-      const floor = this.parameters.match(/Floor: (?<floor>[\d]+)/);
-      if (floor) scaleBounds.push(`min ${floor[1]}`);
-
-      const cap = this.parameters.match(/Cap: (?<cap>[\d]+)/);
-      if (cap) scaleBounds.push(`max ${cap[1]}`);
+      if (this.monster.scalingFloor !== "0")
+        scaleBounds.push(`min ${this.monster.scalingFloor}`);
+      if (this.monster.scalingCap !== "0")
+        scaleBounds.push(`max ${this.monster.scalingCap}`);
 
       if (scaleBounds.length > 0)
         scaleDetails.push(`(${scaleBounds.join(", ")})`);
 
       description.push(
         `Scales to ${scaleDetails.join(" ")} | HP: ${
-          hp ? hp[1] : "75% of defense"
+          hp && hp !== "0" ? inlineExpression(hp) : "75% of defense"
         }.`,
       );
     } else {
       description.push("Scales unusually.");
     }
 
-    const phylum = this.parameters.match(/P: (?<phylum>[a-z]+)/);
-    if (phylum) description.push(`Phylum: ${phylum[1]}`);
+    if (this.monster.phylum)
+      description.push(
+        `Phylum: ${this.monster.phylum} ${this.getPhylumEmoji()}`,
+      );
 
-    const element = this.parameters.match(/E: (?<element>[a-z]+)/);
-    if (element) description.push(`Element: ${element[1]}`);
+    if (this.monster.element)
+      description.push(
+        `Element: ${this.monster.element.toLowerCase()} ${this.getElementEmoji()}`,
+      );
 
-    if (this.parameters.includes("Init: 10000"))
+    if (this.monster.initiative === "10000")
       description.push("Always wins initiative.");
-    if (this.parameters.includes("Init: -10000"))
+    if (this.monster.initiative === "-10000")
       description.push("Always loses initiative.");
-    if (this.parameters.includes("FREE"))
-      description.push("Doesn't cost a turn to fight.");
-    if (this.parameters.includes("NOCOPY"))
-      description.push("Can't be copied.");
-    if (this.parameters.includes("BOSS")) description.push("Instakill immune.");
-    if (this.parameters.includes("ULTRARARE"))
-      description.push("Ultra-rare encounter.");
+    if (this.monster.free) description.push("Doesn't cost a turn to fight.");
+    if (this.monster.nocopy) description.push("Can't be copied.");
+    if (this.monster.boss) description.push("Instakill immune.");
+    if (this.monster.ultrarare) description.push("Ultra-rare encounter.");
 
     const drops = this.getDropsDescription();
     if (drops) {
       description.push("", drops);
     }
 
-    return description.join("\n");
+    return Promise.resolve(description.join("\n"));
   }
 }

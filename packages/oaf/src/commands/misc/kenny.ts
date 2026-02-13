@@ -6,6 +6,7 @@ import {
 } from "discord.js";
 
 import { LibreLinkUpClient } from "../../clients/LibreLinkupClient.js";
+import { discordClient } from "../../clients/discord.js";
 import { config } from "../../config.js";
 
 export const data = new SlashCommandBuilder()
@@ -43,13 +44,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ));
     }
 
-    interaction.editReply(
+    await interaction.editReply(
       `Kenny's blood glucose 🩸 was ${latest.value}mg/dL ${time(
         latest.date,
         TimestampStyles.RelativeTime,
       )}. ${makeComment({ isHigh: latest.value >= KENNY_TOO_HIGH, isLow: latest.value <= KENNY_TOO_LOW })}`,
     );
   } catch (error) {
+    await discordClient.alert(
+      `Kenny cyborg implant error: ${JSON.stringify(error)}`,
+      interaction,
+      error,
+    );
     return void (await interaction.editReply(
       "Can't communicate with Kenny's cyborg implant right now.",
     ));

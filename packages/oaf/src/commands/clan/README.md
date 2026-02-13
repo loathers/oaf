@@ -4,7 +4,7 @@ ASS currently has a relatively active set of free-use community Dungeons used co
 
 ### /status
 
-When invoked, this command will spawn a quick summary of the active Dread instances. Summary includes turns spent in each zone (formatted as "Forest/Village/Castle") and the number of skills left in [The Machine](https://kol.coldfront.net/thekolwiki/index.php/The_Machine)
+When invoked, this command will spawn a quick summary of the active Dread instances. Summary includes turns spent in each zone (formatted as "Forest/Village/Castle") and the number of skills left in [The Machine](https://wiki.kingdomofloathing.com/The_Machine)
 
 ![image](https://user-images.githubusercontent.com/8014761/172421429-7d7a4b03-61f3-4825-879e-b21e6a30f6d2.png)
 
@@ -22,7 +22,7 @@ When invoked, this command shows the number of skills each user is owed accordin
 
 ### /brains
 
-When invoked, this command will assess the status of various possible users that could (in theory) be available brains for people who want to use [The Machine](https://kol.coldfront.net/thekolwiki/index.php/The_Machine) in a Dread instance to get skills and report back their classes.
+When invoked, this command will assess the status of various possible users that could (in theory) be available brains for people who want to use [The Machine](https://wiki.kingdomofloathing.com/The_Machine) in a Dread instance to get skills and report back their classes.
 
 ![image](https://user-images.githubusercontent.com/8014761/172420340-6662a773-7e2a-441c-82de-5a1066203b54.png)
 

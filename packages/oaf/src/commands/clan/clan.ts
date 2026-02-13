@@ -191,7 +191,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   );
 
   if (!clan) {
-    interaction.reply({ content: "Clan not recognised.", ephemeral: true });
+    await interaction.reply({
+      content: "Clan not recognised.",
+      ephemeral: true,
+    });
     return;
   }
 

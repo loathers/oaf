@@ -1,7 +1,7 @@
 import { type KoLMessage } from "kol.js";
 
-import { isRecordNotFoundError, prisma } from "./clients/database.js";
 import { discordClient } from "./clients/discord.js";
+import { greenboxClient } from "./clients/greenbox.js";
 import { kolClient } from "./clients/kol.js";
 
 export async function handleGreenboxKmail(message: KoLMessage) {
@@ -26,28 +26,20 @@ async function update(
   greenboxString: string,
 ) {
   try {
-    // If the player isn't already in the database, add them
-    const player = await prisma.player.upsert({
-      where: { playerId },
-      update: {},
-      create: { playerId, playerName },
-      include: { greenbox: { orderBy: { id: "desc" }, take: 1 } },
-    });
-
-    // Only add a new entry if something has changed
-    if (player.greenbox.at(0)?.data !== greenboxString) {
-      await prisma.greenbox.create({
-        data: {
-          playerId,
-          data: greenboxString,
-        },
-      });
-    }
+    const response = await greenboxClient.update(
+      playerId,
+      playerName,
+      greenboxString,
+    );
+    console.log(
+      `Updated greenbox for player ${playerId} (${playerName})`,
+      response,
+    );
   } catch (error) {
     await discordClient.alert(
       "Error processing greenbox submission",
       undefined,
-      error,
+      `Failed to update greenbox for player ${playerId}: ${String(error)}`,
     );
     await kolClient.kmail(
       playerId,
@@ -58,30 +50,21 @@ async function update(
 
 async function wipe(playerId: number) {
   try {
-    await prisma.player.update({
-      where: { playerId },
-      data: {
-        greenboxString: null,
-        greenboxLastUpdate: null,
-        greenbox: { deleteMany: {} },
-      },
-    });
+    const response = await greenboxClient.wipe(playerId);
+    console.log(`Wiped greenbox for player ${playerId}`, response);
+    await kolClient.kmail(
+      playerId,
+      "At your request, your public greenbox profile, if it existed, has been removed",
+    );
   } catch (error) {
-    if (!isRecordNotFoundError(error)) {
-      await discordClient.alert(
-        "Error processing greenbox submission",
-        undefined,
-        error,
-      );
-      return await kolClient.kmail(
-        playerId,
-        "There was an error wiping your public greenbox profile",
-      );
-    }
+    await discordClient.alert(
+      "Error processing greenbox wipe request",
+      undefined,
+      `Failed to wipe greenbox for player ${playerId}: ${String(error)}`,
+    );
+    await kolClient.kmail(
+      playerId,
+      "There was an error processing your greenbox wipe request",
+    );
   }
-
-  await kolClient.kmail(
-    playerId,
-    "At your request, your public greenbox profile, if it existed, has been removed",
-  );
 }

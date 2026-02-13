@@ -1,4 +1,9 @@
 name: Publish kol.js
+
+permissions:
+  id-token: write # Required for OIDC
+  contents: read
+
 on:
   push:
     paths:
@@ -12,10 +17,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
       - name: Check publish status
         id: check
         run: |
@@ -29,8 +39,7 @@ jobs:
           corepack enable
           yarn workspace kol.js install --immutable
           yarn workspace kol.js build
-          yarn workspace kol.js npm publish
+          cd packages/kol.js && npm publish
         env:
           STATUS: ${{ steps.check.outputs.status }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
     

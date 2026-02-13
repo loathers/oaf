@@ -1,18 +1,16 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { wikiClient } from "../../clients/wiki.js";
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 
 export const data = new SlashCommandBuilder()
   .setName("rescan")
-  .setDescription("Reload my in-game information from KoLmafia's datafiles.");
+  .setDescription("Reload oaf's in-game information from Data of Loathing.");
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  if (await wikiClient.reloadMafiaData()) {
-    return interaction.editReply(
-      "Information reloaded from KoLMafia Github data files.",
-    );
+  if (await dataOfLoathingClient.reload()) {
+    return interaction.editReply("Information reloaded from Data of Loathing.");
   }
 
   return interaction.editReply(

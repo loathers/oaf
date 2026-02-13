@@ -13,10 +13,10 @@ export const data = new SlashCommandBuilder()
       .setMinValue(1),
   );
 
-export function execute(interaction: ChatInputCommandInteraction): void {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
 
-  interaction.reply(
+  await interaction.reply(
     `A ${weight}lb fairy provides +${toDrop(weight).toFixed(2)}% item drop. ` +
       `(+${toDrop(weight, 1.25).toFixed(2)}% for Jumpsuited Hound Dog)`,
   );

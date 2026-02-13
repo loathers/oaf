@@ -1,101 +1,65 @@
+import { type SkillTag } from "data-of-loathing";
 import { bold } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol.js";
-import { cleanString } from "../utils.js";
 import { Thing } from "./Thing.js";
+import { TData } from "./query.js";
+
+const TAG_LABELS: Record<SkillTag, string> = {
+  COMBAT: "Combat Skill",
+  EFFECT: "Buff",
+  EXPRESSION: "Expression",
+  PASSIVE: "Passive Skill",
+  SONG: "Boris Song",
+  HEAL: "Heal",
+  ITEM: "Summon",
+  NC: "Noncombat Skill",
+  WALK: "Walk",
+  OTHER: "Other Skill",
+  SELF: "Self",
+};
+
+type TSkill = NonNullable<NonNullable<TData["allSkills"]>["nodes"][number]>;
 
 export class Skill extends Thing {
+  private skill: TSkill;
+
   static is(thing?: Thing | null): thing is Skill {
     return !!thing && thing instanceof Skill;
   }
 
-  static from(line: string): Skill {
-    const parts = line.split(/\t/);
-    if (parts.length < 6) throw "Invalid data";
-
-    return new Skill(
-      parseInt(parts[0]),
-      cleanString(parts[1]),
-      parts[2],
-      parseInt(parts[3]),
-      parseInt(parts[4]),
-      parseInt(parts[5]),
-      parts[6] ? parseInt(parts[6]) : undefined,
-    );
-  }
-
-  readonly type: number;
-  readonly manaCost: number;
-  readonly duration: number;
-  readonly level?: number;
-
-  constructor(
-    id: number,
-    name: string,
-    imageUrl: string,
-    type: number,
-    manaCost: number,
-    duration: number,
-    level?: number,
-  ) {
-    super(id, name, imageUrl);
-    this.type = type;
-    this.manaCost = manaCost;
-    this.duration = duration;
-    this.level = level;
+  constructor(skill: TSkill) {
+    super(skill.id, skill.name, skill.image);
+    this.skill = skill;
   }
 
   block(): number {
-    return Math.floor(this.id / 1000);
+    return Math.floor(this.skill.id / 1000);
+  }
+
+  getModifiers(): Record<string, string> {
+    return (this.skill.skillModifierBySkill?.modifiers ?? {}) as Record<
+      string,
+      string
+    >;
   }
 
   @Memoize()
   async getDescription(): Promise<string> {
     const description: string[] = [];
 
-    let showCost = false;
+    const tags = (
+      this.skill.tags
+        ?.filter((t) => t !== null)
+        .map((tag) => TAG_LABELS[tag!])
+        .filter((t) => !!t) ?? []
+    ).join(", ");
+    description.push(bold(tags));
 
-    switch (this.type) {
-      case 0:
-        description.push(bold("Passive Skill"));
-        break;
-      case 1:
-      case 2:
-      case 3:
-      case 4:
-        description.push(bold("Skill"));
-        showCost = true;
-        break;
-      case 5:
-        description.push(bold("Combat Skill"));
-        showCost = true;
-        break;
-      case 6:
-        description.push(bold("Skill (Boris Song)"));
-        showCost = true;
-        break;
-      case 7:
-        description.push(bold("Combat/Noncombat Skill"));
-        showCost = true;
-        break;
-      case 8:
-        description.push(bold("Combat Passive Skill"));
-        break;
-      case 9:
-        description.push(bold("Skill (Expression)"));
-        showCost = true;
-        break;
-      case 10:
-        description.push(bold("Skill (Walk)"));
-        showCost = true;
-        break;
-      default:
-        description.push(bold("Skill"));
-        break;
-    }
     description.push(`(Skill ${this.id})`);
-    if (showCost) description.push(`Cost: ${this.manaCost}mp`);
+    const showCost = !this.skill.tags?.includes("PASSIVE");
+    if (showCost) description.push(`Cost: ${this.skill.mpCost}mp`);
 
     const { blueText } = await kolClient.getSkillDescription(this.id);
 

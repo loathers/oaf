@@ -21,7 +21,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   if (!channel) {
     await interaction.editReply(
-      "You have to perform this action from within a Channel.",
+      "You have to perform this action from within a channel.",
     );
     return;
   }
@@ -35,16 +35,34 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const quantity = interaction.options.getInteger("count", false) || 1;
 
-  const toDelete = [];
+  const messagesToDelete = [];
 
-  for (const message of (await channel.messages.fetch()) ?? []) {
-    if (toDelete.length >= quantity) break;
-    if (message[1].author.id === getOwnUserId()) {
-      toDelete.push(message[0]);
+  const messages = await channel.messages.fetch();
+
+  for (const [messageId, message] of messages.sorted(
+    (a, b) => b.createdTimestamp - a.createdTimestamp,
+  )) {
+    // If we have queued enough messages for deletion, end the loop
+    if (messagesToDelete.length >= quantity) break;
+
+    // Only consider messages from OAF
+    if (message.author.id !== getOwnUserId()) continue;
+
+    // If the message is a slash command interaction, was it was initiated by the user?
+    const originator = message.interactionMetadata?.user.id;
+    if (originator === interaction.user.id) {
+      messagesToDelete.push(messageId);
+      continue;
+    }
+
+    // Otherwise, if the message is a reply, was it a reply to the user?
+    if (message.mentions.repliedUser?.id === interaction.user.id) {
+      messagesToDelete.push(messageId);
+      continue;
     }
   }
 
-  await channel.bulkDelete(toDelete);
+  await channel.bulkDelete(messagesToDelete);
 
   await interaction.editReply("Purge complete");
 }

@@ -1,13 +1,16 @@
-import { Player, PrismaPromise } from "@prisma/client";
 import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   bold,
-  underscore,
+  underline,
 } from "discord.js";
 
-import { prisma } from "../../clients/database.js";
+import {
+  batchUpdatePlayerNames,
+  getPlayersEligibleForBrains,
+} from "../../clients/database.js";
 import { kolClient } from "../../clients/kol.js";
+import type { Player } from "../../database-types.js";
 import { formatPlayer } from "../../utils.js";
 
 const BASE_CLASSES = [
@@ -52,16 +55,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     BASE_CLASSES.map((c) => [c, [] as Player[]]),
   );
 
-  const players = await prisma.player.findMany({
-    where: {
-      OR: [
-        { brainiac: true },
-        { raidParticipation: { some: { skills: { gt: 0 } } } },
-      ],
-    },
-  });
+  const players = await getPlayersEligibleForBrains();
 
-  const playerNameUpdates: PrismaPromise<Player>[] = [];
+  const nameUpdates = [];
 
   for (const player of players) {
     const current = await kolClient.players.fetch(player.playerId, true);
@@ -71,12 +67,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     // While we're here, let's update any player name changes
     if (current.name !== player.playerName) {
-      playerNameUpdates.push(
-        prisma.player.update({
-          where: { playerId: player.playerId },
-          data: { playerName: current.name },
-        }),
-      );
+      nameUpdates.push({ playerId: player.playerId, name: current.name });
     }
 
     // Lower than level 15
@@ -95,7 +86,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         description:
           "Captain Scotch, kenny kamAKAzi, and 3BH can pilot dread multis for any class of brain, subject to multi restrictions.",
         fields: BASE_CLASSES.map((playerClass) => ({
-          name: bold(underscore(playerClass)),
+          name: bold(underline(playerClass)),
           value: formatPlayerList(classToPlayers[playerClass]),
           inline: true,
         })),
@@ -103,5 +94,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     ],
   });
 
-  await prisma.$transaction(playerNameUpdates);
+  await batchUpdatePlayerNames(nameUpdates);
 }

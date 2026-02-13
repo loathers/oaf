@@ -1,6 +1,6 @@
+import { ApplicationCommandType } from "discord-api-types/v10";
 import {
   ActionRowBuilder,
-  ApplicationCommandType,
   ContextMenuCommandBuilder,
   ContextMenuCommandInteraction,
   DiscordjsError,
@@ -16,7 +16,12 @@ import {
   inlineCode,
 } from "discord.js";
 
-import { prisma } from "../../clients/database.js";
+import {
+  deleteTag,
+  findTagByMessage,
+  findTagByName,
+  replaceTag,
+} from "../../clients/database.js";
 import { config } from "../../config.js";
 import { init } from "./tag.js";
 
@@ -25,23 +30,20 @@ export const data = new ContextMenuCommandBuilder()
   .setType(ApplicationCommandType.Message);
 
 async function getExistingTagForMessage(message: Message<true>) {
-  return await prisma.tag.findUnique({
-    where: {
-      guildId_channelId_messageId: {
-        guildId: message.guildId,
-        channelId: message.channelId,
-        messageId: message.id,
-      },
-    },
-  });
+  return (
+    (await findTagByMessage(message.guildId, message.channelId, message.id)) ??
+    null
+  );
 }
 
 export async function execute(interaction: ContextMenuCommandInteraction) {
   if (!interaction.isMessageContextMenuCommand())
-    throw "Somehow you're trying to tag something that isn't a message";
+    throw new Error(
+      "Somehow you're trying to tag something that isn't a message",
+    );
 
   if (!interaction.inCachedGuild()) {
-    throw "This can only be done in guild";
+    throw new Error("This can only be done in guild");
   }
 
   const roleToCompare = await interaction.guild.roles.fetch(
@@ -49,7 +51,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
   );
 
   if (!roleToCompare) {
-    throw "Comparison role does not exist for tagging permissions";
+    throw new Error("Comparison role does not exist for tagging permissions");
   }
 
   const highestRole = interaction.member.roles.highest;
@@ -128,7 +130,7 @@ async function handleModal(
     .toLowerCase();
   const reason = interaction.fields.getTextInputValue("messageTaggerReason");
 
-  const tagNameInUse = await prisma.tag.findUnique({ where: { tag } });
+  const tagNameInUse = await findTagByName(tag);
 
   const existing = await getExistingTagForMessage(targetMessage);
 
@@ -139,7 +141,7 @@ async function handleModal(
       return;
     }
 
-    await prisma.tag.delete({ where: { tag: existing.tag } });
+    await deleteTag(existing.tag);
     await interaction.editReply(
       `Tag removed from the message that was previously tagged with ${bold(
         existing.tag,
@@ -161,19 +163,13 @@ async function handleModal(
     return;
   }
 
-  await prisma.$transaction(async (tx) => {
-    if (existing) await tx.tag.delete({ where: { tag: existing.tag } });
-
-    await tx.tag.create({
-      data: {
-        tag,
-        reason,
-        messageId: targetMessage.id,
-        channelId: targetMessage.channelId,
-        guildId: targetMessage.guildId,
-        createdBy: interaction.user.id,
-      },
-    });
+  await replaceTag(existing?.tag ?? null, {
+    tag,
+    reason,
+    messageId: targetMessage.id,
+    channelId: targetMessage.channelId,
+    guildId: targetMessage.guildId,
+    createdBy: interaction.user.id,
   });
 
   // Update cache

@@ -16,3 +16,5 @@ vite.config.*.timestamp-*
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+.react-router/

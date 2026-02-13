@@ -18,6 +18,13 @@ export const data = new SlashCommandBuilder()
       .setDescription(
         "Toggle whether you want to get pinged when subscriptions are rolling in the Kingdom of Loathing",
       ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("politics")
+      .setDescription(
+        "Toggle whether you want to have access to our #politics-discussion channel",
+      ),
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -123,6 +130,37 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         `You will ${
           desired ? "now" : "no longer"
         } receive pings when subs roll`,
+      );
+    }
+    case "politics": {
+      const politicker = await member.guild.roles.fetch(
+        config.POLITICS_ROLE_ID,
+      );
+
+      if (!politicker) {
+        return await interaction.editReply(
+          `Relevant role(s) not found. Is this being used on the right Guild?`,
+        );
+      }
+
+      const desired = !member.roles.cache.has(config.POLITICS_ROLE_ID);
+
+      if (desired) {
+        await member.roles.add(
+          config.POLITICS_ROLE_ID,
+          "Member added via slash command",
+        );
+      } else {
+        await member.roles.remove(
+          config.POLITICS_ROLE_ID,
+          "Member removed via slash command",
+        );
+      }
+
+      return await interaction.editReply(
+        `You will ${
+          desired ? "now" : "no longer"
+        } have access to the #politics-discussion channel`,
       );
     }
 

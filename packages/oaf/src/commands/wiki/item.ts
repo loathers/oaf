@@ -4,8 +4,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
-import { wikiClient } from "../../clients/wiki.js";
 import { itemAutocomplete, itemOption } from "../_options.js";
 
 export const data = new SlashCommandBuilder()
@@ -14,10 +14,10 @@ export const data = new SlashCommandBuilder()
   .addIntegerOption(itemOption());
 
 export async function embedForItem(id: number) {
-  const item = wikiClient.items.find((i) => i.id === id);
+  const item = dataOfLoathingClient.findItemById(id);
   if (!item) return null;
   const embed = createEmbed();
-  embed.setTitle(item.name).setURL(await wikiClient.getWikiLink(item));
+  embed.setTitle(item.name).setURL(dataOfLoathingClient.getWikiLink(item));
   await item.addToEmbed(embed);
   return embed;
 }

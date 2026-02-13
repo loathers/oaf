@@ -12,34 +12,47 @@ function isAnnouncement(message: KoLMessage) {
   );
 }
 
+function isUpdatesMessage(message: KoLMessage) {
+  return (
+    message.msg ===
+    "A new update has been posted. Use the /updates command to read it."
+  );
+}
+
 function listenForAnnouncements() {
-  kolClient.on("system", async (systemMessage) => {
-    if (!isAnnouncement(systemMessage)) return;
+  kolClient.on("system", (systemMessage) => {
+    void (async () => {
+      if (!isAnnouncement(systemMessage)) return;
 
-    const guild = await discordClient.guilds.fetch(config.GUILD_ID);
-    const announcementChannel = guild?.channels.cache.get(
-      config.ANNOUNCEMENTS_CHANNEL_ID,
-    );
+      const announcement = isUpdatesMessage(systemMessage)
+        ? (await kolClient.getUpdates())[0]
+        : systemMessage.msg;
 
-    if (!announcementChannel?.isTextBased()) {
-      await discordClient.alert("No valid announcement channel");
-      return;
-    }
+      const guild = await discordClient.guilds.fetch(config.GUILD_ID);
+      const announcementChannel = guild?.channels.cache.get(
+        config.ANNOUNCEMENTS_CHANNEL_ID,
+      );
 
-    const message = await announcementChannel.send({
-      content: dedent`
-        New announcement posted to KoL chat!
-        ${blockQuote(systemMessage.msg)}
-      `,
-    });
+      if (!announcementChannel?.isTextBased()) {
+        await discordClient.alert("No valid announcement channel");
+        return;
+      }
 
-    await message.startThread({
-      name: `Discussion for announcement`,
-      autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
-    });
+      const message = await announcementChannel.send({
+        content: dedent`
+          New announcement posted to KoL chat!
+          ${blockQuote(announcement)}
+        `,
+      });
+
+      await message.startThread({
+        name: `Discussion for announcement`,
+        autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+      });
+    })();
   });
 }
 
-export async function init() {
-  discordClient.on(Events.ClientReady, listenForAnnouncements);
+export function init() {
+  discordClient.once(Events.ClientReady, listenForAnnouncements);
 }

@@ -4,8 +4,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
-import { wikiClient } from "../../clients/wiki.js";
 
 export const data = new SlashCommandBuilder()
   .setName("effect")
@@ -22,7 +22,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const effectId = interaction.options.getNumber("effect", true);
   await interaction.deferReply();
 
-  const effect = wikiClient.effects.find((i) => i.id === effectId);
+  const effect = dataOfLoathingClient.effects.find((i) => i.id === effectId);
 
   const embed = createEmbed();
 
@@ -34,7 +34,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  embed.setTitle(effect.name).setURL(await wikiClient.getWikiLink(effect));
+  embed.setTitle(effect.name).setURL(dataOfLoathingClient.getWikiLink(effect));
 
   await effect.addToEmbed(embed);
 
@@ -48,7 +48,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 export async function autocomplete(interaction: AutocompleteInteraction) {
   const focusedValue = interaction.options.getFocused();
 
-  const filtered = wikiClient.effects
+  const filtered = dataOfLoathingClient.effects
     .map(({ name, id }) => ({ name, value: id }))
     .filter(({ name }) =>
       name.toLowerCase().includes(focusedValue.toLowerCase()),

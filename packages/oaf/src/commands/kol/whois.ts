@@ -7,14 +7,14 @@ import {
   hyperlink,
   italic,
   time,
-  userMention,
 } from "discord.js";
 
-import { prisma } from "../../clients/database.js";
+import { upsertPlayerInfo } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
+import { greenboxClient } from "../../clients/greenbox.js";
 import { snapshotClient } from "../../clients/snapshot.js";
 import { renderSvg } from "../../svgConverter.js";
-import { toKoldbLink, toMuseumLink } from "../../utils.js";
+import { formatPlayer, toMuseumLink, toSamsaraLink } from "../../utils.js";
 import { findPlayer, identifyPlayer } from "../_player.js";
 
 export const data = new SlashCommandBuilder()
@@ -57,10 +57,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!astralSpirit) {
     fields.push({
       name: "Ascensions",
-      value: hyperlink(
-        player.ascensions.toLocaleString(),
-        toKoldbLink(player.name),
-      ),
+      value:
+        player.ascensions > 0
+          ? hyperlink(
+              player.ascensions.toLocaleString(),
+              toSamsaraLink(player.id),
+            )
+          : "0",
     });
 
     if (player.favoriteFood)
@@ -100,24 +103,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       knownPlayer = await findPlayer({ playerId: player.id });
 
     // Show different greenboxen services
-    const greenboxes = [];
-    if (knownPlayer?.greenbox) {
-      greenboxes.push(
-        `${hyperlink(
-          `Greenbox`,
-          `https://greenbox.loathers.net/?u=${player.id}`,
-        )} (updated ${time(knownPlayer.greenbox.createdAt, "R")})`,
+    const greenboxes = [
+      ["Greenbox", await greenboxClient.getInfo(player)] as const,
+      ["Snapshot", await snapshotClient.getInfo(player)] as const,
+    ]
+      .filter(([, info]) => info !== null)
+      .map(
+        ([name, info]) =>
+          hyperlink(name, info!.link) + ` (updated ${time(info!.date, "R")})`,
       );
-    }
-    const snapshot = await snapshotClient.getInfo(player.name);
-    if (snapshot) {
-      greenboxes.push(
-        `${hyperlink(`Snapshot`, snapshot.link)} (updated ${time(
-          snapshot.date,
-          "R",
-        )})`,
-      );
-    }
 
     fields.push({
       name: "Greenboxes",
@@ -125,26 +119,29 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
   }
 
+  if (knownPlayer?.raffleWins?.length) {
+    const [first, second] = knownPlayer.raffleWins.reduce<[number, number]>(
+      (acc, w) => [
+        acc[0] + Number(w.place === 1),
+        acc[1] + Number(w.place === 2),
+      ],
+      [0, 0],
+    );
+    fields.push({
+      name: "Raffle Wins",
+      value: `${"🥇".repeat(first)}${"🥈".repeat(second)}`,
+    });
+  }
+
   // Use this opportunity to either
   // a) learn about a new player for our database, or
   // b) update player names either from name changes or capitalization changes
-  await prisma.player.upsert({
-    where: { playerId: player.id },
-    update: {
-      playerName: player.name,
-      accountCreationDate: player.createdDate,
-    },
-    create: {
-      playerId: player.id,
-      playerName: player.name,
-      accountCreationDate: player.createdDate,
-    },
-  });
+  await upsertPlayerInfo(player.id, player.name, player.createdDate);
 
   if (knownPlayer?.discordId) {
     fields.push({
       name: "Discord",
-      value: userMention(knownPlayer.discordId),
+      value: formatPlayer(knownPlayer),
     });
   }
 

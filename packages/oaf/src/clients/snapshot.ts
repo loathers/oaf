@@ -1,12 +1,13 @@
 import { parse } from "date-fns";
+import { type Player } from "kol.js";
 
 export class SnapshotClient {
   static toLink(input: string) {
     return `https://api.aventuristo.net/av-snapshot?u=${encodeURI(input)}`;
   }
 
-  async getInfo(playerName: string) {
-    const link = SnapshotClient.toLink(playerName);
+  async getInfo(player: Player) {
+    const link = SnapshotClient.toLink(player.name);
     const response = await fetch(link);
     if (response.status !== 200) return null;
     const data = await response.text();

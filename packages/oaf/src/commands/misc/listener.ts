@@ -39,8 +39,14 @@ async function synchroniseRoles(client: Client) {
   );
 }
 
-export async function init() {
-  discordClient.on(Events.GuildMemberAdd, onJoinServer);
+export function init() {
+  discordClient.on(
+    Events.GuildMemberAdd,
+    (member) => void onJoinServer(member),
+  );
 
-  discordClient.on(Events.ClientReady, synchroniseRoles);
+  discordClient.on(
+    Events.ClientReady,
+    (client) => void synchroniseRoles(client),
+  );
 }

@@ -56,6 +56,11 @@ const BOARD_MAPPINGS = {
   "Legacy of Loathing": 50,
   "A Shrunken Adventurer am I": 51,
   WereProfessor: 52,
+  "11 Things I Hate About U": 53,
+  "Avant Guard": 54,
+  "Z is for Zootomist": 55,
+  "Hat Trick": 56,
+  "11,037 Leagues Under the Sea": 57,
   Standard: 999,
   "Elf Gratitude": 900,
 } as const;
@@ -137,6 +142,14 @@ const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
   smol: "A Shrunken Adventurer am I",
   shrunk: "A Shrunken Adventurer am I",
   shrunken: "A Shrunken Adventurer am I",
+  "11t": "11 Things I Hate About U",
+  "11tihau": "11 Things I Hate About U",
+  ag: "Avant Guard",
+  hats: "Hat Trick",
+  zoot: "Z is for Zootomist",
+  zootomist: "Z is for Zootomist",
+  ht: "Hat Trick",
+  sea: "11,037 Leagues Under the Sea",
 };
 
 const AUTOCOMPLETE_CHOICES = [
@@ -167,7 +180,8 @@ const parseBoard = (input: string) => {
 
 const formatSubboard = (subboard: SubboardInfo) => {
   const runs = subboard.runs.map(
-    (run) => `${run.player} - ${run.days ? `${run.days}/` : ""}${run.turns}`,
+    (run) =>
+      `${run.playerName} - ${run.days ? `${run.days}/` : ""}${run.turns}`,
   );
   if (runs.length > 12) runs.splice(12, 0, "🥉 Bronze Buttons 🥉");
   if (runs.length > 1) runs.splice(1, 0, "🥈 Silver Moons 🥈");
@@ -208,12 +222,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const leaderboard = await kolClient.getLeaderboard(board);
   if (!leaderboard || leaderboard.name === "Weird Leaderboards") {
-    interaction.editReply("I don't think that's a real leaderboard, sorry.");
+    await interaction.editReply(
+      "I don't think that's a real leaderboard, sorry.",
+    );
     return;
   }
 
   if (leaderboard.boards.length === 0) {
-    interaction.editReply({
+    await interaction.editReply({
       content: null,
       embeds: [
         createEmbed()
@@ -226,7 +242,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  interaction.editReply({
+  await interaction.editReply({
     content: null,
     embeds: [
       createEmbed()

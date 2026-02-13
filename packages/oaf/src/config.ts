@@ -31,19 +31,28 @@ export const schema = {
   },
   KOL_USER: String,
   KOL_PASS: String,
+  GREENBOX_TOKEN: String,
 
   // General guild info
   GUILD_ID: SNOWFLAKE_PATTERN,
   ALERTS_CHANNEL_ID: SNOWFLAKE_PATTERN,
   ANNOUNCEMENTS_CHANNEL_ID: SNOWFLAKE_PATTERN,
+  IOTM_CHANNEL_ID: SNOWFLAKE_PATTERN,
+  KOL_CHANNEL_ID: SNOWFLAKE_PATTERN,
+  UNRESTRICTED_CHANNEL_ID: SNOWFLAKE_PATTERN,
+  BAN_ME_CHANNEL_ID: {
+    type: SNOWFLAKE_PATTERN,
+    optional: true,
+  },
 
   // Subsrolling webhook
-  IOTM_CHANNEL_ID: SNOWFLAKE_PATTERN,
   SUBS_ROLLING_TOKEN: String,
 
   // Samsara webhook
-  UNRESTRICTED_CHANNEL_ID: SNOWFLAKE_PATTERN,
   SAMSARA_TOKEN: String,
+
+  // eggnet webhook
+  EGGNET_TOKEN: String,
 
   // /claim
   VERIFIED_ROLE_ID: SNOWFLAKE_PATTERN,
@@ -53,6 +62,11 @@ export const schema = {
   LISTENER_ROLE_ID: SNOWFLAKE_PATTERN,
   NO_ALERTS_ROLE_ID: SNOWFLAKE_PATTERN,
   SUBSCRIBER_ROLE_ID: SNOWFLAKE_PATTERN,
+  POLITICS_ROLE_ID: SNOWFLAKE_PATTERN,
+
+  // /status pings
+  DUNGEON_MASTER_ROLE_ID: SNOWFLAKE_PATTERN,
+  DUNGEON_CHANNEL_ID: SNOWFLAKE_PATTERN,
 
   // /tag
   EXTENDED_TEAM_ROLE_ID: SNOWFLAKE_PATTERN,
@@ -68,6 +82,9 @@ export const schema = {
     type: String,
     optional: true,
   },
+
+  // /raffle
+  RAFFLE_CHANNEL_ID: SNOWFLAKE_PATTERN,
 };
 
 export type Env = EnvType<typeof schema>;

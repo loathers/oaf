@@ -6,7 +6,8 @@
   "packageManager": "yarn@4.4.1",
   "scripts": {
     "format": "yarn workspaces foreach -A run format",
-    "test": "yarn workspaces foreach -A run test"
+    "test": "yarn workspaces foreach -A run test",
+    "dev": "yarn workspace oaf dev"
   },
   "resolutions": {
     "uri-js": "npm:uri-js-replace@1.0.1"

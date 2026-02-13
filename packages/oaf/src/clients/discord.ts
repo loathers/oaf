@@ -4,6 +4,7 @@ import {
   Client,
   Collection,
   CommandInteraction,
+  DiscordAPIError,
   EmbedBuilder,
   Events,
   GatewayIntentBits,
@@ -15,6 +16,7 @@ import {
   ModalSubmitInteraction,
   Partials,
   REST,
+  RESTJSONErrorCodes,
   RESTPostAPIApplicationCommandsJSONBody,
   Routes,
   SendableChannels,
@@ -27,6 +29,12 @@ import { resolveKoLImage } from "kol.js";
 import { isErrorLike, serializeError } from "serialize-error";
 
 import { config } from "../config.js";
+
+function safeStringify(value: unknown): string {
+  return JSON.stringify(value, (_key, v: unknown) =>
+    typeof v === "bigint" ? v.toString() : v,
+  );
+}
 
 export type ModalHandler = {
   customId: string;
@@ -77,14 +85,16 @@ export class DiscordClient extends Client {
     this.clientId = clientId;
     this.token = token;
 
-    this.on(Events.InteractionCreate, async (interaction) =>
-      this.handleInteraction(interaction),
-    );
+    this.on(Events.InteractionCreate, (interaction) => {
+      void this.handleInteraction(interaction);
+    });
 
-    this.on(Events.ClientReady, async (client) => {
-      const channel = await client.channels.fetch(alertsChannelId);
-      if (!channel?.isSendable()) return;
-      await this.initAlertsChannel(channel);
+    this.on(Events.ClientReady, (client) => {
+      void (async () => {
+        const channel = await client.channels.fetch(alertsChannelId);
+        if (!channel?.isSendable()) return;
+        await this.initAlertsChannel(channel);
+      })();
     });
   }
 
@@ -139,6 +149,14 @@ export class DiscordClient extends Client {
         try {
           await command.autocomplete?.(interaction);
         } catch (error) {
+          // "Unknown interaction" errors are expected during autocomplete when
+          // the user types faster than we can respond or moves on
+          if (
+            error instanceof DiscordAPIError &&
+            error.code === RESTJSONErrorCodes.UnknownInteraction
+          ) {
+            return;
+          }
           await this.alert(
             "Encountered error during autocomplete",
             interaction,
@@ -161,11 +179,7 @@ export class DiscordClient extends Client {
     }
   }
 
-  async alert(
-    description: string,
-    interaction?: Interaction,
-    error?: Error | unknown,
-  ) {
+  async alert(description: string, interaction?: Interaction, error?: unknown) {
     if (!interaction) {
       console.warn(description);
     } else if (error) {
@@ -175,16 +189,15 @@ export class DiscordClient extends Client {
     }
 
     if (config.DEBUG) {
-      console.warn("(Suppressing alerts due to debug mode)");
       return;
     }
 
     const embeds: JSONEncodable<APIEmbed>[] = [];
 
     if (interaction) {
-      let commandRun = interaction.toString();
-      if (commandRun === "[object Object]")
-        commandRun = JSON.stringify(interaction);
+      const commandRun = interaction.isChatInputCommand()
+        ? interaction.toString()
+        : safeStringify(interaction);
       const fields = [
         { name: "Command run", value: commandRun },
         { name: "User", value: userMention(interaction.user.id) },
@@ -201,12 +214,20 @@ export class DiscordClient extends Client {
       );
     }
 
-    if (error && isErrorLike(error)) {
-      const fields = Object.entries(serializeError(error)).map(([k, v]) => ({
-        name: k,
-        value: codeBlock(JSON.stringify(v)),
-      }));
-      embeds.push(new EmbedBuilder().setTitle("Error").addFields(fields));
+    if (error !== undefined) {
+      if (isErrorLike(error)) {
+        const fields = Object.entries(serializeError(error)).map(([k, v]) => ({
+          name: k,
+          value: codeBlock(safeStringify(v)),
+        }));
+        embeds.push(new EmbedBuilder().setTitle("Error").addFields(fields));
+      } else {
+        embeds.push(
+          new EmbedBuilder()
+            .setTitle("Error")
+            .setDescription(codeBlock(safeStringify(error))),
+        );
+      }
     }
 
     const alert = {
@@ -225,7 +246,7 @@ export class DiscordClient extends Client {
   }
 
   start(): void {
-    this.login();
+    void this.login();
   }
 }
 
@@ -233,7 +254,7 @@ const OAF_ICON = resolveKoLImage("/itemimages/oaf.gif");
 
 export const createEmbed = () =>
   new EmbedBuilder().setFooter({
-    text: "Check out how I work over at https://github.com/loathers/oaf",
+    text: "Help fund our servers! loathers.net/contribute",
     iconURL: OAF_ICON,
   });
 

@@ -6,7 +6,7 @@ export async function loadFixture(dirname: string, name: string) {
   return await fs.readFile(file, { encoding: "utf-8" });
 }
 
-export async function respondWith<T extends string | Record<string, unknown>>(
+export function respondWith<T extends string | Record<string, unknown>>(
   data: T,
 ) {
   return {

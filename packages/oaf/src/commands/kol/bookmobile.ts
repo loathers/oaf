@@ -4,9 +4,9 @@ import {
   hyperlink,
 } from "discord.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import { wikiClient } from "../../clients/wiki.js";
 
 export const data = new SlashCommandBuilder()
   .setName("bookmobile")
@@ -46,7 +46,7 @@ export function parseBookMobile(page: string) {
 const numberFormat = new Intl.NumberFormat();
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  interaction.deferReply();
+  await interaction.deferReply();
 
   const page = await visitBookMobile();
 
@@ -64,12 +64,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const embed = createEmbed().setTitle(`The Bookmobile`);
 
-  const item = wikiClient.items.find((i) => i.name === info.title);
+  const item = dataOfLoathingClient.findThingByName(info.title);
   let itemInfo = info.title;
 
   if (item) {
     item.addImageToEmbed(embed);
-    const link = await wikiClient.getWikiLink(item);
+    const link = dataOfLoathingClient.getWikiLink(item);
     if (link) itemInfo = hyperlink(item.name, link);
   }
 
@@ -79,5 +79,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     { name: "Current price", value: `${numberFormat.format(info.price)} 🥩` },
   ]);
 
-  interaction.editReply({ content: null, embeds: [embed] });
+  await interaction.editReply({ content: null, embeds: [embed] });
 }

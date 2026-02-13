@@ -18,7 +18,12 @@ import {
 } from "discord.js";
 import { dedent } from "ts-dedent";
 
-import { prisma } from "../../clients/database.js";
+import {
+  createReminder,
+  deleteOldSentReminders,
+  getDueReminders,
+  markReminderSent,
+} from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 
 const CHECK_DURATION: Duration = { seconds: 10 };
@@ -82,11 +87,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     interaction.options.getString("reminder") || "Time's up!";
 
   if (reminderText.length > 127) {
-    interaction.reply({
+    return void (await interaction.reply({
       content: "Maximum reminder length is 128 characters.",
       ephemeral: true,
-    });
-    return;
+    }));
   }
 
   const duration = parseDuration(when);
@@ -114,58 +118,55 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       reminderDate,
       TimestampStyles.RelativeTime,
     )}.`,
-    fetchReply: true,
+    withResponse: true,
   });
 
-  await prisma.reminder.create({
-    data: {
-      guildId: interaction.guildId,
-      channelId: interaction.channelId,
-      userId: interaction.user.id,
-      interactionReplyId: reply.id,
-      messageContents: reminderText,
-      reminderDate,
-    },
+  await createReminder({
+    guildId: interaction.guildId,
+    channelId: interaction.channelId,
+    userId: interaction.user.id,
+    interactionReplyId: reply.interaction.id,
+    messageContents: reminderText,
+    reminderDate,
   });
 }
 
 async function clearOldReminders() {
-  const deleted = await prisma.reminder.deleteMany({
-    where: {
-      reminderSent: true,
-      reminderDate: { lt: sub(new Date(), { days: 30 }) },
-    },
-  });
-  if (deleted.count > 0) {
-    await discordClient.alert(`Cleared ${deleted.count} old sent reminder(s)`);
+  const count = await deleteOldSentReminders(sub(new Date(), { days: 30 }));
+  if (count > 0) {
+    await discordClient.alert(`Cleared ${count} old sent reminder(s)`);
   }
 }
 
 async function checkReminders() {
-  const reminders = await prisma.reminder.findMany({
-    where: { reminderDate: { lte: new Date() }, reminderSent: false },
-  });
+  let reminders;
+  try {
+    reminders = await getDueReminders();
+  } catch {
+    // Database temporarily unavailable, will retry on next interval
+    return;
+  }
 
   for (const reminder of reminders) {
-    const user = await discordClient.users.fetch(reminder.userId);
-    const channel = reminder.guildId
-      ? await discordClient.channels.fetch(reminder.channelId)
-      : await user.createDM();
-
-    if (!channel || !("send" in channel)) {
-      await discordClient.alert(
-        `Skipping reminder #${reminder.id} for ${userMention(
-          user.id,
-        )} due to unknown channel or cannot be posted in ${reminder.channelId}`,
-      );
-      continue;
-    }
-
-    const reply = reminder.interactionReplyId
-      ? { messageReference: reminder.interactionReplyId }
-      : undefined;
-
     try {
+      const user = await discordClient.users.fetch(reminder.userId);
+      const channel = reminder.guildId
+        ? await discordClient.channels.fetch(reminder.channelId)
+        : await user.createDM();
+
+      if (!channel || !("send" in channel)) {
+        await discordClient.alert(
+          `Skipping reminder #${reminder.id} for ${userMention(
+            user.id,
+          )} due to unknown channel or cannot be posted in ${reminder.channelId}`,
+        );
+        continue;
+      }
+
+      const reply = reminder.interactionReplyId
+        ? { messageReference: reminder.interactionReplyId }
+        : undefined;
+
       await channel.send({
         content: userMention(reminder.userId),
         embeds: [{ title: "⏰⏰⏰", description: reminder.messageContents }],
@@ -187,17 +188,18 @@ async function checkReminders() {
       );
     }
 
-    await prisma.reminder.update({
-      where: { id: reminder.id },
-      data: { reminderSent: true },
-    });
+    await markReminderSent(reminder.id);
   }
 }
 
 export async function init() {
   await clearOldReminders();
-  discordClient.on(
+  discordClient.once(
     Events.ClientReady,
-    () => void setInterval(checkReminders, milliseconds(CHECK_DURATION)),
+    () =>
+      void setInterval(
+        () => void checkReminders(),
+        milliseconds(CHECK_DURATION),
+      ),
   );
 }

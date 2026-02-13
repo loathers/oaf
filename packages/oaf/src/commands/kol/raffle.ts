@@ -1,13 +1,25 @@
 import {
   ChatInputCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
+  bold,
   heading,
+  messageLink,
 } from "discord.js";
+import { Player as KoLPlayer } from "kol.js";
 
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
+import {
+  createRaffle,
+  createRaffleWin,
+  findRaffle,
+  getPlayersByIdsWithDiscord,
+} from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import { wikiClient } from "../../clients/wiki.js";
 import { config } from "../../config.js";
+import type { Player } from "../../database-types.js";
+import { formatPlayer } from "../../utils.js";
 import { embedForItem } from "../wiki/item.js";
 
 export const data = new SlashCommandBuilder()
@@ -16,64 +28,152 @@ export const data = new SlashCommandBuilder()
 
 const numberFormat = new Intl.NumberFormat();
 
-async function getRaffleEmbeds() {
-  const raffle = await kolClient.getRaffle();
-
-  const embeds = [];
-
-  let first = raffle.today.first && (await embedForItem(raffle.today.first));
-  if (!first)
-    first = createEmbed().setTitle(`Unknown item (#${raffle.today.first})`);
-  first.setTitle(`First Prize: ${first.toJSON().title}`);
-  embeds.push(first);
-
-  let second = raffle.today.second && (await embedForItem(raffle.today.second));
-  if (!second)
-    second = createEmbed().setTitle(`Unknown item (#${raffle.today.second})`);
-  second.setTitle(`Second Prize: ${second.toJSON().title}`);
-  embeds.push(second);
-
-  const winners = createEmbed().setTitle(`Yesterday's Winners`);
-
-  winners.addFields(
-    raffle.yesterday.map((winner) => {
-      const itemName =
-        wikiClient.items.find((i) => i.id === winner.item)?.name ??
-        `Unknown item (#${winner.item})`;
-      return {
-        name: itemName,
-        value: `${winner.player.toString()} (${numberFormat.format(winner.tickets)} tickets)`,
-      };
-    }),
-  );
-
-  embeds.push(winners);
-  return embeds;
-}
+type Raffle = Awaited<ReturnType<typeof kolClient.getRaffle>>;
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply();
-  const embeds = await getRaffleEmbeds();
-  await interaction.editReply({ content: null, embeds });
-}
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+  const { daynumber } = (await kolClient.fetchStatus()) ?? { daynumber: "0" };
+  const raffle = await findRaffle(Number(daynumber));
 
-async function onRollover() {
-  const guild = await discordClient.guilds.fetch(config.GUILD_ID);
-  const announcementChannel = guild?.channels.cache.get(
-    config.ANNOUNCEMENTS_CHANNEL_ID,
-  );
-
-  if (!announcementChannel?.isTextBased()) {
+  if (!raffle) {
+    // If the rollover post didn't work for whatever reason, just run it now
+    await interaction.editReply(
+      "Hey, thanks! Rollover post was missing so I'll post it now",
+    );
+    await onRollover();
     return;
   }
 
-  await announcementChannel.send({
-    content: heading("Raffle"),
-    embeds: await getRaffleEmbeds(),
-    allowedMentions: { users: [] },
+  await interaction.editReply(
+    `Results were posted here ${messageLink(config.RAFFLE_CHANNEL_ID, raffle.messageId)}`,
+  );
+}
+
+async function trackRaffle(
+  raffle: Awaited<ReturnType<typeof kolClient.getRaffle>>,
+  messageId: string,
+) {
+  // Do this only if the raffle has actually loaded
+  if (!raffle.today.first) {
+    return;
+  }
+
+  // Add today to the database
+  await createRaffle({
+    gameday: raffle.gameday,
+    firstPrize: raffle.today.first,
+    secondPrize: raffle.today.second!,
+    messageId: messageId,
+  });
+
+  // Update yesterday's winners
+  for (const winner of raffle.yesterday) {
+    await createRaffleWin({
+      gameday: raffle.gameday - 1,
+      firstPrize: raffle.yesterday.find((w) => w.place === 1)?.item ?? 0,
+      secondPrize: raffle.yesterday.find((w) => w.place === 2)?.item ?? 0,
+      playerId: winner.player.id,
+      playerName: winner.player.name,
+      accountCreationDate: winner.player.createdDate,
+      tickets: winner.tickets,
+      place: winner.place,
+    });
+  }
+}
+
+async function buildRaffleEmbeds(raffle: Raffle) {
+  const embeds = [];
+
+  if (raffle.today.first === null || raffle.today.second === null) {
+    embeds.push(
+      createEmbed()
+        .setTitle("First Prize: Rollover anticipation!")
+        // Oprah giving out anticipation to all
+        .setImage("https://i.imgur.com/JNhU5Tt.gif"),
+    );
+    return embeds;
+  }
+
+  const first =
+    (await embedForItem(raffle.today.first)) ??
+    createEmbed().setTitle(`Unknown item (#${raffle.today.first})`);
+  first.setTitle(`Today's First Prize: ${first.toJSON().title}`);
+  embeds.push(first);
+
+  const second =
+    (await embedForItem(raffle.today.second)) ??
+    createEmbed().setTitle(`Unknown item (#${raffle.today.second})`);
+  second.setTitle(`Today's Second Prize: ${second.toJSON().title}`);
+  embeds.push(second);
+
+  return embeds;
+}
+
+async function getWinners(raffle: Raffle) {
+  return await getPlayersByIdsWithDiscord(
+    raffle.yesterday.map((prize) => prize.player.id),
+  );
+}
+
+async function getAlertableWinners(players: Player[]) {
+  const role = await discordClient.guild?.roles.fetch(config.LISTENER_ROLE_ID);
+  if (!role) return [];
+  return players
+    .map((p) => p.discordId)
+    .filter((s) => s !== null)
+    .filter((s) => role.members.has(s));
+}
+
+async function getRaffleChannel() {
+  const guild = await discordClient.guilds.fetch(config.GUILD_ID);
+  const raffleChannel = guild?.channels.cache.get(config.RAFFLE_CHANNEL_ID);
+
+  if (!raffleChannel?.isTextBased()) {
+    await discordClient.alert("Raffle channel not found or not text-based");
+    return null;
+  }
+
+  return raffleChannel;
+}
+
+function renderWinners(raffle: Raffle, members: Player[]) {
+  const renderWinner = (p: KoLPlayer) =>
+    formatPlayer(members.find((m) => m.playerId === p.id) ?? p, p.id);
+
+  return raffle.yesterday.map((winner) => {
+    const itemName =
+      dataOfLoathingClient.findItemById(winner.item)?.name ??
+      `Unknown item (#${winner.item})`;
+    return `${winner.place === 1 ? "🥇" : "🥈"} - ${bold(itemName)} won by ${renderWinner(winner.player)} (with ${numberFormat.format(winner.tickets)} tickets)`;
   });
 }
 
-export async function init() {
-  kolClient.on("rollover", onRollover);
+async function sendRaffleMessage(raffle: Raffle) {
+  const raffleChannel = await getRaffleChannel();
+  if (!raffleChannel) return;
+
+  const winningMembers = await getWinners(raffle);
+  const alertable = await getAlertableWinners(winningMembers);
+
+  const winners = renderWinners(raffle, winningMembers);
+
+  return await raffleChannel.send({
+    content: `${heading("Raffle Winners")}\n\n${winners.join("\n")}`,
+    embeds: await buildRaffleEmbeds(raffle),
+    allowedMentions: { users: alertable },
+  });
+}
+
+async function onRollover() {
+  const raffle = await kolClient.getRaffle();
+
+  const message = await sendRaffleMessage(raffle);
+
+  if (!message) return;
+
+  await trackRaffle(raffle, message.id);
+}
+
+export function init() {
+  kolClient.on("rollover", () => void onRollover());
 }

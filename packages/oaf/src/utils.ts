@@ -1,5 +1,11 @@
-import { APIEmbedField, hyperlink, userMention } from "discord.js";
-import { decode } from "html-entities";
+import {
+  APIEmbedField,
+  hideLinkEmbed,
+  hyperlink,
+  inlineCode,
+  userMention,
+} from "discord.js";
+import { decodeHTML } from "entities";
 
 export function indent(textToIndent: string): string {
   return textToIndent
@@ -14,20 +20,24 @@ export function notNull<T>(value: T | null): value is T {
 
 export function cleanString(input: string | undefined): string {
   if (!input) return "";
-  return decode(input).replace(/<[^>]+>/g, "");
+  return decodeHTML(input).replace(/<[^>]+>/g, "");
 }
 
 export function toWikiLink(input: string): string {
-  return `https://kol.coldfront.net/thekolwiki/index.php/${encodeURI(
+  return `https://wiki.kingdomofloathing.com/${encodeURI(
     input.replace(/\s/g, "_"),
   )
     .replace(/\(/g, "%28")
     .replace(/\)/g, "%29")}`;
 }
 
-export function toKoldbLink(input: string): string {
-  // NOTE: KOLDB does not support https. If this ever changes, this should change too.
-  return `http://www.koldb.com/player.php?name=${encodeURI(input)}`;
+export function resolveWikiLink(path: string) {
+  if (/^https?:\/\//i.test(path)) return path;
+  return new URL(path, "https://wiki.kingdomofloathing.com").href;
+}
+
+export function toSamsaraLink(id: number): string {
+  return `https://samsara.loathers.net/player/${id}`;
 }
 
 export function toMuseumLink(id: number): string {
@@ -117,12 +127,13 @@ export function columnsByMaxLength<T extends { toString: () => string }>(
 export function titleCase(title: string) {
   return title
     .split(" ")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
 }
 
 export function formatPlayer(
   player:
+    | { name: string; id: number }
     | Partial<{
         playerName: string;
         playerId: number;
@@ -131,23 +142,39 @@ export function formatPlayer(
     | undefined,
   backupId?: number,
 ) {
-  return [
-    player?.playerName ?? "Unknown Username",
-    ...(player?.playerId
-      ? [
-          `(#${player.playerId})`,
-          player.playerName &&
-            hyperlink(
-              "👤",
-              `https://www.kingdomofloathing.com/showplayer.php?who=${player.playerId}`,
-              player.playerName,
-            ),
-        ]
-      : backupId
-        ? [`(#${backupId})`]
-        : []),
-    ...(player?.discordId ? [userMention(player.discordId)] : []),
-  ].join(" ");
+  let playerName: string | undefined = undefined;
+  let playerId: number | undefined = backupId;
+  let discordId: string | undefined = undefined;
+
+  if (player) {
+    if ("name" in player) {
+      playerName = player.name;
+      playerId = player.id;
+    } else {
+      playerName = player.playerName;
+      playerId = player.playerId;
+      discordId = player.discordId ?? undefined;
+    }
+  }
+
+  // Closure to wrap text in a hyperlink if we have a player id
+  const maybeHyperlink = (text: string) => {
+    if (!playerId) return text;
+    return hyperlink(
+      text,
+      hideLinkEmbed(
+        `https://www.kingdomofloathing.com/showplayer.php?who=${playerId}`,
+      ),
+    );
+  };
+
+  // Format the best player name we can
+  const playerLink = maybeHyperlink(
+    `${playerName ?? "Unknown Username"} (#${playerId ?? "???"})`,
+  );
+
+  // Add Discord mention if available
+  return discordId ? `${playerLink} ${userMention(discordId)}` : playerLink;
 }
 
 export function ensureArray<T>(v: T | T[]) {
@@ -155,11 +182,23 @@ export function ensureArray<T>(v: T | T[]) {
 }
 
 export function englishJoin<T>(v: T[]) {
-  return `${v.length > 1 ? `${v.slice(0, -1).join(", ")} and ` : ""}${v.slice(
-    -1,
-  )}`;
+  return `${v.length > 1 ? `${v.slice(0, -1).join(", ")} and ` : ""}${v.slice(-1).join("")}`;
 }
 
 export function bufferToDataUri(buffer: Buffer) {
   return `data:image/png;base64,${buffer.toString("base64")}`;
+}
+
+export function inlineExpression(value: string) {
+  if (value.startsWith("[") && value.endsWith("]"))
+    return inlineCode(value.slice(1, -1));
+  return value;
+}
+
+export function getRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+export function lowercaseLeadingLetter(str: string): string {
+  return `${str[0].toLowerCase()}${str.slice(1)}`;
 }
