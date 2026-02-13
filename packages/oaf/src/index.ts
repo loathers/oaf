@@ -120,9 +120,16 @@ async function main() {
       );
       if (message.msg.startsWith("GREENBOX:"))
         return await handleGreenboxKmail(message);
-      await discordClient.alert(
-        `Received Kmail from ${inlineCode(`${message.who.name} (#${message.who.id})`)}\n${blockQuote(message.msg)}`,
-      );
+      const alert = [
+        `Received ${message.valentine ? "valentine" : "kmail"} from ${inlineCode(`${message.who.name} (#${message.who.id})`)}`,
+      ];
+      if (message.msg) alert.push(blockQuote(message.msg));
+      if (message.meat) alert.push(`${message.meat} meat`);
+      if (message.items.length)
+        alert.push(
+          `${message.items.map((i) => `${i.name} x ${i.quantity}`).join(", ")}`,
+        );
+      await discordClient.alert(alert.join("\n"));
     })();
   });
 
