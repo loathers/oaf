@@ -4380,13 +4380,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"html-entities@npm:^2.6.0":
-  version: 2.6.0
-  resolution: "html-entities@npm:2.6.0"
-  checksum: 10c0/7c8b15d9ea0cd00dc9279f61bab002ba6ca8a7a0f3c36ed2db3530a67a9621c017830d1d2c1c65beb9b8e3436ea663e9cf8b230472e0e413359399413b27c8b7
-  languageName: node
-  linkType: hard
-
 "html-escaper@npm:^2.0.0":
   version: 2.0.2
   resolution: "html-escaper@npm:2.0.2"
@@ -4919,8 +4912,8 @@ __metadata:
     date-fns: "npm:^4.1.0"
     domhandler: "npm:^5.0.3"
     domutils: "npm:^3.2.2"
+    entities: "npm:^7.0.1"
     got: "npm:^14.6.6"
-    html-entities: "npm:^2.6.0"
     htmlparser2: "npm:^10.1.0"
     image-size: "npm:^2.0.2"
     prettier: "npm:^3.8.1"
@@ -5582,10 +5575,10 @@ __metadata:
     data-of-loathing: "npm:^2.6.2"
     date-fns: "npm:^4.1.0"
     discord.js: "npm:^14.25.1"
+    entities: "npm:^7.0.1"
     eslint: "npm:^9"
     express: "npm:^5.2.1"
     fast-equals: "npm:^6.0.0"
-    html-entities: "npm:^2.6.0"
     http-status-codes: "npm:^2.3.0"
     husky: "npm:^9.1.7"
     jiti: "npm:^2.6.1"

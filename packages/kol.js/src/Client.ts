@@ -12,6 +12,7 @@ import {
   type KoLKmail,
   type KoLMessage,
   isValidMessage,
+  parseKmailMessage,
 } from "./utils/kmail.js";
 import { PlayerCache } from "./Cache.js";
 import { CookieJar } from "tough-cookie";
@@ -32,7 +33,7 @@ export type MallPrice = {
 };
 
 type Events = {
-  kmail: (message: KoLMessage) => void;
+  kmail: (message: KmailMessage) => void;
   whisper: (message: KoLMessage) => void;
   system: (message: KoLMessage) => void;
   public: (message: KoLMessage) => void;
@@ -291,8 +292,8 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
       id: Number(msg.id),
       type: "kmail" as const,
       who: new Player(this, Number(msg.fromid), msg.fromname),
-      msg: msg.message,
       time: new Date(Number(msg.azunixtime) * 1000),
+      ...parseKmailMessage(msg.message, msg.type),
     }));
   }
 

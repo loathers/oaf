@@ -1,5 +1,5 @@
 import { parse as parseDate } from "date-fns";
-import { decode } from "html-entities";
+import { decodeHTML } from "entities";
 
 export function parsePlayerDate(input?: string) {
   if (!input) return new Date();
@@ -8,7 +8,7 @@ export function parsePlayerDate(input?: string) {
 
 export function sanitiseBlueText(blueText: string | undefined): string {
   if (!blueText) return "";
-  return decode(
+  return decodeHTML(
     blueText
       .replace(/\r/g, "")
       .replace(/\r/g, "")
