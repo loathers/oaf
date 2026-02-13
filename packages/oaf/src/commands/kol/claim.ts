@@ -3,15 +3,17 @@ import { crypto } from "@otplib/plugin-crypto-node";
 import { generate, getRemainingTime, verify } from "@otplib/totp";
 import {
   ChatInputCommandInteraction,
+  Client,
   DiscordAPIError,
   Events,
   GuildMember,
+  Message,
   PartialGuildMember,
   RESTJSONErrorCodes,
   SlashCommandBuilder,
+  hyperlink,
   inlineCode,
 } from "discord.js";
-import { Client } from "discord.js";
 
 import {
   claimPlayer,
@@ -33,13 +35,15 @@ export const playerSecret = (playerId: number) =>
 
 const TOTP_PERIOD = 120;
 
+const totpOptions = (playerId: number) => ({
+  secret: playerSecret(playerId),
+  period: TOTP_PERIOD,
+  crypto,
+  base32: bypassAsString,
+});
+
 export async function generatePlayer(playerId: number) {
-  const token = await generate({
-    secret: playerSecret(playerId),
-    period: TOTP_PERIOD,
-    crypto,
-    base32: bypassAsString,
-  });
+  const token = await generate(totpOptions(playerId));
   return Number(`${playerId}${token}`).toString(16);
 }
 
@@ -47,12 +51,9 @@ export async function checkPlayer(input: string) {
   const decoded = parseInt(input, 16);
   const [playerId, token] = intDiv(decoded, 1e6);
   const verification = await verify({
-    secret: playerSecret(playerId),
+    ...totpOptions(playerId),
     token: token.toString().padStart(6, "0"),
-    period: TOTP_PERIOD,
     epochTolerance: [TOTP_PERIOD, 0],
-    crypto,
-    base32: bypassAsString,
   });
   return [playerId, verification.valid] as [playerId: number, valid: boolean];
 }
@@ -67,6 +68,38 @@ export const data = new SlashCommandBuilder()
       .setRequired(false),
   );
 
+async function processClaim(
+  token: string,
+  discordId: string,
+  member: GuildMember,
+): Promise<string | null> {
+  const [playerId, valid] = await checkPlayer(token);
+
+  if (!valid) {
+    return `That code is invalid. Hopefully it timed out and you're not being a naughty little ${member.user.username}`;
+  }
+
+  const player = await kolClient.players.fetch(playerId, true);
+
+  if (!player) return null;
+
+  const previouslyClaimedCount = await clearDiscordId(discordId);
+  await claimPlayer(playerId, player.name, discordId, player.createdDate);
+
+  const role = await member.guild.roles.fetch(config.VERIFIED_ROLE_ID);
+
+  if (role) {
+    await member.roles.add(role);
+  }
+
+  const previous =
+    previouslyClaimedCount > 0
+      ? " Any previous link will have been removed."
+      : "";
+
+  return `Your Discord account has been successfully linked with ${inlineCode(`${player.name} (#${player.id})`)}.${previous}`;
+}
+
 export async function execute(interaction: ChatInputCommandInteraction) {
   const token = interaction.options.getString("token", false);
 
@@ -80,47 +113,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const [playerId, valid] = await checkPlayer(token);
-
-  if (!valid) {
-    await interaction.reply({
-      content: `That code is invalid. Hopefully it timed out and you're not being a naughty little ${interaction.user.username}`,
-      ephemeral: true,
-    });
-    return;
-  }
-
   await interaction.deferReply({ ephemeral: true });
-
-  const player = await kolClient.players.fetch(playerId, true);
-
-  if (!player) return;
-
-  const discordId = interaction.user.id;
-
-  const previouslyClaimedCount = await clearDiscordId(discordId);
-
-  await claimPlayer(playerId, player.name, discordId, player.createdDate);
 
   const guild =
     interaction.guild || (await discordClient.guilds.fetch(config.GUILD_ID));
-  const role = await guild.roles.fetch(config.VERIFIED_ROLE_ID);
+  const member = await guild.members.fetch(interaction.user.id);
 
-  if (role) {
-    const member = await guild.members.fetch(interaction.user.id);
-    await member.roles.add(role);
+  const result = await processClaim(token, interaction.user.id, member);
+
+  if (result) {
+    await interaction.editReply(result);
   }
-
-  const previous =
-    previouslyClaimedCount > 0
-      ? " Any previous link will have been removed."
-      : "";
-
-  await interaction.editReply(
-    `Your Discord account has been successfully linked with ${inlineCode(
-      `${player.name} (#${player.id})`,
-    )}.${previous}`,
-  );
 }
 
 async function synchroniseRoles(client: Client) {
@@ -168,6 +171,41 @@ async function synchroniseRoles(client: Client) {
   }
 }
 
+async function onMessage(message: Message) {
+  if (message.author.bot) return;
+  const member = message.member;
+  if (!member) return;
+
+  const opening = "/claim ";
+  if (!message.content.startsWith(opening)) return;
+  const token = message.content.slice(opening.length);
+  if (!token) return;
+
+  let deleted = true;
+  try {
+    await message.delete();
+  } catch {
+    deleted = false;
+  }
+
+  const dm = await member.user.createDM();
+
+  const deleteStatus = deleted
+    ? "I've deleted it"
+    : `I tried to delete it but couldn't — you should ${hyperlink("delete it yourself", message.url)}`;
+
+  await dm.send(
+    `Looks like you accidentally sent your claim token as a plain message. ${deleteStatus}. I'll do my best with what you've given me.`,
+  );
+
+  const result = await processClaim(token, member.user.id, member);
+
+  await dm.send(
+    result ??
+      "Unable to find the player associated with that token. Try again, and remember to use the /claim slash command next time rather than sending a message. You can always use slash commands with me in our DM here!",
+  );
+}
+
 async function removeVerification(member: GuildMember | PartialGuildMember) {
   const player = await findPlayerByDiscordId(member.id);
 
@@ -204,4 +242,5 @@ export function init() {
     Events.GuildMemberRemove,
     (member) => void removeVerification(member),
   );
+  discordClient.on(Events.MessageCreate, (message) => void onMessage(message));
 }
