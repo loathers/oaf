@@ -27,10 +27,9 @@ RUN YARN_ENABLE_SCRIPTS=false yarn install --immutable
 # Copy full source
 COPY . .
 
-# Generate Prisma client and build
-RUN yarn workspace oaf prisma generate
+# Build
 RUN yarn workspace oaf build
 
 # Run migrations then start
 WORKDIR /app/packages/oaf
-CMD npx prisma migrate deploy && node --import tsx ./src/index.ts
+CMD npm run migrate && node --import tsx ./src/index.ts
