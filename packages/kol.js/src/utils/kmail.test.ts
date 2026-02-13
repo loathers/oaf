@@ -93,7 +93,7 @@ describe("Kmail parsing", () => {
     );
 
     expect(result.msg).toBe("Thanks for everything!");
-    expect(result.kmailType).toBe("gift");
+    expect(result.kmailType).toBe("giftshop");
     expect(result.insideNote).toBe("Hope you enjoy this!");
     expect(result.items).toEqual([]);
     expect(result.meat).toBe(0);

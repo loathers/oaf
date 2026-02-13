@@ -33,7 +33,7 @@ export type MallPrice = {
 };
 
 type Events = {
-  kmail: (message: KoLMessage) => void;
+  kmail: (message: KmailMessage) => void;
   whisper: (message: KoLMessage) => void;
   system: (message: KoLMessage) => void;
   public: (message: KoLMessage) => void;
