@@ -3,7 +3,7 @@ import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
-  { ignores: ["build/", "+types/"] },
+  { ignores: ["build/", "+types/", ".react-router/"] },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   {

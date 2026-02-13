@@ -36,7 +36,7 @@
     "jsonwebtoken": "^9.0.3",
     "kol.js": "workspace:^",
     "lightstreamer-client-node": "^9.2.2",
-    "otplib": "^13.3.0",
+    "otplib": "^12",
     "pretty-ms": "^9.3.0",
     "proj4": "^2.20.2",
     "puppeteer": "24.37.2",
