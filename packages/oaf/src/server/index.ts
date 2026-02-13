@@ -61,12 +61,8 @@ app
   })
   .get("/raffle.csv", async (_req, res) => {
     const raffles = (await getRafflesForCsv()).map(({ winners, ...r }) => {
-      const firstPrize = dataOfLoathingClient.items.find(
-        (i) => i.id === r.firstPrize,
-      );
-      const secondPrize = dataOfLoathingClient.items.find(
-        (i) => i.id === r.secondPrize,
-      );
+      const firstPrize = dataOfLoathingClient.findItemById(r.firstPrize);
+      const secondPrize = dataOfLoathingClient.findItemById(r.secondPrize);
       const firstWinner = winners.find((w) => w.place === 1)!;
       const secondWinners = winners.filter((w) => w.place === 2);
       return {

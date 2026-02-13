@@ -45,7 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const [descid, price] = await checkDailySpecial();
 
-  const item = dataOfLoathingClient.items.find((i) => i.descid === descid);
+  const item = dataOfLoathingClient.findItemByDescId(descid);
 
   if (!item) {
     return void (await interaction.editReply(

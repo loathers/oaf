@@ -17,6 +17,8 @@ import { wikiClient } from "./wiki.js";
 
 export class DataOfLoathingClient {
   private itemByName: Map<string, Item> = new Map();
+  private itemById: Map<number, Item> = new Map();
+  private itemByDescId: Map<number, Item> = new Map();
   private skillByName: Map<string, Skill> = new Map();
   private effectByName: Map<string, Effect> = new Map();
   private familiarByName: Map<string, Familiar> = new Map();
@@ -42,6 +44,8 @@ export class DataOfLoathingClient {
 
   clearMaps() {
     this.itemByName.clear();
+    this.itemById.clear();
+    this.itemByDescId.clear();
     this.skillByName.clear();
     this.effectByName.clear();
     this.familiarByName.clear();
@@ -73,6 +77,11 @@ export class DataOfLoathingClient {
   register(thing: Thing): void {
     const formattedName = cleanString(thing.name.toLowerCase().trim());
     this.getMapForThing(thing).set(formattedName, thing);
+
+    if (thing instanceof Item) {
+      this.itemById.set(thing.id, thing);
+      if (thing.descid != null) this.itemByDescId.set(thing.descid, thing);
+    }
   }
 
   async load() {
@@ -135,6 +144,14 @@ export class DataOfLoathingClient {
   @Memoize({ tags: ["things"] })
   get effects(): Effect[] {
     return [...this.effectByName.values()];
+  }
+
+  findItemById(id: number): Item | undefined {
+    return this.itemById.get(id);
+  }
+
+  findItemByDescId(descid: number): Item | undefined {
+    return this.itemByDescId.get(descid);
   }
 
   isItemIdKnown(id: number) {
