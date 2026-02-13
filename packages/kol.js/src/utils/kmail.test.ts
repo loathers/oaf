@@ -4,7 +4,7 @@ import { parseKmailMessage } from "./kmail.js";
 describe("Kmail parsing", () => {
   it("strips a valentine", () => {
     const result = parseKmailMessage(
-      '<center><table><tr><td><img src="https://d2uyhvukfffg5a.cloudfront.net/adventureimages/smiley.gif" width=100 height=100></td><td valign=center>You zerg rush\'d my heart<br>Your love gets me high<br>Come give me a kiss<br>You\'re oh em gee KAWAIIIIIIII!!11!!11!!!?!!?!</td></tr></table></center>',
+      "<center><table><tr><td><img src=\"https://d2uyhvukfffg5a.cloudfront.net/adventureimages/smiley.gif\" width=100 height=100></td><td valign=center>You zerg rush'd my heart<br>Your love gets me high<br>Come give me a kiss<br>You're oh em gee KAWAIIIIIIII!!11!!11!!!?!!?!</td></tr></table></center>",
       "normal",
     );
 
@@ -52,7 +52,7 @@ describe("Kmail parsing", () => {
 
   it("parses a kmail with meat", () => {
     const result = parseKmailMessage(
-      '<center>You acquire <b>5,000</b> Meat.<br>You gain 5,000 Meat</center>',
+      "<center>You acquire <b>5,000</b> Meat.<br>You gain 5,000 Meat</center>",
       "normal",
     );
 

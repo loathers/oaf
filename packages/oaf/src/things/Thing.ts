@@ -1,5 +1,5 @@
 import { EmbedBuilder } from "discord.js";
-import { decode } from "html-entities";
+import { decodeHTML } from "entities";
 import { resolveKoLImage } from "kol.js";
 
 export class Thing {
@@ -9,7 +9,7 @@ export class Thing {
 
   constructor(id: number, name: string, image: string) {
     this.id = id;
-    this.name = decode(name);
+    this.name = decodeHTML(name);
     this.imageUrl = image;
   }
 

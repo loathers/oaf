@@ -1,6 +1,6 @@
 import { selectAll, selectOne } from "css-select";
 import { type AnyNode, Element } from "domhandler";
-import { decode } from "html-entities";
+import { decodeHTML } from "entities";
 import { parseDocument } from "htmlparser2";
 
 import { Player } from "../Player.js";
@@ -127,12 +127,12 @@ export function parseKmailMessage(
   const allAttachments = `${outsideAttachments ?? ""}${insideAttachments ?? ""}`;
 
   return {
-    msg: decode(outsideNote),
+    msg: decodeHTML(outsideNote),
     kmailType,
     valentine,
     items: allAttachments ? extractItemsFromHtml(allAttachments) : [],
     meat: allAttachments ? extractMeatFromHtml(allAttachments) : 0,
-    insideNote: insideNote !== null ? decode(insideNote) : null,
+    insideNote: insideNote !== null ? decodeHTML(insideNote) : null,
   };
 }
 

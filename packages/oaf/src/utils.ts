@@ -5,7 +5,7 @@ import {
   inlineCode,
   userMention,
 } from "discord.js";
-import { decode } from "html-entities";
+import { decodeHTML } from "entities";
 
 export function indent(textToIndent: string): string {
   return textToIndent
@@ -20,7 +20,7 @@ export function notNull<T>(value: T | null): value is T {
 
 export function cleanString(input: string | undefined): string {
   if (!input) return "";
-  return decode(input).replace(/<[^>]+>/g, "");
+  return decodeHTML(input).replace(/<[^>]+>/g, "");
 }
 
 export function toWikiLink(input: string): string {
