@@ -233,7 +233,7 @@ export function init() {
     })();
   });
 
-  discordClient.once(
+  discordClient.on(
     Events.ClientReady,
     (client) => void synchroniseRoles(client),
   );
