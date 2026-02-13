@@ -24,7 +24,7 @@ describe("Kmail parsing", () => {
     expect(result.msg).toBe("Enjoy!");
     expect(result.valentine).toBeNull();
     expect(result.items).toEqual([
-      { id: 641, name: "toast", quantity: 1, descriptionId: "931984879" },
+      { id: 641, name: "toast", quantity: 1, descid: "931984879" },
     ]);
     expect(result.meat).toBe(0);
     expect(result.insideNote).toBeNull();
@@ -43,7 +43,7 @@ describe("Kmail parsing", () => {
         id: 6863,
         name: "pat of butter",
         quantity: 2,
-        descriptionId: "310457727",
+        descid: "310457727",
       },
     ]);
     expect(result.meat).toBe(0);
@@ -70,7 +70,7 @@ describe("Kmail parsing", () => {
 
     expect(result.msg).toBe("Here you go");
     expect(result.items).toEqual([
-      { id: 641, name: "toast", quantity: 1, descriptionId: "931984879" },
+      { id: 641, name: "toast", quantity: 1, descid: "931984879" },
     ]);
     expect(result.meat).toBe(1000);
     expect(result.insideNote).toBeNull();
@@ -93,7 +93,7 @@ describe("Kmail parsing", () => {
     );
 
     expect(result.msg).toBe("Thanks for everything!");
-    expect(result.kmailType).toBe("giftshop");
+    expect(result.kmailType).toBe("gift");
     expect(result.insideNote).toBe("Hope you enjoy this!");
     expect(result.items).toEqual([]);
     expect(result.meat).toBe(0);

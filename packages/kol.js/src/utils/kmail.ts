@@ -9,7 +9,7 @@ export type KmailItem = {
   id: number;
   name: string;
   quantity: number;
-  descriptionId: string;
+  descid: string;
 };
 
 export type KoLChatMessage = {
@@ -75,7 +75,7 @@ function extractItemsFromHtml(html: string): KmailItem[] {
       id: Number(params.get("id") ?? 0),
       name,
       quantity: Number(params.get("n") ?? 1),
-      descriptionId: descMatch?.[1] ?? "",
+      descid: descMatch?.[1] ?? "",
     };
   });
 }
