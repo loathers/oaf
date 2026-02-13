@@ -25,14 +25,18 @@ function AdminLayout() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => {
+    void (async () => {
+      try {
+        const r = await fetch("/api/auth/me");
         if (!r.ok) throw new Error("Unauthorized");
-        return r.json() as Promise<{ user: User }>;
-      })
-      .then((data) => setUser(data.user))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+        const data = (await r.json()) as { user: User };
+        setUser(data.user);
+      } catch {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   if (loading) return <div className="container">Loading...</div>;

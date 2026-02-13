@@ -71,12 +71,17 @@ export function DynamicDiscordMessage({
   const [message, setMessage] = useState<MessageData | null>(null);
 
   useEffect(() => {
-    fetch(
-      `/api/resources/message?guildId=${guildId}&channelId=${channelId}&messageId=${messageId}`,
-    )
-      .then((r) => r.json() as Promise<{ message: MessageData | null }>)
-      .then((data) => setMessage(data.message))
-      .catch(() => {});
+    void (async () => {
+      try {
+        const r = await fetch(
+          `/api/resources/message?guildId=${guildId}&channelId=${channelId}&messageId=${messageId}`,
+        );
+        const data = (await r.json()) as { message: MessageData | null };
+        setMessage(data.message);
+      } catch {
+        setMessage(null);
+      }
+    })();
   }, [guildId, channelId, messageId]);
 
   return <DiscordMessage message={message} />;

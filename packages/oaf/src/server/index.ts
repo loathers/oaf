@@ -48,7 +48,6 @@ const app = express();
 
 app
   .use(cors())
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   .use(cookieParser())
   .use(
     viteDevServer ? viteDevServer.middlewares : express.static("build/client"),

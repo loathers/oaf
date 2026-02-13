@@ -8,10 +8,15 @@ export function DiscordUser({ id }: Props) {
   const [name, setName] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/api/resources/user?id=${id}`)
-      .then((r) => r.json() as Promise<{ user: { name: string } | null }>)
-      .then((data) => setName(data.user?.name ?? null))
-      .catch(() => {});
+    void (async () => {
+      try {
+        const r = await fetch(`/api/resources/user?id=${id}`);
+        const data = (await r.json()) as { user: { name: string } | null };
+        setName(data.user?.name ?? null);
+      } catch {
+        setName(null);
+      }
+    })();
   }, [id]);
 
   return <span>{name ?? id}</span>;

@@ -13,10 +13,15 @@ export default function Verified() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/verified")
-      .then((r) => r.json() as Promise<{ players: Player[] }>)
-      .then((data) => setPlayers(data.players))
-      .finally(() => setLoading(false));
+    void (async () => {
+      try {
+        const r = await fetch("/api/admin/verified");
+        const data = (await r.json()) as { players: Player[] };
+        setPlayers(data.players);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   if (loading) return <p>Loading...</p>;

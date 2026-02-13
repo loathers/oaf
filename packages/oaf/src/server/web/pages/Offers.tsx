@@ -15,10 +15,15 @@ export default function Offers() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/offers")
-      .then((r) => r.json() as Promise<{ offers: Offer[] }>)
-      .then((data) => setOffers(data.offers))
-      .finally(() => setLoading(false));
+    void (async () => {
+      try {
+        const r = await fetch("/api/admin/offers");
+        const data = (await r.json()) as { offers: Offer[] };
+        setOffers(data.offers);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   if (loading) return <p>Loading...</p>;

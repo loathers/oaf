@@ -31,10 +31,15 @@ export default function Raffle() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/raffle")
-      .then((r) => r.json() as Promise<{ raffles: Raffle[] }>)
-      .then((data) => setRaffles(data.raffles))
-      .finally(() => setLoading(false));
+    void (async () => {
+      try {
+        const r = await fetch("/api/admin/raffle");
+        const data = (await r.json()) as { raffles: Raffle[] };
+        setRaffles(data.raffles);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   if (loading) return <p>Loading...</p>;

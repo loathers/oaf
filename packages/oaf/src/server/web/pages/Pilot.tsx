@@ -9,15 +9,23 @@ export default function Pilot() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [result, setResult] = useState<boolean | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
   const messageInput = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    fetch("/api/admin/pilot")
-      .then((r) => r.json() as Promise<{ channels: Channel[]; emoji: Emoji[] }>)
-      .then((data) => {
-        setChannels(data.channels);
+    void (async () => {
+      try {
+        const r = await fetch("/api/admin/pilot");
+        const data = (await r.json()) as {
+          channels: Channel[];
+          emoji: Emoji[];
+        };
+        setChannels(data.channels.sort((a, b) => a.name.localeCompare(b.name)));
         setEmoji(data.emoji);
-      });
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   function addEmoji(e: Emoji) {
@@ -56,6 +64,8 @@ export default function Pilot() {
       setSubmitting(false);
     }
   }
+
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="form-stack">

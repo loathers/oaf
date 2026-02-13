@@ -17,10 +17,15 @@ export default function Tags() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/tags")
-      .then((r) => r.json() as Promise<{ tags: Tag[] }>)
-      .then((data) => setTags(data.tags))
-      .finally(() => setLoading(false));
+    void (async () => {
+      try {
+        const r = await fetch("/api/admin/tags");
+        const data = (await r.json()) as { tags: Tag[] };
+        setTags(data.tags);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
   if (loading) return <p>Loading...</p>;
