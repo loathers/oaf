@@ -5,20 +5,14 @@ import {
   codeBlock,
   inlineCode,
 } from "discord.js";
+import { inspect } from "node:util";
 import ms from "pretty-ms";
 
 import { createEmbed, discordClient } from "../../clients/discord.js";
 
 function describeError(error: unknown): string {
-  if (error instanceof AggregateError) {
-    const inner = error.errors
-      .map((e, i) => `${i + 1}. ${e instanceof Error ? e.message : String(e)}`)
-      .join("\n");
-    return `${error.message}\n${codeBlock(inner)}`;
-  }
-
   if (error instanceof Error) {
-    return error.message;
+    return codeBlock(inspect(error, { colors: false, depth: 4 }));
   }
 
   return String(error);
