@@ -22,15 +22,9 @@ async function onMessage(message: Message) {
     await member.ban({ reason: "Posted in the autoban channel" });
     await message.delete();
 
-    const formatDate = (date: Date) =>
-      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-
-    const joinStr = joinDate ? formatDate(joinDate) : "????-??-??";
-    const banStr = formatDate(banDate);
-
     if (message.channel.isSendable()) {
       await message.channel.send(
-        `🪦 ${member.user.username} ${joinStr} – ${banStr}`,
+        `🪦 ${member.user.username} ${joinDate?.getFullYear() ?? "????"} - ${banDate.getFullYear()}`,
       );
     }
 
