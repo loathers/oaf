@@ -30,7 +30,7 @@ async function onMessage(message: Message) {
 
     if (message.channel.isSendable()) {
       await message.channel.send(
-        `🪦 ${member.user.username} ${joinStr}–${banStr}`,
+        `🪦 ${member.user.username} ${joinStr} – ${banStr}`,
       );
     }
 
