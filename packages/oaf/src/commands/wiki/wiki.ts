@@ -70,7 +70,7 @@ const trim = (message: string) =>
 
 async function onMessage(message: Message) {
   if (message.author.bot) return;
-  if (!("send" in message.channel)) return;
+  if (!message.channel.isSendable()) return;
   const member = message.member;
   if (!member) return;
 

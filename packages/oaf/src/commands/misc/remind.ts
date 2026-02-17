@@ -154,7 +154,7 @@ async function checkReminders() {
         ? await discordClient.channels.fetch(reminder.channelId)
         : await user.createDM();
 
-      if (!channel || !("send" in channel)) {
+      if (!channel?.isSendable()) {
         await discordClient.alert(
           `Skipping reminder #${reminder.id} for ${userMention(
             user.id,
