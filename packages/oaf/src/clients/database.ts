@@ -19,12 +19,17 @@ function getConnectionString() {
   return url.toString();
 }
 
+const pool = new pg.Pool({
+  connectionString: getConnectionString(),
+});
+
+// Handle idle client errors gracefully — the pool replaces dead connections automatically
+pool.on("error", (err) => {
+  console.error("Database pool error (connection will be replaced):", err);
+});
+
 export const db = new Kysely<DB>({
-  dialect: new PostgresDialect({
-    pool: new pg.Pool({
-      connectionString: getConnectionString(),
-    }),
-  }),
+  dialect: new PostgresDialect({ pool }),
 });
 
 // ── Player ──
