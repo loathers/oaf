@@ -72,6 +72,16 @@ export function init() {
   });
 
   process.on("unhandledRejection", (reason) => {
+    // Don't crash on transient Discord REST timeouts
+    if (reason instanceof DOMException && reason.name === "AbortError") {
+      void discordClient.alert(
+        `${inlineCode("oaf")} transient error (ignored): ${describeError(reason)}`,
+        undefined,
+        reason,
+      );
+      return;
+    }
+
     void discordClient
       .alert(
         `${inlineCode("oaf")} crashed (unhandled rejection): ${describeError(reason)}`,
