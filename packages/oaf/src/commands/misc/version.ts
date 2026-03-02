@@ -62,6 +62,14 @@ export function init() {
   process.on("SIGINT", () => shutdown("SIGINT"));
 
   process.on("uncaughtException", (err) => {
+    // Transient database connection drops — the pool replaces dead connections
+    if (
+      err instanceof Error &&
+      err.message === "Connection terminated unexpectedly"
+    ) {
+      return;
+    }
+
     void discordClient
       .alert(
         `${inlineCode("oaf")} crashed: ${describeError(err)}`,
@@ -72,13 +80,8 @@ export function init() {
   });
 
   process.on("unhandledRejection", (reason) => {
-    // Don't crash on transient Discord REST timeouts
+    // Transient Discord REST timeouts
     if (reason instanceof DOMException && reason.name === "AbortError") {
-      void discordClient.alert(
-        `${inlineCode("oaf")} transient error (ignored): ${describeError(reason)}`,
-        undefined,
-        reason,
-      );
       return;
     }
 
