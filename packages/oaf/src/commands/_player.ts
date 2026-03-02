@@ -29,10 +29,13 @@ export async function identifyPlayer(
       return "That user hasn't claimed a KoL account.";
     }
 
-    return [
-      await kolClient.players.fetch(knownPlayer.playerId, true),
-      knownPlayer,
-    ];
+    const player = await kolClient.players.fetch(knownPlayer.playerId, true);
+
+    if (!player) {
+      return "That user has claimed a KoL account, but I can't find it in-game.";
+    }
+
+    return [player, knownPlayer];
   }
 
   // Validate if the string identifies a KoL player, either as a player ID or a user name
