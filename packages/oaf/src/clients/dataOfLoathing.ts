@@ -142,6 +142,11 @@ export class DataOfLoathingClient {
   }
 
   @Memoize({ tags: ["things"] })
+  get familiars(): Familiar[] {
+    return [...this.familiarByName.values()];
+  }
+
+  @Memoize({ tags: ["things"] })
   get effects(): Effect[] {
     return [...this.effectByName.values()];
   }

@@ -4,10 +4,10 @@ import {
   Message,
   RESTJSONErrorCodes,
 } from "discord.js";
+import unidecode from "unidecode";
 
 import { discordClient } from "../../clients/discord.js";
 import { getRandom, lowercaseLeadingLetter } from "../../utils.js";
-import unidecode from "unidecode";
 
 const ITOM_MATCHER = /(?:\W|^)(ito(m|y)s?)(?:[^a-z]|$)/i;
 
