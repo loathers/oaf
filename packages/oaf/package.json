@@ -53,6 +53,7 @@
     "ts-dotenv": "^0.9.1",
     "typescript": "^5.9.3",
     "typescript-memoize": "^1.1.1",
+    "unidecode": "^1.1.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -67,6 +68,7 @@
     "@types/proj4": "^2.19.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/unidecode": "^1.1.0",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9",

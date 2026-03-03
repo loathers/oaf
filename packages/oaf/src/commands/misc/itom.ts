@@ -7,6 +7,7 @@ import {
 
 import { discordClient } from "../../clients/discord.js";
 import { getRandom, lowercaseLeadingLetter } from "../../utils.js";
+import unidecode from "unidecode";
 
 const ITOM_MATCHER = /(?:\W|^)(ito(m|y)s?)(?:[^a-z]|$)/i;
 
@@ -27,7 +28,9 @@ async function onMessage(message: Message) {
 
   const replies: string[] = [];
 
-  if (message.content.match(ITOM_MATCHER)) {
+  const content = unidecode(message.content).trim().toLowerCase();
+
+  if (content.match(ITOM_MATCHER)) {
     try {
       await message.react("<:minusone:748016030357520464>");
     } catch (error) {
@@ -44,8 +47,8 @@ async function onMessage(message: Message) {
     }
   }
 
-  if (message.content.toLowerCase().includes("you can buy")) {
-    if (message.content.toLowerCase().includes("you can buy a salad glove")) {
+  if (content.toLowerCase().includes("you can buy")) {
+    if (content.toLowerCase().includes("you can buy a salad glove")) {
       replies.push("You can buy an iPod.");
     } else {
       replies.push("You can buy a salad glove" + getRandom(["!", "?"]));

@@ -1870,6 +1870,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/unidecode@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@types/unidecode@npm:1.1.0"
+  checksum: 10c0/8b86e11f740f86f98a2a75cdd975569697d82241efd0162b72bf0218c6ec9c0ecad4fa41180db67cfb43adc21e2514e90c99028f0f81fbe25d22133dcb56227e
+  languageName: node
+  linkType: hard
+
 "@types/ws@npm:^8.5.10":
   version: 8.5.10
   resolution: "@types/ws@npm:8.5.10"
@@ -5566,6 +5573,7 @@ __metadata:
     "@types/react": "npm:^19.2.14"
     "@types/react-dom": "npm:^19.2.3"
     "@types/serialize-error": "npm:^4.0.1"
+    "@types/unidecode": "npm:^1.1.0"
     "@vitejs/plugin-react": "npm:^5.1.4"
     "@vitest/coverage-v8": "npm:^4.0.18"
     body-parser: "npm:^2.2.2"
@@ -5604,6 +5612,7 @@ __metadata:
     typescript: "npm:^5.9.3"
     typescript-eslint: "npm:^8.55.0"
     typescript-memoize: "npm:^1.1.1"
+    unidecode: "npm:^1.1.0"
     vite: "npm:^7.3.1"
     vitest: "npm:^4.0.18"
     zod: "npm:^4.3.6"
@@ -7289,6 +7298,13 @@ __metadata:
   version: 7.11.0
   resolution: "undici@npm:7.11.0"
   checksum: 10c0/e5dd3cc2acae9c8333f97a78d4e91108957367fa7e69918e3a5cbd84702cb453cf7de3f8c2a33bcf808850d78ead70f3bd62900a70d969912e9fed8842bbfc11
+  languageName: node
+  linkType: hard
+
+"unidecode@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "unidecode@npm:1.1.0"
+  checksum: 10c0/e9827ba9f981b01a29c694781b1a7baec051635621989ffda76e7e3433798918352ff217296ae287764a7c8c86987051a5ae31d243316538781d1be87b30a3d0
   languageName: node
   linkType: hard
 
