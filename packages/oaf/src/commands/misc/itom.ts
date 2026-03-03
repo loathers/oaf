@@ -47,8 +47,8 @@ async function onMessage(message: Message) {
     }
   }
 
-  if (content.toLowerCase().includes("you can buy")) {
-    if (content.toLowerCase().includes("you can buy a salad glove")) {
+  if (content.includes("you can buy")) {
+    if (content.includes("you can buy a salad glove")) {
       replies.push("You can buy an iPod.");
     } else {
       replies.push("You can buy a salad glove" + getRandom(["!", "?"]));

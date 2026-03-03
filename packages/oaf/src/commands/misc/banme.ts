@@ -1,4 +1,4 @@
-import { Events, Message } from "discord.js";
+import { Events, Message, blockQuote } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 import { config } from "../../config.js";
@@ -29,7 +29,7 @@ async function onMessage(message: Message) {
     }
 
     await discordClient.alert(
-      `Banned ${member.user.tag} for posting in the autoban channel.`,
+      `Banned ${member.user.tag} for posting in the autoban channel.\n\n${blockQuote(message.content)}`,
     );
   }
 }
