@@ -121,7 +121,7 @@ export class WikiClient {
     const titleMatch = String(data).match(
       /<h1 id="firstHeading" class="firstHeading mw-first-heading">.*?<span class="mw-page-title-main">(?<pageTitle>.+)<\/span><\/h1>/,
     );
-    let result = "";
+    let result;
     if (titleMatch?.groups && titleMatch.groups.pageTitle) {
       result = titleMatch.groups.pageTitle;
     } else
