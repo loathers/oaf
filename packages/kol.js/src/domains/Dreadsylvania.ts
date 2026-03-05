@@ -1,11 +1,13 @@
 import { ClanDungeon } from "./ClanDungeon.js";
 
+export type DreadBossStatus = "unknown" | "predicted" | "defeated";
+export type DreadBoss = { name: string; status: DreadBossStatus };
+
 export type DreadStatus = {
-  forest: number;
-  village: number;
-  castle: number;
-  skills: number;
-  bosses: string[];
+  forest: { remaining: number; boss: DreadBoss };
+  village: { remaining: number; boss: DreadBoss };
+  castle: { remaining: number; boss: DreadBoss };
+  remainingSkills: number;
   capacitor: boolean;
 };
 
@@ -58,6 +60,15 @@ const Monster = {
 
 type MonsterType = (typeof Monster)[keyof typeof Monster];
 
+const BOSS_NAMES: Record<MonsterType, string> = {
+  bugbear: "Falls-From-Sky",
+  werewolf: "Great Wolf of the Air",
+  ghost: "Mayor Ghost",
+  zombie: "Zombie Homeowners' Association",
+  vampire: "Drunkula",
+  skeleton: "Unkillable Skeleton",
+};
+
 const BOSS_REGEXES = {
   [Monster.Bugbear]: /defeated\s+Falls-From-Sky/,
   [Monster.Werewolf]: /defeated\s+The Great Wolf of the Air/,
@@ -67,11 +78,13 @@ const BOSS_REGEXES = {
   [Monster.Skeleton]: /defeated\s+The Unkillable Skeleton/,
 } as const;
 
-const MONSTER_PAIRS = [
-  [Monster.Bugbear, Monster.Werewolf],
-  [Monster.Ghost, Monster.Zombie],
-  [Monster.Vampire, Monster.Skeleton],
-] as const;
+type DreadZone = "forest" | "village" | "castle";
+
+const MONSTER_PAIRS: Record<DreadZone, readonly [MonsterType, MonsterType]> = {
+  forest: [Monster.Bugbear, Monster.Werewolf],
+  village: [Monster.Ghost, Monster.Zombie],
+  castle: [Monster.Vampire, Monster.Skeleton],
+};
 
 type KillsAndBanishes = {
   [key in MonsterType]: { kills: number; banishes: number };
@@ -101,6 +114,37 @@ export class Dreadsylvania extends ClanDungeon {
     }, {} as KillsAndBanishes);
   }
 
+  private static parseBoss(
+    zone: DreadZone,
+    raidLog: string,
+    monsters: KillsAndBanishes,
+  ): DreadBoss {
+    const pair = MONSTER_PAIRS[zone];
+
+    // Match a boss having been defeated
+    for (const monster of pair) {
+      if (BOSS_REGEXES[monster].test(raidLog)) {
+        return { name: BOSS_NAMES[monster], status: "defeated" };
+      }
+    }
+
+    // Otherwise predict the boss based on kills and banishes
+    const [m1, m2] = pair;
+
+    if (monsters[m1].kills > monsters[m2].kills + 50) {
+      monsters[m2].banishes++;
+    } else if (monsters[m2].kills > monsters[m1].kills + 50) {
+      monsters[m1].banishes++;
+    }
+
+    if (monsters[m1].banishes !== monsters[m2].banishes) {
+      const predicted = monsters[m1].banishes > monsters[m2].banishes ? m2 : m1;
+      return { name: BOSS_NAMES[predicted], status: "predicted" };
+    }
+
+    return { name: "Unknown", status: "unknown" };
+  }
+
   static parseOverview(raidLog: string): DreadStatus {
     const forest = raidLog.match(
       /Your clan has defeated <b>(?<forest>[\d,]+)<\/b> monster\(s\) in the Forest/,
@@ -114,39 +158,23 @@ export class Dreadsylvania extends ClanDungeon {
 
     const monsters = Dreadsylvania.parseKillsAndBanishes(raidLog);
 
-    const bosses: string[] = [];
-    for (const [monsterName1, monsterName2] of MONSTER_PAIRS) {
-      const monster1 = monsters[monsterName1];
-      const monster2 = monsters[monsterName2];
-
-      if (monster1.kills > monster2.kills + 50) {
-        monster2.banishes++;
-      } else if (monster2.kills > monster1.kills + 50) {
-        monster1.banishes++;
-      }
-
-      if (BOSS_REGEXES[monsterName1].test(raidLog)) {
-        bosses.push(`x${monsterName1}`);
-      } else if (BOSS_REGEXES[monsterName2].test(raidLog)) {
-        bosses.push(`x${monsterName2}`);
-      } else if (monster1.banishes > monster2.banishes) {
-        bosses.push(monsterName2);
-      } else if (monster2.banishes > monster1.banishes) {
-        bosses.push(monsterName1);
-      } else {
-        bosses.push("unknown");
-      }
-    }
-
     const capacitor = raidLog.includes("fixed The Machine (1 turn)");
     const skills = raidLog.match(/used The Machine, assisted by/g);
 
     return {
-      forest: 1000 - parseNumber(forest?.groups?.forest),
-      village: 1000 - parseNumber(village?.groups?.village),
-      castle: 1000 - parseNumber(castle?.groups?.castle),
-      skills: skills ? 3 - skills.length : 3,
-      bosses,
+      forest: {
+        remaining: 1000 - parseNumber(forest?.groups?.forest),
+        boss: Dreadsylvania.parseBoss("forest", raidLog, monsters),
+      },
+      village: {
+        remaining: 1000 - parseNumber(village?.groups?.village),
+        boss: Dreadsylvania.parseBoss("village", raidLog, monsters),
+      },
+      castle: {
+        remaining: 1000 - parseNumber(castle?.groups?.castle),
+        boss: Dreadsylvania.parseBoss("castle", raidLog, monsters),
+      },
+      remainingSkills: skills ? 3 - skills.length : 3,
       capacitor,
     };
   }
