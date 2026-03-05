@@ -3,6 +3,11 @@ import {
   SlashCommandBuilder,
   hyperlink,
 } from "discord.js";
+import {
+  Bookmobile,
+  BookmobileNotInTownError,
+  BookmobileParseError,
+} from "kol.js/domains/Bookmobile";
 
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
@@ -12,72 +17,47 @@ export const data = new SlashCommandBuilder()
   .setName("bookmobile")
   .setDescription("Find information about the current bookmobile status");
 
-async function visitBookMobile(): Promise<string> {
-  const page = await kolClient.actionMutex.runExclusive(async () => {
-    await kolClient.fetchText("town.php");
-    const p = await kolClient.fetchText("place.php", {
-      searchParams: { whichplace: "town_market", action: "town_bookmobile" },
-    });
-    if (p.includes("name=whichchoice")) {
-      await kolClient.fetchText("choice.php", {
-        form: {
-          whichchoice: 1200,
-          option: 2,
-        },
-      });
-    }
-    return p;
-  });
-
-  return page;
-}
-
-export function parseBookMobile(page: string) {
-  const pattern =
-    /this week, I've got (.*?) copies of(?: the)? <b>(.*?)<\/b>.*?<b>([0-9,]+) Meat<\/b>/s;
-  const match = page.match(pattern);
-
-  if (!match) return null;
-  const [, copies, title, price] = match;
-
-  return { copies, title, price: Number(price.replaceAll(",", "")) };
-}
-
+const bookmobile = new Bookmobile(kolClient);
 const numberFormat = new Intl.NumberFormat();
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  const page = await visitBookMobile();
+  try {
+    const info = await bookmobile.visit();
 
-  if (!page.includes("name=whichchoice"))
-    return void (await interaction.editReply(
-      "The Bookmobile doesn't seem to be in town!",
-    ));
+    const embed = createEmbed().setTitle(`The Bookmobile`);
 
-  const info = parseBookMobile(page);
+    const item = dataOfLoathingClient.findThingByName(info.title);
+    let itemInfo = info.title;
 
-  if (!info)
-    return void (await interaction.editReply(
-      "I wasn't able to understand what The Bookmobile bro said",
-    ));
+    if (item) {
+      item.addImageToEmbed(embed);
+      const link = dataOfLoathingClient.getWikiLink(item);
+      if (link) itemInfo = hyperlink(item.name, link);
+    }
 
-  const embed = createEmbed().setTitle(`The Bookmobile`);
+    embed.addFields([
+      { name: "Book", value: itemInfo },
+      { name: "Copies left", value: info.copies },
+      {
+        name: "Current price",
+        value: `${numberFormat.format(info.price)} 🥩`,
+      },
+    ]);
 
-  const item = dataOfLoathingClient.findThingByName(info.title);
-  let itemInfo = info.title;
-
-  if (item) {
-    item.addImageToEmbed(embed);
-    const link = dataOfLoathingClient.getWikiLink(item);
-    if (link) itemInfo = hyperlink(item.name, link);
+    await interaction.editReply({ content: null, embeds: [embed] });
+  } catch (error) {
+    if (error instanceof BookmobileNotInTownError) {
+      await interaction.editReply("The Bookmobile doesn't seem to be in town!");
+      return;
+    }
+    if (error instanceof BookmobileParseError) {
+      await interaction.editReply(
+        "I wasn't able to understand what The Bookmobile bro said",
+      );
+      return;
+    }
+    throw error;
   }
-
-  embed.addFields([
-    { name: "Book", value: itemInfo },
-    { name: "Copies left", value: info.copies },
-    { name: "Current price", value: `${numberFormat.format(info.price)} 🥩` },
-  ]);
-
-  await interaction.editReply({ content: null, embeds: [embed] });
 }
