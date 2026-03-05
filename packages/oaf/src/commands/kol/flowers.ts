@@ -5,6 +5,10 @@ import {
   MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
+import {
+  FloralMercantileExchange,
+  type FlowerPrices,
+} from "kol.js/domains/FloralMercantileExchange";
 
 import {
   createFlowerPrices,
@@ -18,6 +22,7 @@ import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 
 const CHECK_DURATION = { minutes: 1 };
+const floralExchange = new FloralMercantileExchange(kolClient);
 
 export const data = new SlashCommandBuilder()
   .setName("flowers")
@@ -42,38 +47,9 @@ export const data = new SlashCommandBuilder()
       ),
   );
 
-async function visitFlowerTradeIn(): Promise<string> {
-  return kolClient.fetchText("shop.php?whichshop=flowertradein");
-}
-
-type Prices = {
-  red: number;
-  white: number;
-  blue: number;
-};
-
-export function parsePrices(page: string): Prices | null {
-  const pattern =
-    /<tr rel="7567">.*?Chroner<\/b>&nbsp;<b>\((\d+)\)<\/b>.*?descitem\((\d+)\).*?<\/tr>/gs;
-  const matches = [...page.matchAll(pattern)];
-
-  if (matches.length !== 3) return null;
-
-  const prices = matches.reduce(
-    (acc, m) => ({ ...acc, [m[2]]: Number(m[1]) }),
-    {} as Record<string, number>,
-  );
-
-  return {
-    red: prices["973996072"] ?? 0,
-    white: prices["156741343"] ?? 0,
-    blue: prices["126513532"] ?? 0,
-  };
-}
-
 const numberFormat = new Intl.NumberFormat();
 
-function createPriceEmbed(prices: Prices) {
+function createPriceEmbed(prices: FlowerPrices) {
   return createEmbed()
     .setTitle("🌷 The Central Loathing Floral Mercantile Exchange 🌷")
     .addFields([
@@ -151,9 +127,12 @@ async function manageAlerts(interaction: ChatInputCommandInteraction) {
 }
 
 async function checkPrices() {
-  const page = await visitFlowerTradeIn();
-  const prices = parsePrices(page);
-  if (!prices) return null;
+  let prices: FlowerPrices;
+  try {
+    prices = await floralExchange.getPrices();
+  } catch {
+    return null;
+  }
 
   const lastPrices = await getLatestFlowerPrices();
 

@@ -7,6 +7,7 @@ import {
   messageLink,
 } from "discord.js";
 import { Player as KoLPlayer } from "kol.js";
+import { Raffle, type RaffleResult } from "kol.js/domains/Raffle";
 
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import {
@@ -27,8 +28,7 @@ export const data = new SlashCommandBuilder()
   .setDescription("See today's raffle prizes and yesterday's winners");
 
 const numberFormat = new Intl.NumberFormat();
-
-type Raffle = Awaited<ReturnType<typeof kolClient.getRaffle>>;
+const kolRaffle = new Raffle(kolClient);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
@@ -49,10 +49,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   );
 }
 
-async function trackRaffle(
-  raffle: Awaited<ReturnType<typeof kolClient.getRaffle>>,
-  messageId: string,
-) {
+async function trackRaffle(raffle: RaffleResult, messageId: string) {
   // Do this only if the raffle has actually loaded
   if (!raffle.today.first) {
     return;
@@ -81,7 +78,7 @@ async function trackRaffle(
   }
 }
 
-async function buildRaffleEmbeds(raffle: Raffle) {
+async function buildRaffleEmbeds(raffle: RaffleResult) {
   const embeds = [];
 
   if (raffle.today.first === null || raffle.today.second === null) {
@@ -109,7 +106,7 @@ async function buildRaffleEmbeds(raffle: Raffle) {
   return embeds;
 }
 
-async function getWinners(raffle: Raffle) {
+async function getWinners(raffle: RaffleResult) {
   return await getPlayersByIdsWithDiscord(
     raffle.yesterday.map((prize) => prize.player.id),
   );
@@ -136,7 +133,7 @@ async function getRaffleChannel() {
   return raffleChannel;
 }
 
-function renderWinners(raffle: Raffle, members: Player[]) {
+function renderWinners(raffle: RaffleResult, members: Player[]) {
   const renderWinner = (p: KoLPlayer) =>
     formatPlayer(members.find((m) => m.playerId === p.id) ?? p, p.id);
 
@@ -148,7 +145,7 @@ function renderWinners(raffle: Raffle, members: Player[]) {
   });
 }
 
-async function sendRaffleMessage(raffle: Raffle) {
+async function sendRaffleMessage(raffle: RaffleResult) {
   const raffleChannel = await getRaffleChannel();
   if (!raffleChannel) return;
 
@@ -175,7 +172,7 @@ export async function postRaffleOnRollover(): Promise<{
     return { channelId: config.RAFFLE_CHANNEL_ID, id: existing.messageId };
   }
 
-  const raffle = await kolClient.getRaffle();
+  const raffle = await kolRaffle.getRaffle();
 
   const message = await sendRaffleMessage(raffle);
 

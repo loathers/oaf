@@ -1,11 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { loadFixture } from "../testUtils.js";
-import { parseLeaderboard } from "./leaderboard.js";
+import { Leaderboard } from "./Leaderboard.js";
 
 describe("Leaderboards", () => {
   it("can parse a regular path leaderboard", async () => {
-    const page = await loadFixture(__dirname, "leaderboard_wotsf.html");
-    const leaderboard = parseLeaderboard(page);
+    const page = await loadFixture(
+      import.meta.dirname,
+      "leaderboard_wotsf.html",
+    );
+    const leaderboard = Leaderboard.parse(page);
 
     // Group name
     expect(leaderboard.name).toBe(
@@ -43,5 +46,22 @@ describe("Leaderboards", () => {
     expect(softcore.updated).toStrictEqual(
       new Date("2024-11-21T02:34:31-07:00"),
     );
+  });
+});
+
+describe("boardIdForStandardYear", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("returns 999 for the current year", () => {
+    vi.useFakeTimers({ now: new Date("2026-06-15") });
+    expect(Leaderboard.boardIdForStandardYear(2026)).toBe(999);
+  });
+
+  it("returns the correct id for a past year", () => {
+    expect(Leaderboard.boardIdForStandardYear(2015)).toBe(998);
+    expect(Leaderboard.boardIdForStandardYear(2016)).toBe(997);
+    expect(Leaderboard.boardIdForStandardYear(2020)).toBe(993);
   });
 });

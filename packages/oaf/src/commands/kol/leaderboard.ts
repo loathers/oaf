@@ -5,70 +5,25 @@ import {
   TimestampStyles,
   time,
 } from "discord.js";
-import { type SubboardInfo } from "kol.js";
+import {
+  BOARD_MAPPINGS,
+  type BoardName,
+  Leaderboard,
+  type SubboardInfo,
+} from "kol.js/domains/Leaderboard";
 
 import { createEmbed } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 
-const BOARD_MAPPINGS = {
-  "Clan Dungeons": 8,
-  "Bees Hate You": 9,
-  "Way of the Surprising Fist": 10,
-  Trendy: 11,
-  "Avatar of Boris": 12,
-  "Bugbear Invasion": 13,
-  "Zombie Slayer": 14,
-  "Class Act": 15,
-  "Avatar of Jarlsberg": 16,
-  "BIG!": 17,
-  KOLHS: 18,
-  "Class Act II": 19,
-  "Avatar of Sneaky Pete": 20,
-  "Slow and Steady": 21,
-  "Heavy Rains": 22,
-  Picky: 23,
-  "Actually Ed the Undying": 24,
-  "One Crazy Random Summer": 25,
-  "Community Service": 26,
-  Batfellow: 27,
-  "Avatar of West of Loathing": 28,
-  "The Source": 29,
-  "Nuclear Autumn": 30,
-  "Gelatinous Noob": 31,
-  "License to Adventure": 32,
-  "Live. Ascend. Repeat.": 33,
-  "Pocket Familiars": 34,
-  "G Lover": 35,
-  "Disguises Delimit": 36,
-  "Dark Gyffte": 37,
-  "Two Crazy Random Summer": 38,
-  "Kingdom of Exploathing": 39,
-  "Path of the Plumber": 40,
-  "Low Key Summer": 41,
-  "Grey Goo": 42,
-  "You, Robot": 43,
-  "Quantum Terrarium": 44,
-  "Wild Fire": 45,
-  "Grey You": 46,
-  Journeyman: 47,
-  "Fall of the Dinosaurs": 48,
-  "Avatars of Shadows Over Loathing": 49,
-  "Legacy of Loathing": 50,
-  "A Shrunken Adventurer am I": 51,
-  WereProfessor: 52,
-  "11 Things I Hate About U": 53,
-  "Avant Guard": 54,
-  "Z is for Zootomist": 55,
-  "Hat Trick": 56,
-  "11,037 Leagues Under the Sea": 57,
-  Standard: 999,
-  "Elf Gratitude": 900,
-} as const;
+const leaderboard = new Leaderboard(kolClient);
 
-const BOARD_ALIASES: Record<string, keyof typeof BOARD_MAPPINGS> = {
+const BOARD_ALIASES: Record<string, BoardName | number> = {
   // Automatically alias board names without non-alphanumerics
-  ...Object.keys(BOARD_MAPPINGS).reduce(
-    (acc, key) => ({ ...acc, [key.toLowerCase().replace(/[\W_]+/g, "")]: key }),
+  ...Object.keys(BOARD_MAPPINGS).reduce<Record<string, BoardName>>(
+    (acc, key) => ({
+      ...acc,
+      [key.toLowerCase().replace(/[\W_]+/g, "")]: key as BoardName,
+    }),
     {},
   ),
   clan: "Clan Dungeons",
@@ -159,8 +114,11 @@ const AUTOCOMPLETE_CHOICES = [
     match: board,
   })),
   ...Object.entries(BOARD_ALIASES).map(([alias, board]) => ({
-    name: board,
-    value: BOARD_MAPPINGS[board].toString(),
+    name: typeof board === "number" ? alias : board,
+    value:
+      typeof board === "number"
+        ? board.toString()
+        : Leaderboard.boardIdFor(board).toString(),
     match: alias,
   })),
 ];
@@ -168,14 +126,13 @@ const AUTOCOMPLETE_CHOICES = [
 const parseBoard = (input: string) => {
   // Named board
   const normalized = BOARD_ALIASES[input.toLowerCase().replace(/\W/g, "")];
-  if (normalized) return BOARD_MAPPINGS[normalized];
+  if (typeof normalized === "number") return normalized;
+  if (normalized) return Leaderboard.boardIdFor(normalized);
   const boardNumber = parseInt(input) || 0;
   // Board referenced by internal id
   if (boardNumber <= 2000) return boardNumber;
-  // Current standard year
-  if (boardNumber === new Date().getFullYear()) return 999;
-  // Other standard year
-  return 998 + 2015 - boardNumber;
+  // Standard year
+  return Leaderboard.boardIdForStandardYear(boardNumber);
 };
 
 const formatSubboard = (subboard: SubboardInfo) => {
@@ -220,20 +177,20 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.deferReply();
 
-  const leaderboard = await kolClient.getLeaderboard(board);
-  if (!leaderboard || leaderboard.name === "Weird Leaderboards") {
+  const result = await leaderboard.getLeaderboard(board);
+  if (!result || result.name === "Weird Leaderboards") {
     await interaction.editReply(
       "I don't think that's a real leaderboard, sorry.",
     );
     return;
   }
 
-  if (leaderboard.boards.length === 0) {
+  if (result.boards.length === 0) {
     await interaction.editReply({
       content: null,
       embeds: [
         createEmbed()
-          .setTitle(leaderboard.name || "...")
+          .setTitle(result.name || "...")
           .setDescription(
             "I wasn't able to understand this leaderboard, sorry.",
           ),
@@ -246,8 +203,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     content: null,
     embeds: [
       createEmbed()
-        .setTitle(leaderboard.name || "...")
-        .addFields(leaderboard.boards.map(formatSubboard)),
+        .setTitle(result.name || "...")
+        .addFields(result.boards.map(formatSubboard)),
     ],
   });
 }

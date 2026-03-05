@@ -4,7 +4,6 @@ import TypedEventEmitter, { type EventMap } from "typed-emitter";
 
 import { sanitiseBlueText, wait } from "./utils/utils.js";
 import { Player } from "./Player.js";
-import { parseLeaderboard } from "./utils/leaderboard.js";
 import {
   type ChatMessage,
   type KmailMessage,
@@ -503,18 +502,6 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     });
   }
 
-  async getLeaderboard(leaderboardId: number) {
-    const page = await this.fetchText("museum.php", {
-      searchParams: {
-        floor: 1,
-        place: "leaderboards",
-        whichboard: leaderboardId,
-      },
-    });
-
-    return parseLeaderboard(page);
-  }
-
   async useFamiliar(familiarId: number): Promise<boolean> {
     const result = await this.fetchText("familiar.php", {
       searchParams: {
@@ -561,39 +548,6 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     const id = Number(page.match(/<!-- itemid: (\d+) -->/)?.[1] ?? -1);
     Client.#descIdToIdCache.set(descId, id);
     return id;
-  }
-
-  async getRaffle() {
-    const page = await this.fetchText("raffle.php");
-    const today = page.matchAll(
-      /<tr><td align=right>(?:First|Second) Prize:<\/td>.*?descitem\((\d+)\)/g,
-    );
-    const [first, second] = await Promise.all(
-      today
-        ? [...today].map(async (p) => await this.descIdToId(Number(p[1])))
-        : [null, null],
-    );
-    const winners = page.matchAll(
-      /<tr><td class=small><a href='showplayer\.php\?who=\d+'>(.*?) \(#(\d+)\).*?descitem\((\d+)\).*?([\d,]+)<\/td><\/tr>/g,
-    );
-    const yesterday = await Promise.all(
-      winners
-        ? [...winners].map(async (w, i) => ({
-            player: new Player(this, Number(w[2]), w[1]),
-            item: await this.descIdToId(Number(w[3])),
-            tickets: Number(w[4].replace(",", "")),
-            place: Math.min(i + 1, 2),
-          }))
-        : [],
-    );
-
-    const { daynumber } = (await this.fetchStatus()) ?? { daynumber: "0" };
-
-    return {
-      today: { first, second },
-      yesterday,
-      gameday: Number(daynumber),
-    };
   }
 
   async getStandard(date?: Date) {
