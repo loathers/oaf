@@ -20,7 +20,7 @@ const client = new Client("", "");
 describe("Raffle", () => {
   it("can fetch the current raffle", async () => {
     text.mockResolvedValueOnce(
-      await loadFixture(import.meta.dirname + "/..", "raffle.html"),
+      await loadFixture(import.meta.dirname, "raffle.html"),
     );
     text.mockResolvedValueOnce("<!-- itemid: 1 -->");
     text.mockResolvedValueOnce("<!-- itemid: 2 -->");
