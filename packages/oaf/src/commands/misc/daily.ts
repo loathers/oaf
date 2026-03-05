@@ -9,6 +9,7 @@ import {
   italic,
   messageLink,
 } from "discord.js";
+import { SkeletonOfCrimboPast } from "kol.js/domains/SkeletonOfCrimboPast";
 
 import { LoathingDate } from "../../clients/LoathingDate.js";
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
@@ -115,31 +116,13 @@ async function birthdaySection(): Promise<string | null> {
   return `${heading("In-Game Birthdays \u{1F382}")}\n\n${content}`;
 }
 
-let checkedFamiliars = false;
-let hasFamiliar = false;
+const socp = new SkeletonOfCrimboPast(kolClient);
 
 async function socpSection(): Promise<string | null> {
-  if (!checkedFamiliars) {
-    const fams = await kolClient.getFamiliars();
-    hasFamiliar = fams.some((f) => f.id === 326);
-    checkedFamiliars = true;
-  }
+  const special = await socp.getDailySpecial();
+  if (!special) return null;
 
-  if (!hasFamiliar) return null;
-
-  const page = await kolClient.fetchText("main.php", {
-    searchParams: { talktosocp: "1" },
-  });
-
-  const match = page.match(
-    /Daily Special:.*?descitem\((\d+)\).*?\((\d+) knucklebones\)/,
-  );
-
-  if (!match) throw new Error("Could not parse daily special from SOCP page");
-
-  const [, descidStr, priceStr] = match;
-  const descid = Number(descidStr);
-  const price = Number(priceStr);
+  const { descId: descid, price } = special;
 
   const item = dataOfLoathingClient.findItemByDescId(descid);
   if (!item) throw new Error(`Unknown item with descid ${descid}`);
