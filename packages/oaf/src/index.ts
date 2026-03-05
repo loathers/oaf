@@ -11,7 +11,6 @@ import {
   discordClient,
 } from "./clients/discord.js";
 import { kolClient } from "./clients/kol.js";
-import { initCrowdsource } from "./crowdsource.js";
 import { handleGreenboxKmail } from "./greenbox.js";
 import { startApiServer } from "./server/index.js";
 
@@ -94,9 +93,6 @@ async function main() {
 
   console.log("Loading commands and syncing relevant data");
   await loadSlashCommands();
-
-  // Start crowdsource listeners
-  await initCrowdsource();
 
   // Start chatbot
   await kolClient.startChatBot();

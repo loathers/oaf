@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { parseSubmission } from "./crowdsource.js";
+import { parseSubmission } from "./commands/kol/crowdsource.js";
 
 describe("parseSubmission", () => {
   test("parses a simple key:value pair", () => {

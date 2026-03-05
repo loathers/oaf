@@ -8,9 +8,9 @@ import {
   upsertDaily,
   upsertDailySubmission,
   upsertPlayerInfo,
-} from "./clients/database.js";
-import { discordClient } from "./clients/discord.js";
-import { kolClient } from "./clients/kol.js";
+} from "../../clients/database.js";
+import { discordClient } from "../../clients/discord.js";
+import { kolClient } from "../../clients/kol.js";
 
 const CONSENSUS_THRESHOLD = 11;
 
@@ -102,7 +102,7 @@ async function handleSubmission(
   }
 }
 
-export async function initCrowdsource() {
+export async function init() {
   const rows = await getAllDailyConsensus();
   for (const row of rows) {
     cache.set(row.key, { value: row.value, count: Number(row.count) });
