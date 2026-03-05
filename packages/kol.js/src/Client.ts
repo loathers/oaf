@@ -563,39 +563,6 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
     return id;
   }
 
-  async getRaffle() {
-    const page = await this.fetchText("raffle.php");
-    const today = page.matchAll(
-      /<tr><td align=right>(?:First|Second) Prize:<\/td>.*?descitem\((\d+)\)/g,
-    );
-    const [first, second] = await Promise.all(
-      today
-        ? [...today].map(async (p) => await this.descIdToId(Number(p[1])))
-        : [null, null],
-    );
-    const winners = page.matchAll(
-      /<tr><td class=small><a href='showplayer\.php\?who=\d+'>(.*?) \(#(\d+)\).*?descitem\((\d+)\).*?([\d,]+)<\/td><\/tr>/g,
-    );
-    const yesterday = await Promise.all(
-      winners
-        ? [...winners].map(async (w, i) => ({
-            player: new Player(this, Number(w[2]), w[1]),
-            item: await this.descIdToId(Number(w[3])),
-            tickets: Number(w[4].replace(",", "")),
-            place: Math.min(i + 1, 2),
-          }))
-        : [],
-    );
-
-    const { daynumber } = (await this.fetchStatus()) ?? { daynumber: "0" };
-
-    return {
-      today: { first, second },
-      yesterday,
-      gameday: Number(daynumber),
-    };
-  }
-
   async getStandard(date?: Date) {
     if (!date) {
       date = new Date();
