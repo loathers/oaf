@@ -168,6 +168,13 @@ export async function postRaffleOnRollover(): Promise<{
   channelId: string;
   id: string;
 } | null> {
+  const { daynumber } = (await kolClient.fetchStatus()) ?? { daynumber: "0" };
+  const existing = await findRaffle(Number(daynumber));
+
+  if (existing) {
+    return { channelId: config.RAFFLE_CHANNEL_ID, id: existing.messageId };
+  }
+
   const raffle = await kolClient.getRaffle();
 
   const message = await sendRaffleMessage(raffle);

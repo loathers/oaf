@@ -6,6 +6,7 @@ import {
   bold,
   heading,
   hyperlink,
+  italic,
   messageLink,
 } from "discord.js";
 
@@ -17,53 +18,69 @@ import { getMallPrice, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { renderSvg } from "../../svgConverter.js";
-import { englishJoin, formatPlayer, getRandom } from "../../utils.js";
+import { englishJoin, formatPlayer, getRandom, toWikiLink } from "../../utils.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
 
 const ADJECTIVES = [
-  "loving",
-  "friendly",
-  "wholesome",
+  // Butt jokes
   "cheeky",
-  "dependable",
-  "loyal",
-  "enthusiastic",
-  "magnificent",
-  "glamorous",
+  "cracking",
+  "divided",
+  "fragrant",
+  "hungry",
+  "muscular",
+  "relaxed",
+  "tight-knit",
+  "well-rounded",
+  "wholesome",
+  // Generic words
   "dazzling",
+  "dependable",
+  "devoted",
+  "enthusiastic",
+  "fabulous",
+  "friendly",
+  "glamorous",
+  "humble",
+  "loving",
+  "loyal",
+  "magnificent",
+  "ponderous",
   "radiant",
   "spectacular",
-  "humble",
-  "devoted",
-  "fabulous",
+  "steadfast",
 ];
 
 const numberFormat = new Intl.NumberFormat();
 
-async function dateSection(): Promise<{
-  text: string;
-  attachment: AttachmentBuilder | null;
-}> {
+async function buildTitleMessage(adjective: string): Promise<Message> {
   const date = new LoathingDate();
-  let attachment: AttachmentBuilder | null = null;
 
+  const holidays = date.getHolidays();
+  const dateStr = holidays.length > 0
+    ? `${bold(date.toString())} (${englishJoin(holidays.map((h) => hyperlink(h, toWikiLink(h))))})`
+    : `${bold(date.toString())}`;
+
+  const lines = [
+    `# The Daily Toot \u{1F4EF}`,
+    italic(`from your ${adjective} ASS`),
+    "",
+    dateStr,
+    date.getMoonDescription(),
+  ];
+
+  let files: AttachmentBuilder[] | undefined;
   try {
     const svg = date.getMoonsAsSvg("Noto Color Emoji");
     const png = await renderSvg(svg);
     if (png) {
-      attachment = new AttachmentBuilder(png, { name: "moons.png" });
+      files = [new AttachmentBuilder(png, { name: "moons.png" })];
     }
   } catch {
     // Moon rendering is non-critical
   }
 
-  const text = [
-    `${heading("Date & Moons")}`,
-    `${bold(date.toString())}`,
-    date.getMoonDescription(),
-  ].join("\n");
-
-  return { text, attachment };
+  return { content: lines.join("\n"), files };
 }
 
 async function birthdaySection(): Promise<string | null> {
@@ -116,14 +133,14 @@ async function socpSection(): Promise<string | null> {
     /Daily Special:.*?descitem\((\d+)\).*?\((\d+) knucklebones\)/,
   );
 
-  if (!match) return null;
+  if (!match) throw new Error("Could not parse daily special from SOCP page");
 
   const [, descidStr, priceStr] = match;
   const descid = Number(descidStr);
   const price = Number(priceStr);
 
   const item = dataOfLoathingClient.findItemByDescId(descid);
-  if (!item) return null;
+  if (!item) throw new Error(`Unknown item with descid ${descid}`);
 
   const wikiLink = dataOfLoathingClient.getWikiLink(item);
   const itemDisplay = wikiLink
@@ -184,22 +201,12 @@ async function onRollover() {
   }
 
   const adjective = getRandom(ADJECTIVES);
-  await channel.send({
-    content: `# The Daily Toot \u{1F4EF} (from your ${adjective} ASS)`,
-    allowedMentions: { users: [] },
-  });
+  const titleMessage = await buildTitleMessage(adjective);
+  await channel.send({ ...titleMessage, allowedMentions: { users: [] } });
 
   const messages = [
-    await buildSection("Date & Moons", async () => {
-      const { text, attachment } = await dateSection();
-      return { content: text, files: attachment ? [attachment] : undefined };
-    }),
     await buildSection("Birthdays", async () => {
       const content = await birthdaySection();
-      return content ? { content } : null;
-    }),
-    await buildSection("SOCP", async () => {
-      const content = await socpSection();
       return content ? { content } : null;
     }),
     await buildSection("Raffle", async () => {
@@ -208,6 +215,10 @@ async function onRollover() {
       return {
         content: `${heading("Raffle Results \u{1F3B0}")}\n\n${messageLink(raffleMessage.channelId, raffleMessage.id)}`,
       };
+    }),
+    await buildSection("Skeleton of Crimbo Past", async () => {
+      const content = await socpSection();
+      return content ? { content } : null;
     }),
   ];
 
@@ -222,6 +233,16 @@ export const data = new SlashCommandBuilder()
   .setDescription("Manually trigger the Daily Toot newsletter");
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  if (!interaction.inCachedGuild()) return;
+
+  if (!interaction.member.roles.cache.has(config.EXTENDED_TEAM_ROLE_ID)) {
+    await interaction.reply({
+      content: "You are not permitted to trigger the newsletter.",
+      flags: [MessageFlags.Ephemeral],
+    });
+    return;
+  }
+
   await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
   await onRollover();
   await interaction.editReply("Newsletter posted!");
