@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { Client } from "../Client.js";
+import { loadFixture } from "../testUtils.js";
 import { SkeletonOfCrimboPast } from "./SkeletonOfCrimboPast.js";
 
 const { text } = vi.hoisted(() => ({ text: vi.fn() }));
@@ -14,6 +15,8 @@ vi.mock("../Client.js", async (importOriginal) => {
 });
 
 const client = new Client("", "");
+
+const terrariumWithSocp = `onClick='fam(326)'><img src="https://d2uyhvukfffg5a.cloudfront.net/itemimages/socp.gif" 1-pound Skeleton of Crimbo Past (`;
 
 describe("SkeletonOfCrimboPast", () => {
   it("returns null if player has no familiar", async () => {
@@ -32,23 +35,19 @@ describe("SkeletonOfCrimboPast", () => {
   });
 
   it("returns null if page does not match", async () => {
-    text.mockResolvedValueOnce(
-      `onClick='fam(326)'><img src="https://d2uyhvukfffg5a.cloudfront.net/itemimages/socp.gif" 1-pound Skeleton of Crimbo Past (`,
-    );
+    text.mockResolvedValueOnce(terrariumWithSocp);
     text.mockResolvedValueOnce("<html>no match here</html>");
     const socp = new SkeletonOfCrimboPast(client);
     expect(await socp.getDailySpecial()).toBeNull();
   });
 
   it("parses the daily special", async () => {
+    text.mockResolvedValueOnce(terrariumWithSocp);
     text.mockResolvedValueOnce(
-      `onClick='fam(326)'><img src="https://d2uyhvukfffg5a.cloudfront.net/itemimages/socp.gif" 1-pound Skeleton of Crimbo Past (`,
-    );
-    text.mockResolvedValueOnce(
-      `Daily Special: <a onclick="descitem(123456789)">cool item</a> (42 knucklebones)`,
+      await loadFixture(import.meta.dirname, "socp.html"),
     );
     const socp = new SkeletonOfCrimboPast(client);
     const special = await socp.getDailySpecial();
-    expect(special).toEqual({ descId: 123456789, price: 42 });
+    expect(special).toEqual({ descId: 153919945, price: 1388 });
   });
 });
