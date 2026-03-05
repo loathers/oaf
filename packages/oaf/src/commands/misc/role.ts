@@ -32,13 +32,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   const subcommand = interaction.options.getSubcommand();
 
-  const member = interaction.member;
+  if (!interaction.inCachedGuild()) return;
 
-  if (!member || !("guild" in member)) {
-    return await interaction.editReply(
-      "You have to perform this action from within a Guild.",
-    );
-  }
+  const member = interaction.member;
 
   switch (subcommand) {
     case "pronouns": {

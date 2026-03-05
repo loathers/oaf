@@ -1,8 +1,4 @@
-import {
-  ChatInputCommandInteraction,
-  GuildMemberRoleManager,
-  SlashCommandBuilder,
-} from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 import { config } from "../../config.js";
@@ -18,18 +14,9 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const member = interaction.member;
+  if (!interaction.inCachedGuild()) return;
 
-  if (!member) {
-    return void (await interaction.reply({
-      content: "You have to perform this action from within a Guild.",
-      ephemeral: true,
-    }));
-  }
-
-  const roleManager = member.roles as GuildMemberRoleManager;
-
-  if (!roleManager.cache.has(config.EXTENDED_TEAM_ROLE_ID)) {
+  if (!interaction.member.roles.cache.has(config.EXTENDED_TEAM_ROLE_ID)) {
     return void (await interaction.reply({
       content: "You are not permitted to rename me, your beloved O.A.F.",
       ephemeral: true,
