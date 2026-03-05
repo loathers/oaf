@@ -1,6 +1,7 @@
 import {
   AttachmentBuilder,
   ChatInputCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { readFileSync } from "node:fs";
@@ -87,7 +88,7 @@ async function renderMap(interaction: ChatInputCommandInteraction) {
 }
 
 async function removeLocation(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
   await updatePlayersByDiscordId(interaction.user.id, {
     latitude: null,
@@ -120,7 +121,7 @@ async function addLocation(
   interaction: ChatInputCommandInteraction,
   location: string,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
   const request = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=jsonv2&limit=1`,
   );

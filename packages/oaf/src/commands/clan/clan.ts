@@ -1,6 +1,7 @@
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
   bold,
   italic,
@@ -193,7 +194,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!clan) {
     await interaction.reply({
       content: "Clan not recognised.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     });
     return;
   }

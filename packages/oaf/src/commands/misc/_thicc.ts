@@ -1,6 +1,7 @@
 import {
   ChatInputCommandInteraction,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder,
   bold,
   hyperlink,
@@ -35,7 +36,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   const subcommand = interaction.options.getSubcommand();
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
   switch (subcommand) {
     case "about":

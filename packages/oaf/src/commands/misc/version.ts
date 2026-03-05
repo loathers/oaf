@@ -1,6 +1,7 @@
 import {
   ChatInputCommandInteraction,
   Events,
+  MessageFlags,
   SlashCommandBuilder,
   codeBlock,
   inlineCode,
@@ -42,7 +43,7 @@ function getVersionEmbed() {
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.reply({
     embeds: [getVersionEmbed()],
-    ephemeral: true,
+    flags: [MessageFlags.Ephemeral],
   });
 }
 

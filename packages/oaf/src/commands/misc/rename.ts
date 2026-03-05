@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 import { config } from "../../config.js";
@@ -19,7 +19,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.member.roles.cache.has(config.EXTENDED_TEAM_ROLE_ID)) {
     return void (await interaction.reply({
       content: "You are not permitted to rename me, your beloved O.A.F.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     }));
   }
 
@@ -40,12 +40,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
     return void (await interaction.reply({
       content: "Sorry, that command didn't work. My name is still my name.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     }));
   }
 
   return void (await interaction.reply({
     content: `Done! My name is now ${name}`,
-    ephemeral: true,
+    flags: [MessageFlags.Ephemeral],
   }));
 }

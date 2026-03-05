@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from "discord.js";
 
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
@@ -25,7 +25,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!PERMITTED_ROLE_IDS.some((r) => interaction.member.roles.cache.has(r))) {
     await interaction.reply({
       content: "You are not permitted to edit clan whitelists.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     });
     return;
   }

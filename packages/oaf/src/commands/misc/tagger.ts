@@ -6,6 +6,7 @@ import {
   DiscordjsError,
   DiscordjsErrorCodes,
   Message,
+  MessageFlags,
   ModalBuilder,
   ModalSubmitInteraction,
   TextInputBuilder,
@@ -62,7 +63,7 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
 
   if (canPost < 0) {
     await interaction.reply({
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
       content:
         'This is only available for members with the role "Extended Team" or higher',
     });
@@ -124,7 +125,7 @@ async function handleModal(
   targetMessage: Message<true>,
   interaction: ModalSubmitInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
   const tag = interaction.fields
     .getTextInputValue("messageTaggerTag")
     .toLowerCase();

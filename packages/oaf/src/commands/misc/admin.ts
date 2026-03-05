@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from "discord.js";
 import jwt from "jsonwebtoken";
 
 import { config } from "../../config.js";
@@ -13,7 +13,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.member.roles.cache.has(config.EXTENDED_TEAM_ROLE_ID)) {
     await interaction.reply({
       content: "You are not permitted to administrate O.A.F.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     });
     return;
   }
@@ -31,7 +31,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   );
 
   await interaction.reply({
-    ephemeral: true,
+    flags: [MessageFlags.Ephemeral],
     content: `https://oaf.loathers.net/login?token=${token}`,
   });
 }
