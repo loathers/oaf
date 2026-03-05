@@ -72,7 +72,7 @@ export class LoathingDate {
   }
 
   static fromRealDate(realDate: Date) {
-    return (
+    return Math.floor(
       (realDate.getTime() - LoathingDate.EPOCH.getTime()) /
       (1000 * 60 * 60 * 24)
     );
