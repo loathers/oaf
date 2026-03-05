@@ -37,7 +37,7 @@ const ADJECTIVES = [
   "muscular",
   "relaxed",
   "retentive",
-  "sweaty (in the \"tryhard\" sense)",
+  'sweaty (in the "tryhard" sense)',
   "thick-as-thieves",
   "tight-knit",
   "well-rounded",
@@ -112,7 +112,7 @@ async function birthdaySection(): Promise<string | null> {
     })
     .join("\n");
 
-  return `${heading("In-Game Birthdays \u{1F382}")}\n\n${content}`;
+  return `${heading("In-Game Birthdays \u{1F382}", 2)}\n\n${content}`;
 }
 
 let checkedFamiliars = false;
@@ -166,7 +166,7 @@ async function socpSection(): Promise<string | null> {
   })();
 
   const lines = [
-    `${heading("Skeleton of Crimbo Past \u{1F480}")}`,
+    `${heading("Skeleton of Crimbo Past \u{1F480}", 2)}`,
     `${itemDisplay} for ${numberFormat.format(price)} knucklebones${value ? ` (${value}/\u{1F9B4})` : ""}`,
   ];
 
@@ -211,7 +211,7 @@ async function onRollover() {
       const raffleMessage = await postRaffleOnRollover();
       if (!raffleMessage) return null;
       return {
-        content: `${heading("Raffle Results \u{1F3B0}")}\n\n${messageLink(raffleMessage.channelId, raffleMessage.id)}`,
+        content: `${heading("Raffle Results \u{1F3B0}", 2)}\n\n${messageLink(raffleMessage.channelId, raffleMessage.id)}`,
       };
     }),
     await buildSection("Skeleton of Crimbo Past", async () => {
