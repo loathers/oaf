@@ -36,6 +36,8 @@ const ADJECTIVES = [
   "hungry",
   "muscular",
   "relaxed",
+  "retentive",
+  "sweaty (in the \"tryhard\" sense)",
   "thick-as-thieves",
   "tight-knit",
   "well-rounded",
