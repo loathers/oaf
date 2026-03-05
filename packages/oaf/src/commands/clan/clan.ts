@@ -6,18 +6,18 @@ import {
   bold,
   italic,
   strikethrough,
-  underscore,
+  underline,
 } from "discord.js";
+import { JoinClanError, RaidLogMissingError } from "kol.js/domains/ClanDungeon";
+import {
+  type DetailedDreadStatus,
+  Dreadsylvania,
+} from "kol.js/domains/Dreadsylvania";
 
 import { createEmbed, discordClient } from "../../clients/discord.js";
+import { kolClient } from "../../clients/kol.js";
 import { pluralize } from "../../utils.js";
 import { DREAD_CLANS } from "./_clans.js";
-import {
-  DetailedDreadStatus,
-  JoinClanError,
-  RaidLogMissingError,
-  getDetailedDreadStatus,
-} from "./_dread.js";
 
 const DREAD_BOSS_MAPPINGS = new Map([
   ["werewolf", "Air Wolf"],
@@ -34,6 +34,8 @@ const DREAD_BOSS_MAPPINGS = new Map([
   ["xskeleton", strikethrough("Unkillable Skeleton")],
   ["unknown", "Boss unknown"],
 ]);
+
+const dreadsylvania = new Dreadsylvania(kolClient);
 
 export const data = new SlashCommandBuilder()
   .setName("clan")
@@ -202,7 +204,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   try {
-    const status = await getDetailedDreadStatus(clan.id);
+    const status = await dreadsylvania.getDetailedDreadStatus(clan.id);
     const embed = createEmbed().setTitle(`Status update for ${clan.name}`);
 
     embed.setDescription(
@@ -211,19 +213,19 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     embed.addFields([
       {
-        name: `${underscore(bold("Forest"))} (${DREAD_BOSS_MAPPINGS.get(
+        name: `${underline(bold("Forest"))} (${DREAD_BOSS_MAPPINGS.get(
           status.overview.bosses[0],
         )})`,
         value: getForestSummary(status),
       },
       {
-        name: `${underscore(bold("Village"))} (${DREAD_BOSS_MAPPINGS.get(
+        name: `${underline(bold("Village"))} (${DREAD_BOSS_MAPPINGS.get(
           status.overview.bosses[1],
         )})`,
         value: getVillageSummary(status),
       },
       {
-        name: `${underscore(bold("Castle"))} (${DREAD_BOSS_MAPPINGS.get(
+        name: `${underline(bold("Castle"))} (${DREAD_BOSS_MAPPINGS.get(
           status.overview.bosses[2],
         )})`,
         value: parseCastleStatus(status),
