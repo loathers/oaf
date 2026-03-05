@@ -1,5 +1,68 @@
 import { dedent } from "ts-dedent";
 
+const GAME_HOLIDAYS = new Map<`${number},${number}`, string>([
+  ["0,1", "Festival of Jarlsberg"],
+  ["1,4", "Valentine's Day"],
+  ["2,3", "St. Sneaky Pete's Day"],
+  ["3,2", "Oyster Egg Day"],
+  ["4,2", "El Dia De Los Muertos Borrachos"],
+  ["5,3", "Generic Summer Holiday"],
+  ["6,4", "Dependence Day"],
+  ["7,4", "Arrrbor Day"],
+  ["8,6", "Labór Day"],
+  ["9,8", "Halloween"],
+  ["10,7", "Feast of Boris"],
+  ["11,4", "Yuletide"],
+]);
+
+const MUSCLE_PHASES = new Set([8, 9]);
+const MYSTICALITY_PHASES = new Set([4, 12]);
+const MOXIE_PHASES = new Set([0, 15]);
+
+function getEaster(year: number): [month: number, date: number] {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const date = ((h + l - 7 * m + 114) % 31) + 1;
+  return [month, date];
+}
+
+function getThanksgiving(year: number): number {
+  // 4th Thursday of November
+  const nov1 = new Date(year, 10, 1).getDay();
+  const firstThursday = ((4 - nov1 + 7) % 7) + 1;
+  return firstThursday + 21;
+}
+
+function getRealWorldHoliday(realDate: Date): string | undefined {
+  const year = realDate.getUTCFullYear();
+  const [easterMonth, easterDate] = getEaster(year);
+  const thanksgiving = getThanksgiving(year);
+
+  const realHolidays = new Map([
+    ["0,1", "Festival of Jarlsberg"],
+    ["1,14", "Valentine's Day"],
+    ["2,17", "St. Sneaky Pete's Day"],
+    [`${easterMonth},${easterDate}`, "Oyster Egg Day"],
+    ["6,4", "Dependence Day"],
+    ["9,31", "Halloween"],
+    [`10,${thanksgiving}`, "Feast of Boris"],
+    ["11,25", "Crimbo"],
+  ]);
+
+  return realHolidays.get(`${realDate.getUTCMonth()},${realDate.getUTCDate()}`);
+}
+
 export class LoathingDate {
   static EPOCH = new Date(Date.UTC(2003, 1, 1, 3, 30));
   static COLLISION = 1218;
@@ -8,20 +71,29 @@ export class LoathingDate {
     return (year - 1) * 96 + month * 8 + (date - 1);
   }
 
+  static fromRealDate(realDate: Date) {
+    return (
+      (realDate.getTime() - LoathingDate.EPOCH.getTime()) /
+      (1000 * 60 * 60 * 24)
+    );
+  }
+
   #year: number;
   #month: number;
   #date: number;
+  #realDate: Date;
 
   constructor(date: Date);
   constructor(year?: number, month?: number, date?: number);
-  constructor(yearOrDate?: Date | number, month = 0, date = 0) {
+  constructor(yearOrDate: Date | number = new Date(), month = 0, date = 0) {
     const daysSinceEpoch =
-      yearOrDate instanceof Date || yearOrDate === undefined
-        ? ((yearOrDate ?? new Date()).getTime() -
-            LoathingDate.EPOCH.getTime()) /
-          (1000 * 60 * 60 * 24)
+      yearOrDate instanceof Date
+        ? LoathingDate.fromRealDate(yearOrDate)
         : LoathingDate.getDaysSinceEpoch(yearOrDate, month, date);
 
+    this.#realDate = new Date(
+      LoathingDate.EPOCH.getTime() + daysSinceEpoch * 1000 * 60 * 60 * 24,
+    );
     this.#year = Math.floor(daysSinceEpoch / 96) + 1;
     this.#month = Math.floor((daysSinceEpoch % 96) / 8);
     this.#date = Math.floor(daysSinceEpoch % 8) + 1;
@@ -167,6 +239,48 @@ export class LoathingDate {
       default:
         return 0;
     }
+  }
+
+  getStatDay() {
+    const phase = this.getPhase();
+    if (MUSCLE_PHASES.has(phase)) return "Muscle Day";
+    if (MYSTICALITY_PHASES.has(phase)) return "Mysticality Day";
+    if (MOXIE_PHASES.has(phase)) return "Moxie Day";
+    return null;
+  }
+
+  getHolidays() {
+    const holidays = new Set<string>();
+
+    const gameHoliday = GAME_HOLIDAYS.get(`${this.#month},${this.#date}`);
+    if (gameHoliday) holidays.add(gameHoliday);
+
+    const realHoliday = getRealWorldHoliday(this.#realDate);
+    if (realHoliday) holidays.add(realHoliday);
+
+    // Combination holidays replace their components
+    if (
+      holidays.has("St. Sneaky Pete's Day") &&
+      holidays.has("Feast of Boris")
+    ) {
+      holidays.delete("St. Sneaky Pete's Day");
+      holidays.delete("Feast of Boris");
+      holidays.add("Drunksgiving");
+    }
+
+    if (
+      holidays.has("Feast of Boris") &&
+      holidays.has("El Dia De Los Muertos Borrachos")
+    ) {
+      holidays.delete("Feast of Boris");
+      holidays.delete("El Dia De Los Muertos Borrachos");
+      holidays.add("El Dia De Los Muertos Borrachos y Agradecido");
+    }
+
+    const statDay = this.getStatDay();
+    if (statDay) holidays.add(statDay);
+
+    return [...holidays];
   }
 
   getMoonDescription() {
