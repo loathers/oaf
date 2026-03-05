@@ -4,7 +4,6 @@ import TypedEventEmitter, { type EventMap } from "typed-emitter";
 
 import { sanitiseBlueText, wait } from "./utils/utils.js";
 import { Player } from "./Player.js";
-import { parseLeaderboard } from "./utils/leaderboard.js";
 import {
   type ChatMessage,
   type KmailMessage,
@@ -501,18 +500,6 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
       });
       return true;
     });
-  }
-
-  async getLeaderboard(leaderboardId: number) {
-    const page = await this.fetchText("museum.php", {
-      searchParams: {
-        floor: 1,
-        place: "leaderboards",
-        whichboard: leaderboardId,
-      },
-    });
-
-    return parseLeaderboard(page);
   }
 
   async useFamiliar(familiarId: number): Promise<boolean> {

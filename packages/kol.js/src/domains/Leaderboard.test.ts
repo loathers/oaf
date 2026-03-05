@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { loadFixture } from "../testUtils.js";
-import { parseLeaderboard } from "./leaderboard.js";
+import { Leaderboard } from "./Leaderboard.js";
 
 describe("Leaderboards", () => {
   it("can parse a regular path leaderboard", async () => {
-    const page = await loadFixture(__dirname, "leaderboard_wotsf.html");
-    const leaderboard = parseLeaderboard(page);
+    const page = await loadFixture(
+      import.meta.dirname,
+      "leaderboard_wotsf.html",
+    );
+    const leaderboard = Leaderboard.parse(page);
 
     // Group name
     expect(leaderboard.name).toBe(
