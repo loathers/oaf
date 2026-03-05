@@ -1,5 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Player } from "kol.js";
+import { JoinClanError, RaidLogMissingError } from "kol.js/domains/ClanDungeon";
+import { Dreadsylvania } from "kol.js/domains/Dreadsylvania";
 
 import {
   createRaidsWithParticipation,
@@ -8,24 +10,11 @@ import {
 } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import {
-  columnsByMaxLength,
-  formatPlayer,
-  notNull,
-  pluralize,
-} from "../../utils.js";
+import { columnsByMaxLength, formatPlayer, pluralize } from "../../utils.js";
 import { identifyPlayer } from "../_player.js";
 import { DREAD_CLANS } from "./_clans.js";
-import {
-  JoinClanError,
-  RaidLogMissingError,
-  getFinishedRaidLog,
-  getMissingRaidLogs,
-  getRaidLog,
-} from "./_dread.js";
 
-const SKILL_KILL_MATCHER =
-  /([A-Za-z0-9\-_ ]+)\s+\(#(\d+)\)\s+(defeated\D+(\d+)|used the machine)/i;
+const dreadsylvania = new Dreadsylvania(kolClient);
 
 export const data = new SlashCommandBuilder()
   .setName("skills")
@@ -39,70 +28,15 @@ export const data = new SlashCommandBuilder()
     "Get a list of everyone currently elgible for Dreadsylvania skills.",
   );
 
-export type Participation = Record<
-  string | number,
-  {
-    skills: number;
-    kills: number;
-    playerId: number;
-  }
->;
-
-/**
- * Mutating the first parameter, merge the participation maps
- * @param target Base participation map
- * @param sources New maps to merge into the target
- * @returns A reference to the first parameter
- */
-export function mergeParticipation(
-  target: Participation,
-  ...sources: Participation[]
-) {
-  sources
-    .flatMap((s) => Object.entries(s))
-    .forEach(([playerId, { skills, kills }]) => {
-      const existing = target[playerId] ?? { skills: 0, kills: 0 };
-      target[playerId] = {
-        ...existing,
-        skills: existing.skills + skills,
-        kills: existing.kills + kills,
-        playerId: parseInt(playerId),
-      };
-    });
-
-  return target;
-}
-
 async function getParticipationFromCurrentRaid() {
   return (
     await Promise.all(
       DREAD_CLANS.map(async (clan) => {
-        const log = await getRaidLog(clan.id);
-        return getParticipationFromRaidLog(log);
+        const log = await dreadsylvania.getRaidLog(clan.id);
+        return Dreadsylvania.parseParticipation(log);
       }),
     )
   ).flat();
-}
-
-export function getParticipationFromRaidLog(raidLog: string) {
-  return (
-    raidLog
-      .match(new RegExp(SKILL_KILL_MATCHER, "gi"))
-      ?.map((l) => l.match(SKILL_KILL_MATCHER))
-      .filter(notNull)
-      .map((m) => {
-        const playerId = parseInt(m[2]);
-        const type = m[3].startsWith("defeated") ? "kills" : "skills";
-        const num = parseInt(m[4] ?? "1");
-        return {
-          [playerId]: {
-            playerId,
-            skills: type === "skills" ? num : 0,
-            kills: type === "kills" ? num : 0,
-          },
-        };
-      }) ?? []
-  );
 }
 
 async function parseLogs() {
@@ -124,11 +58,14 @@ async function parseLogs() {
   }[] = [];
 
   for (const clan of DREAD_CLANS) {
-    const raids = (await getMissingRaidLogs(clan.id, parsedRaids)).filter(
-      (id) => !parsedRaids.includes(id),
-    );
+    const raids = (
+      await dreadsylvania.getMissingRaidLogs(clan.id, parsedRaids)
+    ).filter((id) => !parsedRaids.includes(id));
     const raidLogs = await Promise.all(
-      raids.map(async (id) => ({ id, log: await getFinishedRaidLog(id) })),
+      raids.map(async (id) => ({
+        id,
+        log: await dreadsylvania.getFinishedRaidLog(id),
+      })),
     );
 
     for (const { id, log } of raidLogs) {
@@ -141,7 +78,10 @@ async function parseLogs() {
 
       const participation = await Promise.all(
         Object.values(
-          mergeParticipation({}, ...getParticipationFromRaidLog(log)),
+          Dreadsylvania.mergeParticipation(
+            {},
+            ...Dreadsylvania.parseParticipation(log),
+          ),
         ).map(async ({ playerId, skills, kills }) => ({
           playerId,
           playerName:
@@ -185,7 +125,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       raidParticipation: participationByPlayer.get(p.playerId) ?? [],
     }));
 
-    const participation = mergeParticipation(
+    const participation = Dreadsylvania.mergeParticipation(
       {},
       ...playersWithParticipation
         .map((p) => p.raidParticipation.map((r) => ({ [p.playerId]: r })))
