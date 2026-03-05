@@ -1,6 +1,6 @@
 import {
   ChatInputCommandInteraction,
-  GuildMemberRoleManager,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 
@@ -24,22 +24,12 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const member = interaction.member;
+  if (!interaction.inCachedGuild()) return;
 
-  if (!member) {
-    await interaction.reply({
-      content: "You have to perform this action from within a Guild.",
-      ephemeral: true,
-    });
-    return;
-  }
-
-  const roleManager = member.roles as GuildMemberRoleManager;
-
-  if (!PERMITTED_ROLE_IDS.some((r) => roleManager.cache.has(r))) {
+  if (!PERMITTED_ROLE_IDS.some((r) => interaction.member.roles.cache.has(r))) {
     await interaction.reply({
       content: "You are not permitted to edit clan whitelists.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     });
     return;
   }

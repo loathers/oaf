@@ -8,6 +8,7 @@ import {
   Events,
   GuildMember,
   Message,
+  MessageFlags,
   PartialGuildMember,
   RESTJSONErrorCodes,
   SlashCommandBuilder,
@@ -108,12 +109,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       content: `Get a verification token by sending ${inlineCode(
         `/msg ${OAF_USER} claim`,
       )} in chat`,
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
   const guild =
     interaction.guild || (await discordClient.guilds.fetch(config.GUILD_ID));

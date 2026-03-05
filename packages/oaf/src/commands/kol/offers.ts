@@ -1,6 +1,7 @@
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { resolveKoLImage } from "kol.js";
@@ -58,7 +59,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return await interaction.reply({
         content:
           "Invalid subcommand. It shouldn't be possible to see this message. Please report it.",
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
   }
 }
@@ -103,7 +104,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 }
 
 async function manageStandingOffers(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
   const itemId = interaction.options.getInteger("item", true);
   const price = interaction.options.getInteger("price", true);
 

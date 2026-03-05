@@ -40,7 +40,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     await interaction.editReply(
       "Hey, thanks! Rollover post was missing so I'll post it now",
     );
-    await onRollover();
+    await postRaffleOnRollover();
     return;
   }
 
@@ -164,16 +164,24 @@ async function sendRaffleMessage(raffle: Raffle) {
   });
 }
 
-async function onRollover() {
+export async function postRaffleOnRollover(): Promise<{
+  channelId: string;
+  id: string;
+} | null> {
+  const { daynumber } = (await kolClient.fetchStatus()) ?? { daynumber: "0" };
+  const existing = await findRaffle(Number(daynumber));
+
+  if (existing) {
+    return { channelId: config.RAFFLE_CHANNEL_ID, id: existing.messageId };
+  }
+
   const raffle = await kolClient.getRaffle();
 
   const message = await sendRaffleMessage(raffle);
 
-  if (!message) return;
+  if (!message) return null;
 
   await trackRaffle(raffle, message.id);
-}
 
-export function init() {
-  kolClient.on("rollover", () => void onRollover());
+  return message;
 }

@@ -11,6 +11,7 @@ import {
   ChatInputCommandInteraction,
   DiscordAPIError,
   Events,
+  MessageFlags,
   SlashCommandBuilder,
   TimestampStyles,
   time,
@@ -89,7 +90,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (reminderText.length > 127) {
     return void (await interaction.reply({
       content: "Maximum reminder length is 128 characters.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     }));
   }
 
@@ -99,7 +100,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return void (await interaction.reply({
       content:
         'You must supply a time to wait in the form of "1w2d3h4m5s" or "rollover".',
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     }));
   }
 
@@ -109,7 +110,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return void (await interaction.reply({
       content:
         "It doesn't look possible for oaf to respond to this request when the time comes",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     }));
   }
 

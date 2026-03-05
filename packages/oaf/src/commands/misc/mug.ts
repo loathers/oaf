@@ -1,6 +1,7 @@
 import {
   AttachmentBuilder,
   ChatInputCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { resolveKoLImage } from "kol.js";
@@ -126,7 +127,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return void (await interaction.reply({
       content:
         "A personalized coffee mug with no message is like a skunk with no bad smells. It just don't make sense.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     }));
   }
 

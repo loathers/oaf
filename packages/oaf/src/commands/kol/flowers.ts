@@ -2,6 +2,7 @@ import { milliseconds } from "date-fns";
 import {
   ChatInputCommandInteraction,
   Events,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 
@@ -104,7 +105,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return await interaction.reply({
         content:
           "Invalid subcommand. It shouldn't be possible to see this message. Please report it.",
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
   }
 }
@@ -125,7 +126,7 @@ async function replyWithFlowerPrices(interaction: ChatInputCommandInteraction) {
 }
 
 async function manageAlerts(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
   const price = interaction.options.getInteger("price", true);
 

@@ -1,6 +1,6 @@
 import {
   ChatInputCommandInteraction,
-  GuildMemberRoleManager,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 
@@ -18,21 +18,12 @@ export const data = new SlashCommandBuilder()
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const member = interaction.member;
+  if (!interaction.inCachedGuild()) return;
 
-  if (!member) {
-    return void (await interaction.reply({
-      content: "You have to perform this action from within a Guild.",
-      ephemeral: true,
-    }));
-  }
-
-  const roleManager = member.roles as GuildMemberRoleManager;
-
-  if (!roleManager.cache.has(config.EXTENDED_TEAM_ROLE_ID)) {
+  if (!interaction.member.roles.cache.has(config.EXTENDED_TEAM_ROLE_ID)) {
     return void (await interaction.reply({
       content: "You are not permitted to rename me, your beloved O.A.F.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     }));
   }
 
@@ -53,12 +44,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
     return void (await interaction.reply({
       content: "Sorry, that command didn't work. My name is still my name.",
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
     }));
   }
 
   return void (await interaction.reply({
     content: `Done! My name is now ${name}`,
-    ephemeral: true,
+    flags: [MessageFlags.Ephemeral],
   }));
 }
