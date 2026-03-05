@@ -11,6 +11,7 @@ import {
 import { JoinClanError, RaidLogMissingError } from "kol.js/domains/ClanDungeon";
 import {
   type DetailedDreadStatus,
+  type DreadBoss,
   Dreadsylvania,
 } from "kol.js/domains/Dreadsylvania";
 
@@ -18,22 +19,6 @@ import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { pluralize } from "../../utils.js";
 import { DREAD_CLANS } from "./_clans.js";
-
-const DREAD_BOSS_MAPPINGS = new Map([
-  ["werewolf", "Air Wolf"],
-  ["bugbear", "Falls-From-Sky"],
-  ["zombie", "Zombie HOA"],
-  ["ghost", "Mayor Ghost"],
-  ["vampire", "Drunkula"],
-  ["skeleton", "Unkillable Skeleton"],
-  ["xwerewolf", strikethrough("Air Wolf")],
-  ["xbugbear", strikethrough("Falls-From-Sky")],
-  ["xzombie", strikethrough("Zombie HOA")],
-  ["xghost", strikethrough("Mayor Ghost")],
-  ["xvampire", strikethrough("Drunkula")],
-  ["xskeleton", strikethrough("Unkillable Skeleton")],
-  ["unknown", "Boss unknown"],
-]);
 
 const dreadsylvania = new Dreadsylvania(kolClient);
 
@@ -54,7 +39,8 @@ const sidenote = (...steps: string[]) =>
   `\u00a0\u00a0\u00a0\u00a0${italic(steps.join(" \u2192 "))}`;
 
 function getForestSummary(status: DetailedDreadStatus) {
-  if (!status.overview.forest) return strikethrough("Forest fully cleared.");
+  if (!status.overview.forest.remaining)
+    return strikethrough("Forest fully cleared.");
 
   const summary = [];
 
@@ -108,7 +94,8 @@ function getForestSummary(status: DetailedDreadStatus) {
 }
 
 function getVillageSummary(status: DetailedDreadStatus) {
-  if (!status.overview.village) return strikethrough("Village fully cleared.");
+  if (!status.overview.village.remaining)
+    return strikethrough("Village fully cleared.");
 
   const summary = [];
 
@@ -140,7 +127,8 @@ function getVillageSummary(status: DetailedDreadStatus) {
 }
 
 function parseCastleStatus(status: DetailedDreadStatus) {
-  if (!status.overview.castle) return strikethrough("Castle fully cleared.");
+  if (!status.overview.castle.remaining)
+    return strikethrough("Castle fully cleared.");
 
   const summary = [];
 
@@ -148,10 +136,12 @@ function parseCastleStatus(status: DetailedDreadStatus) {
     summary.push(bold("Lab needs unlocking."));
   } else if (!status.overview.capacitor) {
     summary.push("Machine needs repairing (with skull capacitor).");
-  } else if (!status.overview.skills) {
+  } else if (!status.overview.remainingSkills) {
     summary.push(strikethrough("All skills claimed."));
   } else {
-    summary.push(`${pluralize(status.overview.skills, "skill")} available.`);
+    summary.push(
+      `${pluralize(status.overview.remainingSkills, "skill")} available.`,
+    );
   }
 
   if (status.castle.roast) {
@@ -208,26 +198,23 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const embed = createEmbed().setTitle(`Status update for ${clan.name}`);
 
     embed.setDescription(
-      `Kills remaining: ${status.overview.forest}/${status.overview.village}/${status.overview.castle}`,
+      `Kills remaining: ${status.overview.forest.remaining}/${status.overview.village.remaining}/${status.overview.castle.remaining}`,
     );
+
+    const formatBoss = (boss: DreadBoss) =>
+      boss.status === "defeated" ? strikethrough(boss.name) : boss.name;
 
     embed.addFields([
       {
-        name: `${underline(bold("Forest"))} (${DREAD_BOSS_MAPPINGS.get(
-          status.overview.bosses[0],
-        )})`,
+        name: `${underline(bold("Forest"))} (${formatBoss(status.overview.forest.boss)})`,
         value: getForestSummary(status),
       },
       {
-        name: `${underline(bold("Village"))} (${DREAD_BOSS_MAPPINGS.get(
-          status.overview.bosses[1],
-        )})`,
+        name: `${underline(bold("Village"))} (${formatBoss(status.overview.village.boss)})`,
         value: getVillageSummary(status),
       },
       {
-        name: `${underline(bold("Castle"))} (${DREAD_BOSS_MAPPINGS.get(
-          status.overview.bosses[2],
-        )})`,
+        name: `${underline(bold("Castle"))} (${formatBoss(status.overview.castle.boss)})`,
         value: parseCastleStatus(status),
       },
     ]);

@@ -24,7 +24,7 @@ async function constructDreadStatusMessage(): Promise<{
     DREAD_CLANS.map(async (clan) => {
       const overview = await dreadsylvania.getDreadStatusOverview(clan.id);
 
-      const skills = overview.castle ? overview.skills : 0;
+      const skills = overview.castle.remaining > 0 ? overview.remainingSkills : 0;
 
       const capacitorString = overview.capacitor
         ? `${pluralize(skills, "skill")} left`
@@ -32,16 +32,16 @@ async function constructDreadStatusMessage(): Promise<{
 
       if (
         overview.capacitor &&
-        !overview.skills &&
+        !overview.remainingSkills &&
         (["forest", "village", "castle"] as const).every(
-          (zone) => overview[zone] <= 10,
+          (zone) => overview[zone].remaining <= 10,
         )
       ) {
         pingableClans.push(clan.name);
       }
 
-      return `${bold(clan.name)}: ${overview.forest}/${overview.village}/${
-        overview.castle
+      return `${bold(clan.name)}: ${overview.forest.remaining}/${overview.village.remaining}/${
+        overview.castle.remaining
       } (${capacitorString})`;
     }),
   );

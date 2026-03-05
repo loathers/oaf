@@ -28,9 +28,9 @@ describe("parseOverview", () => {
   });
 
   test("Can parse kill counts", () => {
-    expect(overview.forest).toBe(973);
-    expect(overview.village).toBe(1000);
-    expect(overview.castle).toBe(516);
+    expect(overview.forest.remaining).toBe(973);
+    expect(overview.village.remaining).toBe(1000);
+    expect(overview.castle.remaining).toBe(516);
   });
 
   test("Can parse capacitor status", () => {
@@ -38,11 +38,22 @@ describe("parseOverview", () => {
   });
 
   test("Can parse skills remaining", () => {
-    expect(overview.skills).toBe(2);
+    expect(overview.remainingSkills).toBe(2);
   });
 
   test("Can predict bosses", () => {
-    expect(overview.bosses).toHaveLength(3);
+    expect(overview.forest.boss).toEqual({
+      name: "Unknown",
+      status: "unknown",
+    });
+    expect(overview.village.boss).toEqual({
+      name: "Unknown",
+      status: "unknown",
+    });
+    expect(overview.castle.boss).toEqual({
+      name: "Unkillable Skeleton",
+      status: "predicted",
+    });
   });
 });
 
