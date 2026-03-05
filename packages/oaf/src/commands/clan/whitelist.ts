@@ -1,4 +1,8 @@
-import { ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  MessageFlags,
+  SlashCommandBuilder,
+} from "discord.js";
 
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";

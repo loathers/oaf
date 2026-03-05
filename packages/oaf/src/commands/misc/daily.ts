@@ -18,7 +18,12 @@ import { getMallPrice, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { renderSvg } from "../../svgConverter.js";
-import { englishJoin, formatPlayer, getRandom, toWikiLink } from "../../utils.js";
+import {
+  englishJoin,
+  formatPlayer,
+  getRandom,
+  toWikiLink,
+} from "../../utils.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
 
 const ADJECTIVES = [
@@ -59,9 +64,10 @@ async function buildTitleMessage(adjective: string): Promise<Message> {
   const date = new LoathingDate();
 
   const holidays = date.getHolidays();
-  const dateStr = holidays.length > 0
-    ? `${bold(date.toString())} (${englishJoin(holidays.map((h) => hyperlink(h, toWikiLink(h))))})`
-    : `${bold(date.toString())}`;
+  const dateStr =
+    holidays.length > 0
+      ? `${bold(date.toString())} (${englishJoin(holidays.map((h) => hyperlink(h, toWikiLink(h))))})`
+      : `${bold(date.toString())}`;
 
   const lines = [
     `# The Daily Toot \u{1F4EF}`,
@@ -71,13 +77,10 @@ async function buildTitleMessage(adjective: string): Promise<Message> {
     date.getMoonDescription(),
   ];
 
-  let files: AttachmentBuilder[] | undefined;
+  const files: AttachmentBuilder[] = [];
   try {
-    const svg = date.getMoonsAsSvg("Noto Color Emoji");
-    const png = await renderSvg(svg);
-    if (png) {
-      files = [new AttachmentBuilder(png, { name: "moons.png" })];
-    }
+    const png = await renderSvg(date.getMoonsAsSvg("Noto Color Emoji"));
+    if (png) files.push(new AttachmentBuilder(png, { name: "moons.png" }));
   } catch {
     // Moon rendering is non-critical
   }
@@ -93,14 +96,11 @@ async function birthdaySection(): Promise<string | null> {
 
   const currentYear = new Date().getFullYear();
 
-  const byAge = birthdays.reduce<Record<number, Player[]>>(
-    (acc, p) => {
-      if (!p.accountCreationDate) return acc;
-      const age = currentYear - p.accountCreationDate.getFullYear();
-      return { ...acc, [age]: [...(acc[age] || []), p] };
-    },
-    {},
-  );
+  const byAge = birthdays.reduce<Record<number, Player[]>>((acc, p) => {
+    if (!p.accountCreationDate) return acc;
+    const age = currentYear - p.accountCreationDate.getFullYear();
+    return { ...acc, [age]: [...(acc[age] || []), p] };
+  }, {});
 
   const content = Object.entries(byAge)
     .toSorted((a, b) => Number(a[0]) - Number(b[0]))
@@ -145,21 +145,17 @@ async function socpSection(): Promise<string | null> {
   if (!item) throw new Error(`Unknown item with descid ${descid}`);
 
   const wikiLink = dataOfLoathingClient.getWikiLink(item);
-  const itemDisplay = wikiLink
-    ? hyperlink(item.name, wikiLink)
-    : item.name;
+  const itemDisplay = wikiLink ? hyperlink(item.name, wikiLink) : item.name;
 
   const lines = [
-    `${heading("SOCP Daily Special \u{1F480}")}`,
+    `${heading("Skeleton of Crimbo Past \u{1F480}")}`,
     `${itemDisplay} for ${numberFormat.format(price)} knucklebones`,
   ];
 
   if (price > 0 && item.tradeable) {
     try {
       const mallPrice = (await getMallPrice(item.id)).mallPrice;
-      const meatPerKnuckle = numberFormat.format(
-        Math.round(mallPrice / price),
-      );
+      const meatPerKnuckle = numberFormat.format(Math.round(mallPrice / price));
       const pricegunLink = hyperlink(
         `${meatPerKnuckle} meat/\u{1F9B4}`,
         `https://pricegun.loathers.net/item/${item.id}`,
@@ -196,9 +192,7 @@ async function onRollover() {
   const channel = guild?.channels.cache.get(config.NEWSLETTER_CHANNEL_ID);
 
   if (!channel?.isTextBased()) {
-    await discordClient.alert(
-      "Newsletter channel not found or not text-based",
-    );
+    await discordClient.alert("Newsletter channel not found or not text-based");
     return;
   }
 
