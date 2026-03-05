@@ -5,6 +5,7 @@ import {
   SlashCommandBuilder,
   bold,
   heading,
+  hideLinkEmbed,
   hyperlink,
   italic,
   messageLink,
@@ -145,28 +146,30 @@ async function socpSection(): Promise<string | null> {
   if (!item) throw new Error(`Unknown item with descid ${descid}`);
 
   const wikiLink = dataOfLoathingClient.getWikiLink(item);
-  const itemDisplay = wikiLink ? hyperlink(item.name, wikiLink) : item.name;
+  const itemDisplay = wikiLink
+    ? hyperlink(item.name, hideLinkEmbed(wikiLink))
+    : item.name;
 
-  const lines = [
-    `${heading("Skeleton of Crimbo Past \u{1F480}")}`,
-    `${itemDisplay} for ${numberFormat.format(price)} knucklebones`,
-  ];
-
-  if (price > 0 && item.tradeable) {
+  const value = await (async () => {
+    if (price <= 0) return null;
+    if (!item.tradeable) return `\u{267E}\u{FE0F}`;
     try {
       const mallPrice = (await getMallPrice(item.id)).mallPrice;
       const meatPerKnuckle = numberFormat.format(Math.round(mallPrice / price));
       const pricegunLink = hyperlink(
-        `${meatPerKnuckle} meat/\u{1F9B4}`,
-        `https://pricegun.loathers.net/item/${item.id}`,
+        `${meatPerKnuckle} meat`,
+        hideLinkEmbed(`https://pricegun.loathers.net/item/${item.id}`),
       );
-      lines.push(`Value: ${pricegunLink}`);
+      return pricegunLink;
     } catch {
-      // Mall price lookup is non-critical
+      return null;
     }
-  } else if (price > 0) {
-    lines.push(`Value: \u{267E}\u{FE0F} meat/\u{1F9B4}`);
-  }
+  })();
+
+  const lines = [
+    `${heading("Skeleton of Crimbo Past \u{1F480}")}`,
+    `${itemDisplay} for ${numberFormat.format(price)} knucklebones${value ? ` (${value}/\u{1F9B4})` : ""}`,
+  ];
 
   return lines.join("\n");
 }
