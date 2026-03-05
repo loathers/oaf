@@ -65,10 +65,7 @@ async function buildTitleMessage(adjective: string): Promise<Message> {
   const date = new LoathingDate();
 
   const holidays = date.getHolidays();
-  const dateStr =
-    holidays.length > 0
-      ? `${bold(date.toString())} (${englishJoin(holidays.map((h) => hyperlink(h, toWikiLink(h))))})`
-      : `${bold(date.toString())}`;
+  const dateStr = `Today is ${bold(date.toString())}${holidays.length > 0 ? `  (${englishJoin(holidays.map((h) => hyperlink(h, toWikiLink(h))))})` : ""}`;
 
   const lines = [
     `# The Daily Toot \u{1F4EF}`,

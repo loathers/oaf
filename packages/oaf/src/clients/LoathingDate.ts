@@ -163,6 +163,10 @@ export class LoathingDate {
     }
   }
 
+  getLightFromPhase(phase: number) {
+    return 4 - Math.abs(phase - 4);
+  }
+
   getRonaldPhase() {
     return this.getPhase() % 8;
   }
@@ -283,8 +287,16 @@ export class LoathingDate {
     return [...holidays];
   }
 
+  getMoonlight() {
+    return (
+      this.getLightFromPhase(this.getRonaldPhase()) +
+      this.getLightFromPhase(this.getGrimacePhase()) +
+      this.getHamburglarLight()
+    );
+  }
+
   getMoonDescription() {
-    return `Ronald is ${this.getRonaldPhaseDescription()}, Grimace is ${this.getGrimacePhaseDescription()}, and Hamburglar is ${this.getHamburglarPhaseDescription()}`;
+    return `Ronald is ${this.getRonaldPhaseDescription()}, Grimace is ${this.getGrimacePhaseDescription()}, and Hamburglar is ${this.getHamburglarPhaseDescription()}. In total the moonlight is of strength ${this.getMoonlight()}.`;
   }
 
   getMoonsAsSvg(font?: string) {
