@@ -93,6 +93,19 @@ export interface FlowerPriceAlertTable {
   price: number;
 }
 
+export interface DailyTable {
+  key: string;
+  gameday: number;
+  value: string;
+}
+
+export interface DailySubmissionTable {
+  key: string;
+  value: string;
+  playerId: number;
+  submittedAt: ColumnType<Date, Date | undefined, Date>;
+}
+
 export interface DB {
   Player: PlayerTable;
   StandingOffer: StandingOfferTable;
@@ -105,6 +118,8 @@ export interface DB {
   RaffleWins: RaffleWinsTable;
   FlowerPrices: FlowerPricesTable;
   FlowerPriceAlert: FlowerPriceAlertTable;
+  Daily: DailyTable;
+  DailySubmission: DailySubmissionTable;
 }
 
 export type Player = Selectable<PlayerTable>;
@@ -118,3 +133,5 @@ export type Raffle = Selectable<RaffleTable>;
 export type RaffleWins = Selectable<RaffleWinsTable>;
 export type FlowerPrices = Selectable<FlowerPricesTable>;
 export type FlowerPriceAlert = Selectable<FlowerPriceAlertTable>;
+export type Daily = Selectable<DailyTable>;
+export type DailySubmission = Selectable<DailySubmissionTable>;

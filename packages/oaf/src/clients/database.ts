@@ -1,6 +1,7 @@
 import { Kysely, PostgresDialect, sql } from "kysely";
 import pg from "pg";
 
+import { LoathingDate } from "./LoathingDate.js";
 import { config } from "../config.js";
 import type { DB, Player } from "../database-types.js";
 
@@ -695,4 +696,94 @@ export async function getTriggeredAlerts(prices: {
       Math.max(prices.red, prices.white, prices.blue),
     )
     .execute();
+}
+
+// ── Daily ──
+
+export async function upsertDailySubmission(
+  key: string,
+  value: string,
+  playerId: number,
+) {
+  await db
+    .insertInto("DailySubmission")
+    .values({ key, value, playerId })
+    .onConflict((oc) => oc.columns(["key", "playerId"]).doUpdateSet({ value }))
+    .execute();
+}
+
+export async function getDailyConsensusForKey(key: string) {
+  const result = await db
+    .selectFrom("DailySubmission")
+    .select(["value", db.fn.countAll<string>().as("count")])
+    .where("key", "=", key)
+    .groupBy("value")
+    .orderBy("count", "desc")
+    .limit(1)
+    .executeTakeFirst();
+  if (!result) return null;
+  return { value: result.value, count: Number(result.count) };
+}
+
+export async function getAllDailyConsensus() {
+  const results = await sql<{
+    key: string;
+    value: string;
+    count: string;
+  }>`
+    SELECT DISTINCT ON ("key") "key", "value", COUNT(*) as "count"
+    FROM "DailySubmission"
+    GROUP BY "key", "value"
+    ORDER BY "key", "count" DESC
+  `.execute(db);
+  return results.rows;
+}
+
+export async function getDissentersForKey(key: string, consensusValue: string) {
+  return await db
+    .selectFrom("DailySubmission")
+    .innerJoin("Player", "Player.playerId", "DailySubmission.playerId")
+    .select([
+      "Player.playerId",
+      "Player.playerName",
+      "Player.discordId",
+      "DailySubmission.value",
+    ])
+    .where("DailySubmission.key", "=", key)
+    .where("DailySubmission.value", "!=", consensusValue)
+    .execute();
+}
+
+export async function clearDailySubmissions() {
+  await db.deleteFrom("DailySubmission").execute();
+}
+
+export async function upsertDaily(key: string, gameday: number, value: string) {
+  await db
+    .insertInto("Daily")
+    .values({ key, gameday, value })
+    .onConflict((oc) => oc.columns(["key", "gameday"]).doUpdateSet({ value }))
+    .execute();
+}
+
+export async function getDaily(key: string, gameday = LoathingDate.fromRealDate(new Date())) {
+  return await db
+    .selectFrom("Daily")
+    .selectAll()
+    .where("key", "=", key)
+    .where("gameday", "=", gameday)
+    .executeTakeFirst();
+}
+
+export async function getLatestDailies() {
+  const results = await sql<{
+    key: string;
+    value: string;
+    gameday: number;
+  }>`
+    SELECT DISTINCT ON ("key") "key", "value", "gameday"
+    FROM "Daily"
+    ORDER BY "key", "gameday" DESC
+  `.execute(db);
+  return results.rows;
 }
