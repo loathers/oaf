@@ -223,7 +223,7 @@ export class Dreadsylvania extends ClanDungeon {
       raidLog
         .match(new RegExp(SKILL_KILL_MATCHER, "gi"))
         ?.map((l) => l.match(SKILL_KILL_MATCHER))
-        .filter((m): m is RegExpMatchArray => m !== null)
+        .filter(m => m !== null)
         .map((m) => {
           const playerId = parseInt(m[2]);
           const type = m[3].startsWith("defeated") ? "kills" : "skills";
