@@ -30,12 +30,15 @@ import { postRaffleOnRollover } from "../kol/raffle.js";
 
 const ADJECTIVES = [
   // Butt jokes
+  "callipygian",
   "cheeky",
   "cracking",
   "divided",
+  "edible",
   "fragrant",
   "hungry",
   "muscular",
+  "poppin'",
   "relaxed",
   "retentive",
   'sweaty (in the "tryhard" sense)',
@@ -44,6 +47,7 @@ const ADJECTIVES = [
   "well-rounded",
   "wholesome",
   // Generic words
+  "charismatic",
   "dazzling",
   "dependable",
   "devoted",
@@ -52,14 +56,20 @@ const ADJECTIVES = [
   "friendly",
   "glamorous",
   "humble",
+  "jocular",
+  "jovial",
   "lugubrious",
   "loving",
   "loyal",
   "magnificent",
+  "marxist",
   "ponderous",
   "radiant",
+  "radical",
   "spectacular",
   "steadfast",
+  "homely",
+  "toothsome",
 ];
 
 const numberFormat = new Intl.NumberFormat();
