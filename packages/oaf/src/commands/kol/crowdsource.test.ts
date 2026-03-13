@@ -41,13 +41,17 @@ describe("parseSubmission", () => {
       key: "snootee",
       value: "1",
     });
-    expect(parseSubmission("microbewery:2")).toEqual({
-      key: "microbewery",
+    expect(parseSubmission("microbrewery:2")).toEqual({
+      key: "microbrewery",
       value: "2",
     });
     expect(parseSubmission("jickjar:3")).toEqual({
       key: "jickjar",
       value: "3",
+    });
+    expect(parseSubmission("votemonster:4")).toEqual({
+      key: "votemonster",
+      value: "4",
     });
   });
 
@@ -68,9 +72,16 @@ describe("parseSubmission", () => {
     expect(parseSubmission(" :value")).toBeNull();
   });
 
+  test("strips zero-width spaces", () => {
+    expect(parseSubmission("sno\u200Botee:12\u200B412")).toEqual({
+      key: "snootee",
+      value: "12412",
+    });
+  });
+
   test("handles values with spaces", () => {
-    expect(parseSubmission("microbewery:some thing")).toEqual({
-      key: "microbewery",
+    expect(parseSubmission("microbrewery:some thing")).toEqual({
+      key: "microbrewery",
       value: "some thing",
     });
   });
