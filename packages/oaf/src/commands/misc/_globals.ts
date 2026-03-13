@@ -161,7 +161,7 @@ export async function buildGlobalsContent(gameday: number): Promise<string> {
         summary.topCount === summary.totalCount &&
         summary.topCount < CONSENSUS_THRESHOLD;
       display = isUnanimousHint
-        ? italic(`waiting for reports, but I'm hearing it's ${summary.value}`)
+        ? italic(`waiting for more reports, but I'm hearing it's ${summary.value}`)
         : italic("waiting for reports");
     }
     lines.push(`${bold(entry.displayName)}: ${display}`);
