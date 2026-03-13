@@ -77,6 +77,10 @@ describe("parseSubmission", () => {
       key: "snootee",
       value: "12412",
     });
+    expect(parseSubmission("sno&#8203;otee:12&#8203;412")).toEqual({
+      key: "snootee",
+      value: "12412",
+    });
   });
 
   test("handles values with spaces", () => {

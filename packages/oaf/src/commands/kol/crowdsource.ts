@@ -18,7 +18,7 @@ export const CONSENSUS_THRESHOLD = 11;
 export const KNOWN_KEYS = ["snootee", "microbrewery", "jickjar", "votemonster"] as const;
 
 export function parseSubmission(msg: string) {
-  const cleaned = msg.replaceAll("\u200B", "");
+  const cleaned = msg.replaceAll("\u200B", "").replaceAll("&#8203;", "");
   const colonIndex = cleaned.indexOf(":");
   if (colonIndex < 1) return null;
   const key = cleaned.slice(0, colonIndex).trim().toLowerCase();

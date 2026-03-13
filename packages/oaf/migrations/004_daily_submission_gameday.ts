@@ -1,21 +1,6 @@
 import { type Kysely, sql } from "kysely";
 
 export async function up(db: Kysely<never>): Promise<void> {
-  // Strip zero-width spaces from existing data
-  await sql`
-    UPDATE "DailySubmission"
-    SET "value" = REPLACE("value", E'\u200B', ''),
-        "key" = REPLACE("key", E'\u200B', '')
-    WHERE "value" LIKE E'%\u200B%' OR "key" LIKE E'%\u200B%'
-  `.execute(db);
-
-  await sql`
-    UPDATE "Daily"
-    SET "value" = REPLACE("value", E'\u200B', ''),
-        "key" = REPLACE("key", E'\u200B', '')
-    WHERE "value" LIKE E'%\u200B%' OR "key" LIKE E'%\u200B%'
-  `.execute(db);
-
   // Add gameday column to DailySubmission, defaulting existing rows to today
   await sql`
     ALTER TABLE "DailySubmission"

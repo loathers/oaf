@@ -78,7 +78,14 @@ export default function Dailies() {
           </tr>
         </thead>
         <tbody>
-          {keys.map((key) => {
+          {[...keys]
+            .sort((a, b) => {
+              const aReached = consensus.some((c) => c.key === a && c.count >= threshold);
+              const bReached = consensus.some((c) => c.key === b && c.count >= threshold);
+              if (aReached !== bReached) return aReached ? -1 : 1;
+              return 0;
+            })
+            .map((key) => {
             const c = consensus.find((c) => c.key === key);
             const reached = c !== undefined && c.count >= threshold;
             return (
@@ -113,18 +120,8 @@ export default function Dailies() {
           ) : (
             Object.entries(grouped)
               .sort(([, a], [, b]) => b.length - a.length)
-              .map(([value, subs]) => {
-                const reached = subs.length >= threshold;
-                return (
-                <div
-                  key={value}
-                  style={{
-                    marginTop: "1rem",
-                    padding: "0.5rem",
-                    borderRadius: "0.375rem",
-                    background: reached ? "#c6f6d5" : undefined,
-                  }}
-                >
+              .map(([value, subs]) => (
+                <div key={value} style={{ marginTop: "1rem" }}>
                   <h4>
                     <code>{value}</code>{" "}
                     <span style={{ color: "#718096", fontWeight: "normal" }}>
@@ -152,8 +149,7 @@ export default function Dailies() {
                     </tbody>
                   </table>
                 </div>
-                );
-              })
+              ))
           )}
         </div>
       )}
