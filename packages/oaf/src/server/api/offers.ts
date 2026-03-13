@@ -10,9 +10,13 @@ offersRouter.get("/", async (_req, res) => {
 
   res.json({
     offers: offers.map((o) => ({
-      ...o,
+      itemId: o.itemId,
       price: Number(o.price),
       itemName: dataOfLoathingClient.findItemById(o.itemId)?.name ?? "Unknown",
+      buyer: {
+        playerId: o.playerId,
+        playerName: o.playerName,
+      },
     })),
   });
 });
