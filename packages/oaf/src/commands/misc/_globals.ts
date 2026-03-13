@@ -37,7 +37,7 @@ async function renderSocp(data: string): Promise<string> {
       const mallPrice = (await getMallPrice(item.id)).mallPrice;
       const meatPerKnuckle = numberFormat.format(Math.round(mallPrice / price));
       return hyperlink(
-        `${meatPerKnuckle} meat`,
+        `${meatPerKnuckle} Meat`,
         hideLinkEmbed(`https://pricegun.loathers.net/item/${item.id}`),
       );
     } catch {
@@ -46,6 +46,14 @@ async function renderSocp(data: string): Promise<string> {
   })();
 
   return `${itemDisplay} for ${numberFormat.format(price)} knucklebones${value ? ` (${value}/\u{1F9B4})` : ""}`;
+}
+
+function renderRestaurantItem(data: string): string {
+  const item = dataOfLoathingClient.findItemByName(data);
+  if (!item) return data;
+  const link = hyperlink(data, hideLinkEmbed(dataOfLoathingClient.getWikiLink(item) ?? ""));
+  const price = item.autosell * 3;
+  return `${link} (${price > 0 ? `${price} Meat` : "unknown price"})`;
 }
 
 export type DailyGlobal = {
@@ -60,21 +68,13 @@ export const DAILY_GLOBALS: DailyGlobal[] = [
     key: "snootee",
     displayName: "Chez Snootée",
     crowdsourced: true,
-    render: (data) => {
-      const item = dataOfLoathingClient.findItemByName(data);
-      if (!item) return data;
-      return `${hyperlink(data, hideLinkEmbed(dataOfLoathingClient.getWikiLink(item) ?? ""))} (${item.autosell * 3} meat)`;
-    },
+    render: (data) => renderRestaurantItem(data),
   },
   {
     key: "microbrewery",
     displayName: "Gnomish Microbrewery",
     crowdsourced: true,
-    render: (data) => {
-      const item = dataOfLoathingClient.findItemByName(data);
-      if (!item) return data;
-      return `${hyperlink(data, hideLinkEmbed(dataOfLoathingClient.getWikiLink(item) ?? ""))} (${item.autosell * 3} meat)`;
-    },
+    render: (data) => renderRestaurantItem(data),
   },
   {
     key: "jickjar",
