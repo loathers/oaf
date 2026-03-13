@@ -12,10 +12,15 @@ import {
 import { LoathingDate } from "../../clients/LoathingDate.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
+import {
+  CONSENSUS_THRESHOLD,
+  DAILY_GLOBALS,
+  updateGlobalsMessage,
+} from "../misc/_globals.js";
 
-export const CONSENSUS_THRESHOLD = 11;
-
-export const KNOWN_KEYS = ["snootee", "microbrewery", "jickjar", "votemonster"] as const;
+const CROWDSOURCED_KEY_SET: Set<string> = new Set(
+  DAILY_GLOBALS.filter((k) => k.crowdsourced).map((k) => k.key),
+);
 
 export function parseSubmission(msg: string) {
   const cleaned = msg.replaceAll("\u200B", "").replaceAll("&#8203;", "");
@@ -24,7 +29,7 @@ export function parseSubmission(msg: string) {
   const key = cleaned.slice(0, colonIndex).trim().toLowerCase();
   const value = cleaned.slice(colonIndex + 1).trim();
   if (!key || !value) return null;
-  if (!KNOWN_KEYS.includes(key as (typeof KNOWN_KEYS)[number])) return null;
+  if (!CROWDSOURCED_KEY_SET.has(key)) return null;
   return { key, value };
 }
 
@@ -72,6 +77,7 @@ async function handleSubmission(
     await discordClient.alert(
       `Consensus reached for **${key}** = \`${consensus.value}\` (${consensus.count} votes).${dissenterSuffix}`,
     );
+    await updateGlobalsMessage();
   } else if (value !== consensus.value) {
     const player = await kolClient.players.fetch(playerId);
     const playerDisplay = player?.name ?? playerName;

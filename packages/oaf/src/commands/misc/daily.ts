@@ -5,18 +5,15 @@ import {
   SlashCommandBuilder,
   bold,
   heading,
-  hideLinkEmbed,
   hyperlink,
   italic,
   messageLink,
 } from "discord.js";
-import { SkeletonOfCrimboPast } from "kol.js/domains/SkeletonOfCrimboPast";
 
 import { LoathingDate } from "../../clients/LoathingDate.js";
-import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
-import { getBirthdays } from "../../clients/database.js";
+import { getBirthdays, setGlobalsMessage } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
-import { getMallPrice, kolClient } from "../../clients/kol.js";
+import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { renderSvg } from "../../svgConverter.js";
@@ -27,6 +24,7 @@ import {
   toWikiLink,
 } from "../../utils.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
+import { storeSocpAndBuildGlobals } from "./_globals.js";
 
 const ADJECTIVES = [
   // Butt jokes
@@ -71,8 +69,6 @@ const ADJECTIVES = [
   "homely",
   "toothsome",
 ];
-
-const numberFormat = new Intl.NumberFormat();
 
 async function buildTitleMessage(adjective: string): Promise<Message> {
   const date = new LoathingDate();
@@ -126,46 +122,6 @@ async function birthdaySection(): Promise<string | null> {
   return `${heading("In-Game Birthdays \u{1F382}", 2)}\n\n${content}`;
 }
 
-const socp = new SkeletonOfCrimboPast(kolClient);
-
-async function socpSection(): Promise<string | null> {
-  const special = await socp.getDailySpecial();
-  if (!special) return null;
-
-  const { descId: descid, price } = special;
-
-  const item = dataOfLoathingClient.findItemByDescId(descid);
-  if (!item) throw new Error(`Unknown item with descid ${descid}`);
-
-  const wikiLink = dataOfLoathingClient.getWikiLink(item);
-  const itemDisplay = wikiLink
-    ? hyperlink(item.name, hideLinkEmbed(wikiLink))
-    : item.name;
-
-  const value = await (async () => {
-    if (price <= 0) return null;
-    if (!item.tradeable) return `\u{267E}\u{FE0F}`;
-    try {
-      const mallPrice = (await getMallPrice(item.id)).mallPrice;
-      const meatPerKnuckle = numberFormat.format(Math.round(mallPrice / price));
-      const pricegunLink = hyperlink(
-        `${meatPerKnuckle} meat`,
-        hideLinkEmbed(`https://pricegun.loathers.net/item/${item.id}`),
-      );
-      return pricegunLink;
-    } catch {
-      return null;
-    }
-  })();
-
-  const lines = [
-    `${heading("Skeleton of Crimbo Past \u{1F480}", 2)}`,
-    `${itemDisplay} for ${numberFormat.format(price)} knucklebones${value ? ` (${value}/\u{1F9B4})` : ""}`,
-  ];
-
-  return lines.join("\n");
-}
-
 type Message = { content: string; files?: AttachmentBuilder[] };
 
 async function buildSection(
@@ -207,16 +163,21 @@ async function onRollover() {
         content: `${heading("Raffle Results \u{1F3B0}", 2)}\n\n${messageLink(raffleMessage.channelId, raffleMessage.id)}`,
       };
     }),
-    await buildSection("Skeleton of Crimbo Past", async () => {
-      const content = await socpSection();
-      return content ? { content } : null;
-    }),
   ];
 
   for (const message of messages) {
     if (!message) continue;
     await channel.send({ ...message, allowedMentions: { users: [] } });
   }
+
+  // Build and send the Globals message (editable in-place as consensus forms)
+  const gameday = LoathingDate.fromRealDate(new Date());
+  const globalsContent = await storeSocpAndBuildGlobals(gameday);
+  const globalsMsg = await channel.send({
+    content: globalsContent,
+    allowedMentions: { users: [] },
+  });
+  await setGlobalsMessage(globalsMsg.id, globalsMsg.channelId, gameday);
 }
 
 export const data = new SlashCommandBuilder()
