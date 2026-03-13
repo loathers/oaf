@@ -788,6 +788,14 @@ export async function getDaily(key: string, gameday = LoathingDate.fromRealDate(
     .executeTakeFirst();
 }
 
+export async function getDailiesForGameday(gameday: number) {
+  return await db
+    .selectFrom("Daily")
+    .selectAll()
+    .where("gameday", "=", gameday)
+    .execute();
+}
+
 export async function getDailySubmissionsForKey(key: string, gameday: number) {
   return await db
     .selectFrom("DailySubmission")
@@ -802,6 +810,45 @@ export async function getDailySubmissionsForKey(key: string, gameday: number) {
     .where("DailySubmission.gameday", "=", gameday)
     .orderBy("DailySubmission.value")
     .orderBy("DailySubmission.submittedAt")
+    .execute();
+}
+
+// ── Setting ──
+
+export async function getGlobalsMessage(gameday: number) {
+  const row = await db
+    .selectFrom("Setting")
+    .selectAll()
+    .where("key", "=", "globals_message")
+    .executeTakeFirst();
+  if (!row) return null;
+  const data = row.value as {
+    messageId: string;
+    channelId: string;
+    gameday: number;
+  };
+  if (data.gameday !== gameday) return null;
+  return data;
+}
+
+export async function setGlobalsMessage(
+  messageId: string,
+  channelId: string,
+  gameday: number,
+) {
+  await db
+    .insertInto("Setting")
+    .values({
+      key: "globals_message",
+      value: JSON.stringify({ messageId, channelId, gameday }),
+    })
+    .onConflict((oc) =>
+      oc
+        .column("key")
+        .doUpdateSet({
+          value: JSON.stringify({ messageId, channelId, gameday }),
+        }),
+    )
     .execute();
 }
 
