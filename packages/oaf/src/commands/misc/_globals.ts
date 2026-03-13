@@ -96,7 +96,7 @@ export const DAILY_GLOBALS: DailyGlobal[] = [
   },
 ];
 
-export const CONSENSUS_THRESHOLD = 11;
+export const CONSENSUS_THRESHOLD = 5;
 
 // ── SOCP fetching ──
 
