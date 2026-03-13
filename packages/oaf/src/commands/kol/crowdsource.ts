@@ -2,7 +2,7 @@ import { userMention } from "discord.js";
 
 import {
   clearDailySubmissions,
-  getAllDailyConsensus,
+  getDaily,
   getDailyConsensusForKey,
   getDissentersForKey,
   upsertDaily,
@@ -19,10 +19,11 @@ export const KNOWN_KEYS = ["snootee", "microbrewery", "jickjar", "votemonster"] 
 const cache = new Map<string, { value: string; count: number }>();
 
 export function parseSubmission(msg: string) {
-  const colonIndex = msg.indexOf(":");
+  const cleaned = msg.replaceAll("\u200B", "");
+  const colonIndex = cleaned.indexOf(":");
   if (colonIndex < 1) return null;
-  const key = msg.slice(0, colonIndex).trim().toLowerCase();
-  const value = msg.slice(colonIndex + 1).trim();
+  const key = cleaned.slice(0, colonIndex).trim().toLowerCase();
+  const value = cleaned.slice(colonIndex + 1).trim();
   if (!key || !value) return null;
   if (!KNOWN_KEYS.includes(key as (typeof KNOWN_KEYS)[number])) return null;
   return { key, value };
