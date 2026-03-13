@@ -6,7 +6,7 @@ import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import {
   getDailiesForGameday,
   getGlobalsMessage,
-  getUnanimousSubConsensus,
+  getSubmissionSummaries,
   upsertDaily,
 } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
@@ -139,13 +139,13 @@ async function renderDailyValue(
 }
 
 export async function buildGlobalsContent(gameday: number): Promise<string> {
-  const [dailies, subConsensus] = await Promise.all([
+  const [dailies, summaries] = await Promise.all([
     getDailiesForGameday(gameday),
-    getUnanimousSubConsensus(gameday, CONSENSUS_THRESHOLD),
+    getSubmissionSummaries(gameday),
   ]);
 
   const dailyByKey = new Map(dailies.map((d) => [d.key, d.value]));
-  const subConsensusByKey = new Map(subConsensus.map((s) => [s.key, s.value]));
+  const summaryByKey = new Map(summaries.map((s) => [s.key, s]));
 
   const lines = [`${heading("Globals \u{1F30D}", 2)}`];
 
@@ -155,9 +155,13 @@ export async function buildGlobalsContent(gameday: number): Promise<string> {
     if (value) {
       display = await renderDailyValue(entry, value);
     } else {
-      const hint = subConsensusByKey.get(entry.key);
-      display = hint
-        ? italic(`waiting for reports, but I'm hearing it's ${hint}`)
+      const summary = summaryByKey.get(entry.key);
+      const isUnanimousHint =
+        summary &&
+        summary.topCount === summary.totalCount &&
+        summary.topCount < CONSENSUS_THRESHOLD;
+      display = isUnanimousHint
+        ? italic(`waiting for reports, but I'm hearing it's ${summary.value}`)
         : italic("waiting for reports");
     }
     lines.push(`${bold(entry.displayName)}: ${display}`);

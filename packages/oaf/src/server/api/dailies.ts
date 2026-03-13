@@ -2,9 +2,9 @@ import { Router } from "express";
 
 import { LoathingDate } from "../../clients/LoathingDate.js";
 import {
-  getAllDailyConsensus,
   getDailiesForGameday,
   getDailySubmissionsForKey,
+  getSubmissionSummaries,
 } from "../../clients/database.js";
 import {
   CONSENSUS_THRESHOLD,
@@ -15,8 +15,8 @@ export const dailiesRouter = Router();
 
 dailiesRouter.get("/", async (_req, res) => {
   const gameday = LoathingDate.fromRealDate(new Date());
-  const [consensus, dailies] = await Promise.all([
-    getAllDailyConsensus(gameday),
+  const [summaries, dailies] = await Promise.all([
+    getSubmissionSummaries(gameday),
     getDailiesForGameday(gameday),
   ]);
 
@@ -24,7 +24,7 @@ dailiesRouter.get("/", async (_req, res) => {
 
   res.json({
     threshold: CONSENSUS_THRESHOLD,
-    consensus: consensus.map((c) => ({ ...c, count: Number(c.count) })),
+    summaries,
     dailies: DAILY_GLOBALS.map((k) => ({
       key: k.key,
       displayName: k.displayName,

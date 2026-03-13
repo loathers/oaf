@@ -4,8 +4,8 @@ import { LoathingDate } from "../../clients/LoathingDate.js";
 import {
   clearDailySubmissions,
   getDaily,
-  getDailyConsensusForKey,
   getDissentersForKey,
+  getSubmissionSummaryForKey,
   upsertDaily,
   upsertDailySubmission,
   upsertPlayerInfo,
@@ -60,34 +60,34 @@ async function handleSubmission(
   // Reactively clear old submissions from previous days
   await clearDailySubmissions(gameday);
 
-  const consensus = await getDailyConsensusForKey(key, gameday);
-  if (!consensus) return;
+  const summary = await getSubmissionSummaryForKey(key, gameday);
+  if (!summary) return;
 
-  if (consensus.count >= CONSENSUS_THRESHOLD) {
+  if (summary.topCount >= CONSENSUS_THRESHOLD) {
     const existing = await getDaily(key, gameday);
-    await upsertDaily(key, gameday, consensus.value);
+    await upsertDaily(key, gameday, summary.value);
 
-    const justFormed = !existing || existing.value !== consensus.value;
+    const justFormed = !existing || existing.value !== summary.value;
 
     if (justFormed) {
       const dissenters = await getDissentersForKey(
         key,
         gameday,
-        consensus.value,
+        summary.value,
       );
       const dissenterSuffix =
         dissenters.length > 0
           ? ` Dissenters:\n${dissenters.map(formatDissenter).join("\n")}`
           : "";
       await discordClient.alert(
-        `Consensus reached for **${key}** = \`${consensus.value}\` (${consensus.count} votes).${dissenterSuffix}`,
+        `Consensus reached for **${key}** = \`${summary.value}\` (${summary.topCount} votes).${dissenterSuffix}`,
       );
       await updateGlobalsMessage();
-    } else if (value !== consensus.value) {
+    } else if (value !== summary.value) {
       const player = await kolClient.players.fetch(playerId);
       const playerDisplay = player?.name ?? playerName;
       await discordClient.alert(
-        `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${consensus.value}\`)`,
+        `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${summary.value}\`)`,
       );
     }
   } else {

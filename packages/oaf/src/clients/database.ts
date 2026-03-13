@@ -715,45 +715,23 @@ export async function upsertDailySubmission(
     .execute();
 }
 
-export async function getDailyConsensusForKey(key: string, gameday: number) {
-  const result = await db
-    .selectFrom("DailySubmission")
-    .select(["value", db.fn.countAll<string>().as("count")])
-    .where("key", "=", key)
-    .where("gameday", "=", gameday)
-    .groupBy("value")
-    .orderBy("count", "desc")
-    .limit(1)
-    .executeTakeFirst();
-  if (!result) return null;
-  return { value: result.value, count: Number(result.count) };
-}
+export type SubmissionSummary = {
+  key: string;
+  value: string;
+  topCount: number;
+  totalCount: number;
+};
 
-export async function getAllDailyConsensus(gameday: number) {
-  const results = await sql<{
-    key: string;
-    value: string;
-    count: string;
-  }>`
-    SELECT DISTINCT ON ("key") "key", "value", COUNT(*) as "count"
-    FROM "DailySubmission"
-    WHERE "gameday" = ${gameday}
-    GROUP BY "key", "value"
-    ORDER BY "key", "count" DESC
-  `.execute(db);
-  return results.rows;
-}
-
-export async function getUnanimousSubConsensus(
+export async function getSubmissionSummaries(
   gameday: number,
-  threshold: number,
-) {
+): Promise<SubmissionSummary[]> {
   const results = await sql<{
     key: string;
     value: string;
-    count: string;
+    topCount: string;
+    totalCount: string;
   }>`
-    SELECT "key", "value", "topCount" as "count" FROM (
+    SELECT "key", "value", "topCount", "totalCount" FROM (
       SELECT "key", "value",
         COUNT(*) as "topCount",
         SUM(COUNT(*)) OVER (PARTITION BY "key") as "totalCount",
@@ -762,9 +740,43 @@ export async function getUnanimousSubConsensus(
       WHERE "gameday" = ${gameday}
       GROUP BY "key", "value"
     ) sub
-    WHERE rn = 1 AND "topCount" = "totalCount" AND "topCount" < ${threshold}
+    WHERE rn = 1
   `.execute(db);
-  return results.rows;
+  return results.rows.map((r) => ({
+    ...r,
+    topCount: Number(r.topCount),
+    totalCount: Number(r.totalCount),
+  }));
+}
+
+export async function getSubmissionSummaryForKey(
+  key: string,
+  gameday: number,
+): Promise<SubmissionSummary | null> {
+  const results = await sql<{
+    key: string;
+    value: string;
+    topCount: string;
+    totalCount: string;
+  }>`
+    SELECT "key", "value", "topCount", "totalCount" FROM (
+      SELECT "key", "value",
+        COUNT(*) as "topCount",
+        SUM(COUNT(*)) OVER () as "totalCount",
+        ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) as rn
+      FROM "DailySubmission"
+      WHERE "key" = ${key} AND "gameday" = ${gameday}
+      GROUP BY "key", "value"
+    ) sub
+    WHERE rn = 1
+  `.execute(db);
+  const row = results.rows[0];
+  if (!row) return null;
+  return {
+    ...row,
+    topCount: Number(row.topCount),
+    totalCount: Number(row.totalCount),
+  };
 }
 
 export async function getDissentersForKey(
