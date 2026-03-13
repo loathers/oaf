@@ -62,8 +62,8 @@ describe("Food", () => {
         **Awesome food** (Size 3, requires level 5)
         7-14 adventures (Average 10.5 adventures, 3.5 per fullness)
 
-        Autosell value: 50 meat.
-        Mall Price: [502 meat](https://pricegun.loathers.net/item/1365)
+        Autosell value: 50 Meat.
+        Mall Price: [502 Meat](https://pricegun.loathers.net/item/1365)
       `,
     );
   });
@@ -114,8 +114,8 @@ describe("Food", () => {
         3 adventures
 
         Gives 5 Adventures of a random positive effect
-        Autosell value: 8 meat.
-        Mall Price: [1,995 meat](https://pricegun.loathers.net/item/9423)
+        Autosell value: 8 Meat.
+        Mall Price: [1,995 Meat](https://pricegun.loathers.net/item/9423)
       `,
     );
   });
@@ -163,7 +163,7 @@ describe("Equipment", () => {
         Cannot be traded.
 
         Damage Reduction: 10
-        Autosell value: 5 meat.
+        Autosell value: 5 Meat.
       `,
     );
   });
@@ -200,7 +200,7 @@ describe("Other", () => {
         Cannot be traded.
 
         Restores an amount of MP that increases as you level up
-        Autosell value: 50 meat.
+        Autosell value: 50 Meat.
       `,
     );
   });
@@ -297,10 +297,10 @@ describe("Foldable", () => {
         40 power, requires 5 Muscle, Damage Reduction: 1.67
 
         Maximum HP +10
-        Autosell value: 7 meat.
-        Mall Price: [500 meat](https://pricegun.loathers.net/item/3915)
+        Autosell value: 7 Meat.
+        Mall Price: [500 Meat](https://pricegun.loathers.net/item/3915)
         Folds into: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet), [turtle wax greaves](https://wiki.kingdomofloathing.com/turtle_wax_greaves)
-        (Cheapest: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet) @ [100 meat](https://pricegun.loathers.net/item/3916))
+        (Cheapest: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet) @ [100 Meat](https://pricegun.loathers.net/item/3916))
       `,
     );
   });
