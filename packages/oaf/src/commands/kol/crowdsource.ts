@@ -1,5 +1,6 @@
 import { userMention } from "discord.js";
 
+import { LoathingDate } from "../../clients/LoathingDate.js";
 import {
   clearDailySubmissions,
   getDaily,
@@ -9,7 +10,6 @@ import {
   upsertDailySubmission,
   upsertPlayerInfo,
 } from "../../clients/database.js";
-import { LoathingDate } from "../../clients/LoathingDate.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import {

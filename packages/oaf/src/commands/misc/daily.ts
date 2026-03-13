@@ -24,7 +24,7 @@ import {
   toWikiLink,
 } from "../../utils.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
-import { storeSocpAndBuildGlobals } from "./_globals.js";
+import { buildGlobals } from "./_globals.js";
 
 const ADJECTIVES = [
   // Butt jokes
@@ -172,7 +172,7 @@ async function onRollover() {
 
   // Build and send the Globals message (editable in-place as consensus forms)
   const gameday = LoathingDate.fromRealDate(new Date());
-  const globalsContent = await storeSocpAndBuildGlobals(gameday);
+  const globalsContent = await buildGlobals(gameday);
   const globalsMsg = await channel.send({
     content: globalsContent,
     allowedMentions: { users: [] },

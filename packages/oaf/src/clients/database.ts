@@ -1,9 +1,9 @@
 import { Kysely, PostgresDialect, sql } from "kysely";
 import pg from "pg";
 
-import { LoathingDate } from "./LoathingDate.js";
 import { config } from "../config.js";
 import type { DB, Player } from "../database-types.js";
+import { LoathingDate } from "./LoathingDate.js";
 
 function getConnectionString() {
   if (!config.DATABASE_URL) return undefined;
@@ -779,7 +779,10 @@ export async function upsertDaily(key: string, gameday: number, value: string) {
     .execute();
 }
 
-export async function getDaily(key: string, gameday = LoathingDate.fromRealDate(new Date())) {
+export async function getDaily(
+  key: string,
+  gameday = LoathingDate.fromRealDate(new Date()),
+) {
   return await db
     .selectFrom("Daily")
     .selectAll()
@@ -836,19 +839,11 @@ export async function setGlobalsMessage(
   channelId: string,
   gameday: number,
 ) {
+  const value = { messageId, channelId, gameday };
   await db
     .insertInto("Setting")
-    .values({
-      key: "globals_message",
-      value: JSON.stringify({ messageId, channelId, gameday }),
-    })
-    .onConflict((oc) =>
-      oc
-        .column("key")
-        .doUpdateSet({
-          value: JSON.stringify({ messageId, channelId, gameday }),
-        }),
-    )
+    .values({ key: "globals_message", value })
+    .onConflict((oc) => oc.column("key").doUpdateSet({ value }))
     .execute();
 }
 

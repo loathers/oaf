@@ -65,13 +65,10 @@ export default function Dailies() {
 
   if (loading) return <p>Loading...</p>;
 
-  const grouped = submissions.reduce<Record<string, Submission[]>>(
-    (acc, s) => {
-      (acc[s.value] ??= []).push(s);
-      return acc;
-    },
-    {},
-  );
+  const grouped = submissions.reduce<Record<string, Submission[]>>((acc, s) => {
+    (acc[s.value] ??= []).push(s);
+    return acc;
+  }, {});
 
   return (
     <div>
@@ -87,47 +84,60 @@ export default function Dailies() {
         <tbody>
           {[...dailies]
             .sort((a, b) => {
-              if (a.crowdsourced !== b.crowdsourced) return a.crowdsourced ? -1 : 1;
-              const aReached = consensus.some((c) => c.key === a.key && c.count >= threshold);
-              const bReached = consensus.some((c) => c.key === b.key && c.count >= threshold);
+              if (a.crowdsourced !== b.crowdsourced)
+                return a.crowdsourced ? -1 : 1;
+              const aReached = consensus.some(
+                (c) => c.key === a.key && c.count >= threshold,
+              );
+              const bReached = consensus.some(
+                (c) => c.key === b.key && c.count >= threshold,
+              );
               if (aReached !== bReached) return aReached ? -1 : 1;
               return 0;
             })
             .map((entry) => {
-            if (!entry.crowdsourced) {
+              if (!entry.crowdsourced) {
+                return (
+                  <tr
+                    key={entry.key}
+                    style={{ background: entry.value ? "#c6f6d5" : undefined }}
+                  >
+                    <td>
+                      <strong>{entry.displayName}</strong>
+                    </td>
+                    <td>
+                      {entry.value ? (
+                        <code>{entry.value}</code>
+                      ) : (
+                        <em>Pending</em>
+                      )}
+                    </td>
+                    <td className="numeric">{"\u{1F451}"}</td>
+                  </tr>
+                );
+              }
+
+              const c = consensus.find((c) => c.key === entry.key);
+              const reached = c !== undefined && c.count >= threshold;
               return (
                 <tr
                   key={entry.key}
-                  style={{ background: entry.value ? "#c6f6d5" : undefined }}
+                  onClick={() => void loadDetail(entry.key)}
+                  style={{
+                    cursor: "pointer",
+                    background: reached ? "#c6f6d5" : undefined,
+                  }}
                 >
                   <td>
                     <strong>{entry.displayName}</strong>
                   </td>
-                  <td>{entry.value ? <code>{entry.value}</code> : <em>Pending</em>}</td>
-                  <td className="numeric">{"\u{1F451}"}</td>
+                  <td>
+                    {c ? <code>{c.value}</code> : <em>No submissions</em>}
+                  </td>
+                  <td className="numeric">{c?.count ?? 0}</td>
                 </tr>
               );
-            }
-
-            const c = consensus.find((c) => c.key === entry.key);
-            const reached = c !== undefined && c.count >= threshold;
-            return (
-              <tr
-                key={entry.key}
-                onClick={() => void loadDetail(entry.key)}
-                style={{
-                  cursor: "pointer",
-                  background: reached ? "#c6f6d5" : undefined,
-                }}
-              >
-                <td>
-                  <strong>{entry.displayName}</strong>
-                </td>
-                <td>{c ? <code>{c.value}</code> : <em>No submissions</em>}</td>
-                <td className="numeric">{c?.count ?? 0}</td>
-              </tr>
-            );
-          })}
+            })}
         </tbody>
       </table>
 

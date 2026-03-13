@@ -76,6 +76,11 @@ export class DataOfLoathingClient {
     );
   }
 
+  findItemByName(name: string): Item | null {
+    const formattedName = cleanString(name.toLowerCase().trim());
+    return this.itemByName.get(formattedName) || null;
+  }
+
   register(thing: Thing): void {
     const formattedName = cleanString(thing.name.toLowerCase().trim());
     this.getMapForThing(thing).set(formattedName, thing);

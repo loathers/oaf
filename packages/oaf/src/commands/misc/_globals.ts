@@ -35,9 +35,7 @@ async function renderSocp(data: string): Promise<string> {
     if (!item.tradeable) return `\u{267E}\u{FE0F}`;
     try {
       const mallPrice = (await getMallPrice(item.id)).mallPrice;
-      const meatPerKnuckle = numberFormat.format(
-        Math.round(mallPrice / price),
-      );
+      const meatPerKnuckle = numberFormat.format(Math.round(mallPrice / price));
       return hyperlink(
         `${meatPerKnuckle} meat`,
         hideLinkEmbed(`https://pricegun.loathers.net/item/${item.id}`),
@@ -54,17 +52,45 @@ export type DailyGlobal = {
   key: string;
   displayName: string;
   crowdsourced: boolean;
-  render?: (data: string) => Promise<string>;
+  render?: (data: string) => Promise<string> | string;
 };
 
 export const DAILY_GLOBALS: DailyGlobal[] = [
-  { key: "snootee", displayName: "Snootée", crowdsourced: true },
-  { key: "microbrewery", displayName: "Microbrewery", crowdsourced: true },
-  { key: "jickjar", displayName: "Jick Jar", crowdsourced: true },
-  { key: "votemonster", displayName: "Vote Monster", crowdsourced: true },
+  {
+    key: "snootee",
+    displayName: "Chez Snootée",
+    crowdsourced: true,
+    render: (data) => {
+      const item = dataOfLoathingClient.findItemByName(data);
+      if (!item) return data;
+      return `${hyperlink(data, hideLinkEmbed(dataOfLoathingClient.getWikiLink(item) ?? ""))} (${item.autosell * 3} meat)`;
+    },
+  },
+  {
+    key: "microbrewery",
+    displayName: "Gnomish Microbrewery",
+    crowdsourced: true,
+    render: (data) => {
+      const item = dataOfLoathingClient.findItemByName(data);
+      if (!item) return data;
+      return `${hyperlink(data, hideLinkEmbed(dataOfLoathingClient.getWikiLink(item) ?? ""))} (${item.autosell * 3} meat)`;
+    },
+  },
+  {
+    key: "jickjar",
+    displayName: "Jick Jar",
+    crowdsourced: true,
+    render: (data) =>
+      `Players whose id % 23 = ${data} can make a ${hyperlink("jar of psychoses (Jick)", hideLinkEmbed("https://wiki.kingdomofloathing.com/Jar_of_psychoses_(Jick)"))} today!`,
+  },
+  {
+    key: "votemonster",
+    displayName: "Voting Booth Monster ",
+    crowdsourced: true,
+  },
   {
     key: "socp",
-    displayName: "Skeleton of Crimbo Past \u{1F480}",
+    displayName: "Skeleton of Crimbo Past",
     crowdsourced: false,
     render: renderSocp,
   },
@@ -134,7 +160,7 @@ export async function updateGlobalsMessage() {
   }
 }
 
-export async function storeSocpAndBuildGlobals(
+export async function buildGlobals(
   gameday: number,
 ): Promise<string> {
   try {

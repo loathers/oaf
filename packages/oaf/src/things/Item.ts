@@ -119,6 +119,10 @@ export class Item extends Thing {
     return this.item.plural || `${this.name}s`;
   }
 
+  get autosell() {
+    return this.item.autosell || 0;
+  }
+
   mapQuality(rawQuality: ConsumableQuality | null): string {
     if (!rawQuality || rawQuality === "CHANGING" || rawQuality === "NONE") {
       return "???";
