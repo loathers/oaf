@@ -1,8 +1,8 @@
 import { Events, blockQuote, codeBlock, inlineCode } from "discord.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { inspect } from "node:util";
 import * as url from "node:url";
+import { inspect } from "node:util";
 
 import { dataOfLoathingClient } from "./clients/dataOfLoathing.js";
 import {
@@ -140,9 +140,7 @@ async function main() {
 
   const shutdown = async (signal: string) => {
     await waitForPendingRetries();
-    await discordClient.alert(
-      `${inlineCode("oaf")} shutting down (${signal})`,
-    );
+    await discordClient.alert(`${inlineCode("oaf")} shutting down (${signal})`);
     process.exit(0);
   };
 

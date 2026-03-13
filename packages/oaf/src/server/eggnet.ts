@@ -11,11 +11,17 @@ export const eggnetNewUnlockSchema = z.object({
 });
 
 async function getNextMonster() {
-  const response = await fetchWithRetry("https://eggnet.loathers.net/status", {});
+  const response = await fetchWithRetry(
+    "https://eggnet.loathers.net/status",
+    {},
+  );
   const json = (await response.json()) as { eggs: Record<number, number> };
   const closest = Object.entries(json.eggs)
     .filter(([, count]) => count < 100)
-    .filter(([id]) => dataOfLoathingClient.findMonsterById(Number(id))?.copyable ?? true)
+    .filter(
+      ([id]) =>
+        dataOfLoathingClient.findMonsterById(Number(id))?.copyable ?? true,
+    )
     .reduce((e, acc) => (e[1] > acc[1] ? e : acc));
   return [Number(closest[0]), closest[1]] as const;
 }
