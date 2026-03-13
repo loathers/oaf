@@ -1,6 +1,7 @@
-import { Events, blockQuote, inlineCode } from "discord.js";
+import { Events, blockQuote, codeBlock, inlineCode } from "discord.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { inspect } from "node:util";
 import * as url from "node:url";
 
 import { dataOfLoathingClient } from "./clients/dataOfLoathing.js";
@@ -13,6 +14,7 @@ import {
 import { kolClient } from "./clients/kol.js";
 import { handleGreenboxKmail } from "./greenbox.js";
 import { startApiServer } from "./server/index.js";
+import { waitForPendingRetries } from "./utils.js";
 
 export {};
 
@@ -135,6 +137,58 @@ async function main() {
 
   console.log("Starting bot.");
   discordClient.start();
+
+  const shutdown = async (signal: string) => {
+    await waitForPendingRetries();
+    await discordClient.alert(
+      `${inlineCode("oaf")} shutting down (${signal})`,
+    );
+    process.exit(0);
+  };
+
+  process.on("SIGTERM", () => void shutdown("SIGTERM"));
+  process.on("SIGINT", () => void shutdown("SIGINT"));
+
+  process.on("uncaughtException", (err) => {
+    // Transient database connection drops — the pool replaces dead connections
+    if (
+      err instanceof Error &&
+      err.message === "Connection terminated unexpectedly"
+    ) {
+      return;
+    }
+
+    void discordClient
+      .alert(
+        `${inlineCode("oaf")} crashed: ${describeError(err)}`,
+        undefined,
+        err,
+      )
+      .then(() => process.exit(1));
+  });
+
+  process.on("unhandledRejection", (reason) => {
+    // Transient Discord REST timeouts
+    if (reason instanceof DOMException && reason.name === "AbortError") {
+      return;
+    }
+
+    void discordClient
+      .alert(
+        `${inlineCode("oaf")} crashed (unhandled rejection): ${describeError(reason)}`,
+        undefined,
+        reason,
+      )
+      .then(() => process.exit(1));
+  });
+}
+
+function describeError(error: unknown): string {
+  if (error instanceof Error) {
+    return codeBlock(inspect(error, { colors: false, depth: 4 }));
+  }
+
+  return String(error);
 }
 
 await main();

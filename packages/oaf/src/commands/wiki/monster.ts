@@ -22,7 +22,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const monsterId = interaction.options.getNumber("monster", true);
   await interaction.deferReply();
 
-  const monster = dataOfLoathingClient.monsters.find((i) => i.id === monsterId);
+  const monster = dataOfLoathingClient.findMonsterById(monsterId);
 
   const embed = createEmbed();
 

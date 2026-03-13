@@ -23,6 +23,7 @@ export class DataOfLoathingClient {
   private effectByName: Map<string, Effect> = new Map();
   private familiarByName: Map<string, Familiar> = new Map();
   private monsterByName: Map<string, Monster> = new Map();
+  private monsterById: Map<number, Monster> = new Map();
 
   private knownItemIds = new Set<number>();
   #lastItem = -1;
@@ -50,6 +51,7 @@ export class DataOfLoathingClient {
     this.effectByName.clear();
     this.familiarByName.clear();
     this.monsterByName.clear();
+    this.monsterById.clear();
   }
 
   getMapForThing(thing: Thing): Map<string, Thing> {
@@ -81,6 +83,10 @@ export class DataOfLoathingClient {
     if (thing instanceof Item) {
       this.itemById.set(thing.id, thing);
       if (thing.descid != null) this.itemByDescId.set(thing.descid, thing);
+    }
+
+    if (thing instanceof Monster) {
+      this.monsterById.set(thing.id, thing);
     }
   }
 
@@ -149,6 +155,10 @@ export class DataOfLoathingClient {
   @Memoize({ tags: ["things"] })
   get effects(): Effect[] {
     return [...this.effectByName.values()];
+  }
+
+  findMonsterById(id: number): Monster | undefined {
+    return this.monsterById.get(id);
   }
 
   findItemById(id: number): Item | undefined {

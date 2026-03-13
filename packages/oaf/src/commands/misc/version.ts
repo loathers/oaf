@@ -3,21 +3,11 @@ import {
   Events,
   MessageFlags,
   SlashCommandBuilder,
-  codeBlock,
   inlineCode,
 } from "discord.js";
-import { inspect } from "node:util";
 import ms from "pretty-ms";
 
 import { createEmbed, discordClient } from "../../clients/discord.js";
-
-function describeError(error: unknown): string {
-  if (error instanceof Error) {
-    return codeBlock(inspect(error, { colors: false, depth: 4 }));
-  }
-
-  return String(error);
-}
 
 let START_TIME = 0;
 
@@ -51,47 +41,5 @@ export function init() {
   discordClient.on(Events.ClientReady, () => {
     START_TIME = Date.now();
     void discordClient.alert(`${inlineCode("oaf")} started`);
-  });
-
-  const shutdown = (signal: string) => {
-    void discordClient
-      .alert(`${inlineCode("oaf")} shutting down (${signal})`)
-      .then(() => process.exit(0));
-  };
-
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGINT", () => shutdown("SIGINT"));
-
-  process.on("uncaughtException", (err) => {
-    // Transient database connection drops — the pool replaces dead connections
-    if (
-      err instanceof Error &&
-      err.message === "Connection terminated unexpectedly"
-    ) {
-      return;
-    }
-
-    void discordClient
-      .alert(
-        `${inlineCode("oaf")} crashed: ${describeError(err)}`,
-        undefined,
-        err,
-      )
-      .then(() => process.exit(1));
-  });
-
-  process.on("unhandledRejection", (reason) => {
-    // Transient Discord REST timeouts
-    if (reason instanceof DOMException && reason.name === "AbortError") {
-      return;
-    }
-
-    void discordClient
-      .alert(
-        `${inlineCode("oaf")} crashed (unhandled rejection): ${describeError(reason)}`,
-        undefined,
-        reason,
-      )
-      .then(() => process.exit(1));
   });
 }
