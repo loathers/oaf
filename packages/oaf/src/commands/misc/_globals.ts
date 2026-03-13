@@ -51,7 +51,10 @@ async function renderSocp(data: string): Promise<string> {
 function renderRestaurantItem(data: string): string {
   const item = dataOfLoathingClient.findItemByName(data);
   if (!item) return data;
-  const link = hyperlink(data, hideLinkEmbed(dataOfLoathingClient.getWikiLink(item) ?? ""));
+  const link = hyperlink(
+    data,
+    hideLinkEmbed(dataOfLoathingClient.getWikiLink(item) ?? ""),
+  );
   const price = item.autosell * 3;
   return `${link} (${price > 0 ? `${price} Meat` : "unknown price"})`;
 }
@@ -85,8 +88,14 @@ export const DAILY_GLOBALS: DailyGlobal[] = [
   },
   {
     key: "votemonster",
-    displayName: "Voting Booth Monster ",
+    displayName: "Voting Booth Monster",
     crowdsourced: true,
+    render: (data) => {
+      const monster = dataOfLoathingClient.findMonsterByName(data);
+      if (!monster) return data;
+      const wikiLink = dataOfLoathingClient.getWikiLink(monster);
+      return wikiLink ? hyperlink(data, hideLinkEmbed(wikiLink)) : data;
+    },
   },
   {
     key: "socp",
@@ -160,9 +169,7 @@ export async function updateGlobalsMessage() {
   }
 }
 
-export async function buildGlobals(
-  gameday: number,
-): Promise<string> {
+export async function buildGlobals(gameday: number): Promise<string> {
   try {
     const socpData = await fetchSocpData();
     await upsertDaily("socp", gameday, socpData);
