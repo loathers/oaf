@@ -380,15 +380,15 @@ export class Item extends Thing {
       return `Mall Price: ${this.getPriceLink("Can't check, rollover")}`;
     } else if (mallPrice) {
       let output = `Mall Price: ${this.getPriceLink(
-        `${formattedMallPrice} meat`,
+        `${formattedMallPrice} Meat`,
       )}`;
       if (limitedMallPrice && limitedMallPrice < mallPrice) {
-        output += ` (or ${formattedLimitedMallPrice} meat limited per day)`;
+        output += ` (or ${formattedLimitedMallPrice} Meat limited per day)`;
       }
       return output;
     } else if (limitedMallPrice) {
       return `Mall Price: ${this.getPriceLink(
-        `${formattedLimitedMallPrice} meat (only available limited per day)`,
+        `${formattedLimitedMallPrice} Meat (only available limited per day)`,
       )}`;
     } else {
       return "Mall extinct.";
@@ -433,7 +433,7 @@ export class Item extends Thing {
         const cheapest = tradeables[0].item;
         const wikiLink = hyperlink(cheapest.name, toWikiLink(cheapest.name));
         const mallHistoryLink = cheapest.getPriceLink(
-          `${tradeables[0].price.formattedMinPrice} meat`,
+          `${tradeables[0].price.formattedMinPrice} Meat`,
         );
 
         output.push(`(Cheapest: ${wikiLink} @ ${mallHistoryLink})`);
@@ -454,7 +454,7 @@ export class Item extends Thing {
     if (blueText) description.push(blueText);
 
     if (this.item.discardable && (this.item.autosell ?? 0) > 0) {
-      description.push(`Autosell value: ${this.item.autosell} meat.`);
+      description.push(`Autosell value: ${this.item.autosell} Meat.`);
     }
 
     const price = await this.getMallPrice();

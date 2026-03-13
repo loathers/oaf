@@ -83,7 +83,7 @@ async function viewStandingOffers(interaction: ChatInputCommandInteraction) {
 
   const offers = (await getTopOffersForItem(item.id, 10)).map(
     (offer) =>
-      `${formatPlayer(offer)} buys at ${numberFormat.format(offer.price)} meat`,
+      `${formatPlayer(offer)} buys at ${numberFormat.format(offer.price)} Meat.`,
   );
 
   if (offers.length === 0) {

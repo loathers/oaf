@@ -126,7 +126,7 @@ async function main() {
         `Received ${message.valentine ? "valentine" : "kmail"} from ${inlineCode(`${message.who.name} (#${message.who.id})`)}`,
       ];
       if (message.msg) alert.push(blockQuote(message.msg));
-      if (message.meat) alert.push(`${message.meat} meat`);
+      if (message.meat) alert.push(`${message.meat} Meat`);
       if (message.items.length)
         alert.push(
           `${message.items.map((i) => `${i.name} x ${i.quantity}`).join(", ")}`,

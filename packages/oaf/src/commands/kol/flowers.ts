@@ -122,7 +122,7 @@ async function manageAlerts(interaction: ChatInputCommandInteraction) {
   await upsertFlowerAlert(player.playerId, price);
 
   return await interaction.editReply(
-    `You will be alerted when the price of a tulip is at or above ${numberFormat.format(price)} meat.`,
+    `You will be alerted when the price of a tulip is at or above ${numberFormat.format(price)} Meat.`,
   );
 }
 
