@@ -16,6 +16,7 @@ type Submission = {
 export default function Dailies() {
   const [keys, setKeys] = useState<string[]>([]);
   const [consensus, setConsensus] = useState<Consensus[]>([]);
+  const [threshold, setThreshold] = useState(11);
   const [loading, setLoading] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -27,9 +28,11 @@ export default function Dailies() {
         const r = await fetch("/api/admin/dailies");
         const data = (await r.json()) as {
           keys: string[];
+          threshold: number;
           consensus: Consensus[];
         };
         setKeys(data.keys);
+        setThreshold(data.threshold);
         setConsensus(data.consensus);
       } finally {
         setLoading(false);
@@ -77,11 +80,15 @@ export default function Dailies() {
         <tbody>
           {keys.map((key) => {
             const c = consensus.find((c) => c.key === key);
+            const reached = c !== undefined && c.count >= threshold;
             return (
               <tr
                 key={key}
                 onClick={() => void loadDetail(key)}
-                style={{ cursor: "pointer" }}
+                style={{
+                  cursor: "pointer",
+                  background: reached ? "#c6f6d5" : undefined,
+                }}
               >
                 <td>
                   <strong>{key}</strong>
@@ -106,8 +113,18 @@ export default function Dailies() {
           ) : (
             Object.entries(grouped)
               .sort(([, a], [, b]) => b.length - a.length)
-              .map(([value, subs]) => (
-                <div key={value} style={{ marginTop: "1rem" }}>
+              .map(([value, subs]) => {
+                const reached = subs.length >= threshold;
+                return (
+                <div
+                  key={value}
+                  style={{
+                    marginTop: "1rem",
+                    padding: "0.5rem",
+                    borderRadius: "0.375rem",
+                    background: reached ? "#c6f6d5" : undefined,
+                  }}
+                >
                   <h4>
                     <code>{value}</code>{" "}
                     <span style={{ color: "#718096", fontWeight: "normal" }}>
@@ -135,7 +152,8 @@ export default function Dailies() {
                     </tbody>
                   </table>
                 </div>
-              ))
+                );
+              })
           )}
         </div>
       )}

@@ -4,7 +4,10 @@ import {
   getAllDailyConsensus,
   getDailySubmissionsForKey,
 } from "../../clients/database.js";
-import { KNOWN_KEYS } from "../../commands/kol/crowdsource.js";
+import {
+  CONSENSUS_THRESHOLD,
+  KNOWN_KEYS,
+} from "../../commands/kol/crowdsource.js";
 
 export const dailiesRouter = Router();
 
@@ -12,6 +15,7 @@ dailiesRouter.get("/", async (_req, res) => {
   const consensus = await getAllDailyConsensus();
   res.json({
     keys: KNOWN_KEYS,
+    threshold: CONSENSUS_THRESHOLD,
     consensus: consensus.map((c) => ({ ...c, count: Number(c.count) })),
   });
 });
