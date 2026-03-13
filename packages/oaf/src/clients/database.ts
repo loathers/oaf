@@ -775,6 +775,22 @@ export async function getDaily(key: string, gameday = LoathingDate.fromRealDate(
     .executeTakeFirst();
 }
 
+export async function getDailySubmissionsForKey(key: string) {
+  return await db
+    .selectFrom("DailySubmission")
+    .innerJoin("Player", "Player.playerId", "DailySubmission.playerId")
+    .select([
+      "Player.playerId",
+      "Player.playerName",
+      "DailySubmission.value",
+      "DailySubmission.submittedAt",
+    ])
+    .where("DailySubmission.key", "=", key)
+    .orderBy("DailySubmission.value")
+    .orderBy("DailySubmission.submittedAt")
+    .execute();
+}
+
 export async function getLatestDailies() {
   const results = await sql<{
     key: string;

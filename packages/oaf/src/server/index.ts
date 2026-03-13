@@ -16,6 +16,7 @@ import {
   requireAuth,
 } from "./api/auth.js";
 import { messageRouter } from "./api/message.js";
+import { dailiesRouter } from "./api/dailies.js";
 import { offersRouter } from "./api/offers.js";
 import { pilotRouter } from "./api/pilot.js";
 import { raffleRouter } from "./api/raffle.js";
@@ -206,6 +207,7 @@ app
   .get("/logout", logoutHandler)
   .use("/api/auth", authRouter)
   // Admin API routes (require auth)
+  .use("/api/admin/dailies", requireAuth, dailiesRouter)
   .use("/api/admin/offers", requireAuth, offersRouter)
   .use("/api/admin/pilot", requireAuth, pilotRouter)
   .use("/api/admin/tags", requireAuth, tagsRouter)

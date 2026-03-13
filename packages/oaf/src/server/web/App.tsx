@@ -8,6 +8,7 @@ import {
   Routes,
 } from "react-router";
 
+import Dailies from "./pages/Dailies.js";
 import Offers from "./pages/Offers.js";
 import Pilot from "./pages/Pilot.js";
 import Raffle from "./pages/Raffle.js";
@@ -61,6 +62,7 @@ function AdminLayout() {
             title={user.name}
           />
           <nav className="nav-links">
+            <Link to="/admin/dailies">Dailies</Link>
             <Link to="/admin/offers">Offers</Link>
             <Link to="/admin/pilot">Pilot</Link>
             <Link to="/admin/tags">Tags</Link>
@@ -86,6 +88,7 @@ export default function App() {
         />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="offers" replace />} />
+          <Route path="dailies" element={<Dailies />} />
           <Route path="offers" element={<Offers />} />
           <Route path="pilot" element={<Pilot />} />
           <Route path="tags" element={<Tags />} />
