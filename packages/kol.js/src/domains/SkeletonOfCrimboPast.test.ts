@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Client } from "../Client.js";
 import { loadFixture } from "../testUtils.js";
@@ -19,6 +19,8 @@ const client = new Client("", "");
 const terrariumWithSocp = `onClick='fam(326)'><img src="https://d2uyhvukfffg5a.cloudfront.net/itemimages/socp.gif" 1-pound Skeleton of Crimbo Past (`;
 
 describe("SkeletonOfCrimboPast", () => {
+  beforeEach(() => text.mockReset());
+
   it("returns null if player has no familiar", async () => {
     text.mockResolvedValueOnce(""); // empty terrarium
     const socp = new SkeletonOfCrimboPast(client);
