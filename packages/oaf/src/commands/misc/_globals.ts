@@ -4,8 +4,9 @@ import { SkeletonOfCrimboPast } from "kol.js/domains/SkeletonOfCrimboPast";
 import { LoathingDate } from "../../clients/LoathingDate.js";
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import {
-  getDaily,
+  getDailiesForGameday,
   getGlobalsMessage,
+  getUnanimousSubConsensus,
   upsertDaily,
 } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
@@ -138,13 +139,27 @@ async function renderDailyValue(
 }
 
 export async function buildGlobalsContent(gameday: number): Promise<string> {
+  const [dailies, subConsensus] = await Promise.all([
+    getDailiesForGameday(gameday),
+    getUnanimousSubConsensus(gameday, CONSENSUS_THRESHOLD),
+  ]);
+
+  const dailyByKey = new Map(dailies.map((d) => [d.key, d.value]));
+  const subConsensusByKey = new Map(subConsensus.map((s) => [s.key, s.value]));
+
   const lines = [`${heading("Globals \u{1F30D}", 2)}`];
 
   for (const entry of DAILY_GLOBALS) {
-    const daily = await getDaily(entry.key, gameday);
-    const display = daily
-      ? await renderDailyValue(entry, daily.value)
-      : italic("waiting for reports");
+    const value = dailyByKey.get(entry.key);
+    let display: string;
+    if (value) {
+      display = await renderDailyValue(entry, value);
+    } else {
+      const hint = subConsensusByKey.get(entry.key);
+      display = hint
+        ? italic(`waiting for reports, but I'm hearing it's ${hint}`)
+        : italic("waiting for reports");
+    }
     lines.push(`${bold(entry.displayName)}: ${display}`);
   }
 

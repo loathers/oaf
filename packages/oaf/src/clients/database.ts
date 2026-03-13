@@ -744,6 +744,29 @@ export async function getAllDailyConsensus(gameday: number) {
   return results.rows;
 }
 
+export async function getUnanimousSubConsensus(
+  gameday: number,
+  threshold: number,
+) {
+  const results = await sql<{
+    key: string;
+    value: string;
+    count: string;
+  }>`
+    SELECT "key", "value", "topCount" as "count" FROM (
+      SELECT "key", "value",
+        COUNT(*) as "topCount",
+        SUM(COUNT(*)) OVER (PARTITION BY "key") as "totalCount",
+        ROW_NUMBER() OVER (PARTITION BY "key" ORDER BY COUNT(*) DESC) as rn
+      FROM "DailySubmission"
+      WHERE "gameday" = ${gameday}
+      GROUP BY "key", "value"
+    ) sub
+    WHERE rn = 1 AND "topCount" = "totalCount" AND "topCount" < ${threshold}
+  `.execute(db);
+  return results.rows;
+}
+
 export async function getDissentersForKey(
   key: string,
   gameday: number,

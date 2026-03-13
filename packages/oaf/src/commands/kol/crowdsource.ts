@@ -61,29 +61,38 @@ async function handleSubmission(
   await clearDailySubmissions(gameday);
 
   const consensus = await getDailyConsensusForKey(key, gameday);
-  if (!consensus || consensus.count < CONSENSUS_THRESHOLD) return;
+  if (!consensus) return;
 
-  const existing = await getDaily(key, gameday);
-  await upsertDaily(key, gameday, consensus.value);
+  if (consensus.count >= CONSENSUS_THRESHOLD) {
+    const existing = await getDaily(key, gameday);
+    await upsertDaily(key, gameday, consensus.value);
 
-  const justFormed = !existing || existing.value !== consensus.value;
+    const justFormed = !existing || existing.value !== consensus.value;
 
-  if (justFormed) {
-    const dissenters = await getDissentersForKey(key, gameday, consensus.value);
-    const dissenterSuffix =
-      dissenters.length > 0
-        ? ` Dissenters:\n${dissenters.map(formatDissenter).join("\n")}`
-        : "";
-    await discordClient.alert(
-      `Consensus reached for **${key}** = \`${consensus.value}\` (${consensus.count} votes).${dissenterSuffix}`,
-    );
+    if (justFormed) {
+      const dissenters = await getDissentersForKey(
+        key,
+        gameday,
+        consensus.value,
+      );
+      const dissenterSuffix =
+        dissenters.length > 0
+          ? ` Dissenters:\n${dissenters.map(formatDissenter).join("\n")}`
+          : "";
+      await discordClient.alert(
+        `Consensus reached for **${key}** = \`${consensus.value}\` (${consensus.count} votes).${dissenterSuffix}`,
+      );
+      await updateGlobalsMessage();
+    } else if (value !== consensus.value) {
+      const player = await kolClient.players.fetch(playerId);
+      const playerDisplay = player?.name ?? playerName;
+      await discordClient.alert(
+        `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${consensus.value}\`)`,
+      );
+    }
+  } else {
+    // Sub-threshold: update globals to reflect current unanimity hints
     await updateGlobalsMessage();
-  } else if (value !== consensus.value) {
-    const player = await kolClient.players.fetch(playerId);
-    const playerDisplay = player?.name ?? playerName;
-    await discordClient.alert(
-      `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${consensus.value}\`)`,
-    );
   }
 }
 
