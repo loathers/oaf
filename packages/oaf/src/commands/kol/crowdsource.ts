@@ -14,7 +14,7 @@ import { kolClient } from "../../clients/kol.js";
 
 const CONSENSUS_THRESHOLD = 11;
 
-export const KNOWN_KEYS = ["snootee", "microbewery", "jickjar"] as const;
+export const KNOWN_KEYS = ["snootee", "microbrewery", "jickjar", "votemonster"] as const;
 
 const cache = new Map<string, { value: string; count: number }>();
 
