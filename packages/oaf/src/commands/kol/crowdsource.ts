@@ -9,6 +9,7 @@ import {
   upsertDailySubmission,
   upsertPlayerInfo,
 } from "../../clients/database.js";
+import { LoathingDate } from "../../clients/LoathingDate.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 
@@ -46,14 +47,16 @@ async function handleSubmission(
 
   const { key, value } = parsed;
 
+  const gameday = LoathingDate.fromRealDate(new Date());
+
   await upsertPlayerInfo(playerId, playerName);
-  await upsertDailySubmission(key, value, playerId);
+  await upsertDailySubmission(key, value, playerId, gameday);
 
-  const consensus = await getDailyConsensusForKey(key);
+  // Reactively clear old submissions from previous days
+  await clearDailySubmissions(gameday);
+
+  const consensus = await getDailyConsensusForKey(key, gameday);
   if (!consensus || consensus.count < CONSENSUS_THRESHOLD) return;
-
-  const status = await kolClient.fetchStatus();
-  const gameday = status ? Number(status.daynumber) : 0;
 
   const existing = await getDaily(key, gameday);
   await upsertDaily(key, gameday, consensus.value);
@@ -61,7 +64,7 @@ async function handleSubmission(
   const justFormed = !existing || existing.value !== consensus.value;
 
   if (justFormed) {
-    const dissenters = await getDissentersForKey(key, consensus.value);
+    const dissenters = await getDissentersForKey(key, gameday, consensus.value);
     const dissenterSuffix =
       dissenters.length > 0
         ? ` Dissenters:\n${dissenters.map(formatDissenter).join("\n")}`
@@ -84,6 +87,7 @@ export function init() {
   });
 
   kolClient.on("rollover", () => {
-    void clearDailySubmissions();
+    const gameday = LoathingDate.fromRealDate(new Date());
+    void clearDailySubmissions(gameday);
   });
 }

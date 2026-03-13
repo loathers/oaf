@@ -704,19 +704,23 @@ export async function upsertDailySubmission(
   key: string,
   value: string,
   playerId: number,
+  gameday: number,
 ) {
   await db
     .insertInto("DailySubmission")
-    .values({ key, value, playerId })
-    .onConflict((oc) => oc.columns(["key", "playerId"]).doUpdateSet({ value }))
+    .values({ key, value, playerId, gameday })
+    .onConflict((oc) =>
+      oc.columns(["key", "playerId", "gameday"]).doUpdateSet({ value }),
+    )
     .execute();
 }
 
-export async function getDailyConsensusForKey(key: string) {
+export async function getDailyConsensusForKey(key: string, gameday: number) {
   const result = await db
     .selectFrom("DailySubmission")
     .select(["value", db.fn.countAll<string>().as("count")])
     .where("key", "=", key)
+    .where("gameday", "=", gameday)
     .groupBy("value")
     .orderBy("count", "desc")
     .limit(1)
@@ -725,7 +729,7 @@ export async function getDailyConsensusForKey(key: string) {
   return { value: result.value, count: Number(result.count) };
 }
 
-export async function getAllDailyConsensus() {
+export async function getAllDailyConsensus(gameday: number) {
   const results = await sql<{
     key: string;
     value: string;
@@ -733,13 +737,18 @@ export async function getAllDailyConsensus() {
   }>`
     SELECT DISTINCT ON ("key") "key", "value", COUNT(*) as "count"
     FROM "DailySubmission"
+    WHERE "gameday" = ${gameday}
     GROUP BY "key", "value"
     ORDER BY "key", "count" DESC
   `.execute(db);
   return results.rows;
 }
 
-export async function getDissentersForKey(key: string, consensusValue: string) {
+export async function getDissentersForKey(
+  key: string,
+  gameday: number,
+  consensusValue: string,
+) {
   return await db
     .selectFrom("DailySubmission")
     .innerJoin("Player", "Player.playerId", "DailySubmission.playerId")
@@ -750,12 +759,16 @@ export async function getDissentersForKey(key: string, consensusValue: string) {
       "DailySubmission.value",
     ])
     .where("DailySubmission.key", "=", key)
+    .where("DailySubmission.gameday", "=", gameday)
     .where("DailySubmission.value", "!=", consensusValue)
     .execute();
 }
 
-export async function clearDailySubmissions() {
-  await db.deleteFrom("DailySubmission").execute();
+export async function clearDailySubmissions(currentGameday: number) {
+  await db
+    .deleteFrom("DailySubmission")
+    .where("gameday", "<", currentGameday)
+    .execute();
 }
 
 export async function upsertDaily(key: string, gameday: number, value: string) {
@@ -775,7 +788,7 @@ export async function getDaily(key: string, gameday = LoathingDate.fromRealDate(
     .executeTakeFirst();
 }
 
-export async function getDailySubmissionsForKey(key: string) {
+export async function getDailySubmissionsForKey(key: string, gameday: number) {
   return await db
     .selectFrom("DailySubmission")
     .innerJoin("Player", "Player.playerId", "DailySubmission.playerId")
@@ -786,6 +799,7 @@ export async function getDailySubmissionsForKey(key: string) {
       "DailySubmission.submittedAt",
     ])
     .where("DailySubmission.key", "=", key)
+    .where("DailySubmission.gameday", "=", gameday)
     .orderBy("DailySubmission.value")
     .orderBy("DailySubmission.submittedAt")
     .execute();

@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { LoathingDate } from "../../clients/LoathingDate.js";
 import {
   getAllDailyConsensus,
   getDailySubmissionsForKey,
@@ -12,7 +13,8 @@ import {
 export const dailiesRouter = Router();
 
 dailiesRouter.get("/", async (_req, res) => {
-  const consensus = await getAllDailyConsensus();
+  const gameday = LoathingDate.fromRealDate(new Date());
+  const consensus = await getAllDailyConsensus(gameday);
   res.json({
     keys: KNOWN_KEYS,
     threshold: CONSENSUS_THRESHOLD,
@@ -27,6 +29,7 @@ dailiesRouter.get("/:key", async (req, res) => {
     return;
   }
 
-  const submissions = await getDailySubmissionsForKey(key);
+  const gameday = LoathingDate.fromRealDate(new Date());
+  const submissions = await getDailySubmissionsForKey(key, gameday);
   res.json({ key, submissions });
 });

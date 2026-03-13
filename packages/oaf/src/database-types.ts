@@ -101,6 +101,7 @@ export interface DailyTable {
 
 export interface DailySubmissionTable {
   key: string;
+  gameday: number;
   value: string;
   playerId: number;
   submittedAt: ColumnType<Date, Date | undefined, Date>;
