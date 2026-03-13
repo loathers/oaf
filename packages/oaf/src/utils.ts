@@ -202,3 +202,37 @@ export function getRandom<T>(arr: T[]): T {
 export function lowercaseLeadingLetter(str: string): string {
   return `${str[0].toLowerCase()}${str.slice(1)}`;
 }
+
+const pendingRetries = new Set<Promise<Response>>();
+
+export async function fetchWithRetry(
+  url: string,
+  init: RequestInit,
+  retries = 3,
+): Promise<Response> {
+  const promise = (async () => {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        return await fetch(url, init);
+      } catch (error) {
+        if (attempt === retries - 1) throw error;
+        await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+      }
+    }
+
+    throw new Error("Unreachable");
+  })();
+
+  pendingRetries.add(promise);
+  void promise.finally(() => pendingRetries.delete(promise));
+
+  return promise;
+}
+
+export async function waitForPendingRetries(): Promise<void> {
+  if (pendingRetries.size === 0) return;
+  console.log(
+    `Waiting for ${pendingRetries.size} pending request(s) to complete...`,
+  );
+  await Promise.allSettled(pendingRetries);
+}

@@ -25,6 +25,10 @@ export class Monster extends Thing {
     this.monster = monster;
   }
 
+  get copyable() {
+    return !this.monster.nocopy;
+  }
+
   getPhylumEmoji() {
     const phylum = this.monster.phylum?.toLowerCase();
     switch (phylum) {

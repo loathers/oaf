@@ -1,5 +1,7 @@
 import { type Player } from "kol.js";
 
+import { fetchWithRetry } from "../utils.js";
+
 type GreenboxResponse = {
   playerId: number;
   playerName: string;
@@ -16,7 +18,7 @@ export class GreenboxClient {
   }
 
   async update(playerId: number, playerName: string, greenboxString: string) {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       "https://greenbox.loathers.net/webhooks/update",
       {
         method: "POST",
@@ -35,7 +37,7 @@ export class GreenboxClient {
   }
 
   async wipe(playerId: number) {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       "https://greenbox.loathers.net/webhooks/wipe",
       {
         method: "POST",
