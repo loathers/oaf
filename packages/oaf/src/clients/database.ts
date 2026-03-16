@@ -722,33 +722,6 @@ export type SubmissionSummary = {
   totalCount: number;
 };
 
-export async function getSubmissionSummaries(
-  gameday: number,
-): Promise<SubmissionSummary[]> {
-  const results = await sql<{
-    key: string;
-    value: string;
-    topCount: string;
-    totalCount: string;
-  }>`
-    SELECT "key", "value", "topCount", "totalCount" FROM (
-      SELECT "key", "value",
-        COUNT(*) as "topCount",
-        SUM(COUNT(*)) OVER (PARTITION BY "key") as "totalCount",
-        ROW_NUMBER() OVER (PARTITION BY "key" ORDER BY COUNT(*) DESC) as rn
-      FROM "DailySubmission"
-      WHERE "gameday" = ${gameday}
-      GROUP BY "key", "value"
-    ) sub
-    WHERE rn = 1
-  `.execute(db);
-  return results.rows.map((r) => ({
-    ...r,
-    topCount: Number(r.topCount),
-    totalCount: Number(r.totalCount),
-  }));
-}
-
 export async function getSubmissionSummaryForKey(
   key: string,
   gameday: number,

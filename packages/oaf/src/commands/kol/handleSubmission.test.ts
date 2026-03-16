@@ -165,7 +165,7 @@ describe("handleSubmission", () => {
       expect(updateGlobalsMessage).toHaveBeenCalled();
     });
 
-    test("alerts when sub-threshold value crosses threshold", async () => {
+    test("alerts when preliminary value reaches consensus", async () => {
       getSubmissionSummaryForKey.mockResolvedValueOnce(summary(5, 5));
       getDaily.mockResolvedValueOnce({
         key: "snootee",

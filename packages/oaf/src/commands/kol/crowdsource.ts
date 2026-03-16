@@ -2,6 +2,7 @@ import { userMention } from "discord.js";
 
 import { LoathingDate } from "../../clients/LoathingDate.js";
 import {
+  type SubmissionSummary,
   clearDailySubmissions,
   deleteDaily,
   getDaily,
@@ -18,6 +19,10 @@ import {
   DAILY_GLOBALS,
   updateGlobalsMessage,
 } from "../misc/_globals.js";
+
+function isUnanimous(summary: SubmissionSummary) {
+  return summary.topCount === summary.totalCount;
+}
 
 const CROWDSOURCED_KEY_SET: Set<string> = new Set(
   DAILY_GLOBALS.filter((k) => k.crowdsourced).map((k) => k.key),
@@ -94,7 +99,7 @@ export async function handleSubmission(
         `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${summary.value}\`)`,
       );
     }
-  } else if (summary.topCount === summary.totalCount) {
+  } else if (isUnanimous(summary)) {
     // Sub-threshold but unanimous: store as preliminary value
     const existing = await getDaily(key, gameday);
     await upsertDaily(key, gameday, summary.value, false);
