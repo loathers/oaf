@@ -97,6 +97,7 @@ export interface DailyTable {
   key: string;
   gameday: number;
   value: string;
+  thresholdReached: Generated<boolean>;
 }
 
 export interface DailySubmissionTable {

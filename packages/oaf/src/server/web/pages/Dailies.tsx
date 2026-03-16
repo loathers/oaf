@@ -5,6 +5,7 @@ type DailyEntry = {
   displayName: string;
   crowdsourced: boolean;
   value: string | null;
+  thresholdReached: boolean | null;
 };
 
 type SubmissionSummary = {
@@ -24,7 +25,6 @@ type Submission = {
 export default function Dailies() {
   const [dailies, setDailies] = useState<DailyEntry[]>([]);
   const [summaries, setSummaries] = useState<SubmissionSummary[]>([]);
-  const [threshold, setThreshold] = useState(11);
   const [loading, setLoading] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -35,11 +35,9 @@ export default function Dailies() {
       try {
         const r = await fetch("/api/admin/dailies");
         const data = (await r.json()) as {
-          threshold: number;
           summaries: SubmissionSummary[];
           dailies: DailyEntry[];
         };
-        setThreshold(data.threshold);
         setSummaries(data.summaries);
         setDailies(data.dailies);
       } finally {
@@ -87,12 +85,8 @@ export default function Dailies() {
             .sort((a, b) => {
               if (a.crowdsourced !== b.crowdsourced)
                 return a.crowdsourced ? -1 : 1;
-              const aReached = summaries.some(
-                (s) => s.key === a.key && s.topCount >= threshold,
-              );
-              const bReached = summaries.some(
-                (s) => s.key === b.key && s.topCount >= threshold,
-              );
+              const aReached = a.thresholdReached === true;
+              const bReached = b.thresholdReached === true;
               if (aReached !== bReached) return aReached ? -1 : 1;
               return 0;
             })
@@ -119,22 +113,18 @@ export default function Dailies() {
               }
 
               const s = summaries.find((s) => s.key === entry.key);
-              const reached = s !== undefined && s.topCount >= threshold;
-              const unanimous =
-                s !== undefined &&
-                !reached &&
-                s.topCount === s.totalCount;
               return (
                 <tr
                   key={entry.key}
                   onClick={() => void loadDetail(entry.key)}
                   style={{
                     cursor: "pointer",
-                    background: reached
-                      ? "#c6f6d5"
-                      : unanimous
-                        ? "#fefcbf"
-                        : undefined,
+                    background:
+                      entry.thresholdReached === true
+                        ? "#c6f6d5"
+                        : entry.thresholdReached === false
+                          ? "#fefcbf"
+                          : undefined,
                   }}
                 >
                   <td>

@@ -6,7 +6,6 @@ import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import {
   getDailiesForGameday,
   getGlobalsMessage,
-  getSubmissionSummaries,
   upsertDaily,
 } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
@@ -139,30 +138,21 @@ async function renderDailyValue(
 }
 
 export async function buildGlobalsContent(gameday: number): Promise<string> {
-  const [dailies, summaries] = await Promise.all([
-    getDailiesForGameday(gameday),
-    getSubmissionSummaries(gameday),
-  ]);
-
-  const dailyByKey = new Map(dailies.map((d) => [d.key, d.value]));
-  const summaryByKey = new Map(summaries.map((s) => [s.key, s]));
+  const dailies = await getDailiesForGameday(gameday);
+  const dailyByKey = new Map(dailies.map((d) => [d.key, d]));
 
   const lines = [`${heading("Globals \u{1F30D}", 2)}`];
 
   for (const entry of DAILY_GLOBALS) {
-    const value = dailyByKey.get(entry.key);
+    const daily = dailyByKey.get(entry.key);
     let display: string;
-    if (value) {
-      display = await renderDailyValue(entry, value);
+    if (daily) {
+      const rendered = await renderDailyValue(entry, daily.value);
+      display = daily.thresholdReached
+        ? rendered
+        : italic(`waiting for more reports, but I'm hearing it's ${rendered}`);
     } else {
-      const summary = summaryByKey.get(entry.key);
-      const isUnanimousHint =
-        summary &&
-        summary.topCount === summary.totalCount &&
-        summary.topCount < CONSENSUS_THRESHOLD;
-      display = isUnanimousHint
-        ? italic(`waiting for more reports, but I'm hearing it's ${summary.value}`)
-        : italic("waiting for reports");
+      display = italic("waiting for reports");
     }
     lines.push(`${bold(entry.displayName)}: ${display}`);
   }
@@ -191,7 +181,7 @@ export async function updateGlobalsMessage() {
 export async function buildGlobals(gameday: number): Promise<string> {
   try {
     const socpData = await fetchSocpData();
-    await upsertDaily("socp", gameday, socpData);
+    await upsertDaily("socp", gameday, socpData, true);
   } catch {
     // SOCP fetch failed — placeholder will show
   }

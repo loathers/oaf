@@ -6,10 +6,7 @@ import {
   getDailySubmissionsForKey,
   getSubmissionSummaries,
 } from "../../clients/database.js";
-import {
-  CONSENSUS_THRESHOLD,
-  DAILY_GLOBALS,
-} from "../../commands/misc/_globals.js";
+import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
 
 export const dailiesRouter = Router();
 
@@ -20,17 +17,20 @@ dailiesRouter.get("/", async (_req, res) => {
     getDailiesForGameday(gameday),
   ]);
 
-  const dailyByKey = new Map(dailies.map((d) => [d.key, d.value]));
+  const dailyByKey = new Map(dailies.map((d) => [d.key, d]));
 
   res.json({
-    threshold: CONSENSUS_THRESHOLD,
     summaries,
-    dailies: DAILY_GLOBALS.map((k) => ({
-      key: k.key,
-      displayName: k.displayName,
-      crowdsourced: k.crowdsourced,
-      value: dailyByKey.get(k.key) ?? null,
-    })),
+    dailies: DAILY_GLOBALS.map((k) => {
+      const daily = dailyByKey.get(k.key);
+      return {
+        key: k.key,
+        displayName: k.displayName,
+        crowdsourced: k.crowdsourced,
+        value: daily?.value ?? null,
+        thresholdReached: daily?.thresholdReached ?? null,
+      };
+    }),
   });
 });
 

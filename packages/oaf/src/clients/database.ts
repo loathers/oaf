@@ -806,11 +806,26 @@ export async function clearDailySubmissions(currentGameday: number) {
     .execute();
 }
 
-export async function upsertDaily(key: string, gameday: number, value: string) {
+export async function upsertDaily(
+  key: string,
+  gameday: number,
+  value: string,
+  thresholdReached: boolean,
+) {
   await db
     .insertInto("Daily")
-    .values({ key, gameday, value })
-    .onConflict((oc) => oc.columns(["key", "gameday"]).doUpdateSet({ value }))
+    .values({ key, gameday, value, thresholdReached })
+    .onConflict((oc) =>
+      oc.columns(["key", "gameday"]).doUpdateSet({ value, thresholdReached }),
+    )
+    .execute();
+}
+
+export async function deleteDaily(key: string, gameday: number) {
+  await db
+    .deleteFrom("Daily")
+    .where("key", "=", key)
+    .where("gameday", "=", gameday)
     .execute();
 }
 

@@ -3,6 +3,7 @@ import { userMention } from "discord.js";
 import { LoathingDate } from "../../clients/LoathingDate.js";
 import {
   clearDailySubmissions,
+  deleteDaily,
   getDaily,
   getDissentersForKey,
   getSubmissionSummaryForKey,
@@ -65,9 +66,10 @@ async function handleSubmission(
 
   if (summary.topCount >= CONSENSUS_THRESHOLD) {
     const existing = await getDaily(key, gameday);
-    await upsertDaily(key, gameday, summary.value);
+    await upsertDaily(key, gameday, summary.value, true);
 
-    const justFormed = !existing || existing.value !== summary.value;
+    const justFormed =
+      !existing || existing.value !== summary.value || !existing.thresholdReached;
 
     if (justFormed) {
       const dissenters = await getDissentersForKey(
@@ -90,8 +92,16 @@ async function handleSubmission(
         `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${summary.value}\`)`,
       );
     }
+  } else if (summary.topCount === summary.totalCount) {
+    // Sub-threshold but unanimous: store as preliminary value
+    const existing = await getDaily(key, gameday);
+    await upsertDaily(key, gameday, summary.value, false);
+    if (!existing || existing.value !== summary.value) {
+      await updateGlobalsMessage();
+    }
   } else {
-    // Sub-threshold: update globals to reflect current unanimity hints
+    // Sub-threshold with dissent: remove any preliminary value
+    await deleteDaily(key, gameday);
     await updateGlobalsMessage();
   }
 }
