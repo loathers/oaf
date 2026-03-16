@@ -84,7 +84,7 @@ export const DAILY_GLOBALS: DailyGlobal[] = [
     displayName: "Jick Jar",
     crowdsourced: true,
     render: (data) =>
-      `Players whose id % 23 = ${data} can make a ${hyperlink("jar of psychoses (Jick)", hideLinkEmbed("https://wiki.kingdomofloathing.com/Jar_of_psychoses_(Jick)"))} today!`,
+      `players whose id % 23 = ${data} can make a ${hyperlink("jar of psychoses (Jick)", hideLinkEmbed("https://wiki.kingdomofloathing.com/Jar%5Fof%5Fpsychoses%5F(Jick)"))} today!`,
   },
   {
     key: "votemonster",
@@ -150,7 +150,7 @@ export async function buildGlobalsContent(gameday: number): Promise<string> {
       const rendered = await renderDailyValue(entry, daily.value);
       display = daily.thresholdReached
         ? rendered
-        : italic(`waiting for more reports, but I'm hearing it's ${rendered}`);
+        : italic(`waiting for more reports, but I'm hearing ${rendered}`);
     } else {
       display = italic("waiting for reports");
     }
