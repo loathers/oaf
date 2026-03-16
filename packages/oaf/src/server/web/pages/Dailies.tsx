@@ -8,13 +8,6 @@ type DailyEntry = {
   thresholdReached: boolean | null;
 };
 
-type SubmissionSummary = {
-  key: string;
-  value: string;
-  topCount: number;
-  totalCount: number;
-};
-
 type Submission = {
   playerId: number;
   playerName: string;
@@ -24,7 +17,6 @@ type Submission = {
 
 export default function Dailies() {
   const [dailies, setDailies] = useState<DailyEntry[]>([]);
-  const [summaries, setSummaries] = useState<SubmissionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -35,10 +27,8 @@ export default function Dailies() {
       try {
         const r = await fetch("/api/admin/dailies");
         const data = (await r.json()) as {
-          summaries: SubmissionSummary[];
           dailies: DailyEntry[];
         };
-        setSummaries(data.summaries);
         setDailies(data.dailies);
       } finally {
         setLoading(false);
@@ -77,7 +67,6 @@ export default function Dailies() {
           <tr>
             <th>Key</th>
             <th>Value</th>
-            <th className="numeric">Votes</th>
           </tr>
         </thead>
         <tbody>
@@ -107,12 +96,10 @@ export default function Dailies() {
                         <em>Pending</em>
                       )}
                     </td>
-                    <td className="numeric">{"\u{1F451}"}</td>
                   </tr>
                 );
               }
 
-              const s = summaries.find((s) => s.key === entry.key);
               return (
                 <tr
                   key={entry.key}
@@ -131,9 +118,12 @@ export default function Dailies() {
                     <strong>{entry.displayName}</strong>
                   </td>
                   <td>
-                    {s ? <code>{s.value}</code> : <em>No submissions</em>}
+                    {entry.value ? (
+                      <code>{entry.value}</code>
+                    ) : (
+                      <em>No submissions</em>
+                    )}
                   </td>
-                  <td className="numeric">{s?.topCount ?? 0}</td>
                 </tr>
               );
             })}

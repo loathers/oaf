@@ -43,7 +43,7 @@ function formatDissenter(d: {
   return `- ${d.playerName}${mention}: ${d.value}`;
 }
 
-async function handleSubmission(
+export async function handleSubmission(
   playerId: number,
   playerName: string,
   msg: string,
@@ -68,6 +68,8 @@ async function handleSubmission(
     const existing = await getDaily(key, gameday);
     await upsertDaily(key, gameday, summary.value, true);
 
+    // True if this is a new consensus, a changed value, or a sub-threshold
+    // preliminary value that just crossed the threshold
     const justFormed =
       !existing || existing.value !== summary.value || !existing.thresholdReached;
 
