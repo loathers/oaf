@@ -716,3 +716,11 @@ body.moonlight-mode .day-detail-section h3 {
 body.moonlight-mode .no-data {
   color: #4a4a6a;
 }
+
+body.moonlight-mode .day-detail a {
+  color: #64ffda;
+}
+
+body.moonlight-mode .day-detail a:hover {
+  color: #9efff0;
+}

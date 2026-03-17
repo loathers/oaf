@@ -125,7 +125,7 @@ export default function CalendarPage() {
           className={view === "kol" ? "active" : ""}
           onClick={() => setView("kol")}
         >
-          KoL Calendar
+          Ralphine
         </button>
         <label className="moonlight-toggle">
           <input
