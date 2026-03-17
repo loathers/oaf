@@ -87,20 +87,23 @@ export default function DayDetail({ gameday, todayGameday, data }: Props) {
           <h3>Raffle</h3>
           {raffle ? (
             <>
-              <p>
-                1st prize: {raffle.firstPrize.name} | 2nd prize:{" "}
-                {raffle.secondPrize.name}
-              </p>
-              {!isToday && raffle.winners.length > 0 && (
-                <ul>
-                  {raffle.winners.map((w, i) => (
-                    <li key={i}>
-                      {w.place === 1 ? "1st" : "2nd"}: {w.playerName} (
-                      {w.tickets} ticket{w.tickets !== 1 ? "s" : ""})
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {([1, 2] as const).map((place) => {
+                const prize = place === 1 ? raffle.firstPrize : raffle.secondPrize;
+                const winners = isToday ? [] : raffle.winners.filter((w) => w.place === place);
+                return (
+                  <p key={place}>
+                    {place === 1 ? "🥇" : "🥈"} {prize.name}
+                    {winners.length > 0 && (
+                      <>
+                        {" - "}
+                        {winners
+                          .map((w) => `${w.playerName} (${w.tickets.toLocaleString()})`)
+                          .join(", ")}
+                      </>
+                    )}
+                  </p>
+                );
+              })}
             </>
           ) : (
             <p className="no-data">No data</p>
