@@ -428,16 +428,16 @@ code {
   display: grid;
   gap: 1px;
   background: #e2e8f0;
-  overflow: hidden;
-  min-width: 500px;
+  width: max-content;
+  min-width: 100%;
 }
 
 .gregorian-grid {
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(4rem, 1fr));
 }
 
 .kol-grid {
-  grid-template-columns: auto repeat(8, 1fr);
+  grid-template-columns: auto repeat(8, minmax(3.5rem, 1fr));
 }
 
 .calendar-header {
