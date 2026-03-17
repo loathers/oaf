@@ -91,26 +91,27 @@ export default function CalendarPage() {
     [],
   );
 
-  const jumpGregorian = useCallback((year: number, month: number) => {
-    setGregYear(year);
-    setGregMonth(month);
-    setSelectedDay(null);
+  const navigateTo = useCallback((ld: LoathingDate) => {
+    const rd = ld.toRealDate();
+    setGregYear(rd.getUTCFullYear());
+    setGregMonth(rd.getUTCMonth());
+    setKolYear(ld.getYear());
   }, []);
+
+  const jumpGregorian = useCallback((year: number, month: number) => {
+    navigateTo(new LoathingDate(new Date(Date.UTC(year, month, 15))));
+    setSelectedDay(null);
+  }, [navigateTo]);
 
   const jumpKol = useCallback((year: number) => {
-    setKolYear(year);
+    navigateTo(new LoathingDate(year, 0, 1));
     setSelectedDay(null);
-  }, []);
+  }, [navigateTo]);
 
   const jumpToToday = useCallback(() => {
-    if (view === "gregorian") {
-      setGregYear(now.getUTCFullYear());
-      setGregMonth(now.getUTCMonth());
-    } else {
-      setKolYear(todayKolYear);
-    }
+    navigateTo(new LoathingDate(todayGameday));
     setSelectedDay(todayGameday);
-  }, [view, now, todayKolYear, todayGameday]);
+  }, [navigateTo, todayGameday]);
 
   return (
     <div className="calendar-page">
@@ -119,11 +120,7 @@ export default function CalendarPage() {
         <button
           className={view === "gregorian" ? "active" : ""}
           onClick={() => {
-            if (selectedDay !== null) {
-              const rd = new LoathingDate(selectedDay).toRealDate();
-              setGregYear(rd.getUTCFullYear());
-              setGregMonth(rd.getUTCMonth());
-            }
+            if (selectedDay !== null) navigateTo(new LoathingDate(selectedDay));
             setView("gregorian");
           }}
         >
@@ -132,9 +129,7 @@ export default function CalendarPage() {
         <button
           className={view === "kol" ? "active" : ""}
           onClick={() => {
-            if (selectedDay !== null) {
-              setKolYear(new LoathingDate(selectedDay).getYear());
-            }
+            if (selectedDay !== null) navigateTo(new LoathingDate(selectedDay));
             setView("kol");
           }}
         >
