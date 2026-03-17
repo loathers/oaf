@@ -1,7 +1,4 @@
-import kolRng from "kol-rng";
-// kol-rng is CJS; extract the class from the default-export wrapper
-const RNG = kolRng as unknown as typeof kolRng.default;
-type RNG = InstanceType<typeof RNG>;
+import RNG from "kol-rng";
 
 import type { Client } from "../Client.js";
 import { getElementalResistanceAdjective } from "../utils/utils.js";

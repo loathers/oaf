@@ -4874,12 +4874,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kol-rng@npm:^2.0.0":
-  version: 2.0.0
-  resolution: "kol-rng@npm:2.0.0"
+"kol-rng@npm:3":
+  version: 3.0.0
+  resolution: "kol-rng@npm:3.0.0"
   dependencies:
     mersenne-twister: "npm:^1.1.0"
-  checksum: 10c0/9eefee49e410ebf5d95a6a3013f8f4cb8c317aa472bce27c4239af2b41353171895bf1d5e37bf89409b96b61bc1bcee187a161be6678fa5425dea8260e29395b
+  checksum: 10c0/b355abb72aa4ffb03cdc88d50f76046d39aad005117e1b0634346c34b67b747b55de1b21027d03733b33b6b796deffc445cd901bfc118e63fa458a52d8d3d141
   languageName: node
   linkType: hard
 
@@ -4896,7 +4896,7 @@ __metadata:
     got: "npm:^14.6.6"
     htmlparser2: "npm:^10.1.0"
     image-size: "npm:^2.0.2"
-    kol-rng: "npm:^2.0.0"
+    kol-rng: "npm:3"
     prettier: "npm:^3.8.1"
     querystring: "npm:^0.2.1"
     tough-cookie: "npm:^6.0.0"
