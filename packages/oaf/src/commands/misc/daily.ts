@@ -167,7 +167,8 @@ async function onRollover() {
 
   for (const message of messages) {
     if (!message) continue;
-    await channel.send({ ...message, allowedMentions: { users: [] } });
+    const sentMessage = await channel.send({ ...message, allowedMentions: { users: [] } });
+    await sentMessage.crosspost();
   }
 
   // Build and send the Globals message (editable in-place as consensus forms)
@@ -178,6 +179,7 @@ async function onRollover() {
     allowedMentions: { users: [] },
   });
   await setGlobalsMessage(globalsMsg.id, globalsMsg.channelId, gameday);
+  await globalsMsg.crosspost();
 }
 
 export const data = new SlashCommandBuilder()
