@@ -118,13 +118,25 @@ export default function CalendarPage() {
       <div className="calendar-view-toggle">
         <button
           className={view === "gregorian" ? "active" : ""}
-          onClick={() => setView("gregorian")}
+          onClick={() => {
+            if (selectedDay !== null) {
+              const rd = new LoathingDate(selectedDay).toRealDate();
+              setGregYear(rd.getUTCFullYear());
+              setGregMonth(rd.getUTCMonth());
+            }
+            setView("gregorian");
+          }}
         >
           Gregorian
         </button>
         <button
           className={view === "kol" ? "active" : ""}
-          onClick={() => setView("kol")}
+          onClick={() => {
+            if (selectedDay !== null) {
+              setKolYear(new LoathingDate(selectedDay).getYear());
+            }
+            setView("kol");
+          }}
         >
           Ralphine
         </button>
