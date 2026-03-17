@@ -25,8 +25,8 @@ function getGregorianRange(year: number, month: number) {
 
 function getKolRange(kolYear: number) {
   return {
-    from: LoathingDate.getDaysSinceEpochFromKoLDate(kolYear, 0, 1),
-    to: LoathingDate.getDaysSinceEpochFromKoLDate(kolYear, 11, 8),
+    from: LoathingDate.getDaysSinceEpoch(kolYear, 0, 1),
+    to: LoathingDate.getDaysSinceEpoch(kolYear, 11, 8),
   };
 }
 
@@ -37,7 +37,7 @@ export default function CalendarPage() {
   }, []);
   const todayGameday = useMemo(() => LoathingDate.gameDayFromRealDate(now), [now]);
   const todayKolYear = useMemo(
-    () => LoathingDate.fromGameday(todayGameday).getYear(),
+    () => new LoathingDate(todayGameday).getYear(),
     [todayGameday],
   );
 

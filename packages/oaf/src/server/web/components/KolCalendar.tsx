@@ -66,12 +66,12 @@ export default function KolCalendar({
               {monthName}
             </div>
             {Array.from({ length: 8 }, (_, dayIndex) => {
-              const gameday = LoathingDate.getDaysSinceEpochFromKoLDate(
+              const gameday = LoathingDate.getDaysSinceEpoch(
                 kolYear,
                 monthIndex,
                 dayIndex + 1,
               );
-              const ld = LoathingDate.fromGameday(gameday);
+              const ld = new LoathingDate(gameday);
               const isToday = gameday === todayGameday;
               const isSelected = gameday === selectedDay;
               const statDay = ld.getStatDay();

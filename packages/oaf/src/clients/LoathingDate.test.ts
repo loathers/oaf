@@ -14,6 +14,16 @@ describe("Constructor", () => {
     expect(d.toString()).toBe("Frankuary 2 Year 80");
   });
 
+  test("March 17th 2026 is gameday 8436", () => {
+    const d = new Date(Date.UTC(2026, 2, 17, 12, 0, 0));
+    expect(LoathingDate.gameDayFromRealDate(d)).toBe(8436);
+  });
+
+  test("March 17th 2026 is Dougtember 6 Year 88", () => {
+    const d = new LoathingDate(new Date(Date.UTC(2026, 2, 17, 12, 0, 0)));
+    expect(d.toString()).toBe("Dougtember 6 Year 88");
+  });
+
   test("Both constructors agree", () => {
     const realDate = new Date(Date.UTC(2023, 10, 16, 12, 0, 0));
     const fromReal = new LoathingDate(realDate);

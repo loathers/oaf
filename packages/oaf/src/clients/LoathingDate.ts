@@ -65,18 +65,15 @@ function getRealWorldHoliday(realDate: Date): string | undefined {
 }
 
 export class LoathingDate {
-  static EPOCH = new Date(Date.UTC(2003, 1, 1, 3, 30));
-  static COLLISION = 1218;
+  static EPOCH = new Date(Date.UTC(2003, 1, 10, 3, 30));
+  // The epoch is not Jarlsuary 1 Year 1 — gameday 0 falls 9 days into
+  // the KoL calendar, so we offset when converting between gameday and
+  // KoL year/month/date.
+  static CALENDAR_OFFSET = 9;
+  static COLLISION = 1209;
 
   static getDaysSinceEpoch(kolYear: number, kolMonth: number, kolDate: number) {
-    return (kolYear - 1) * 96 + kolMonth * 8 + (kolDate - 1);
-  }
-
-  static fromGameday(gameday: number) {
-    const year = Math.floor(gameday / 96) + 1;
-    const month = Math.floor((gameday % 96) / 8);
-    const date = (gameday % 8) + 1;
-    return new LoathingDate(year, month, date);
+    return (kolYear - 1) * 96 + kolMonth * 8 + (kolDate - 1) - LoathingDate.CALENDAR_OFFSET;
   }
 
   static gameDayFromRealDate(realDate: Date) {
@@ -88,18 +85,23 @@ export class LoathingDate {
   #date: number;
   #realDate: Date;
 
+  constructor();
+  constructor(gameday: number);
   constructor(realDate: Date);
-  constructor(kolYear?: number, kolMonth?: number, kolDate?: number);
-  constructor(kolYearOrRealDate: Date | number = new Date(), kolMonth = 0, kolDate = 0) {
-    const daysSinceEpoch =
-      kolYearOrRealDate instanceof Date
-        ? LoathingDate.gameDayFromRealDate(kolYearOrRealDate)
-        : LoathingDate.getDaysSinceEpoch(kolYearOrRealDate, kolMonth, kolDate);
+  constructor(kolYear: number, kolMonth: number, kolDate: number);
+  constructor(first: Date | number = new Date(), kolMonth?: number, kolDate?: number) {
+    const gameday =
+      first instanceof Date
+        ? LoathingDate.gameDayFromRealDate(first)
+        : kolMonth !== undefined && kolDate !== undefined
+          ? LoathingDate.getDaysSinceEpoch(first, kolMonth, kolDate)
+          : first;
 
-    this.#realDate = addDays(LoathingDate.EPOCH.getTime(), daysSinceEpoch);
-    this.#year = Math.floor(daysSinceEpoch / 96) + 1;
-    this.#month = Math.floor((daysSinceEpoch % 96) / 8);
-    this.#date = Math.floor(daysSinceEpoch % 8) + 1;
+    this.#realDate = addDays(LoathingDate.EPOCH.getTime(), gameday);
+    const calendarDay = gameday + LoathingDate.CALENDAR_OFFSET;
+    this.#year = Math.floor(calendarDay / 96) + 1;
+    this.#month = Math.floor((calendarDay % 96) / 8);
+    this.#date = Math.floor(calendarDay % 8) + 1;
   }
 
   getYear() {
@@ -129,6 +131,10 @@ export class LoathingDate {
 
   getDate() {
     return this.#date;
+  }
+
+  toRealDate() {
+    return this.#realDate;
   }
 
   getDaysSinceEpoch() {

@@ -10,12 +10,10 @@ type Props = {
 };
 
 export default function DayDetail({ gameday, todayGameday, data }: Props) {
-  const ld = LoathingDate.fromGameday(gameday);
-  const realDate = new Date(
-    LoathingDate.EPOCH.getTime() + gameday * 1000 * 60 * 60 * 24,
-  );
+  const ld = new LoathingDate(gameday);
+  const realDate = ld.toRealDate();
 
-  const DAILIES_START_GAMEDAY = 8441; // Started collecting dailies on March 13, 2026
+  const DAILIES_START_GAMEDAY = 8432; // Started collecting dailies on March 13, 2026
   const isFuture = gameday > todayGameday;
   const isToday = gameday === todayGameday;
   const hasDailies = gameday >= DAILIES_START_GAMEDAY;
