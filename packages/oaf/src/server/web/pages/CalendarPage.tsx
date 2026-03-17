@@ -109,8 +109,8 @@ export default function CalendarPage() {
     } else {
       setKolYear(todayKolYear);
     }
-    setSelectedDay(null);
-  }, [view, now, todayKolYear]);
+    setSelectedDay(todayGameday);
+  }, [view, now, todayKolYear, todayGameday]);
 
   return (
     <div className="calendar-page">
