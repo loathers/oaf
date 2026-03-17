@@ -317,6 +317,7 @@ code {
 
 .calendar-view-toggle {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -417,13 +418,18 @@ code {
   font-size: 0.875rem;
 }
 
+.calendar-grid-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+}
+
 .calendar-grid {
   display: grid;
   gap: 1px;
   background: #e2e8f0;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.375rem;
   overflow: hidden;
+  min-width: 500px;
 }
 
 .gregorian-grid {
@@ -535,6 +541,7 @@ code {
   width: 55px;
   height: 20px;
   display: block;
+  margin-top: auto;
 }
 
 .cell-holiday {
@@ -628,9 +635,12 @@ body.moonlight-mode input {
   border-color: #2a2a4e;
 }
 
+body.moonlight-mode .calendar-grid-wrapper {
+  border-color: #1a1a2e;
+}
+
 body.moonlight-mode .calendar-grid {
   background: #1a1a2e;
-  border-color: #1a1a2e;
 }
 
 body.moonlight-mode .calendar-header {

@@ -1,3 +1,4 @@
+import React from "react";
 import { LoathingDate } from "../../../clients/LoathingDate.js";
 import CalendarNav from "./CalendarNav.js";
 import { HOLIDAY_EMOJI } from "./holidayEmoji.js";
@@ -55,6 +56,7 @@ export default function KolCalendar({
         onJump={onJump}
         onJumpToToday={onJumpToToday}
       />
+      <div className="calendar-grid-wrapper">
       <div className="calendar-grid kol-grid">
         <div className="calendar-header" />
         {Array.from({ length: 8 }, (_, i) => (
@@ -63,8 +65,8 @@ export default function KolCalendar({
           </div>
         ))}
         {MONTH_NAMES.map((monthName, monthIndex) => (
-          <>
-            <div key={`label-${monthIndex}`} className="kol-month-label">
+          <React.Fragment key={monthIndex}>
+            <div className="kol-month-label">
               {monthName}
             </div>
             {Array.from({ length: 8 }, (_, dayIndex) => {
@@ -118,8 +120,9 @@ export default function KolCalendar({
                 </div>
               );
             })}
-          </>
+          </React.Fragment>
         ))}
+      </div>
       </div>
     </div>
   );

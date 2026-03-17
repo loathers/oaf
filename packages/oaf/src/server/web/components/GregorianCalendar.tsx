@@ -67,6 +67,7 @@ export default function GregorianCalendar({
         onJump={onJump}
         onJumpToToday={onJumpToToday}
       />
+      <div className="calendar-grid-wrapper">
       <div className="calendar-grid gregorian-grid">
         {DAY_NAMES.map((d) => (
           <div key={d} className="calendar-header">
@@ -116,6 +117,7 @@ export default function GregorianCalendar({
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
