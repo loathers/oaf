@@ -162,7 +162,7 @@ export async function buildGlobalsContent(gameday: number): Promise<string> {
 
 export async function updateGlobalsMessage() {
   try {
-    const gameday = LoathingDate.fromRealDate(new Date());
+    const gameday = LoathingDate.gameDayFromRealDate(new Date());
     const stored = await getGlobalsMessage(gameday);
     if (!stored) return;
 

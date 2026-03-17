@@ -66,7 +66,7 @@ export default function KolCalendar({
               {monthName}
             </div>
             {Array.from({ length: 8 }, (_, dayIndex) => {
-              const gameday = LoathingDate.getDaysSinceEpoch(
+              const gameday = LoathingDate.getDaysSinceEpochFromKoLDate(
                 kolYear,
                 monthIndex,
                 dayIndex + 1,

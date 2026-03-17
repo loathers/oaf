@@ -10,7 +10,7 @@ import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
 export const dailiesRouter = Router();
 
 dailiesRouter.get("/", async (_req, res) => {
-  const gameday = LoathingDate.fromRealDate(new Date());
+  const gameday = LoathingDate.gameDayFromRealDate(new Date());
   const dailies = await getDailiesForGameday(gameday);
   const dailyByKey = new Map(dailies.map((d) => [d.key, d]));
 
@@ -36,7 +36,7 @@ dailiesRouter.get("/:key", async (req, res) => {
     return;
   }
 
-  const gameday = LoathingDate.fromRealDate(new Date());
+  const gameday = LoathingDate.gameDayFromRealDate(new Date());
   const submissions = await getDailySubmissionsForKey(key, gameday);
   res.json({ key, submissions });
 });

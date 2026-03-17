@@ -58,7 +58,7 @@ export async function handleSubmission(
 
   const { key, value } = parsed;
 
-  const gameday = LoathingDate.fromRealDate(new Date());
+  const gameday = LoathingDate.gameDayFromRealDate(new Date());
 
   await upsertPlayerInfo(playerId, playerName);
   await upsertDailySubmission(key, value, playerId, gameday);
@@ -119,7 +119,7 @@ export function init() {
   });
 
   kolClient.on("rollover", () => {
-    const gameday = LoathingDate.fromRealDate(new Date());
+    const gameday = LoathingDate.gameDayFromRealDate(new Date());
     void clearDailySubmissions(gameday);
   });
 }

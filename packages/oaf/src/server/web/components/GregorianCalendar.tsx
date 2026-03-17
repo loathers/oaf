@@ -74,7 +74,7 @@ export default function GregorianCalendar({
         ))}
         {dates.map((date) => {
           const noon = new Date(date.getTime() + 12 * 60 * 60 * 1000);
-          const gameday = LoathingDate.fromRealDate(noon);
+          const gameday = LoathingDate.gameDayFromRealDate(noon);
           const ld = LoathingDate.fromGameday(gameday);
           const isCurrentMonth = date.getUTCMonth() === month;
           const isToday = gameday === todayGameday;

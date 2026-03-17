@@ -804,7 +804,7 @@ export async function deleteDaily(key: string, gameday: number) {
 
 export async function getDaily(
   key: string,
-  gameday = LoathingDate.fromRealDate(new Date()),
+  gameday = LoathingDate.gameDayFromRealDate(new Date()),
 ) {
   return await db
     .selectFrom("Daily")

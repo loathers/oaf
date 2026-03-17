@@ -172,7 +172,7 @@ async function onRollover() {
   }
 
   // Build and send the Globals message (editable in-place as consensus forms)
-  const gameday = LoathingDate.fromRealDate(new Date());
+  const gameday = LoathingDate.gameDayFromRealDate(new Date());
   const globalsContent = await buildGlobals(gameday);
   const globalsMsg = await channel.send({
     content: globalsContent,

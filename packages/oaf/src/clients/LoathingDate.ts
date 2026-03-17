@@ -1,4 +1,5 @@
 import { dedent } from "ts-dedent";
+import { addDays, differenceInDays, subDays } from "date-fns";
 
 const GAME_HOLIDAYS = new Map<`${number},${number}`, string>([
   ["0,1", "Festival of Jarlsberg"],
@@ -67,8 +68,8 @@ export class LoathingDate {
   static EPOCH = new Date(Date.UTC(2003, 1, 1, 3, 30));
   static COLLISION = 1218;
 
-  static getDaysSinceEpoch(year: number, month: number, date: number) {
-    return (year - 1) * 96 + month * 8 + (date - 1);
+  static getDaysSinceEpoch(kolYear: number, kolMonth: number, kolDate: number) {
+    return (kolYear - 1) * 96 + kolMonth * 8 + (kolDate - 1);
   }
 
   static fromGameday(gameday: number) {
@@ -78,11 +79,8 @@ export class LoathingDate {
     return new LoathingDate(year, month, date);
   }
 
-  static fromRealDate(realDate: Date) {
-    return Math.floor(
-      (realDate.getTime() - LoathingDate.EPOCH.getTime()) /
-        (1000 * 60 * 60 * 24),
-    );
+  static gameDayFromRealDate(realDate: Date) {
+    return differenceInDays(realDate, LoathingDate.EPOCH);
   }
 
   #year: number;
@@ -90,17 +88,15 @@ export class LoathingDate {
   #date: number;
   #realDate: Date;
 
-  constructor(date: Date);
-  constructor(year?: number, month?: number, date?: number);
-  constructor(yearOrDate: Date | number = new Date(), month = 0, date = 0) {
+  constructor(realDate: Date);
+  constructor(kolYear?: number, kolMonth?: number, kolDate?: number);
+  constructor(kolYearOrRealDate: Date | number = new Date(), kolMonth = 0, kolDate = 0) {
     const daysSinceEpoch =
-      yearOrDate instanceof Date
-        ? LoathingDate.fromRealDate(yearOrDate)
-        : LoathingDate.getDaysSinceEpoch(yearOrDate, month, date);
+      kolYearOrRealDate instanceof Date
+        ? LoathingDate.gameDayFromRealDate(kolYearOrRealDate)
+        : LoathingDate.getDaysSinceEpoch(kolYearOrRealDate, kolMonth, kolDate);
 
-    this.#realDate = new Date(
-      LoathingDate.EPOCH.getTime() + daysSinceEpoch * 1000 * 60 * 60 * 24,
-    );
+    this.#realDate = addDays(LoathingDate.EPOCH.getTime(), daysSinceEpoch);
     this.#year = Math.floor(daysSinceEpoch / 96) + 1;
     this.#month = Math.floor((daysSinceEpoch % 96) / 8);
     this.#date = Math.floor(daysSinceEpoch % 8) + 1;
