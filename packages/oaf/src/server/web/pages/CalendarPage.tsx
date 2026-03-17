@@ -45,7 +45,7 @@ export default function CalendarPage() {
   const [gregYear, setGregYear] = useState(now.getUTCFullYear());
   const [gregMonth, setGregMonth] = useState(now.getUTCMonth());
   const [kolYear, setKolYear] = useState(todayKolYear);
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(todayGameday);
   const [data, setData] = useState<CalendarData>({ dailies: {}, raffles: {} });
   const [loading, setLoading] = useState(false);
 

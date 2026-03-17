@@ -2,7 +2,6 @@ import { LoathingDate } from "../../../clients/LoathingDate.js";
 import CalendarNav from "./CalendarNav.js";
 import { HOLIDAY_EMOJI } from "./holidayEmoji.js";
 
-const MOON_ICONS = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const STAT_CLASSES: Record<string, string> = {
@@ -101,10 +100,11 @@ export default function GregorianCalendar({
               onClick={() => onSelectDay(gameday)}
             >
               <span className="cell-day">{date.getUTCDate()}</span>
-              <span className="cell-moons">
-                {MOON_ICONS[ld.getRonaldPhase()]}
-                {MOON_ICONS[ld.getGrimacePhase()]}
-              </span>
+              <img
+                className="cell-moons"
+                src={`data:image/svg+xml,${encodeURIComponent(ld.getMoonsAsSvg())}`}
+                alt={ld.getMoonDescription()}
+              />
               {holidays.length > 0 && (
                 <span className="cell-holiday" title={holidays.join(", ")}>
                   {holidays.map((h) => HOLIDAY_EMOJI[h] ?? "🎉").join("")}

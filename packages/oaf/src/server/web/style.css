@@ -531,8 +531,9 @@ code {
 }
 
 .cell-moons {
-  font-size: 0.625rem;
-  line-height: 1;
+  width: 55px;
+  height: 20px;
+  display: block;
 }
 
 .cell-holiday {

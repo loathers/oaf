@@ -2,7 +2,7 @@ import { LoathingDate } from "../../../clients/LoathingDate.js";
 import CalendarNav from "./CalendarNav.js";
 import { HOLIDAY_EMOJI } from "./holidayEmoji.js";
 
-const MOON_ICONS = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
+
 
 const MONTH_NAMES = [
   "Jarlsuary",
@@ -99,10 +99,11 @@ export default function KolCalendar({
                   onClick={() => onSelectDay(gameday)}
                 >
                   {isToday && <span className="today-dot" title="Today" />}
-                  <span className="cell-moons">
-                    {MOON_ICONS[ld.getRonaldPhase()]}
-                    {MOON_ICONS[ld.getGrimacePhase()]}
-                  </span>
+                  <img
+                    className="cell-moons"
+                    src={`data:image/svg+xml,${encodeURIComponent(ld.getMoonsAsSvg())}`}
+                    alt={ld.getMoonDescription()}
+                  />
                   {holidays.length > 0 && (
                     <span
                       className="cell-holiday"
