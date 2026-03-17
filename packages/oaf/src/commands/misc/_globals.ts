@@ -103,6 +103,12 @@ export const DAILY_GLOBALS: DailyGlobal[] = [
     crowdsourced: false,
     render: renderSocp,
   },
+  {
+    key: "g9",
+    displayName: "Experimental Effect G-9",
+    crowdsourced: true,
+    render: (data) => `+${data}% all stats`,
+  },
 ];
 
 export const CONSENSUS_THRESHOLD = 5;

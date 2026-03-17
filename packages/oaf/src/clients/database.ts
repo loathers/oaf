@@ -865,6 +865,7 @@ export async function getRafflesForGamedayRange(from: number, to: number) {
       place: w.place,
       tickets: w.tickets,
       playerName: w.playerName,
+      playerId: w.playerId,
     })),
   }));
 }

@@ -53,12 +53,17 @@ function renderJickJar(data: string): TextSegment[] {
   ];
 }
 
+function renderG9(data: string): TextSegment[] {
+  return [{ text: `+${data}% all stats`, href: toWikiLink("Experimental Effect G-9") }];
+}
+
 const RENDERERS: Record<string, (data: string) => TextSegment[]> = {
   snootee: renderRestaurantItem,
   microbrewery: renderRestaurantItem,
   socp: renderSocp,
   votemonster: renderVoteMonster,
   jickjar: renderJickJar,
+  g9: renderG9,
 };
 
 function renderDaily(key: string, value: string): TextSegment[] {
