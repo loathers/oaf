@@ -161,10 +161,10 @@ describe("SVG", () => {
     const d = new LoathingDate(new Date(Date.UTC(2023, 10, 16, 12, 0, 0)));
     expect(d.getMoonsAsSvg()).toBe(dedent`
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="110" height="40" style="dominant-baseline: hanging;">
-      <text id="ronald" x="10" y="7" font-size="30">🌘</text>
-      <text id="grimace" x="70" y="7" font-size="30">🌕</text>
-      <text id="hamburglar" x="87" y="16" font-size="10">🌑</text>
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="110" height="50" viewBox="0 0 110 50">
+      <text id="ronald" x="10" y="35" font-size="30">🌘</text>
+      <text id="grimace" x="70" y="35" font-size="30">🌕</text>
+      <text id="hamburglar" x="87" y="35" font-size="10">🌑</text>
     </svg>
     `);
   });
@@ -173,10 +173,10 @@ describe("SVG", () => {
     const d = new LoathingDate(new Date(Date.UTC(2023, 10, 15, 12, 0, 0)));
     expect(d.getMoonsAsSvg("Noto Color Emoji")).toBe(dedent`
     <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="110" height="40" style="dominant-baseline: hanging;">
-      <text id="ronald" x="10" y="7" font-size="30" font-family="Noto Color Emoji">🌑</text>
-      <text id="grimace" x="70" y="7" font-size="30" font-family="Noto Color Emoji">🌕</text>
-      <text id="hamburglar" x="50" y="16" font-size="10" font-family="Noto Color Emoji">🌕</text>
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="110" height="50" viewBox="0 0 110 50">
+      <text id="ronald" x="10" y="35" font-size="30" font-family="Noto Color Emoji">🌑</text>
+      <text id="grimace" x="70" y="35" font-size="30" font-family="Noto Color Emoji">🌕</text>
+      <text id="hamburglar" x="50" y="35" font-size="10" font-family="Noto Color Emoji">🌕</text>
     </svg>
     `);
   });

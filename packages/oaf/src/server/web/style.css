@@ -318,6 +318,7 @@ code {
 .calendar-view-toggle {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -539,7 +540,7 @@ code {
 
 .cell-moons {
   width: 55px;
-  height: 20px;
+  aspect-ratio: 110 / 50;
   display: block;
   margin-top: auto;
 }
@@ -547,12 +548,10 @@ code {
 @media (max-width: 640px) {
   .cell-moons {
     width: 40px;
-    height: 15px;
   }
 
   .kol-cell .cell-moons {
     width: 30px;
-    height: 11px;
   }
 }
 
@@ -696,6 +695,10 @@ code {
   font-size: 0.875rem;
   cursor: pointer;
   margin-left: auto;
+}
+
+.moonlight-toggle input {
+  width: auto;
 }
 
 body.moonlight-mode {
