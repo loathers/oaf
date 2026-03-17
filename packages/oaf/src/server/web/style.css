@@ -678,12 +678,12 @@ body.moonlight-mode .calendar-cell.stat-moxie {
 }
 
 body.moonlight-mode .calendar-cell.outside-month {
-  background: #0a0a1a;
+  background: color-mix(in srgb, #c8dcff calc(var(--moonlight, 0) * 10%), #0f0f23);
   color: #4a4a6a;
 }
 
 body.moonlight-mode .calendar-cell:hover {
-  background: #1a1a3e;
+  background: color-mix(in srgb, #c8dcff calc(var(--moonlight, 0) * 10% + 8%), #0f0f23);
 }
 
 body.moonlight-mode .calendar-cell.selected {
