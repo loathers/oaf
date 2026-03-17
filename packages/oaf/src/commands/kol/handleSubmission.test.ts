@@ -81,7 +81,7 @@ vi.mock("../misc/_globals.js", () => ({
 }));
 
 vi.mock("../../clients/LoathingDate.js", () => ({
-  LoathingDate: { fromRealDate: () => 100 },
+  LoathingDate: { gameDayFromRealDate: () => 100 },
 }));
 
 vi.mock("../../config.js", () => ({

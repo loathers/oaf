@@ -1,4 +1,5 @@
 import { LoathingDate } from "../../../clients/LoathingDate.js";
+import { toWikiLink } from "../../../utils.js";
 import type { CalendarData } from "../types/calendar.js";
 
 const MOON_ICONS = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
@@ -58,7 +59,11 @@ export default function DayDetail({ gameday, todayGameday, data }: Props) {
           <h3>Holidays</h3>
           <ul>
             {holidays.map((h) => (
-              <li key={h}>{h}</li>
+              <li key={h}>
+                <a href={toWikiLink(h)} target="_blank" rel="noreferrer">
+                  {h}
+                </a>
+              </li>
             ))}
           </ul>
         </div>
@@ -92,7 +97,10 @@ export default function DayDetail({ gameday, todayGameday, data }: Props) {
                 const winners = isToday ? [] : raffle.winners.filter((w) => w.place === place);
                 return (
                   <p key={place}>
-                    {place === 1 ? "🥇" : "🥈"} {prize.name}
+                    {place === 1 ? "🥇" : "🥈"}{" "}
+                    <a href={toWikiLink(prize.name)} target="_blank" rel="noreferrer">
+                      {prize.name}
+                    </a>
                     {winners.length > 0 && (
                       <>
                         {" - "}

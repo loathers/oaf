@@ -20,7 +20,7 @@ import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
-import { formatPlayer } from "../../utils.js";
+import { formatPlayer } from "../../discordUtils.js";
 import { embedForItem } from "../wiki/item.js";
 
 export const data = new SlashCommandBuilder()

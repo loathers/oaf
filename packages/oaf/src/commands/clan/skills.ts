@@ -8,12 +8,8 @@ import {
 } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
-import {
-  columnsByMaxLength,
-  formatPlayer,
-  notNull,
-  pluralize,
-} from "../../utils.js";
+import { columnsByMaxLength, formatPlayer } from "../../discordUtils.js";
+import { notNull, pluralize } from "../../utils.js";
 import { identifyPlayer } from "../_player.js";
 import { DREAD_CLANS } from "./_clans.js";
 import {

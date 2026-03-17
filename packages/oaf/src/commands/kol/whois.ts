@@ -14,7 +14,8 @@ import { createEmbed, discordClient } from "../../clients/discord.js";
 import { greenboxClient } from "../../clients/greenbox.js";
 import { snapshotClient } from "../../clients/snapshot.js";
 import { renderSvg } from "../../svgConverter.js";
-import { formatPlayer, toMuseumLink, toSamsaraLink } from "../../utils.js";
+import { formatPlayer } from "../../discordUtils.js";
+import { toMuseumLink, toSamsaraLink } from "../../utils.js";
 import { findPlayer, identifyPlayer } from "../_player.js";
 
 export const data = new SlashCommandBuilder()

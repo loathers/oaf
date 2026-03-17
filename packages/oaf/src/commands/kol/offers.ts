@@ -15,7 +15,7 @@ import {
   upsertOffer,
 } from "../../clients/database.js";
 import { createEmbed } from "../../clients/discord.js";
-import { formatPlayer } from "../../utils.js";
+import { formatPlayer } from "../../discordUtils.js";
 import { itemAutocomplete, itemOption } from "../_options.js";
 
 const numberFormat = new Intl.NumberFormat();

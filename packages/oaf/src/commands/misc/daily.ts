@@ -17,12 +17,8 @@ import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { renderSvg } from "../../svgConverter.js";
-import {
-  englishJoin,
-  formatPlayer,
-  getRandom,
-  toWikiLink,
-} from "../../utils.js";
+import { formatPlayer } from "../../discordUtils.js";
+import { englishJoin, getRandom, toWikiLink } from "../../utils.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
 import { buildGlobals } from "./_globals.js";
 
