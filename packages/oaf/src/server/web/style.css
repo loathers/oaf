@@ -544,6 +544,18 @@ code {
   margin-top: auto;
 }
 
+@media (max-width: 640px) {
+  .cell-moons {
+    width: 40px;
+    height: 15px;
+  }
+
+  .kol-cell .cell-moons {
+    width: 30px;
+    height: 11px;
+  }
+}
+
 .cell-holiday {
   position: absolute;
   top: 0.25rem;
