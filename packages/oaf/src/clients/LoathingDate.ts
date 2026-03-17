@@ -1,5 +1,5 @@
 import { dedent } from "ts-dedent";
-import { addDays, differenceInDays, subDays } from "date-fns";
+import { addDays, differenceInDays } from "date-fns";
 
 const GAME_HOLIDAYS = new Map<`${number},${number}`, string>([
   ["0,1", "Festival of Jarlsberg"],
