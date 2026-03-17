@@ -6,7 +6,70 @@ import {
   getRafflesForGamedayRange,
 } from "../../clients/database.js";
 import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
-import type { CalendarData } from "../web/types/calendar.js";
+import { toWikiLink } from "../../utils.js";
+import type { CalendarData, TextSegment } from "../web/types/calendar.js";
+
+const numberFormat = new Intl.NumberFormat();
+
+function renderRestaurantItem(data: string): TextSegment[] {
+  const item = dataOfLoathingClient.findItemByName(data);
+  if (!item) return [{ text: data }];
+  const wikiLink = dataOfLoathingClient.getWikiLink(item);
+  const price = item.autosell * 3;
+  return [
+    { text: data, href: wikiLink ?? undefined },
+    { text: price > 0 ? ` (${price} Meat)` : "" },
+  ];
+}
+
+function renderSocp(data: string): TextSegment[] {
+  const { itemId, price } = JSON.parse(data) as {
+    itemId: number;
+    price: number;
+  };
+  const item = dataOfLoathingClient.findItemById(itemId);
+  if (!item) return [{ text: data }];
+  const wikiLink = dataOfLoathingClient.getWikiLink(item);
+  return [
+    { text: item.name, href: wikiLink ?? undefined },
+    { text: ` for ${numberFormat.format(price)} knucklebones` },
+  ];
+}
+
+function renderVoteMonster(data: string): TextSegment[] {
+  const monster = dataOfLoathingClient.findMonsterByName(data);
+  if (!monster) return [{ text: data }];
+  const wikiLink = dataOfLoathingClient.getWikiLink(monster);
+  return [{ text: data, href: wikiLink ?? undefined }];
+}
+
+function renderJickJar(data: string): TextSegment[] {
+  return [
+    { text: `players whose id % 23 = ${data} can make a ` },
+    {
+      text: "jar",
+      href: toWikiLink("Jar of psychoses (Jick)"),
+    },
+  ];
+}
+
+const RENDERERS: Record<string, (data: string) => TextSegment[]> = {
+  snootee: renderRestaurantItem,
+  microbrewery: renderRestaurantItem,
+  socp: renderSocp,
+  votemonster: renderVoteMonster,
+  jickjar: renderJickJar,
+};
+
+function renderDaily(key: string, value: string): TextSegment[] {
+  const renderer = RENDERERS[key];
+  if (!renderer) return [{ text: value }];
+  try {
+    return renderer(value);
+  } catch {
+    return [{ text: value }];
+  }
+}
 
 export const calendarRouter = Router();
 
@@ -45,6 +108,7 @@ calendarRouter.get("/", async (req, res) => {
             key: e.key,
             displayName: dailyDisplayNames.get(e.key)!,
             value: e.value,
+            rendered: renderDaily(e.key, e.value),
             thresholdReached: e.thresholdReached,
           })),
       ]),

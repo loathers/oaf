@@ -311,6 +311,10 @@ code {
   gap: 1rem;
 }
 
+.calendar-page h1 {
+  text-align: center;
+}
+
 .calendar-view-toggle {
   display: flex;
   gap: 0.5rem;
@@ -388,9 +392,6 @@ code {
   width: 100%;
 }
 
-.calendar-jump-popup input[type="number"] {
-  -moz-appearance: textfield;
-}
 
 .calendar-jump-actions {
   display: flex;

@@ -114,6 +114,7 @@ export default function CalendarPage() {
 
   return (
     <div className="calendar-page">
+      <h1>KoL Calendar</h1>
       <div className="calendar-view-toggle">
         <button
           className={view === "gregorian" ? "active" : ""}

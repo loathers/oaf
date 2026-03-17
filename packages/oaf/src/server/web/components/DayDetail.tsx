@@ -76,7 +76,16 @@ export default function DayDetail({ gameday, todayGameday, data }: Props) {
             <ul>
               {dailies.map((d) => (
                 <li key={d.key}>
-                  <strong>{d.displayName}</strong>: {d.value}
+                  <strong>{d.displayName}</strong>:{" "}
+                  {d.rendered.map((seg, i) =>
+                    seg.href ? (
+                      <a key={i} href={seg.href} target="_blank" rel="noreferrer">
+                        {seg.text}
+                      </a>
+                    ) : (
+                      <span key={i}>{seg.text}</span>
+                    ),
+                  )}
                   {!d.thresholdReached && " (unconfirmed)"}
                 </li>
               ))}
@@ -105,7 +114,7 @@ export default function DayDetail({ gameday, todayGameday, data }: Props) {
                       <>
                         {" - "}
                         {winners
-                          .map((w) => `${w.playerName} (${w.tickets.toLocaleString()})`)
+                          .map((w) => `${w.playerName} (#${w.playerId}) ${w.tickets.toLocaleString()} tickets`)
                           .join(", ")}
                       </>
                     )}

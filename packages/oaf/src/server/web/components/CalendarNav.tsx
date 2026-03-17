@@ -67,8 +67,10 @@ export default function CalendarNav(props: Props) {
     const year = parseInt(inputYear, 10);
     if (isNaN(year)) return;
     if (props.mode === "gregorian") {
+      if (year < 2003 || (year === 2003 && inputMonth < 1)) return;
       props.onJump(year, inputMonth);
     } else {
+      if (year < 1) return;
       props.onJump(year);
     }
     setOpen(false);
@@ -79,9 +81,14 @@ export default function CalendarNav(props: Props) {
       ? `${MONTH_OPTIONS[props.month]} ${props.year}`
       : `Year ${props.kolYear}`;
 
+  const atStart =
+    props.mode === "gregorian"
+      ? props.year <= 2003 && props.month <= 1
+      : props.kolYear <= 1;
+
   return (
     <div className="calendar-nav">
-      <button onClick={() => props.onNavigate(-1)}>&larr;</button>
+      <button disabled={atStart} onClick={() => props.onNavigate(-1)}>&larr;</button>
       <div className="calendar-nav-label-wrapper" ref={popupRef}>
         <button
           className="calendar-nav-label"
@@ -107,6 +114,8 @@ export default function CalendarNav(props: Props) {
               type="number"
               value={inputYear}
               onChange={(e) => setInputYear(e.target.value)}
+              min={props.mode === "gregorian" ? 2003 : 1}
+              step={1}
               autoFocus
             />
             <div className="calendar-jump-actions">
