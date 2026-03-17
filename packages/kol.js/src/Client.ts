@@ -52,6 +52,8 @@ type ApiStatus = {
   turnsplayed: string;
   /** kol game day number */
   daynumber: string;
+  /** player level */
+  level: string;
   /** session password */
   pwd: string;
 };

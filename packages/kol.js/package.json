@@ -32,6 +32,7 @@
     "got": "^14.6.6",
     "htmlparser2": "^10.1.0",
     "image-size": "^2.0.2",
+    "kol-rng": "^2.0.0",
     "querystring": "^0.2.1",
     "tough-cookie": "^6.0.0",
     "ts-dedent": "^2.2.0",
