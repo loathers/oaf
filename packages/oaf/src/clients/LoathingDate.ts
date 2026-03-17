@@ -71,6 +71,13 @@ export class LoathingDate {
     return (year - 1) * 96 + month * 8 + (date - 1);
   }
 
+  static fromGameday(gameday: number) {
+    const year = Math.floor(gameday / 96) + 1;
+    const month = Math.floor((gameday % 96) / 8);
+    const date = (gameday % 8) + 1;
+    return new LoathingDate(year, month, date);
+  }
+
   static fromRealDate(realDate: Date) {
     return Math.floor(
       (realDate.getTime() - LoathingDate.EPOCH.getTime()) /

@@ -822,6 +822,53 @@ export async function getDailiesForGameday(gameday: number) {
     .execute();
 }
 
+export async function getDailiesForGamedayRange(from: number, to: number) {
+  return await db
+    .selectFrom("Daily")
+    .selectAll()
+    .where("gameday", ">=", from)
+    .where("gameday", "<=", to)
+    .execute();
+}
+
+export async function getRafflesForGamedayRange(from: number, to: number) {
+  const raffles = await db
+    .selectFrom("Raffle")
+    .selectAll()
+    .where("gameday", ">=", from)
+    .where("gameday", "<=", to)
+    .orderBy("gameday", "asc")
+    .execute();
+
+  if (raffles.length === 0) return [];
+
+  const gamedays = raffles.map((r) => r.gameday);
+
+  const wins = await db
+    .selectFrom("RaffleWins")
+    .innerJoin("Player", "Player.playerId", "RaffleWins.playerId")
+    .select([
+      "RaffleWins.gameday",
+      "RaffleWins.place",
+      "RaffleWins.tickets",
+      "Player.playerId",
+      "Player.playerName",
+    ])
+    .where("RaffleWins.gameday", "in", gamedays)
+    .execute();
+
+  const winsByGameday = Map.groupBy(wins, (w) => w.gameday);
+
+  return raffles.map((r) => ({
+    ...r,
+    winners: (winsByGameday.get(r.gameday) ?? []).map((w) => ({
+      place: w.place,
+      tickets: w.tickets,
+      playerName: w.playerName,
+    })),
+  }));
+}
+
 export async function getDailySubmissionsForKey(key: string, gameday: number) {
   return await db
     .selectFrom("DailySubmission")

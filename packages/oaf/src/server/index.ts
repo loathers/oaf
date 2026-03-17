@@ -15,6 +15,7 @@ import {
   logoutHandler,
   requireAuth,
 } from "./api/auth.js";
+import { calendarRouter } from "./api/calendar.js";
 import { dailiesRouter } from "./api/dailies.js";
 import { messageRouter } from "./api/message.js";
 import { offersRouter } from "./api/offers.js";
@@ -202,6 +203,8 @@ app
       throw e;
     }
   })
+  // Public API routes
+  .use("/api/calendar", calendarRouter)
   // Auth routes
   .get("/login", loginHandler)
   .get("/logout", logoutHandler)

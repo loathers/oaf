@@ -1,0 +1,17 @@
+export const HOLIDAY_EMOJI: Record<string, string> = {
+  "Festival of Jarlsberg": "🎂",
+  "Valentine's Day": "💕",
+  "St. Sneaky Pete's Day": "🍺",
+  "Oyster Egg Day": "🥚",
+  "El Dia De Los Muertos Borrachos": "💀",
+  "Generic Summer Holiday": "☀️",
+  "Dependence Day": "🎆",
+  "Arrrbor Day": "🌳",
+  "Labór Day": "⚒️",
+  "Halloween": "🎃",
+  "Feast of Boris": "🦃",
+  "Yuletide": "🎄",
+  "Crimbo": "🎅",
+  "Drunksgiving": "🍻",
+  "El Dia De Los Muertos Borrachos y Agradecido": "💀🦃",
+};
