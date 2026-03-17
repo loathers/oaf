@@ -19,6 +19,7 @@ type Props = {
   onNavigate: (delta: number) => void;
   onJump: (year: number, month: number) => void;
   onJumpToToday: () => void;
+  moonlightMode: boolean;
 };
 
 function getGridDates(year: number, month: number) {
@@ -52,6 +53,7 @@ export default function GregorianCalendar({
   onNavigate,
   onJump,
   onJumpToToday,
+  moonlightMode,
 }: Props) {
   const dates = getGridDates(year, month);
 
@@ -97,6 +99,7 @@ export default function GregorianCalendar({
             <div
               key={date.toISOString()}
               className={classes}
+              style={moonlightMode ? { "--moonlight": ld.getMoonlight() } as React.CSSProperties : undefined}
               onClick={() => onSelectDay(gameday)}
             >
               <span className="cell-day">{date.getUTCDate()}</span>

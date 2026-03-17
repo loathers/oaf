@@ -46,6 +46,13 @@ export default function CalendarPage() {
   const [gregMonth, setGregMonth] = useState(now.getUTCMonth());
   const [kolYear, setKolYear] = useState(todayKolYear);
   const [selectedDay, setSelectedDay] = useState<number | null>(todayGameday);
+  const [moonlightMode, setMoonlightMode] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.toggle("moonlight-mode", moonlightMode);
+    return () => document.body.classList.remove("moonlight-mode");
+  }, [moonlightMode]);
+
   const [data, setData] = useState<CalendarData>({ dailies: {}, raffles: {} });
   const [loading, setLoading] = useState(false);
 
@@ -120,6 +127,14 @@ export default function CalendarPage() {
         >
           KoL Calendar
         </button>
+        <label className="moonlight-toggle">
+          <input
+            type="checkbox"
+            checked={moonlightMode}
+            onChange={(e) => setMoonlightMode(e.target.checked)}
+          />
+          Moonlight
+        </label>
       </div>
 
       {loading && <div className="calendar-loading">Loading...</div>}
@@ -134,6 +149,7 @@ export default function CalendarPage() {
           onNavigate={navigateGregorian}
           onJump={jumpGregorian}
           onJumpToToday={jumpToToday}
+          moonlightMode={moonlightMode}
         />
       ) : (
         <KolCalendar
@@ -144,6 +160,7 @@ export default function CalendarPage() {
           onNavigate={navigateKol}
           onJump={jumpKol}
           onJumpToToday={jumpToToday}
+          moonlightMode={moonlightMode}
         />
       )}
 

@@ -33,6 +33,7 @@ type Props = {
   onNavigate: (delta: number) => void;
   onJump: (kolYear: number) => void;
   onJumpToToday: () => void;
+  moonlightMode: boolean;
 };
 
 export default function KolCalendar({
@@ -43,6 +44,7 @@ export default function KolCalendar({
   onNavigate,
   onJump,
   onJumpToToday,
+  moonlightMode,
 }: Props) {
   return (
     <div>
@@ -96,6 +98,7 @@ export default function KolCalendar({
                 <div
                   key={`${monthIndex}-${dayIndex}`}
                   className={classes}
+                  style={moonlightMode ? { "--moonlight": ld.getMoonlight() } as React.CSSProperties : undefined}
                   onClick={() => onSelectDay(gameday)}
                 >
                   {isToday && <span className="today-dot" title="Today" />}

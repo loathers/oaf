@@ -589,3 +589,130 @@ code {
   color: #a0aec0;
   font-style: italic;
 }
+
+/* Moonlight mode */
+.moonlight-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+body.moonlight-mode {
+  background: #0a0a1a;
+  color: #ccd6f6;
+}
+
+body.moonlight-mode button {
+  background: #1a1a3e;
+  color: #ccd6f6;
+  border-color: #2a2a4e;
+}
+
+body.moonlight-mode button:hover {
+  background: #2a2a4e;
+}
+
+body.moonlight-mode .calendar-view-toggle button.active {
+  background: #64ffda;
+  color: #0a0a1a;
+}
+
+body.moonlight-mode select,
+body.moonlight-mode input {
+  background: #1a1a3e;
+  color: #ccd6f6;
+  border-color: #2a2a4e;
+}
+
+body.moonlight-mode .calendar-grid {
+  background: #1a1a2e;
+  border-color: #1a1a2e;
+}
+
+body.moonlight-mode .calendar-header {
+  background: #16213e;
+  color: #8892b0;
+}
+
+body.moonlight-mode .kol-month-label {
+  background: #16213e;
+  color: #8892b0;
+}
+
+body.moonlight-mode .calendar-nav-label {
+  color: #ccd6f6;
+}
+
+body.moonlight-mode .calendar-nav-label:hover {
+  background: #1a1a3e;
+}
+
+body.moonlight-mode .calendar-jump-popup {
+  background: #16213e;
+  border-color: #2a2a4e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+body.moonlight-mode .calendar-jump-actions button[type="button"] {
+  background: #1a1a3e;
+  color: #ccd6f6;
+}
+
+body.moonlight-mode .calendar-jump-actions button[type="button"]:hover {
+  background: #2a2a4e;
+}
+
+body.moonlight-mode .calendar-cell {
+  background: color-mix(in srgb, #c8dcff calc(var(--moonlight, 0) * 10%), #0f0f23);
+  color: #ccd6f6;
+  box-shadow: 0 0 calc(var(--moonlight, 0) * 3px) calc(var(--moonlight, 0) * 1px) rgba(200, 220, 255, calc(var(--moonlight, 0) * 0.1));
+}
+
+body.moonlight-mode .calendar-cell.stat-muscle,
+body.moonlight-mode .calendar-cell.stat-myst,
+body.moonlight-mode .calendar-cell.stat-moxie {
+  background: color-mix(in srgb, #c8dcff calc(var(--moonlight, 0) * 10%), #0f0f23);
+}
+
+body.moonlight-mode .calendar-cell.outside-month {
+  background: #0a0a1a;
+  color: #4a4a6a;
+}
+
+body.moonlight-mode .calendar-cell:hover {
+  background: #1a1a3e;
+}
+
+body.moonlight-mode .calendar-cell.selected {
+  outline-color: #64ffda;
+}
+
+body.moonlight-mode .calendar-cell.today .cell-day {
+  background: #64ffda;
+  color: #0f0f23;
+}
+
+body.moonlight-mode .today-dot {
+  background: #64ffda;
+}
+
+body.moonlight-mode .cell-holiday {
+  color: #ffd700;
+}
+
+body.moonlight-mode .day-detail {
+  background: #0f0f23;
+  border-color: #1a1a2e;
+  color: #ccd6f6;
+}
+
+body.moonlight-mode .day-detail-section h3 {
+  color: #8892b0;
+}
+
+body.moonlight-mode .no-data {
+  color: #4a4a6a;
+}
