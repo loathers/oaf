@@ -1,6 +1,7 @@
 import { LoathingDate } from "../../../clients/LoathingDate.js";
 import { toWikiLink } from "../../../utils.js";
 import type { CalendarData } from "../types/calendar.js";
+import WardrobeSection from "./WardrobeSection.js";
 
 const MOON_ICONS = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
 
@@ -127,6 +128,8 @@ export default function DayDetail({ gameday, todayGameday, data }: Props) {
           )}
         </div>
       )}
+
+      <WardrobeSection gameday={gameday} />
     </div>
   );
 }
