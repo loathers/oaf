@@ -12,7 +12,7 @@ const LOATHING_ORBIT_SPEED = 0.1;
 const MOON_ORBIT_RADIUS = 3;
 const RONALD_ORBIT_SPEED = 0.3; // 16-phase cycle (slower)
 const GRIMACE_ORBIT_SPEED = 0.6; // 8-phase cycle (2x Ronald)
-const HAMBURGLAR_SPEED = 0.8;
+const HAMBURGLAR_CYCLE_SPEED = 0.15; // speed of one 11-phase cycle
 
 function Sun() {
   const ref = useRef<Group>(null);
@@ -30,7 +30,18 @@ function Sun() {
         <sphereGeometry args={[1.5, 32, 32]} />
         <meshBasicMaterial color="#ffdd44" />
       </mesh>
-      <pointLight intensity={3} distance={50} decay={0.5} />
+      <directionalLight
+        intensity={2}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-near={0.5}
+        shadow-camera-far={30}
+        shadow-camera-left={-5}
+        shadow-camera-right={5}
+        shadow-camera-top={5}
+        shadow-camera-bottom={-5}
+      />
     </group>
   );
 }
@@ -95,7 +106,12 @@ const GrimaceMoon = forwardRef<Group>(function GrimaceMoon(_, ref) {
 
   return (
     <group ref={ref}>
-      <mesh geometry={geometry} key={texture ? "textured" : "plain"}>
+      <mesh
+        geometry={geometry}
+        key={texture ? "textured" : "plain"}
+        castShadow
+        receiveShadow
+      >
         <meshStandardMaterial
           color="#ffffff"
           map={texture}
@@ -111,57 +127,112 @@ function LoathingSystem() {
   const ronaldRef = useRef<Mesh>(null);
   const grimaceRef = useRef<Group>(null);
   const hamburglarRef = useRef<Group>(null);
-
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
 
+    // Ronald orbits Loathing (upper band)
+    const ronaldAngle = t * RONALD_ORBIT_SPEED;
     if (ronaldRef.current) {
-      const rt = t * RONALD_ORBIT_SPEED;
-      ronaldRef.current.position.x = Math.cos(rt) * MOON_ORBIT_RADIUS;
-      ronaldRef.current.position.z = Math.sin(rt) * MOON_ORBIT_RADIUS;
+      ronaldRef.current.position.x = Math.cos(ronaldAngle) * MOON_ORBIT_RADIUS;
+      ronaldRef.current.position.z = Math.sin(ronaldAngle) * MOON_ORBIT_RADIUS;
+      ronaldRef.current.position.y = 0.4;
     }
 
+    // Grimace orbits Loathing (lower band)
+    const grimaceAngle = t * GRIMACE_ORBIT_SPEED;
     if (grimaceRef.current) {
-      const gt = t * GRIMACE_ORBIT_SPEED;
-      grimaceRef.current.position.x = Math.cos(gt) * MOON_ORBIT_RADIUS;
-      grimaceRef.current.position.z = Math.sin(gt) * MOON_ORBIT_RADIUS;
+      grimaceRef.current.position.x = Math.cos(grimaceAngle) * MOON_ORBIT_RADIUS;
+      grimaceRef.current.position.z = Math.sin(grimaceAngle) * MOON_ORBIT_RADIUS;
+      grimaceRef.current.position.y = -0.4;
     }
 
-    if (hamburglarRef.current && ronaldRef.current && grimaceRef.current) {
-      const ht = t * HAMBURGLAR_SPEED;
-      const clearance = 0.6;
+    // Hamburglar: keyframed to match the 11 phase descriptions
+    // Each phase defines an offset relative to a moon or the midpoint:
+    //   [target, radial, tangential, vertical]
+    //   target: "g" = grimace, "r" = ronald, "m" = midpoint
+    //   radial: negative = toward Loathing (in front), positive = away (behind)
+    //   tangential: offset along orbit direction (left/right)
+    //   vertical: y offset
+    if (hamburglarRef.current) {
+      const c = 0.6; // clearance from moon center
+      // Phase keyframes: [target, radial, tangential, vertical]
+      const keyframes: [string, number, number, number][] = [
+        ["g", -c, -0.3, 0],    // 0: in front of Grimace's left side
+        ["g", -c, 0.3, 0],     // 1: in front of Grimace's right side
+        ["g", 0, 0.5, 0.1],    // 2: heading behind Grimace
+        ["g", c, 0, 0.2],      // 3: hidden behind Grimace
+        ["g", 0, -0.5, 0.1],   // 4: appearing from behind Grimace
+        ["r", 0, -0.5, -0.1],  // 5: disappearing behind Ronald
+        ["r", c, 0, -0.2],     // 6: hidden behind Ronald
+        ["r", 0, 0.5, -0.1],   // 7: returning from behind Ronald
+        ["r", -c, -0.3, 0],    // 8: in front of Ronald's left side
+        ["r", -c, 0.3, 0],     // 9: in front of Ronald's right side
+        ["m", -c * 0.8, 0, 0], // 10: front and center
+      ];
 
-      // Actual moon positions
-      const rx = ronaldRef.current.position.x;
-      const rz = ronaldRef.current.position.z;
-      const gx = grimaceRef.current.position.x;
-      const gz = grimaceRef.current.position.z;
+      // Continuous phase: 0→11 repeating
+      const cycleT = t * HAMBURGLAR_CYCLE_SPEED;
+      const rawPhase = ((cycleT % 11) + 11) % 11;
+      const phaseIndex = Math.floor(rawPhase);
+      const phaseFrac = rawPhase - phaseIndex;
+      const nextIndex = (phaseIndex + 1) % 11;
 
-      // Phase within one figure-8 cycle
-      const phase = ((ht % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      const from = keyframes[phaseIndex];
+      const to = keyframes[nextIndex];
 
-      // Blend 0→1→0: 0 = at Ronald, 1 = at Grimace
-      const blend = (1 - Math.cos(phase)) / 2;
+      // Smooth interpolation (ease in/out)
+      const smooth = phaseFrac * phaseFrac * (3 - 2 * phaseFrac);
 
-      // Center of the loop: the actual moon position we're orbiting
-      const cx = rx + (gx - rx) * blend;
-      const cz = rz + (gz - rz) * blend;
+      // Interpolate offsets
+      const radial = from[1] + (to[1] - from[1]) * smooth;
+      const tangential = from[2] + (to[2] - from[2]) * smooth;
+      const vertical = from[3] + (to[3] - from[3]) * smooth;
 
-      // Radial and tangential directions at this point on the orbit
+      // Determine which target we're relative to
+      // Blend the target too when transitioning between moons
+      const fromTarget = from[0];
+      const toTarget = to[0];
+
+      function getTargetPos(target: string): [number, number, number] {
+        if (target === "r") {
+          return [
+            Math.cos(ronaldAngle) * MOON_ORBIT_RADIUS,
+            0.4,
+            Math.sin(ronaldAngle) * MOON_ORBIT_RADIUS,
+          ];
+        } else if (target === "g") {
+          return [
+            Math.cos(grimaceAngle) * MOON_ORBIT_RADIUS,
+            -0.4,
+            Math.sin(grimaceAngle) * MOON_ORBIT_RADIUS,
+          ];
+        } else {
+          // Midpoint between both moons
+          return [
+            (Math.cos(ronaldAngle) + Math.cos(grimaceAngle)) * MOON_ORBIT_RADIUS / 2,
+            0,
+            (Math.sin(ronaldAngle) + Math.sin(grimaceAngle)) * MOON_ORBIT_RADIUS / 2,
+          ];
+        }
+      }
+
+      const fromPos = getTargetPos(fromTarget);
+      const toPos = getTargetPos(toTarget);
+      const cx = fromPos[0] + (toPos[0] - fromPos[0]) * smooth;
+      const cy = fromPos[1] + (toPos[1] - fromPos[1]) * smooth;
+      const cz = fromPos[2] + (toPos[2] - fromPos[2]) * smooth;
+
+      // Radial direction (outward from Loathing) at center position
       const dist = Math.sqrt(cx * cx + cz * cz) || 1;
       const radX = cx / dist;
       const radZ = cz / dist;
+      // Tangential direction (along orbit)
       const tanX = -radZ;
       const tanZ = radX;
 
-      // Local loop: two full circles per figure-8 period
-      const loopAngle = phase * 2;
-      const offRadial = Math.cos(loopAngle) * clearance;
-      const offTangential = Math.sin(loopAngle) * clearance;
-
-      hamburglarRef.current.position.x = cx + radX * offRadial + tanX * offTangential;
-      hamburglarRef.current.position.z = cz + radZ * offRadial + tanZ * offTangential;
-      hamburglarRef.current.position.y = Math.sin(phase) * 0.15;
+      hamburglarRef.current.position.x = cx + radX * radial + tanX * tangential;
+      hamburglarRef.current.position.y = cy + vertical;
+      hamburglarRef.current.position.z = cz + radZ * radial + tanZ * tangential;
     }
   });
 
@@ -178,7 +249,7 @@ function LoathingSystem() {
   return (
     <group>
       {/* Loathing */}
-      <mesh>
+      <mesh castShadow>
         <sphereGeometry args={[1, 32, 32]} />
         <meshStandardMaterial color="#4a90d9" roughness={0.7} />
       </mesh>
@@ -186,7 +257,12 @@ function LoathingSystem() {
       <OrbitRing radiusX={MOON_ORBIT_RADIUS} color="#4488ff" />
 
       {/* Ronald */}
-      <mesh ref={ronaldRef} key={ronaldTexture ? "textured" : "plain"}>
+      <mesh
+        ref={ronaldRef}
+        key={ronaldTexture ? "textured" : "plain"}
+        castShadow
+        receiveShadow
+      >
         <sphereGeometry args={[0.35, 32, 32]} />
         <meshStandardMaterial
           color="#ffffff"
@@ -200,7 +276,7 @@ function LoathingSystem() {
 
       {/* Hamburglar */}
       <group ref={hamburglarRef}>
-        <mesh>
+        <mesh castShadow receiveShadow>
           <sphereGeometry args={[0.12, 16, 16]} />
           <meshStandardMaterial
             color="#ff6347"
@@ -252,10 +328,11 @@ export default function MoonOrbits({ onClose }: { onClose: () => void }) {
         </button>
       </div>
       <Canvas
+        shadows
         camera={{ position: [0, 8, 12], fov: 50 }}
         style={{ flex: 1 }}
       >
-        <ambientLight intensity={0.08} />
+        <ambientLight intensity={0.05} />
         <OrbitControls enablePan={false} />
         <OrbitRing radiusX={SUN_SEMI_MAJOR} radiusZ={SUN_SEMI_MINOR} color="#ffdd44" />
         <Sun />
