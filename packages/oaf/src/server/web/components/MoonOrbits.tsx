@@ -1,6 +1,13 @@
 import { OrbitControls } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import * as THREE from "three";
 import { Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
 import type { Group, Mesh, Texture } from "three";
@@ -123,13 +130,24 @@ const GrimaceMoon = forwardRef<Group>(function GrimaceMoon(_, ref) {
   );
 });
 
-function LoathingSystem() {
+interface OrbitalPositions {
+  sunAngle: number;
+  ronaldAngle: number;
+  grimaceAngle: number;
+}
+
+function LoathingSystem({
+  positionsRef,
+}: {
+  positionsRef: React.MutableRefObject<OrbitalPositions>;
+}) {
   const ronaldRef = useRef<Mesh>(null);
   const grimaceRef = useRef<Group>(null);
   const hamburglarRef = useRef<Group>(null);
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
 
+    const sunAngle = t * LOATHING_ORBIT_SPEED;
     // Ronald orbits Loathing (upper band)
     const ronaldAngle = t * RONALD_ORBIT_SPEED;
     if (ronaldRef.current) {
@@ -145,6 +163,9 @@ function LoathingSystem() {
       grimaceRef.current.position.z = Math.sin(grimaceAngle) * MOON_ORBIT_RADIUS;
       grimaceRef.current.position.y = -0.4;
     }
+
+    // Update shared positions for the phase overlay
+    positionsRef.current = { sunAngle, ronaldAngle, grimaceAngle };
 
     // Hamburglar: keyframed to match the 11 phase descriptions
     // Each phase defines an offset relative to a moon or the midpoint:
@@ -289,7 +310,127 @@ function LoathingSystem() {
   );
 }
 
+/**
+ * Draws a moon phase as an SVG.
+ * elongation: angle between sun and moon as seen from Loathing.
+ * 0 = new moon (dark), π = full moon (lit).
+ * The lit side faces the sun direction.
+ */
+function MoonPhaseSvg({
+  elongation,
+  size = 48,
+  label,
+}: {
+  elongation: number;
+  size?: number;
+  label: string;
+}) {
+  const r = size / 2 - 2;
+  const cx = size / 2;
+  const cy = size / 2;
+
+  // How much of the visible face is lit (0 = new, 1 = full)
+  const illum = (1 - Math.cos(elongation)) / 2;
+
+  // The terminator is an ellipse whose x-radius depends on illumination
+  // terminatorX: r = full, 0 = quarter, -r = new
+  const terminatorX = r * (1 - 2 * illum);
+
+  // Determine if we're waxing (right side lit) or waning (left side lit)
+  // based on the sign of sin(elongation)
+  const waxing = Math.sin(elongation) >= 0;
+
+  // Draw: dark circle background, then lit area
+  // Lit area = one semicircle + one terminator arc
+  const litSide = waxing ? 1 : -1;
+
+  // Path for the lit portion:
+  // Semicircle on the lit side + terminator ellipse arc
+  const d = [
+    `M ${cx} ${cy - r}`,
+    // Semicircle on the lit side
+    `A ${r} ${r} 0 0 ${waxing ? 1 : 0} ${cx} ${cy + r}`,
+    // Terminator arc back to top (elliptical)
+    `A ${Math.abs(terminatorX)} ${r} 0 0 ${terminatorX * litSide > 0 ? 1 : 0} ${cx} ${cy - r}`,
+    "Z",
+  ].join(" ");
+
+  return (
+    <div style={{ textAlign: "center" }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {/* Dark base (unlit moon) */}
+        <circle cx={cx} cy={cy} r={r} fill="#222" />
+        {/* Lit portion */}
+        <path d={d} fill="#ddd" />
+        {/* Moon outline */}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#555" strokeWidth={0.5} />
+      </svg>
+      <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>{label}</div>
+    </div>
+  );
+}
+
+function PhaseOverlay({
+  positionsRef,
+}: {
+  positionsRef: React.RefObject<OrbitalPositions>;
+}) {
+  const ronaldRef = useRef<HTMLDivElement>(null);
+  const grimaceRef = useRef<HTMLDivElement>(null);
+  const [ronaldElong, setRonaldElong] = useState(0);
+  const [grimaceElong, setGrimaceElong] = useState(0);
+
+  const updatePhases = useCallback(() => {
+    const pos = positionsRef.current;
+    if (!pos) return;
+
+    // Elongation = angle between sun and moon as seen from Loathing (origin)
+    // Sun angle is the direction TO the sun from Loathing
+    // Moon angle is the direction TO the moon from Loathing
+    // elongation = moonAngle - sunAngle (the angular separation)
+    const re = pos.ronaldAngle - pos.sunAngle;
+    const ge = pos.grimaceAngle - pos.sunAngle;
+
+    setRonaldElong(re);
+    setGrimaceElong(ge);
+  }, [positionsRef]);
+
+  useEffect(() => {
+    let raf: number;
+    function loop() {
+      updatePhases();
+      raf = requestAnimationFrame(loop);
+    }
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [updatePhases]);
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 48,
+        left: 16,
+        display: "flex",
+        gap: 12,
+        background: "rgba(0,0,0,0.5)",
+        borderRadius: 8,
+        padding: "8px 12px",
+      }}
+    >
+      <MoonPhaseSvg elongation={ronaldElong} label="Ronald" />
+      <MoonPhaseSvg elongation={grimaceElong} label="Grimace" />
+    </div>
+  );
+}
+
 export default function MoonOrbits({ onClose }: { onClose: () => void }) {
+  const positionsRef = useRef<OrbitalPositions>({
+    sunAngle: 0,
+    ronaldAngle: 0,
+    grimaceAngle: 0,
+  });
+
   return (
     <div
       style={{
@@ -327,17 +468,20 @@ export default function MoonOrbits({ onClose }: { onClose: () => void }) {
           Close
         </button>
       </div>
-      <Canvas
-        shadows
-        camera={{ position: [0, 8, 12], fov: 50 }}
-        style={{ flex: 1 }}
-      >
-        <ambientLight intensity={0.05} />
-        <OrbitControls enablePan={false} />
-        <OrbitRing radiusX={SUN_SEMI_MAJOR} radiusZ={SUN_SEMI_MINOR} color="#ffdd44" />
-        <Sun />
-        <LoathingSystem />
-      </Canvas>
+      <div style={{ position: "relative", flex: 1 }}>
+        <Canvas
+          shadows
+          camera={{ position: [0, 8, 12], fov: 50 }}
+          style={{ position: "absolute", inset: 0 }}
+        >
+          <ambientLight intensity={0.05} />
+          <OrbitControls enablePan={false} />
+          <OrbitRing radiusX={SUN_SEMI_MAJOR} radiusZ={SUN_SEMI_MINOR} color="#ffdd44" />
+          <Sun />
+          <LoathingSystem positionsRef={positionsRef} />
+        </Canvas>
+        <PhaseOverlay positionsRef={positionsRef} />
+      </div>
     </div>
   );
 }
