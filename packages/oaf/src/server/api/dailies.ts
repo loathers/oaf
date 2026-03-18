@@ -4,6 +4,7 @@ import { LoathingDate } from "../../clients/LoathingDate.js";
 import {
   getDailiesForGameday,
   getDailySubmissionsForKey,
+  getSubmissionCountsForGameday,
 } from "../../clients/database.js";
 import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
 
@@ -11,7 +12,10 @@ export const dailiesRouter = Router();
 
 dailiesRouter.get("/", async (_req, res) => {
   const gameday = LoathingDate.gameDayFromRealDate(new Date());
-  const dailies = await getDailiesForGameday(gameday);
+  const [dailies, submissionCounts] = await Promise.all([
+    getDailiesForGameday(gameday),
+    getSubmissionCountsForGameday(gameday),
+  ]);
   const dailyByKey = new Map(dailies.map((d) => [d.key, d]));
 
   res.json({
@@ -23,6 +27,7 @@ dailiesRouter.get("/", async (_req, res) => {
         crowdsourced: k.crowdsourced,
         value: daily?.value ?? null,
         thresholdReached: daily?.thresholdReached ?? null,
+        submissionCount: submissionCounts.get(k.key) ?? 0,
       };
     }),
   });

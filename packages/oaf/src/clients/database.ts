@@ -887,6 +887,16 @@ export async function getDailySubmissionsForKey(key: string, gameday: number) {
     .execute();
 }
 
+export async function getSubmissionCountsForGameday(gameday: number) {
+  const rows = await db
+    .selectFrom("DailySubmission")
+    .select(["key", db.fn.countAll<number>().as("count")])
+    .where("gameday", "=", gameday)
+    .groupBy("key")
+    .execute();
+  return new Map(rows.map((r) => [r.key, r.count]));
+}
+
 // ── Setting ──
 
 export async function getGlobalsMessage(gameday: number) {

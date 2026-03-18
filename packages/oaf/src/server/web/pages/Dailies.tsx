@@ -6,6 +6,7 @@ type DailyEntry = {
   crowdsourced: boolean;
   value: string | null;
   thresholdReached: boolean | null;
+  submissionCount: number;
 };
 
 type Submission = {
@@ -111,7 +112,9 @@ export default function Dailies() {
                         ? "#c6f6d5"
                         : entry.thresholdReached === false
                           ? "#fefcbf"
-                          : undefined,
+                          : entry.submissionCount > 0
+                            ? "#fed7d7"
+                            : undefined,
                   }}
                 >
                   <td>
@@ -120,6 +123,11 @@ export default function Dailies() {
                   <td>
                     {entry.value ? (
                       <code>{entry.value}</code>
+                    ) : entry.submissionCount > 0 ? (
+                      <em>
+                        Dissent ({entry.submissionCount} submission
+                        {entry.submissionCount !== 1 ? "s" : ""})
+                      </em>
                     ) : (
                       <em>No submissions</em>
                     )}
