@@ -146,7 +146,7 @@ export default function CalendarPage() {
           />
           Moonlight
         </label>
-        <button onClick={() => setShow3D(true)}>3D Moons</button>
+        <button onClick={() => setShow3D(true)} title="Orrery">🔭</button>
       </div>
 
       {loading && <div className="calendar-loading">Loading...</div>}
