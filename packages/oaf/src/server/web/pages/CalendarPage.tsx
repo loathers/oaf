@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
 import { LoathingDate } from "../../../clients/LoathingDate.js";
 import DayDetail from "../components/DayDetail.js";
 import GregorianCalendar from "../components/GregorianCalendar.js";
 import KolCalendar from "../components/KolCalendar.js";
 import type { CalendarData } from "../types/calendar.js";
+
+const MoonOrbits = lazy(() => import("../components/MoonOrbits.js"));
 
 type View = "gregorian" | "kol";
 
@@ -47,6 +49,7 @@ export default function CalendarPage() {
   const [kolYear, setKolYear] = useState(todayKolYear);
   const [selectedDay, setSelectedDay] = useState<number | null>(todayGameday);
   const [moonlightMode, setMoonlightMode] = useState(false);
+  const [show3D, setShow3D] = useState(false);
 
   useEffect(() => {
     document.body.classList.toggle("moonlight-mode", moonlightMode);
@@ -143,6 +146,7 @@ export default function CalendarPage() {
           />
           Moonlight
         </label>
+        <button onClick={() => setShow3D(true)} title="Orrery">🔭</button>
       </div>
 
       {loading && <div className="calendar-loading">Loading...</div>}
@@ -174,6 +178,12 @@ export default function CalendarPage() {
 
       {selectedDay !== null && (
         <DayDetail gameday={selectedDay} todayGameday={todayGameday} data={data} />
+      )}
+
+      {show3D && (
+        <Suspense fallback={null}>
+          <MoonOrbits onClose={() => setShow3D(false)} />
+        </Suspense>
       )}
     </div>
   );
