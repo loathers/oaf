@@ -50,6 +50,11 @@ export async function generatePlayer(playerId: number) {
 
 export async function checkPlayer(input: string) {
   const decoded = parseInt(input, 16);
+
+  if (isNaN(decoded) || decoded <= 0) {
+    return [0, false] as [playerId: number, valid: boolean];
+  }
+
   const [playerId, token] = intDiv(decoded, 1e6);
   const verification = await verify({
     ...totpOptions(playerId),
