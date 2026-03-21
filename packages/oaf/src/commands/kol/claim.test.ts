@@ -149,6 +149,42 @@ describe("token validation", () => {
     expect(valid).toBe(false);
   });
 
+  test("invalid hex string with special characters returns invalid", async () => {
+    const [playerId, valid] = await checkPlayer("not-a-valid-hex-string!");
+    expect(valid).toBe(false);
+    expect(playerId).toBe(0);
+  });
+
+  test("empty string returns invalid", async () => {
+    const [playerId, valid] = await checkPlayer("");
+    expect(valid).toBe(false);
+    expect(playerId).toBe(0);
+  });
+
+  test("hex string with invalid characters returns invalid", async () => {
+    const [playerId, valid] = await checkPlayer("ghijklmnop");
+    expect(valid).toBe(false);
+    expect(playerId).toBe(0);
+  });
+
+  test("string with only punctuation returns invalid", async () => {
+    const [playerId, valid] = await checkPlayer("!@#$%^&*()");
+    expect(valid).toBe(false);
+    expect(playerId).toBe(0);
+  });
+
+  test("hex string with spaces returns invalid", async () => {
+    const [playerId, valid] = await checkPlayer("dead beef cafe");
+    expect(valid).toBe(false);
+    expect(playerId).toBe(0);
+  });
+
+  test("zero value returns invalid", async () => {
+    const [playerId, valid] = await checkPlayer("0");
+    expect(valid).toBe(false);
+    expect(playerId).toBe(0);
+  });
+
   test("a token for one player does not validate as another", async () => {
     const hex = await generatePlayer(100);
     // Manually swap the player id portion by re-encoding with a different player
