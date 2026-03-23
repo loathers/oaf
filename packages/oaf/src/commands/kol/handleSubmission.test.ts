@@ -133,6 +133,7 @@ describe("handleSubmission", () => {
   });
 
   test("uses provided time for gameday, not current time", async () => {
+    // Before rollover — should resolve to the previous gameday
     const whisperTime = new Date("2026-03-22T03:00:00Z");
     gameDayFromRealDate.mockImplementation((d: Date) =>
       d.getTime() === whisperTime.getTime() ? 99 : 100,
@@ -148,6 +149,7 @@ describe("handleSubmission", () => {
       1,
       99,
     );
+    expect(clearDailySubmissions).toHaveBeenCalledWith(99);
   });
 
   describe("consensus reached (topCount >= threshold)", () => {

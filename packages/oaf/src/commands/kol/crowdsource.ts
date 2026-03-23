@@ -119,8 +119,8 @@ export function init() {
     void handleSubmission(whisper.who.id, whisper.who.name, whisper.msg, whisper.time);
   });
 
-  kolClient.on("rollover", () => {
-    const gameday = LoathingDate.gameDayFromRealDate(new Date());
+  kolClient.on("rollover", (time) => {
+    const gameday = LoathingDate.gameDayFromRealDate(time);
     void clearDailySubmissions(gameday);
   });
 }

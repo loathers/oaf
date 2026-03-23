@@ -45,9 +45,9 @@ describe("Constructor", () => {
 
 describe("gameDayFromRealDate", () => {
   test("Boundary is always at 3:30 UTC regardless of DST", () => {
-    // EU DST starts March 29 2026. After that, CET (UTC+1) becomes CEST (UTC+2).
-    // The gameday boundary must stay at 3:30 UTC, not shift with local clocks.
-    // March 30 is in CEST.
+    // Must not use local-time methods that shift with DST (the previous
+    // differenceInDays implementation did). March 30 2026 falls after the
+    // EU DST transition, which broke the boundary on the Nuremberg server.
     const beforeRollover = new Date(Date.UTC(2026, 2, 30, 3, 29, 59));
     const afterRollover = new Date(Date.UTC(2026, 2, 30, 3, 30, 0));
     expect(LoathingDate.gameDayFromRealDate(afterRollover)).toBe(

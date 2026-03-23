@@ -40,7 +40,7 @@ function getEaster(year: number): [month: number, date: number] {
 
 function getThanksgiving(year: number): number {
   // 4th Thursday of November
-  const nov1 = new Date(year, 10, 1).getDay();
+  const nov1 = new Date(Date.UTC(year, 10, 1)).getUTCDay();
   const firstThursday = ((4 - nov1 + 7) % 7) + 1;
   return firstThursday + 21;
 }
@@ -76,7 +76,7 @@ export class LoathingDate {
     return (kolYear - 1) * 96 + kolMonth * 8 + (kolDate - 1) - LoathingDate.CALENDAR_OFFSET;
   }
 
-  static MS_PER_DAY = 24 * 60 * 60 * 1000;
+  private static MS_PER_DAY = 24 * 60 * 60 * 1000;
 
   static gameDayFromRealDate(realDate: Date) {
     return Math.floor(
