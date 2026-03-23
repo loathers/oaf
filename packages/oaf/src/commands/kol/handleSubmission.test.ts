@@ -80,8 +80,12 @@ vi.mock("../misc/_globals.js", () => ({
   updateGlobalsMessage,
 }));
 
+const { gameDayFromRealDate } = vi.hoisted(() => ({
+  gameDayFromRealDate: vi.fn().mockReturnValue(100),
+}));
+
 vi.mock("../../clients/LoathingDate.js", () => ({
-  LoathingDate: { gameDayFromRealDate: () => 100 },
+  LoathingDate: { gameDayFromRealDate },
 }));
 
 vi.mock("../../config.js", () => ({
@@ -126,6 +130,24 @@ describe("handleSubmission", () => {
       100,
     );
     expect(clearDailySubmissions).toHaveBeenCalledWith(100);
+  });
+
+  test("uses provided time for gameday, not current time", async () => {
+    const whisperTime = new Date("2026-03-22T03:00:00Z");
+    gameDayFromRealDate.mockImplementation((d: Date) =>
+      d.getTime() === whisperTime.getTime() ? 99 : 100,
+    );
+    getSubmissionSummaryForKey.mockResolvedValueOnce(null);
+
+    await handleSubmission(1, "player", "snootee:testvalue", whisperTime);
+
+    expect(gameDayFromRealDate).toHaveBeenCalledWith(whisperTime);
+    expect(upsertDailySubmission).toHaveBeenCalledWith(
+      "snootee",
+      "testvalue",
+      1,
+      99,
+    );
   });
 
   describe("consensus reached (topCount >= threshold)", () => {
