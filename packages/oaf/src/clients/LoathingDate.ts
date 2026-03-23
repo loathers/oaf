@@ -1,5 +1,5 @@
 import { dedent } from "ts-dedent";
-import { addDays, differenceInDays } from "date-fns";
+import { addDays } from "date-fns";
 
 const GAME_HOLIDAYS = new Map<`${number},${number}`, string>([
   ["0,1", "Festival of Jarlsberg"],
@@ -76,8 +76,12 @@ export class LoathingDate {
     return (kolYear - 1) * 96 + kolMonth * 8 + (kolDate - 1) - LoathingDate.CALENDAR_OFFSET;
   }
 
+  static MS_PER_DAY = 24 * 60 * 60 * 1000;
+
   static gameDayFromRealDate(realDate: Date) {
-    return differenceInDays(realDate, LoathingDate.EPOCH);
+    return Math.floor(
+      (realDate.getTime() - LoathingDate.EPOCH.getTime()) / LoathingDate.MS_PER_DAY,
+    );
   }
 
   #year: number;

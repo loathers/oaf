@@ -43,6 +43,19 @@ describe("Constructor", () => {
   });
 });
 
+describe("gameDayFromRealDate", () => {
+  test("Boundary is always at 3:30 UTC regardless of DST", () => {
+    // EU DST starts March 29 2026. After that, CET (UTC+1) becomes CEST (UTC+2).
+    // The gameday boundary must stay at 3:30 UTC, not shift with local clocks.
+    // March 30 is in CEST.
+    const beforeRollover = new Date(Date.UTC(2026, 2, 30, 3, 29, 59));
+    const afterRollover = new Date(Date.UTC(2026, 2, 30, 3, 30, 0));
+    expect(LoathingDate.gameDayFromRealDate(afterRollover)).toBe(
+      LoathingDate.gameDayFromRealDate(beforeRollover) + 1,
+    );
+  });
+});
+
 describe("Ronald", () => {
   test("Correct phase", () => {
     const d = new LoathingDate(new Date(Date.UTC(2023, 10, 16, 12, 0, 0)));
