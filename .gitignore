@@ -5,6 +5,7 @@ vite.config.*.timestamp-*
 
 .env
 .vscode
+.DS_Store
 
 *.dump
 
