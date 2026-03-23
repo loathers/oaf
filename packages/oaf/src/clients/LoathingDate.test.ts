@@ -43,6 +43,19 @@ describe("Constructor", () => {
   });
 });
 
+describe("gameDayFromRealDate", () => {
+  test("Boundary is always at 3:30 UTC regardless of DST", () => {
+    // Must not use local-time methods that shift with DST (the previous
+    // differenceInDays implementation did). March 30 2026 falls after the
+    // EU DST transition, which broke the boundary on the Nuremberg server.
+    const beforeRollover = new Date(Date.UTC(2026, 2, 30, 3, 29, 59));
+    const afterRollover = new Date(Date.UTC(2026, 2, 30, 3, 30, 0));
+    expect(LoathingDate.gameDayFromRealDate(afterRollover)).toBe(
+      LoathingDate.gameDayFromRealDate(beforeRollover) + 1,
+    );
+  });
+});
+
 describe("Ronald", () => {
   test("Correct phase", () => {
     const d = new LoathingDate(new Date(Date.UTC(2023, 10, 16, 12, 0, 0)));

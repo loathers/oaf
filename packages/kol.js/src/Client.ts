@@ -36,7 +36,7 @@ type Events = {
   whisper: (message: KoLMessage) => void;
   system: (message: KoLMessage) => void;
   public: (message: KoLMessage) => void;
-  rollover: () => void;
+  rollover: (time: Date) => void;
 };
 
 type Familiar = {
@@ -171,7 +171,7 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
 
       if (this.postRolloverLatch) {
         this.postRolloverLatch = false;
-        this.emit("rollover");
+        this.emit("rollover", new Date());
       }
 
       return true;

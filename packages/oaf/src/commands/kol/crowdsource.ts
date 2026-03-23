@@ -52,13 +52,14 @@ export async function handleSubmission(
   playerId: number,
   playerName: string,
   msg: string,
+  time = new Date(),
 ) {
   const parsed = parseSubmission(msg);
   if (!parsed) return;
 
   const { key, value } = parsed;
 
-  const gameday = LoathingDate.gameDayFromRealDate(new Date());
+  const gameday = LoathingDate.gameDayFromRealDate(time);
 
   await upsertPlayerInfo(playerId, playerName);
   await upsertDailySubmission(key, value, playerId, gameday);
@@ -115,11 +116,11 @@ export async function handleSubmission(
 
 export function init() {
   kolClient.on("whisper", (whisper) => {
-    void handleSubmission(whisper.who.id, whisper.who.name, whisper.msg);
+    void handleSubmission(whisper.who.id, whisper.who.name, whisper.msg, whisper.time);
   });
 
-  kolClient.on("rollover", () => {
-    const gameday = LoathingDate.gameDayFromRealDate(new Date());
+  kolClient.on("rollover", (time) => {
+    const gameday = LoathingDate.gameDayFromRealDate(time);
     void clearDailySubmissions(gameday);
   });
 }
