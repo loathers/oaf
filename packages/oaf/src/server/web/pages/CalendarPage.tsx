@@ -32,6 +32,12 @@ function getKolRange(kolYear: number) {
   };
 }
 
+function getGamedayFromHash(): number | null {
+  const hash = window.location.hash.replace("#", "");
+  const n = Number(hash);
+  return hash && Number.isInteger(n) ? n : null;
+}
+
 export default function CalendarPage() {
   const now = useMemo(() => {
     const d = new Date();
@@ -43,13 +49,25 @@ export default function CalendarPage() {
     [todayGameday],
   );
 
+  const initialDay = getGamedayFromHash() ?? todayGameday;
+  const initialLd = new LoathingDate(initialDay);
+  const initialRd = initialLd.toRealDate();
+
   const [view, setView] = useState<View>("gregorian");
-  const [gregYear, setGregYear] = useState(now.getUTCFullYear());
-  const [gregMonth, setGregMonth] = useState(now.getUTCMonth());
-  const [kolYear, setKolYear] = useState(todayKolYear);
-  const [selectedDay, setSelectedDay] = useState<number | null>(todayGameday);
+  const [gregYear, setGregYear] = useState(initialRd.getUTCFullYear());
+  const [gregMonth, setGregMonth] = useState(initialRd.getUTCMonth());
+  const [kolYear, setKolYear] = useState(initialLd.getYear());
+  const [selectedDay, setSelectedDay] = useState<number | null>(initialDay);
   const [moonlightMode, setMoonlightMode] = useState(false);
   const [show3D, setShow3D] = useState(false);
+
+  useEffect(() => {
+    if (selectedDay !== null) {
+      window.history.replaceState(null, "", `#${selectedDay}`);
+    } else {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [selectedDay]);
 
   useEffect(() => {
     document.body.classList.toggle("moonlight-mode", moonlightMode);
@@ -115,6 +133,18 @@ export default function CalendarPage() {
     navigateTo(new LoathingDate(todayGameday));
     setSelectedDay(todayGameday);
   }, [navigateTo, todayGameday]);
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const day = getGamedayFromHash();
+      if (day !== null) {
+        setSelectedDay(day);
+        navigateTo(new LoathingDate(day));
+      }
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, [navigateTo]);
 
   return (
     <div className="calendar-page">
