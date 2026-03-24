@@ -47,6 +47,11 @@ function getGridDates(year: number, month: number) {
     dates.push(new Date(current));
     current.setUTCDate(current.getUTCDate() + 1);
   }
+  // Pad to 42 cells (6 weeks) to prevent layout jumps
+  while (dates.length < 42) {
+    dates.push(new Date(current));
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
   return dates;
 }
 

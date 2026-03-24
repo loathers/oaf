@@ -99,7 +99,6 @@ export default function CalendarPage() {
       const d = new Date(Date.UTC(gregYear, gregMonth + delta, 1));
       setGregYear(d.getUTCFullYear());
       setGregMonth(d.getUTCMonth());
-      setSelectedDay(null);
     },
     [gregYear, gregMonth],
   );
@@ -107,7 +106,6 @@ export default function CalendarPage() {
   const navigateKol = useCallback(
     (delta: number) => {
       setKolYear((y) => y + delta);
-      setSelectedDay(null);
     },
     [],
   );
@@ -121,12 +119,10 @@ export default function CalendarPage() {
 
   const jumpGregorian = useCallback((year: number, month: number) => {
     navigateTo(new LoathingDate(new Date(Date.UTC(year, month, 15))));
-    setSelectedDay(null);
   }, [navigateTo]);
 
   const jumpKol = useCallback((year: number) => {
     navigateTo(new LoathingDate(year, 0, 1));
-    setSelectedDay(null);
   }, [navigateTo]);
 
   const jumpToToday = useCallback(() => {
@@ -179,8 +175,6 @@ export default function CalendarPage() {
         <button onClick={() => setShow3D(true)} title="Orrery">🔭</button>
       </div>
 
-      {loading && <div className="calendar-loading">Loading...</div>}
-
       {view === "gregorian" ? (
         <GregorianCalendar
           year={gregYear}
@@ -207,7 +201,14 @@ export default function CalendarPage() {
       )}
 
       {selectedDay !== null && (
-        <DayDetail gameday={selectedDay} todayGameday={todayGameday} data={data} />
+        <DayDetail
+          gameday={selectedDay}
+          todayGameday={todayGameday}
+          data={data}
+          loading={loading}
+          visible={selectedDay >= range.from && selectedDay <= range.to}
+          onNavigateToDay={() => navigateTo(new LoathingDate(selectedDay))}
+        />
       )}
 
       {show3D && (

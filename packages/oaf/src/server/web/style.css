@@ -602,6 +602,29 @@ code {
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 0.375rem;
+  transition: opacity 0.15s;
+  position: relative;
+}
+
+.day-detail-goto {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: #2d3748;
+  background: #edf2f7;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.day-detail-goto:hover {
+  background: #e2e8f0;
+}
+
+.day-detail-loading {
+  opacity: 0.5;
 }
 
 .day-detail-section h3 {

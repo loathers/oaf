@@ -9,9 +9,12 @@ type Props = {
   gameday: number;
   todayGameday: number;
   data: CalendarData;
+  loading?: boolean;
+  visible?: boolean;
+  onNavigateToDay?: () => void;
 };
 
-export default function DayDetail({ gameday, todayGameday, data }: Props) {
+export default function DayDetail({ gameday, todayGameday, data, loading, visible = true, onNavigateToDay }: Props) {
   const ld = new LoathingDate(gameday);
   const realDate = ld.toRealDate();
 
@@ -24,7 +27,12 @@ export default function DayDetail({ gameday, todayGameday, data }: Props) {
   const raffle = isFuture ? undefined : data.raffles[gameday];
 
   return (
-    <div className="day-detail">
+    <div className={`day-detail${loading ? " day-detail-loading" : ""}`}>
+      {!visible && onNavigateToDay && (
+        <button className="day-detail-goto" onClick={onNavigateToDay}>
+          Show in calendar
+        </button>
+      )}
       <div className="day-detail-section">
         <h3 title={`Day ${gameday}`}>Date</h3>
         <p>
