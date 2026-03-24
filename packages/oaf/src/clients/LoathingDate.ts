@@ -70,7 +70,9 @@ export class LoathingDate {
   // the KoL calendar, so we offset when converting between gameday and
   // KoL year/month/date.
   static CALENDAR_OFFSET = 9;
-  static COLLISION = 1209;
+  static BLACK_SUNDAY = 545; // August 8, 2004
+  static WHITE_WEDNESDAY = 989; // October 26, 2005
+  static COLLISION = 1209; // June 3, 2006 — comet created Hamburglar
 
   static getDaysSinceEpoch(kolYear: number, kolMonth: number, kolDate: number) {
     return (kolYear - 1) * 96 + kolMonth * 8 + (kolDate - 1) - LoathingDate.CALENDAR_OFFSET;
@@ -293,6 +295,11 @@ export class LoathingDate {
       holidays.delete("El Dia De Los Muertos Borrachos");
       holidays.add("El Dia De Los Muertos Borrachos y Agradecido");
     }
+
+    const gameday = this.getDaysSinceEpoch();
+    if (gameday === LoathingDate.BLACK_SUNDAY) holidays.add("Black Sunday");
+    if (gameday === LoathingDate.WHITE_WEDNESDAY) holidays.add("White Wednesday");
+    if (gameday === LoathingDate.COLLISION) holidays.add("The Comet");
 
     const statDay = this.getStatDay();
     if (statDay) holidays.add(statDay);

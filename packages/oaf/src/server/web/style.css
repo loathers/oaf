@@ -499,6 +499,12 @@ code {
   margin-top: auto;
 }
 
+.calendar-cell[style*="background-image"] {
+  background-size: 70%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
 .today-dot {
   width: 0.5rem;
   height: 0.5rem;

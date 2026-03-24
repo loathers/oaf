@@ -4,6 +4,12 @@ import { HOLIDAY_EMOJI } from "./holidayEmoji.js";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+const EVENT_IMAGES = new Map<number, string>([
+  [LoathingDate.BLACK_SUNDAY, "/vortex.gif"],
+  [LoathingDate.WHITE_WEDNESDAY, "/rift.gif"],
+  [LoathingDate.COLLISION, "/comet.gif"],
+]);
+
 const STAT_CLASSES: Record<string, string> = {
   "Muscle Day": "stat-muscle",
   "Mysticality Day": "stat-myst",
@@ -83,6 +89,7 @@ export default function GregorianCalendar({
           const isToday = !preEpoch && gameday === todayGameday;
           const isSelected = !preEpoch && gameday === selectedDay;
           const statDay = ld?.getStatDay() ?? null;
+          const eventImage = preEpoch ? null : EVENT_IMAGES.get(gameday);
           const holidays = ld?.getHolidays().filter(
             (h) => !h.includes("Day") || !["Muscle Day", "Mysticality Day", "Moxie Day"].includes(h),
           ) ?? [];
@@ -102,7 +109,10 @@ export default function GregorianCalendar({
             <div
               key={date.toISOString()}
               className={classes}
-              style={moonlightMode && ld ? { "--moonlight": ld.getMoonlight() } as React.CSSProperties : undefined}
+              style={{
+                ...(moonlightMode && ld ? { "--moonlight": ld.getMoonlight() } : {}),
+                ...(eventImage ? { backgroundImage: `url(${eventImage})` } : {}),
+              } as React.CSSProperties}
               onClick={preEpoch ? undefined : () => onSelectDay(gameday)}
             >
               <span className="cell-day">{date.getUTCDate()}</span>

@@ -14,4 +14,7 @@ export const HOLIDAY_EMOJI: Record<string, string> = {
   "Crimbo": "🎅",
   "Drunksgiving": "🍻",
   "El Dia De Los Muertos Borrachos y Agradecido": "💀🦃",
+  "Black Sunday": "🌀",
+  "White Wednesday": "🕳️",
+  "The Comet": "☄️",
 };
