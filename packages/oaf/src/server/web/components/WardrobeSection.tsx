@@ -19,12 +19,6 @@ const SLOT_LABELS: Record<WardrobeItem["slot"], string> = {
   "familiar-equipment": "Familiar Equipment",
 };
 
-const SLOT_IMAGE_PREFIX: Record<WardrobeItem["slot"], string> = {
-  shirt: "jw_shirt",
-  hat: "jw_hat",
-  "familiar-equipment": "jw_pet",
-};
-
 type Props = {
   gameday: number;
 };
@@ -55,7 +49,7 @@ export default function WardrobeSection({ gameday }: Props) {
           <div key={item.slot} className="wardrobe-item">
             <img
               className="wardrobe-item-img"
-              src={`https://d2uyhvukfffg5a.cloudfront.net/itemimages/${SLOT_IMAGE_PREFIX[item.slot]}${item.image}.gif`}
+              src={`https://d2uyhvukfffg5a.cloudfront.net/itemimages/${item.image}.gif`}
               alt={item.name}
             />
             <div className="wardrobe-item-info">

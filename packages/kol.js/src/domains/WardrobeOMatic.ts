@@ -13,7 +13,7 @@ export type WardrobeModifier = {
 
 export type WardrobeItem = {
   name: string;
-  image: number;
+  image: string;
   slot: WardrobeSlot;
   modifiers: WardrobeModifier[];
 };
@@ -22,6 +22,12 @@ const SLOT_INDEX: Record<WardrobeSlot, number> = {
   shirt: 0,
   hat: 1,
   "familiar-equipment": 2,
+};
+
+const SLOT_IMAGE_PREFIX: Record<WardrobeSlot, string> = {
+  shirt: "jw_shirt",
+  hat: "jw_hat",
+  "familiar-equipment": "jw_pet",
 };
 
 const SLOTS: WardrobeSlot[] = ["shirt", "hat", "familiar-equipment"];
@@ -577,7 +583,9 @@ function generateItem(
   const seed = gameday * (11391 + slotIndex) + 2063;
   const rng = new RNG(seed);
 
-  const image = rng.mtRand.roll(1, 9);
+  const imageNum = rng.mtRand.roll(1, 9);
+  const imagePrefix = slot === "hat" && imageNum === 9 ? "hw_hat" : SLOT_IMAGE_PREFIX[slot];
+  const image = `${imagePrefix}${imageNum}`;
 
   let name: string;
   if (slot === "shirt") {
@@ -585,7 +593,7 @@ function generateItem(
   } else if (slot === "hat") {
     name = generateHatName(rng);
   } else {
-    name = generateFamEquipName(rng, image);
+    name = generateFamEquipName(rng, imageNum);
   }
 
   const effectsList: ModifierId[] = [];

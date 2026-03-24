@@ -18,6 +18,13 @@ export default function DayDetail({ gameday, todayGameday, data, loading, visibl
   const ld = new LoathingDate(gameday);
   const realDate = ld.toRealDate();
 
+  const rollover = new Date(LoathingDate.EPOCH.getTime() + gameday * 24 * 60 * 60 * 1000);
+  const rolloverTime = new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(rollover);
+
   const DAILIES_START_GAMEDAY = 8432; // Started collecting dailies on March 13, 2026
   const isFuture = gameday > todayGameday;
   const isToday = gameday === todayGameday;
@@ -45,6 +52,7 @@ export default function DayDetail({ gameday, todayGameday, data, loading, visibl
           })}
         </p>
         <p>{ld.toString()}</p>
+        <p title="Rollover time">🌅 {rolloverTime}</p>
       </div>
 
       <div className="day-detail-section">

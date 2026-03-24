@@ -8,7 +8,7 @@ describe("WardrobeOMatic", () => {
     it("generates the correct shirt", () => {
       const shirt = WardrobeOMatic.getWardrobe(8436, 1, "shirt");
       expect(shirt.name).toBe("conductive hyperwool dress shirt");
-      expect(shirt.image).toBe(8);
+      expect(shirt.image).toBe("jw_shirt8");
       expect(shirt.modifiers).toHaveLength(1);
       expect(shirt.modifiers[0]).toMatchObject({
         id: "maximumHp",
@@ -19,7 +19,7 @@ describe("WardrobeOMatic", () => {
     it("generates the correct hat", () => {
       const hat = WardrobeOMatic.getWardrobe(8436, 1, "hat");
       expect(hat.name).toBe("laser-guided yttrium-silver ultratiara");
-      expect(hat.image).toBe(4);
+      expect(hat.image).toBe("jw_hat4");
       expect(hat.modifiers).toHaveLength(1);
       expect(hat.modifiers[0]).toMatchObject({
         id: "spellDamageSpooky",
@@ -36,7 +36,7 @@ describe("WardrobeOMatic", () => {
       expect(famEquip.name).toBe(
         "partially transparent pink-black pet sweater",
       );
-      expect(famEquip.image).toBe(7);
+      expect(famEquip.image).toBe("jw_pet7");
       expect(famEquip.modifiers).toHaveLength(1);
       expect(famEquip.modifiers[0]).toMatchObject({
         id: "familiarWeight",
@@ -58,7 +58,7 @@ describe("WardrobeOMatic", () => {
     it("generates the correct shirt", () => {
       const shirt = WardrobeOMatic.getWardrobe(8420, 10, "shirt");
       expect(shirt.name).toBe("carbon-coated wax paper jersey");
-      expect(shirt.image).toBe(7);
+      expect(shirt.image).toBe("jw_shirt7");
       expect(shirt.modifiers).toHaveLength(3);
       expect(shirt.modifiers).toContainEqual(
         expect.objectContaining({
@@ -83,7 +83,7 @@ describe("WardrobeOMatic", () => {
     it("generates the correct hat", () => {
       const hat = WardrobeOMatic.getWardrobe(8420, 10, "hat");
       expect(hat.name).toBe("psionic cobalt-iridium astro-trilby");
-      expect(hat.image).toBe(1);
+      expect(hat.image).toBe("jw_hat1");
       expect(hat.modifiers).toHaveLength(3);
       expect(hat.modifiers).toContainEqual(
         expect.objectContaining({
@@ -112,7 +112,7 @@ describe("WardrobeOMatic", () => {
         "familiar-equipment",
       );
       expect(famEquip.name).toBe("prismatic amber-cornflower collar");
-      expect(famEquip.image).toBe(4);
+      expect(famEquip.image).toBe("jw_pet4");
       expect(famEquip.modifiers).toHaveLength(1);
       expect(famEquip.modifiers[0]).toMatchObject({
         id: "familiarWeight",
