@@ -482,6 +482,23 @@ code {
   background: #fafafa;
 }
 
+.calendar-cell.pre-epoch {
+  cursor: default;
+}
+
+.calendar-cell.pre-epoch:hover {
+  background: #fafafa;
+}
+
+.cell-yore {
+  font-family: "UnifrakturMaguntia", "Old English Text MT", serif;
+  font-size: 0.65rem;
+  text-align: center;
+  color: #8b7355;
+  line-height: 1.2;
+  margin-top: auto;
+}
+
 .today-dot {
   width: 0.5rem;
   height: 0.5rem;
@@ -784,6 +801,14 @@ body.moonlight-mode .calendar-cell.stat-moxie {
 body.moonlight-mode .calendar-cell.outside-month {
   background: color-mix(in srgb, #c8dcff calc(var(--moonlight, 0) * 10%), #0f0f23);
   color: #4a4a6a;
+}
+
+body.moonlight-mode .calendar-cell.pre-epoch {
+  background: #0f0f23;
+}
+
+body.moonlight-mode .calendar-cell.pre-epoch:hover {
+  background: #0f0f23;
 }
 
 body.moonlight-mode .calendar-cell:hover {

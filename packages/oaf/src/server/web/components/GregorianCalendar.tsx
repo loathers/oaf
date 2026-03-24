@@ -77,18 +77,20 @@ export default function GregorianCalendar({
         {dates.map((date) => {
           const noon = new Date(date.getTime() + 12 * 60 * 60 * 1000);
           const gameday = LoathingDate.gameDayFromRealDate(noon);
-          const ld = new LoathingDate(gameday);
+          const preEpoch = gameday < 0;
+          const ld = preEpoch ? null : new LoathingDate(gameday);
           const isCurrentMonth = date.getUTCMonth() === month;
-          const isToday = gameday === todayGameday;
-          const isSelected = gameday === selectedDay;
-          const statDay = ld.getStatDay();
-          const holidays = ld.getHolidays().filter(
+          const isToday = !preEpoch && gameday === todayGameday;
+          const isSelected = !preEpoch && gameday === selectedDay;
+          const statDay = ld?.getStatDay() ?? null;
+          const holidays = ld?.getHolidays().filter(
             (h) => !h.includes("Day") || !["Muscle Day", "Mysticality Day", "Moxie Day"].includes(h),
-          );
+          ) ?? [];
 
           const classes = [
             "calendar-cell",
-            !isCurrentMonth && "outside-month",
+            (!isCurrentMonth || preEpoch) && "outside-month",
+            preEpoch && "pre-epoch",
             isToday && "today",
             isSelected && "selected",
             statDay && STAT_CLASSES[statDay],
@@ -100,15 +102,20 @@ export default function GregorianCalendar({
             <div
               key={date.toISOString()}
               className={classes}
-              style={moonlightMode ? { "--moonlight": ld.getMoonlight() } as React.CSSProperties : undefined}
-              onClick={() => onSelectDay(gameday)}
+              style={moonlightMode && ld ? { "--moonlight": ld.getMoonlight() } as React.CSSProperties : undefined}
+              onClick={preEpoch ? undefined : () => onSelectDay(gameday)}
             >
               <span className="cell-day">{date.getUTCDate()}</span>
-              <img
-                className="cell-moons"
-                src={`data:image/svg+xml,${encodeURIComponent(ld.getMoonsAsSvg())}`}
-                alt={ld.getMoonDescription()}
-              />
+              {preEpoch && (
+                <span className="cell-yore">Days of Yore</span>
+              )}
+              {ld && (
+                <img
+                  className="cell-moons"
+                  src={`data:image/svg+xml,${encodeURIComponent(ld.getMoonsAsSvg())}`}
+                  alt={ld.getMoonDescription()}
+                />
+              )}
               {holidays.length > 0 && (
                 <span className="cell-holiday" title={holidays.join(", ")}>
                   {holidays.map((h) => HOLIDAY_EMOJI[h] ?? "🎉").join("")}

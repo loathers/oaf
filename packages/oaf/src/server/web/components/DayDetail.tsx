@@ -26,7 +26,7 @@ export default function DayDetail({ gameday, todayGameday, data }: Props) {
   return (
     <div className="day-detail">
       <div className="day-detail-section">
-        <h3>Date</h3>
+        <h3 title={`Day ${gameday}`}>Date</h3>
         <p>
           {realDate.toLocaleDateString("en-US", {
             weekday: "long",
