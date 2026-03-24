@@ -119,7 +119,7 @@ export async function fetchWithRetry(
   })();
 
   pendingRetries.add(promise);
-  void promise.finally(() => pendingRetries.delete(promise));
+  void promise.finally(() => pendingRetries.delete(promise)).catch(() => {});
 
   return promise;
 }
