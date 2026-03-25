@@ -4,13 +4,15 @@ import {
   bold,
   roleMention,
 } from "discord.js";
+import { DreadsylvaniaDungeon } from "kol.js/domains/Dreadsylvania";
 
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import { pluralize } from "../../utils.js";
 import { DREAD_CLANS } from "./_clans.js";
-import { getDreadStatusOverview } from "./_dread.js";
+
+const dungeon = new DreadsylvaniaDungeon(kolClient);
 
 async function constructDreadStatusMessage(): Promise<{
   pingableClans: string[];
@@ -20,9 +22,10 @@ async function constructDreadStatusMessage(): Promise<{
 
   const messages = await Promise.all(
     DREAD_CLANS.map(async (clan) => {
-      const overview = await getDreadStatusOverview(clan.id);
+      const raid = await dungeon.getRaid(clan.id);
+      const overview = raid.getOverview();
 
-      const skills = overview.castle ? overview.skills : 0;
+      const skills = overview.castle.remaining > 0 ? overview.remainingSkills : 0;
 
       const capacitorString = overview.capacitor
         ? `${pluralize(skills, "skill")} left`
@@ -30,16 +33,16 @@ async function constructDreadStatusMessage(): Promise<{
 
       if (
         overview.capacitor &&
-        !overview.skills &&
+        !overview.remainingSkills &&
         (["forest", "village", "castle"] as const).every(
-          (zone) => overview[zone] <= 10,
+          (zone) => overview[zone].remaining <= 10,
         )
       ) {
         pingableClans.push(clan.name);
       }
 
-      return `${bold(clan.name)}: ${overview.forest}/${overview.village}/${
-        overview.castle
+      return `${bold(clan.name)}: ${overview.forest.remaining}/${overview.village.remaining}/${
+        overview.castle.remaining
       } (${capacitorString})`;
     }),
   );

@@ -1,5 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Player } from "kol.js";
+import { JoinClanError, RaidLogMissingError } from "kol.js/domains/ClanDungeon";
+import { DreadsylvaniaRaid, DreadsylvaniaDungeon } from "kol.js/domains/Dreadsylvania";
 
 import {
   createRaidsWithParticipation,
@@ -9,19 +11,11 @@ import {
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { columnsByMaxLength, formatPlayer } from "../../discordUtils.js";
-import { notNull, pluralize } from "../../utils.js";
+import { pluralize } from "../../utils.js";
 import { identifyPlayer } from "../_player.js";
 import { DREAD_CLANS } from "./_clans.js";
-import {
-  JoinClanError,
-  RaidLogMissingError,
-  getFinishedRaidLog,
-  getMissingRaidLogs,
-  getRaidLog,
-} from "./_dread.js";
 
-const SKILL_KILL_MATCHER =
-  /([A-Za-z0-9\-_ ]+)\s+\(#(\d+)\)\s+(defeated\D+(\d+)|used the machine)/i;
+const dungeon = new DreadsylvaniaDungeon(kolClient);
 
 export const data = new SlashCommandBuilder()
   .setName("skills")
@@ -35,69 +29,12 @@ export const data = new SlashCommandBuilder()
     "Get a list of everyone currently elgible for Dreadsylvania skills.",
   );
 
-export type Participation = Record<
-  string | number,
-  {
-    skills: number;
-    kills: number;
-    playerId: number;
-  }
->;
-
-/**
- * Mutating the first parameter, merge the participation maps
- * @param target Base participation map
- * @param sources New maps to merge into the target
- * @returns A reference to the first parameter
- */
-export function mergeParticipation(
-  target: Participation,
-  ...sources: Participation[]
-) {
-  sources
-    .flatMap((s) => Object.entries(s))
-    .forEach(([playerId, { skills, kills }]) => {
-      const existing = target[playerId] ?? { skills: 0, kills: 0 };
-      target[playerId] = {
-        ...existing,
-        skills: existing.skills + skills,
-        kills: existing.kills + kills,
-        playerId: parseInt(playerId),
-      };
-    });
-
-  return target;
-}
-
 async function getParticipationFromCurrentRaid() {
-  return (
-    await Promise.all(
-      DREAD_CLANS.map(async (clan) => {
-        const log = await getRaidLog(clan.id);
-        return getParticipationFromRaidLog(log);
-      }),
-    )
-  ).flat();
-}
-
-export function getParticipationFromRaidLog(raidLog: string) {
-  return (
-    raidLog
-      .match(new RegExp(SKILL_KILL_MATCHER, "gi"))
-      ?.map((l) => l.match(SKILL_KILL_MATCHER))
-      .filter(notNull)
-      .map((m) => {
-        const playerId = parseInt(m[2]);
-        const type = m[3].startsWith("defeated") ? "kills" : "skills";
-        const num = parseInt(m[4] ?? "1");
-        return {
-          [playerId]: {
-            playerId,
-            skills: type === "skills" ? num : 0,
-            kills: type === "kills" ? num : 0,
-          },
-        };
-      }) ?? []
+  return await Promise.all(
+    DREAD_CLANS.map(async (clan) => {
+      const raid = await dungeon.getRaid(clan.id);
+      return raid.getParticipation();
+    }),
   );
 }
 
@@ -120,15 +57,18 @@ async function parseLogs() {
   }[] = [];
 
   for (const clan of DREAD_CLANS) {
-    const raids = (await getMissingRaidLogs(clan.id, parsedRaids)).filter(
-      (id) => !parsedRaids.includes(id),
-    );
-    const raidLogs = await Promise.all(
-      raids.map(async (id) => ({ id, log: await getFinishedRaidLog(id) })),
+    const raidIds = (
+      await dungeon.getRaidIds(clan.id, parsedRaids)
+    ).filter((id) => !parsedRaids.includes(id));
+    const raids = await Promise.all(
+      raidIds.map(async (id) => ({
+        id,
+        raid: await dungeon.getRaid(clan.id, id),
+      })),
     );
 
-    for (const { id, log } of raidLogs) {
-      if (log.includes("No such raid was found.")) {
+    for (const { id, raid } of raids) {
+      if (raid.events.length === 0) {
         await discordClient.alert(
           `Discovered raid ${id} from clan ${clan.name} but couldn't load the log`,
         );
@@ -137,7 +77,7 @@ async function parseLogs() {
 
       const participation = await Promise.all(
         Object.values(
-          mergeParticipation({}, ...getParticipationFromRaidLog(log)),
+          raid.getParticipation(),
         ).map(async ({ playerId, skills, kills }) => ({
           playerId,
           playerName:
@@ -168,24 +108,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     await parseLogs();
 
-    const { players, participation: allParticipation } =
+    const { players, participation: dbParticipation } =
       await getPlayersWithRaidParticipation();
 
-    const participationByPlayer = Map.groupBy(
-      allParticipation,
-      (r) => r.playerId,
-    );
-
-    const playersWithParticipation = players.map((p) => ({
-      ...p,
-      raidParticipation: participationByPlayer.get(p.playerId) ?? [],
-    }));
-
-    const participation = mergeParticipation(
-      {},
-      ...playersWithParticipation
-        .map((p) => p.raidParticipation.map((r) => ({ [p.playerId]: r })))
-        .flat(),
+    const participation = DreadsylvaniaRaid.mergeParticipation(
+      ...dbParticipation.map((r) => ({
+        [r.playerId]: { playerId: r.playerId, skills: r.skills, kills: r.kills },
+      })),
       ...(await getParticipationFromCurrentRaid()),
     );
 
@@ -210,16 +139,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ));
     }
 
-    const skillsOwed = playersWithParticipation
+    const skillsOwed = players
       .filter(
         (player) =>
-          player.doneWithSkills !== true && player.raidParticipation.length > 0,
+          !player.doneWithSkills && participation[player.playerId],
       )
       .map((player) => {
-        const { skills, kills } = participation[player.playerId] ?? {
-          skills: 0,
-          kills: 0,
-        };
+        const { skills, kills } = participation[player.playerId];
         return [
           player,
           Math.floor(((kills ?? 0) + 450) / 900) - (skills ?? 0),
