@@ -207,15 +207,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     embed.addFields([
       {
-        name: `${underline(bold("Forest"))} (${formatBoss(status.overview.forest.boss)})`,
+        name: `${underline(bold("Forest"))} - ${formatBoss(status.overview.forest.boss)}`,
         value: getForestSummary(status),
       },
       {
-        name: `${underline(bold("Village"))} (${formatBoss(status.overview.village.boss)})`,
+        name: `${underline(bold("Village"))} - ${formatBoss(status.overview.village.boss)}`,
         value: getVillageSummary(status),
       },
       {
-        name: `${underline(bold("Castle"))} (${formatBoss(status.overview.castle.boss)})`,
+        name: `${underline(bold("Castle"))} - ${formatBoss(status.overview.castle.boss)}`,
         value: parseCastleStatus(status),
       },
     ]);
