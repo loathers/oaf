@@ -1,7 +1,10 @@
 import { ClanDungeon } from "./ClanDungeon.js";
 
-export type DreadBossStatus = "unknown" | "predicted" | "defeated";
-export type DreadBoss = { name: string; status: DreadBossStatus };
+export type DreadBoss = {
+  name: string;
+  status: "predicted" | "defeated";
+  confidence: number;
+};
 
 export type DreadStatus = {
   forest: { remaining: number; boss: DreadBoss };
@@ -58,7 +61,12 @@ const Monster = {
   Skeleton: "skeleton",
 } as const;
 
-type MonsterType = (typeof Monster)[keyof typeof Monster];
+export type MonsterType = (typeof Monster)[keyof typeof Monster];
+
+function pluralise(monster: MonsterType): string {
+  if (monster === "werewolf") return "werewolves";
+  return monster + "s";
+}
 
 const BOSS_NAMES: Record<MonsterType, string> = {
   bugbear: "Falls-From-Sky",
@@ -86,63 +94,156 @@ const MONSTER_PAIRS: Record<DreadZone, readonly [MonsterType, MonsterType]> = {
   castle: [Monster.Vampire, Monster.Skeleton],
 };
 
-type KillsAndBanishes = {
-  [key in MonsterType]: { kills: number; banishes: number };
-};
+/** A kill or banish event for one of the two monster types in a zone. */
+export type ZoneEvent =
+  | { type: "kill"; monster: 0 | 1; count: number }
+  | { type: "banish"; monster: 0 | 1 };
 
 const SKILL_KILL_MATCHER =
   /([A-Za-z0-9\-_ ]+)\s+\(#(\d+)\)\s+(defeated\D+(\d+)|used the machine)/i;
 
 function parseNumber(input?: string): number {
-  return parseInt(input?.replace(",", "") || "0");
+  return parseInt(input?.replaceAll(",", "") || "0");
 }
 
 export class Dreadsylvania extends ClanDungeon {
-  private static parseKillsAndBanishes(raidLog: string): KillsAndBanishes {
-    return Object.values(Monster).reduce<KillsAndBanishes>((acc, m) => {
-      const monsterKillRegex = new RegExp(
-        `defeated (.*?) ${m} x ([0-9]+)`,
-        "gi",
-      );
-      const monsterBanishRegex =
-        /drove some (.*?) out of the (.*?) \(1 turn\)/gi;
-      const kills = [...raidLog.matchAll(monsterKillRegex)]
-        .map((m) => parseInt(m[2]))
-        .reduce((sum, k) => sum + k, 0);
-      const banishes = raidLog.match(monsterBanishRegex)?.length ?? 0;
-      return { ...acc, [m]: { kills, banishes } };
-    }, {} as KillsAndBanishes);
+  /**
+   * Extract ordered kill/banish events for a zone's monster pair from
+   * the raid log. Events are returned in log order so that the prediction
+   * model can compute per-segment likelihoods.
+   */
+  static parseZoneEvents(zone: DreadZone, raidLog: string): ZoneEvent[] {
+    const [m1, m2] = MONSTER_PAIRS[zone];
+    const pattern = new RegExp(
+      `defeated\\s+\\S+\\s+(${m1}|${m2})\\s+x\\s+(\\d+)` +
+      `|drove some (${pluralise(m1)}|${pluralise(m2)}) out of the`,
+      "gi",
+    );
+
+    const events: ZoneEvent[] = [];
+    for (const match of raidLog.matchAll(pattern)) {
+      if (match[1]) {
+        // Kill line: match[1] is the monster type, match[2] is the count
+        const monster = match[1].toLowerCase() === m1 ? 0 : 1;
+        events.push({ type: "kill", monster, count: parseInt(match[2]) });
+      } else if (match[3]) {
+        // Banish line: match[3] is the plural monster name
+        const monster = match[3].toLowerCase() === pluralise(m1) ? 0 : 1;
+        events.push({ type: "banish", monster });
+      }
+    }
+    return events;
   }
 
-  private static parseBoss(
-    zone: DreadZone,
-    raidLog: string,
-    monsters: KillsAndBanishes,
-  ): DreadBoss {
-    const pair = MONSTER_PAIRS[zone];
+  /**
+   * Predict which boss will appear based on ordered kill/banish events.
+   *
+   * The wiki model: each zone starts with an unknown 3:2 split between
+   * two monster types (m1 and m2). Each explicit banish reduces a type's
+   * weight by 1. The type with the higher final weight produces the boss.
+   *
+   * We use Bayesian reasoning with two hypotheses:
+   *   H1: m1 starts at weight 3, m2 starts at weight 2
+   *   H2: m1 starts at weight 2, m2 starts at weight 3
+   *
+   * Kill events provide evidence: under each hypothesis the expected kill
+   * ratio depends on the current weights (which shift as banishes occur).
+   * We compute the log-likelihood of the observed kills under each
+   * hypothesis, segment by segment between banish events, so that each
+   * kill is evaluated against the ratio that was active when it happened.
+   */
+  static predictBoss(zone: DreadZone, events: ZoneEvent[]): { boss: MonsterType; confidence: number } {
+    const [m1, m2] = MONSTER_PAIRS[zone];
 
-    // Match a boss having been defeated
-    for (const monster of pair) {
-      if (BOSS_REGEXES[monster].test(raidLog)) {
-        return { name: BOSS_NAMES[monster], status: "defeated" };
+    // Track banish counts as we walk through events
+    let b1 = 0;
+    let b2 = 0;
+    let logLik_h1 = 0;
+    let logLik_h2 = 0;
+
+    for (const event of events) {
+      if (event.type === "banish") {
+        if (event.monster === 0) b1++;
+        else b2++;
+      } else {
+        // Compute weights under each hypothesis given banishes so far
+        const w1_h1 = Math.max(3 - b1, 0);
+        const w2_h1 = Math.max(2 - b2, 0);
+        const w1_h2 = Math.max(2 - b1, 0);
+        const w2_h2 = Math.max(3 - b2, 0);
+
+        const total_h1 = w1_h1 + w2_h1 || 1;
+        const total_h2 = w1_h2 + w2_h2 || 1;
+
+        const p1_h1 = w1_h1 / total_h1;
+        const p1_h2 = w1_h2 / total_h2;
+
+        // Accumulate log-likelihood for this kill line
+        const k = event.count;
+        if (event.monster === 0) {
+          if (p1_h1 > 0) logLik_h1 += k * Math.log(p1_h1);
+          else logLik_h1 += -Infinity;
+          if (p1_h2 > 0) logLik_h2 += k * Math.log(p1_h2);
+          else logLik_h2 += -Infinity;
+        } else {
+          if (1 - p1_h1 > 0) logLik_h1 += k * Math.log(1 - p1_h1);
+          else logLik_h1 += -Infinity;
+          if (1 - p1_h2 > 0) logLik_h2 += k * Math.log(1 - p1_h2);
+          else logLik_h2 += -Infinity;
+        }
       }
     }
 
-    // Otherwise predict the boss based on kills and banishes
-    const [m1, m2] = pair;
+    // Final weights (after all banishes) determine which boss appears
+    const w1_h1 = Math.max(3 - b1, 0);
+    const w2_h1 = Math.max(2 - b2, 0);
+    const w1_h2 = Math.max(2 - b1, 0);
+    const w2_h2 = Math.max(3 - b2, 0);
 
-    if (monsters[m1].kills > monsters[m2].kills + 50) {
-      monsters[m2].banishes++;
-    } else if (monsters[m2].kills > monsters[m1].kills + 50) {
-      monsters[m1].banishes++;
+    const boss_h1 = w1_h1 > w2_h1 ? m1 : w2_h1 > w1_h1 ? m2 : null;
+    const boss_h2 = w1_h2 > w2_h2 ? m1 : w2_h2 > w1_h2 ? m2 : null;
+
+    // Posterior via log-sum-exp (equal prior)
+    const maxLog = Math.max(logLik_h1, logLik_h2);
+    const posterior_h1 = isFinite(maxLog)
+      ? Math.exp(logLik_h1 - maxLog) /
+        (Math.exp(logLik_h1 - maxLog) + Math.exp(logLik_h2 - maxLog))
+      : 0.5;
+    const posterior_h2 = 1 - posterior_h1;
+
+    // P(m1 is boss) = P(H1)*P(m1 boss|H1) + P(H2)*P(m1 boss|H2)
+    let pBoss_m1 = 0;
+    let pBoss_m2 = 0;
+    if (boss_h1 === m1) pBoss_m1 += posterior_h1;
+    else if (boss_h1 === m2) pBoss_m2 += posterior_h1;
+    else { pBoss_m1 += posterior_h1 * 0.5; pBoss_m2 += posterior_h1 * 0.5; }
+    if (boss_h2 === m1) pBoss_m1 += posterior_h2;
+    else if (boss_h2 === m2) pBoss_m2 += posterior_h2;
+    else { pBoss_m1 += posterior_h2 * 0.5; pBoss_m2 += posterior_h2 * 0.5; }
+
+    if (pBoss_m1 >= pBoss_m2) {
+      return { boss: m1, confidence: pBoss_m1 };
+    }
+    return { boss: m2, confidence: pBoss_m2 };
+  }
+
+  private static parseBoss(zone: DreadZone, raidLog: string): DreadBoss {
+    const pair = MONSTER_PAIRS[zone];
+
+    for (const monster of pair) {
+      if (BOSS_REGEXES[monster].test(raidLog)) {
+        return { name: BOSS_NAMES[monster], status: "defeated", confidence: 1 };
+      }
     }
 
-    if (monsters[m1].banishes !== monsters[m2].banishes) {
-      const predicted = monsters[m1].banishes > monsters[m2].banishes ? m2 : m1;
-      return { name: BOSS_NAMES[predicted], status: "predicted" };
-    }
+    const events = Dreadsylvania.parseZoneEvents(zone, raidLog);
+    const prediction = Dreadsylvania.predictBoss(zone, events);
 
-    return { name: "Unknown", status: "unknown" };
+    return {
+      name: BOSS_NAMES[prediction.boss],
+      status: "predicted",
+      confidence: prediction.confidence,
+    };
   }
 
   static parseOverview(raidLog: string): DreadStatus {
@@ -156,23 +257,21 @@ export class Dreadsylvania extends ClanDungeon {
       /Your clan has defeated <b>(?<castle>[\d,]+)<\/b> monster\(s\) in the Castle/,
     );
 
-    const monsters = Dreadsylvania.parseKillsAndBanishes(raidLog);
-
     const capacitor = raidLog.includes("fixed The Machine (1 turn)");
     const skills = raidLog.match(/used The Machine, assisted by/g);
 
     return {
       forest: {
         remaining: 1000 - parseNumber(forest?.groups?.forest),
-        boss: Dreadsylvania.parseBoss("forest", raidLog, monsters),
+        boss: Dreadsylvania.parseBoss("forest", raidLog),
       },
       village: {
         remaining: 1000 - parseNumber(village?.groups?.village),
-        boss: Dreadsylvania.parseBoss("village", raidLog, monsters),
+        boss: Dreadsylvania.parseBoss("village", raidLog),
       },
       castle: {
         remaining: 1000 - parseNumber(castle?.groups?.castle),
-        boss: Dreadsylvania.parseBoss("castle", raidLog, monsters),
+        boss: Dreadsylvania.parseBoss("castle", raidLog),
       },
       remainingSkills: skills ? 3 - skills.length : 3,
       capacitor,
