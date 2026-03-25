@@ -16,7 +16,7 @@ export class RaidLogMissingError extends Error {
 
 export type RaidLogEvent =
   | { type: "kill"; playerName: string; playerId: number; monster: string; count: number; boss: boolean }
-  | { type: "defeat"; playerName: string; playerId: number; monster: string; count: number }
+  | { type: "defeat"; playerName: string; playerId: number; monster: string; count: number; boss: boolean }
   | { type: "loot"; playerName: string; playerId: number; item: string; recipientName: string; recipientId: number };
 
 export const PLAYER_PREFIX = `([A-Za-z0-9\\-_ ]+)\\s+\\(#(\\d+)\\)\\s+`;
@@ -67,26 +67,30 @@ function matchKill(line: string, bossNames: string[]): RaidLogEvent | null {
   return null;
 }
 
-function matchDefeat(line: string): RaidLogEvent | null {
+function matchDefeat(line: string, bossNames: string[]): RaidLogEvent | null {
   const multi = line.match(DEFEAT_MULTI);
   if (multi) {
+    const monster = multi[3].trim();
     return {
       type: "defeat",
       playerName: multi[1].trim(),
       playerId: parseInt(multi[2]),
-      monster: multi[3].trim(),
+      monster,
       count: parseInt(multi[4]),
+      boss: bossNames.some((b) => monster.toLowerCase().includes(b.toLowerCase())),
     };
   }
 
   const single = line.match(DEFEAT_SINGLE);
   if (single) {
+    const monster = single[3].trim();
     return {
       type: "defeat",
       playerName: single[1].trim(),
       playerId: parseInt(single[2]),
-      monster: single[3].trim(),
+      monster,
       count: 1,
+      boss: bossNames.some((b) => monster.toLowerCase().includes(b.toLowerCase())),
     };
   }
 
@@ -113,7 +117,7 @@ function matchLoot(line: string): RaidLogEvent | null {
 export function parseLine(line: string, bossNames: string[]): RaidLogEvent | null {
   return (
     matchKill(line, bossNames) ??
-    matchDefeat(line) ??
+    matchDefeat(line, bossNames) ??
     matchLoot(line)
   );
 }

@@ -270,33 +270,47 @@ export class DreadsylvaniaRaid {
     let logLikelihoodH2 = 0;
 
     for (const event of this.events) {
-      if (event.type === "banish") {
-        if (event.monster === m1) banishesM1++;
-        else if (event.monster === m2) banishesM2++;
-      } else if (event.type === "kill" && !event.boss) {
-        const monsterLower = event.monster.toLowerCase();
-        const isM1 = monsterLower.includes(m1);
-        const isM2 = monsterLower.includes(m2);
-        if (!isM1 && !isM2) continue;
+      switch (event.type) {
+        case "defeat": {
+          if (!event.boss) break;
+          const monster = [m1, m2].find((m) =>
+            event.monster.toLowerCase().includes(BOSS_NAMES[m].toLowerCase()),
+          );
+          if (monster) return { boss: monster, confidence: 1 };
+          break;
+        }
+        case "banish": {
+          if (event.monster === m1) banishesM1++;
+          else if (event.monster === m2) banishesM2++;
+          break;
+        }
+        case "kill": {
+          if (event.boss) break;
+          const monsterLower = event.monster.toLowerCase();
+          const isM1 = monsterLower.includes(m1);
+          const isM2 = monsterLower.includes(m2);
+          if (!isM1 && !isM2) break;
 
-        const weightM1UnderH1 = Math.max(3 - banishesM1, 0);
-        const weightM2UnderH1 = Math.max(2 - banishesM2, 0);
-        const weightM1UnderH2 = Math.max(2 - banishesM1, 0);
-        const weightM2UnderH2 = Math.max(3 - banishesM2, 0);
+          const weightM1UnderH1 = Math.max(3 - banishesM1, 0);
+          const weightM2UnderH1 = Math.max(2 - banishesM2, 0);
+          const weightM1UnderH2 = Math.max(2 - banishesM1, 0);
+          const weightM2UnderH2 = Math.max(3 - banishesM2, 0);
 
-        const totalH1 = weightM1UnderH1 + weightM2UnderH1 || 1;
-        const totalH2 = weightM1UnderH2 + weightM2UnderH2 || 1;
+          const totalH1 = weightM1UnderH1 + weightM2UnderH1 || 1;
+          const totalH2 = weightM1UnderH2 + weightM2UnderH2 || 1;
 
-        const pM1UnderH1 = weightM1UnderH1 / totalH1;
-        const pM1UnderH2 = weightM1UnderH2 / totalH2;
+          const pM1UnderH1 = weightM1UnderH1 / totalH1;
+          const pM1UnderH2 = weightM1UnderH2 / totalH2;
 
-        const kills = event.count;
-        if (isM1) {
-          logLikelihoodH1 += pM1UnderH1 > 0 ? kills * Math.log(pM1UnderH1) : -Infinity;
-          logLikelihoodH2 += pM1UnderH2 > 0 ? kills * Math.log(pM1UnderH2) : -Infinity;
-        } else {
-          logLikelihoodH1 += 1 - pM1UnderH1 > 0 ? kills * Math.log(1 - pM1UnderH1) : -Infinity;
-          logLikelihoodH2 += 1 - pM1UnderH2 > 0 ? kills * Math.log(1 - pM1UnderH2) : -Infinity;
+          const kills = event.count;
+          if (isM1) {
+            logLikelihoodH1 += pM1UnderH1 > 0 ? kills * Math.log(pM1UnderH1) : -Infinity;
+            logLikelihoodH2 += pM1UnderH2 > 0 ? kills * Math.log(pM1UnderH2) : -Infinity;
+          } else {
+            logLikelihoodH1 += 1 - pM1UnderH1 > 0 ? kills * Math.log(1 - pM1UnderH1) : -Infinity;
+            logLikelihoodH2 += 1 - pM1UnderH2 > 0 ? kills * Math.log(1 - pM1UnderH2) : -Infinity;
+          }
+          break;
         }
       }
     }

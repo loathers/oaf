@@ -311,4 +311,18 @@ describe("predictBoss", () => {
     expect(p.boss).toBe("skeleton");
     expect(p.confidence).toBeGreaterThan(0.5);
   });
+
+  test("defeat by boss gives confidence 1", () => {
+    const defeat: DreadEvent = {
+      type: "defeat",
+      playerName: "Test",
+      playerId: 1,
+      monster: "The Great Wolf of the Air",
+      count: 1,
+      boss: true,
+    };
+    const p = predict([kills(0, 50), kills(1, 50), defeat]);
+    expect(p.boss).toBe("werewolf");
+    expect(p.confidence).toBe(1);
+  });
 });

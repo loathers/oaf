@@ -203,7 +203,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
 
     const formatBoss = (boss: DreadBoss) =>
-      boss.status === "defeated" ? strikethrough(boss.name) : boss.name;
+      boss.status === "defeated" ? strikethrough(boss.name) : `${boss.name} (${boss.confidence}% chance)`;
 
     embed.addFields([
       {
