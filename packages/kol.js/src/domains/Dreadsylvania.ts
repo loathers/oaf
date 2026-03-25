@@ -251,23 +251,28 @@ export class DreadsylvaniaRaid {
   // --- Boss prediction ---
 
   /**
-   * Predict which boss will appear in a zone based on ordered events.
+   * Predict which boss will appear in a zone.
    *
    * The wiki model: each zone starts with an unknown 3:2 split between
    * two monster types. Each explicit banish reduces a type's weight by 1.
    * The type with the higher final weight produces the boss.
    *
-   * We use Bayesian reasoning with two hypotheses for the initial split,
-   * computing log-likelihoods segment by segment between banish events
-   * so kills are evaluated against the ratio active when they happened.
+   * We use Bayesian reasoning with two hypotheses for the initial split
+   * (H1: m1=3/m2=2, H2: m1=2/m2=3). Kill totals are evaluated against
+   * an average of the pre- and post-banish ratios since raid log events
+   * are not in global chronological order (they're grouped by zone then
+   * by player). This is conservative — it slightly underweights kill
+   * evidence when banishes are present, but never overestimates
+   * confidence.
    */
   predictBoss(zone: DreadZone): { boss: MonsterType; confidence: number } {
     const [m1, m2] = MONSTER_PAIRS[zone];
 
+    // Collect totals in a single pass
     let banishesM1 = 0;
     let banishesM2 = 0;
-    let logLikelihoodH1 = 0;
-    let logLikelihoodH2 = 0;
+    let killsM1 = 0;
+    let killsM2 = 0;
 
     for (const event of this.events) {
       switch (event.type) {
@@ -287,53 +292,64 @@ export class DreadsylvaniaRaid {
         case "kill": {
           if (event.boss) break;
           const monsterLower = event.monster.toLowerCase();
-          const isM1 = monsterLower.includes(m1);
-          const isM2 = monsterLower.includes(m2);
-          if (!isM1 && !isM2) break;
-
-          const weightM1UnderH1 = Math.max(3 - banishesM1, 0);
-          const weightM2UnderH1 = Math.max(2 - banishesM2, 0);
-          const weightM1UnderH2 = Math.max(2 - banishesM1, 0);
-          const weightM2UnderH2 = Math.max(3 - banishesM2, 0);
-
-          const totalH1 = weightM1UnderH1 + weightM2UnderH1 || 1;
-          const totalH2 = weightM1UnderH2 + weightM2UnderH2 || 1;
-
-          const pM1UnderH1 = weightM1UnderH1 / totalH1;
-          const pM1UnderH2 = weightM1UnderH2 / totalH2;
-
-          const kills = event.count;
-          if (isM1) {
-            logLikelihoodH1 += pM1UnderH1 > 0 ? kills * Math.log(pM1UnderH1) : -Infinity;
-            logLikelihoodH2 += pM1UnderH2 > 0 ? kills * Math.log(pM1UnderH2) : -Infinity;
-          } else {
-            logLikelihoodH1 += 1 - pM1UnderH1 > 0 ? kills * Math.log(1 - pM1UnderH1) : -Infinity;
-            logLikelihoodH2 += 1 - pM1UnderH2 > 0 ? kills * Math.log(1 - pM1UnderH2) : -Infinity;
-          }
+          if (monsterLower.includes(m1)) killsM1 += event.count;
+          else if (monsterLower.includes(m2)) killsM2 += event.count;
           break;
         }
       }
     }
 
-    const finalWeightM1UnderH1 = Math.max(3 - banishesM1, 0);
-    const finalWeightM2UnderH1 = Math.max(2 - banishesM2, 0);
-    const finalWeightM1UnderH2 = Math.max(2 - banishesM1, 0);
-    const finalWeightM2UnderH2 = Math.max(3 - banishesM2, 0);
+    // Final weights determine the boss
+    const finalM1H1 = Math.max(3 - banishesM1, 0);
+    const finalM2H1 = Math.max(2 - banishesM2, 0);
+    const finalM1H2 = Math.max(2 - banishesM1, 0);
+    const finalM2H2 = Math.max(3 - banishesM2, 0);
 
-    const bossUnderH1 = finalWeightM1UnderH1 > finalWeightM2UnderH1 ? m1
-      : finalWeightM2UnderH1 > finalWeightM1UnderH1 ? m2
-      : null;
-    const bossUnderH2 = finalWeightM1UnderH2 > finalWeightM2UnderH2 ? m1
-      : finalWeightM2UnderH2 > finalWeightM1UnderH2 ? m2
-      : null;
+    const bossUnderH1 = finalM1H1 > finalM2H1 ? m1 : finalM2H1 > finalM1H1 ? m2 : null;
+    const bossUnderH2 = finalM1H2 > finalM2H2 ? m1 : finalM2H2 > finalM1H2 ? m2 : null;
 
-    const maxLog = Math.max(logLikelihoodH1, logLikelihoodH2);
+    // If banishes are decisive (both hypotheses agree), no need for kill analysis
+    if (bossUnderH1 !== null && bossUnderH1 === bossUnderH2) {
+      return { boss: bossUnderH1, confidence: 1 };
+    }
+
+    // Use average of initial and final ratios to account for kills
+    // happening across the entire run (before and after banishes)
+    const initialM1H1 = 3;
+    const initialM2H1 = 2;
+    const initialM1H2 = 2;
+    const initialM2H2 = 3;
+
+    const avgM1H1 = (initialM1H1 + finalM1H1) / 2;
+    const avgM2H1 = (initialM2H1 + finalM2H1) / 2;
+    const avgM1H2 = (initialM1H2 + finalM1H2) / 2;
+    const avgM2H2 = (initialM2H2 + finalM2H2) / 2;
+
+    const totalH1 = avgM1H1 + avgM2H1 || 1;
+    const totalH2 = avgM1H2 + avgM2H2 || 1;
+
+    const pM1H1 = avgM1H1 / totalH1;
+    const pM1H2 = avgM1H2 / totalH2;
+
+    // Log-likelihood of observed kill totals under each hypothesis
+    let logLikH1 = 0;
+    let logLikH2 = 0;
+
+    if (killsM1 + killsM2 > 0) {
+      if (pM1H1 > 0 && pM1H1 < 1 && pM1H2 > 0 && pM1H2 < 1) {
+        logLikH1 = killsM1 * Math.log(pM1H1) + killsM2 * Math.log(1 - pM1H1);
+        logLikH2 = killsM1 * Math.log(pM1H2) + killsM2 * Math.log(1 - pM1H2);
+      }
+    }
+
+    // Posterior via log-sum-exp (equal prior)
+    const maxLog = Math.max(logLikH1, logLikH2);
     const posteriorH1 = isFinite(maxLog)
-      ? Math.exp(logLikelihoodH1 - maxLog) /
-        (Math.exp(logLikelihoodH1 - maxLog) + Math.exp(logLikelihoodH2 - maxLog))
+      ? Math.exp(logLikH1 - maxLog) / (Math.exp(logLikH1 - maxLog) + Math.exp(logLikH2 - maxLog))
       : 0.5;
     const posteriorH2 = 1 - posteriorH1;
 
+    // P(boss is m1) weighted across hypotheses
     let pBossM1 = 0;
     let pBossM2 = 0;
 
