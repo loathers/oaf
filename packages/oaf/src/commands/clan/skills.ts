@@ -79,10 +79,7 @@ async function parseLogs() {
 
       const participation = await Promise.all(
         Object.values(
-          Dreadsylvania.mergeParticipation(
-            {},
-            ...Dreadsylvania.parseParticipation(log),
-          ),
+          Dreadsylvania.parseParticipation(log),
         ).map(async ({ playerId, skills, kills }) => ({
           playerId,
           playerName:

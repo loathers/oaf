@@ -93,22 +93,22 @@ describe("boss detection", () => {
 
   test("detects Great Wolf of the Air", () => {
     const { overview } = Dreadsylvania.parse(loadDreadFixture("raid-218286.html"));
-    expect(overview.forest.boss).toMatchObject({ name: "Great Wolf of the Air", status: "defeated" });
+    expect(overview.forest.boss).toMatchObject({ name: "The Great Wolf of the Air", status: "defeated" });
   });
 
   test("detects Zombie Homeowners' Association", () => {
     const { overview } = Dreadsylvania.parse(loadDreadFixture("raid-218519.html"));
-    expect(overview.village.boss).toMatchObject({ name: "Zombie Homeowners' Association", status: "defeated" });
+    expect(overview.village.boss).toMatchObject({ name: "The Zombie Homeowners' Association", status: "defeated" });
   });
 
   test("detects Count Drunkula", () => {
     const { overview } = Dreadsylvania.parse(loadDreadFixture("raid-218519.html"));
-    expect(overview.castle.boss).toMatchObject({ name: "Drunkula", status: "defeated" });
+    expect(overview.castle.boss).toMatchObject({ name: "Count Drunkula", status: "defeated" });
   });
 
   test("detects Unkillable Skeleton", () => {
     const { overview } = Dreadsylvania.parse(loadDreadFixture("raid-218286.html"));
-    expect(overview.castle.boss).toMatchObject({ name: "Unkillable Skeleton", status: "defeated" });
+    expect(overview.castle.boss).toMatchObject({ name: "The Unkillable Skeleton", status: "defeated" });
   });
 
   test("defeated bosses have confidence 1", () => {
@@ -119,7 +119,7 @@ describe("boss detection", () => {
   test("predicts boss from kill differential", async () => {
     const log = await loadFixture(import.meta.dirname, "raidlog.html");
     const overview = Dreadsylvania.parseOverview(log);
-    expect(overview.castle.boss).toMatchObject({ name: "Unkillable Skeleton", status: "predicted" });
+    expect(overview.castle.boss).toMatchObject({ name: "The Unkillable Skeleton", status: "predicted" });
     expect(overview.castle.boss.confidence).toBeGreaterThan(0.5);
   });
 
@@ -279,65 +279,54 @@ describe("castle details", () => {
 describe("participation", () => {
   test("parses kills per player", async () => {
     const log = await loadFixture(import.meta.dirname, "raidlog.html");
-    const participation = Dreadsylvania.mergeParticipation(
-      {},
-      ...Dreadsylvania.parseParticipation(log),
-    );
-    expect(participation[3268818]).toHaveProperty("kills", 346);
+    const participation = Dreadsylvania.parseParticipation(log);
+    // MeatballMarinaraMaster has the most Dread kills in the legacy fixture
+    expect(participation[2802400]).toHaveProperty("kills", 423);
   });
 
   test("parses skill uses", async () => {
     const log = await loadFixture(import.meta.dirname, "raidlog.html");
-    const participation = Dreadsylvania.mergeParticipation(
-      {},
-      ...Dreadsylvania.parseParticipation(log),
-    );
+    const participation = Dreadsylvania.parseParticipation(log);
     expect(participation[3137318]).toHaveProperty("skills", 1);
   });
 
   test("player with only skill use has 0 kills", async () => {
     const log = await loadFixture(import.meta.dirname, "raidlog.html");
-    const participation = Dreadsylvania.mergeParticipation(
-      {},
-      ...Dreadsylvania.parseParticipation(log),
-    );
+    const participation = Dreadsylvania.parseParticipation(log);
     expect(participation[3137318]).toHaveProperty("kills", 0);
   });
 
-  test("individual kill totals can exceed zone caps due to simultaneous fights", () => {
+  test("counts single kills and multi-kills", () => {
+    // raid-218518 has 2987 multi-kills + 13 single kills = 3000
+    // (old regex over-counted by including boss defeat lines)
     const log = loadDreadFixture("raid-218518.html");
-    const participation = Dreadsylvania.mergeParticipation(
-      {},
-      ...Dreadsylvania.parseParticipation(log),
-    );
+    const participation = Dreadsylvania.parseParticipation(log);
     const totalKills = Object.values(participation).reduce(
       (sum, { kills }) => sum + kills,
       0,
     );
-    expect(totalKills).toBe(3003);
+    expect(totalKills).toBe(3000);
   });
 
-  test("merges participation from multiple sources", async () => {
+  test("only counts Dread monster kills, not other dungeon kills", async () => {
+    // The legacy fixture has Hobopolis + Dread in one page.
+    // 507 multi-kills + 4 single kills from Dudefromaway = 511
     const log = await loadFixture(import.meta.dirname, "raidlog.html");
-    const participation = Dreadsylvania.mergeParticipation(
-      {},
-      ...Dreadsylvania.parseParticipation(log),
-    );
+    const participation = Dreadsylvania.parseParticipation(log);
     const totalKills = Object.values(participation).reduce(
       (sum, { kills }) => sum + kills,
       0,
     );
-    expect(totalKills).toBe(3677);
+    expect(totalKills).toBe(511);
   });
 
-  test("returns empty array for non-Dread log", () => {
+  test("returns empty for non-Dread log", () => {
     const result = Dreadsylvania.parseParticipation("<html><body>No raids here</body></html>");
-    expect(result).toEqual([]);
+    expect(Object.keys(result)).toHaveLength(0);
   });
 
-  test("mergeParticipation accumulates same player across multiple calls", () => {
+  test("mergeParticipation accumulates same player across sources", () => {
     const merged = Dreadsylvania.mergeParticipation(
-      {},
       { 123: { playerId: 123, kills: 10, skills: 0 } },
       { 123: { playerId: 123, kills: 5, skills: 1 } },
     );
