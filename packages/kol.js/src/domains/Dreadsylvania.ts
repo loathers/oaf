@@ -1,4 +1,6 @@
-import { ClanDungeon } from "./ClanDungeon.js";
+import { ClanDungeon, PLAYER_PREFIX, type RaidLogEvent } from "./ClanDungeon.js";
+
+export type { RaidLogEvent };
 
 export type DreadBoss = {
   name: string;
@@ -96,10 +98,9 @@ const MONSTER_PAIRS: Record<DreadZone, readonly [MonsterType, MonsterType]> = {
 
 // --- Structured raid log events ---
 
-export type RaidLogEvent =
-  | { type: "kill"; playerName: string; playerId: number; monster: MonsterType; count: number }
+export type DreadEvent =
+  | RaidLogEvent
   | { type: "banish"; playerName: string; playerId: number; monster: MonsterType }
-  | { type: "boss_defeated"; playerName: string; playerId: number; boss: MonsterType }
   | { type: "learned_skill"; playerName: string; playerId: number; helpers: [string, string] }
   | { type: "capacitor"; playerName: string; playerId: number }
   | { type: "noncombat"; action: string };
@@ -118,30 +119,49 @@ const NONCOMBAT_ACTIONS = [
   "knocked some fruit loose",
   "wasted some fruit",
   "acquired a chunk of moon-amber",
+  "recycled some newspapers",
+  "found and sold a rare baseball card",
+  "got a cool seed pod",
+  "made an impression of a complicated lock",
+  "rifled through a footlocker",
+  "made some bone flour",
+  "acquired some dread tarragon",
+  "got a blood kiwi",
   // Village
   "unlocked the schoolhouse",
   "unlocked the master suite",
   "hung a clanmate",
   "was hung by a clanmate",
+  "collected a ghost pencil",
+  "looted the blacksmith's till",
+  "robbed some graves",
+  "made a shepherd's pie",
+  "polished some moon-amber",
+  "looted the tinker's shack",
+  "made a complicated key",
+  "made a ghost shawl",
+  "got a bottle of eau de mort",
+  "swam in a sewer",
   // Castle
   "unlocked the lab",
   "got some roast beast",
   "got a wax banana",
   "got some stinking agaric",
+  "unlocked the ballroom",
+  "twirled on the dance floor",
+  "sifted through some ashes",
+  "raided a dresser",
+  "made a blood kiwitini",
+  "made a cool iron ingot",
+  "made a cool iron breastplate",
+  // Miscellaneous
+  "got the carriageman",
 ] as const;
 
 const ALL_MONSTER_TYPES = Object.values(Monster);
 
-const PLAYER_PREFIX = `([A-Za-z0-9\\-_ ]+)\\s+\\(#(\\d+)\\)\\s+`;
-const MONSTER_TYPES_PATTERN = ALL_MONSTER_TYPES.join("|");
 const MONSTER_PLURALS_PATTERN = ALL_MONSTER_TYPES.map(pluralise).join("|");
 
-const KILL_MULTI = new RegExp(
-  `^${PLAYER_PREFIX}defeated\\s+\\S+\\s+(${MONSTER_TYPES_PATTERN})\\s+x\\s+(\\d+)`, "i",
-);
-const KILL_SINGLE = new RegExp(
-  `^${PLAYER_PREFIX}defeated\\s+\\S+\\s+(${MONSTER_TYPES_PATTERN})\\s+\\(1 turn\\)`, "i",
-);
 const BANISH = new RegExp(
   `^${PLAYER_PREFIX}drove some (${MONSTER_PLURALS_PATTERN}) out of the`, "i",
 );
@@ -151,59 +171,14 @@ const LEARNED_SKILL = new RegExp(
 const CAPACITOR = new RegExp(
   `^${PLAYER_PREFIX}fixed The Machine \\(1 turn\\)`, "i",
 );
-const BOSS_LINE_REGEXES = Object.entries(BOSS_REGEXES).map(
-  ([monster, regex]) => ({
-    monster: monster as MonsterType,
-    pattern: new RegExp(`^${PLAYER_PREFIX}${regex.source}`, "i"),
-  }),
-);
+
+const BOSS_NAMES_LIST = Object.values(BOSS_NAMES);
 
 function parseNumber(input?: string): number {
   return parseInt(input?.replaceAll(",", "") || "0");
 }
 
-function matchKill(line: string): RaidLogEvent | null {
-  const multi = line.match(KILL_MULTI);
-  if (multi) {
-    return {
-      type: "kill",
-      playerName: multi[1].trim(),
-      playerId: parseInt(multi[2]),
-      monster: multi[3].toLowerCase() as MonsterType,
-      count: parseInt(multi[4]),
-    };
-  }
-
-  const single = line.match(KILL_SINGLE);
-  if (single) {
-    return {
-      type: "kill",
-      playerName: single[1].trim(),
-      playerId: parseInt(single[2]),
-      monster: single[3].toLowerCase() as MonsterType,
-      count: 1,
-    };
-  }
-
-  return null;
-}
-
-function matchBossDefeat(line: string): RaidLogEvent | null {
-  for (const { monster, pattern } of BOSS_LINE_REGEXES) {
-    const match = line.match(pattern);
-    if (match) {
-      return {
-        type: "boss_defeated",
-        playerName: match[1].trim(),
-        playerId: parseInt(match[2]),
-        boss: monster,
-      };
-    }
-  }
-  return null;
-}
-
-function matchBanish(line: string): RaidLogEvent | null {
+function matchBanish(line: string): DreadEvent | null {
   const match = line.match(BANISH);
   if (!match) return null;
   const monster = ALL_MONSTER_TYPES.find(
@@ -217,7 +192,7 @@ function matchBanish(line: string): RaidLogEvent | null {
   };
 }
 
-function matchLearnedSkill(line: string): RaidLogEvent | null {
+function matchLearnedSkill(line: string): DreadEvent | null {
   const match = line.match(LEARNED_SKILL);
   if (!match) return null;
   return {
@@ -228,7 +203,7 @@ function matchLearnedSkill(line: string): RaidLogEvent | null {
   };
 }
 
-function matchCapacitor(line: string): RaidLogEvent | null {
+function matchCapacitor(line: string): DreadEvent | null {
   const match = line.match(CAPACITOR);
   if (!match) return null;
   return {
@@ -238,32 +213,43 @@ function matchCapacitor(line: string): RaidLogEvent | null {
   };
 }
 
-function matchNoncombat(line: string): RaidLogEvent | null {
+function matchNoncombat(line: string): DreadEvent | null {
   const action = NONCOMBAT_ACTIONS.find((a) => line.includes(a));
   return action ? { type: "noncombat", action } : null;
 }
 
 export class Dreadsylvania extends ClanDungeon {
+  protected bossNames(): string[] {
+    return BOSS_NAMES_LIST;
+  }
+
   /**
    * Parse raw raid log HTML into a structured list of events in document
-   * order. This is the single source of truth — all other parsers derive
-   * from this.
+   * order. Dread-specific matchers (banishes, skills, capacitor) are tried
+   * first; unmatched lines fall through to ClanDungeon.parseLine for
+   * generic events (kills, defeats, loot, noncombats).
    */
-  static parseEvents(raidLog: string): RaidLogEvent[] {
-    const events: RaidLogEvent[] = [];
+  static parseEvents(raidLog: string): DreadEvent[] {
+    // Current raid pages combine all dungeons in separate divs.
+    // Historical raid pages are single-dungeon and have a title like
+    // "Dreadsylvania run, March 11, 2026".
+    const dreadBlock = raidLog.match(
+      /<div id='Dreadsylvania'>([\s\S]*?)<\/div>/,
+    );
+    if (!dreadBlock && !raidLog.includes("Dreadsylvania run,")) return [];
+    const html = dreadBlock?.[1] ?? raidLog;
 
-    for (const line of raidLog.split(/<br\s*\/?>|\n/)) {
+    const events: DreadEvent[] = [];
+
+    for (const line of html.split(/<br\s*\/?>|\n/)) {
       const trimmed = line.replace(/<[^>]*>/g, "").trim();
       if (!trimmed) continue;
 
-      // Boss defeats must be checked before kills — "defeated Mayor Ghost"
-      // would otherwise match the single-kill pattern for "ghost".
       const event =
-        matchBossDefeat(trimmed) ??
-        matchKill(trimmed) ??
         matchBanish(trimmed) ??
         matchLearnedSkill(trimmed) ??
         matchCapacitor(trimmed) ??
+        ClanDungeon.parseLine(trimmed, BOSS_NAMES_LIST) ??
         matchNoncombat(trimmed);
 
       if (event) events.push(event);
@@ -399,12 +385,16 @@ export class Dreadsylvania extends ClanDungeon {
 
   // --- High-level parsers that derive from events ---
 
-  private static parseBoss(zone: DreadZone, events: RaidLogEvent[], raidLog: string): DreadBoss {
+  private static parseBoss(zone: DreadZone, events: DreadEvent[], raidLog: string): DreadBoss {
     const pair = MONSTER_PAIRS[zone];
 
     for (const event of events) {
-      if (event.type === "boss_defeated" && (pair as readonly string[]).includes(event.boss)) {
-        return { name: BOSS_NAMES[event.boss], status: "defeated", confidence: 1 };
+      if (event.type !== "kill" || !event.boss) continue;
+      const monster = pair.find((m) =>
+        event.monster.toLowerCase().includes(BOSS_NAMES[m].toLowerCase()),
+      );
+      if (monster) {
+        return { name: BOSS_NAMES[monster], status: "defeated", confidence: 1 };
       }
     }
 
@@ -452,11 +442,11 @@ export class Dreadsylvania extends ClanDungeon {
     };
   }
 
-  private static hasAction(events: RaidLogEvent[], action: string): boolean {
+  private static hasAction(events: DreadEvent[], action: string): boolean {
     return events.some((e) => e.type === "noncombat" && e.action === action);
   }
 
-  private static extractDreadForest(events: RaidLogEvent[]): DreadForestStatus {
+  private static extractDreadForest(events: DreadEvent[]): DreadForestStatus {
     return {
       attic: Dreadsylvania.hasAction(events, "unlocked the attic of the cabin"),
       watchtower: Dreadsylvania.hasAction(events, "unlocked the fire watchtower"),
@@ -470,7 +460,7 @@ export class Dreadsylvania extends ClanDungeon {
     };
   }
 
-  private static extractDreadVillage(events: RaidLogEvent[]): DreadVillageStatus {
+  private static extractDreadVillage(events: DreadEvent[]): DreadVillageStatus {
     return {
       schoolhouse: Dreadsylvania.hasAction(events, "unlocked the schoolhouse"),
       suite: Dreadsylvania.hasAction(events, "unlocked the master suite"),
@@ -480,7 +470,7 @@ export class Dreadsylvania extends ClanDungeon {
     };
   }
 
-  private static extractDreadCastle(events: RaidLogEvent[]): DreadCastleStatus {
+  private static extractDreadCastle(events: DreadEvent[]): DreadCastleStatus {
     return {
       lab: Dreadsylvania.hasAction(events, "unlocked the lab"),
       roast: Dreadsylvania.hasAction(events, "got some roast beast"),

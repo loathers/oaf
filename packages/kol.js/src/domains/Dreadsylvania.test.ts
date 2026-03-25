@@ -296,21 +296,18 @@ describe("participation", () => {
     expect(participation[3137318]).toHaveProperty("kills", 0);
   });
 
-  test("counts single kills and multi-kills", () => {
-    // raid-218518 has 2987 multi-kills + 13 single kills = 3000
-    // (old regex over-counted by including boss defeat lines)
+  test("counts single kills, multi-kills, and boss kills", () => {
+    // raid-218518: 2987 multi + 13 single + 3 boss = 3003
     const log = loadDreadFixture("raid-218518.html");
     const participation = Dreadsylvania.parseParticipation(log);
     const totalKills = Object.values(participation).reduce(
       (sum, { kills }) => sum + kills,
       0,
     );
-    expect(totalKills).toBe(3000);
+    expect(totalKills).toBe(3003);
   });
 
-  test("only counts Dread monster kills, not other dungeon kills", async () => {
-    // The legacy fixture has Hobopolis + Dread in one page.
-    // 507 multi-kills + 4 single kills from Dudefromaway = 511
+  test("only counts Dread kills from combined page", async () => {
     const log = await loadFixture(import.meta.dirname, "raidlog.html");
     const participation = Dreadsylvania.parseParticipation(log);
     const totalKills = Object.values(participation).reduce(
