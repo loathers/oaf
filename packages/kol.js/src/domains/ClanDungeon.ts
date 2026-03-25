@@ -106,30 +106,31 @@ function matchLoot(line: string): RaidLogEvent | null {
   };
 }
 
-export abstract class ClanDungeon {
+/**
+ * Try to parse a single stripped log line into a base raid log event.
+ * Returns null if the line doesn't match any known pattern.
+ */
+export function parseLine(line: string, bossNames: string[]): RaidLogEvent | null {
+  return (
+    matchKill(line, bossNames) ??
+    matchDefeat(line) ??
+    matchLoot(line)
+  );
+}
+
+/**
+ * Service class for interacting with KoL clan dungeons.
+ * Handles joining clans, fetching raid logs, and creating
+ * raid instances from the fetched HTML.
+ */
+export class ClanDungeon {
   #client: Client;
-
-  /** Boss names that should be flagged on kill events. */
-  protected abstract bossNames(): string[];
-
-  /**
-   * Try to parse a single stripped log line into a base raid log event.
-   * Returns null if the line doesn't match any known pattern.
-   * Subclasses should try their own matchers first, then fall back to this.
-   */
-  static parseLine(line: string, bossNames: string[]): RaidLogEvent | null {
-    return (
-      matchKill(line, bossNames) ??
-      matchDefeat(line) ??
-      matchLoot(line)
-    );
-  }
 
   constructor(client: Client) {
     this.#client = client;
   }
 
-  async getRaidLog(clanId: number): Promise<string> {
+  async getCurrentRaid(clanId: number): Promise<string> {
     return await this.#client.actionMutex.runExclusive(async () => {
       if (!(await this.#client.joinClan(clanId))) throw new JoinClanError();
       const log = await this.#client.fetchText("clan_raidlogs.php");
@@ -138,18 +139,21 @@ export abstract class ClanDungeon {
     });
   }
 
-  async getFinishedRaidLog(raidId: number): Promise<string> {
-    return await this.#client.fetchText("clan_viewraidlog.php", {
-      searchParams: {
-        viewlog: raidId,
-        backstart: 0,
-      },
+  async getRaidById(clanId: number, raidId: number): Promise<string> {
+    return await this.#client.actionMutex.runExclusive(async () => {
+      if (!(await this.#client.joinClan(clanId))) throw new JoinClanError();
+      return await this.#client.fetchText("clan_viewraidlog.php", {
+        searchParams: {
+          viewlog: raidId,
+          backstart: 0,
+        },
+      });
     });
   }
 
-  async getMissingRaidLogs(
+  async getRaidIds(
     clanId: number,
-    parsedRaids: number[],
+    exclude: number[] = [],
   ): Promise<number[]> {
     return await this.#client.actionMutex.runExclusive(async () => {
       if (!(await this.#client.joinClan(clanId))) throw new JoinClanError();
@@ -167,7 +171,7 @@ export abstract class ClanDungeon {
           ) || [];
         for (const id of matches) {
           const cleanId = Number(id.replace(/\D/g, ""));
-          if (parsedRaids.includes(cleanId)) {
+          if (exclude.includes(cleanId)) {
             done = true;
             break;
           }

@@ -4,7 +4,7 @@ import {
   bold,
   roleMention,
 } from "discord.js";
-import { Dreadsylvania } from "kol.js/domains/Dreadsylvania";
+import { DreadsylvaniaDungeon } from "kol.js/domains/Dreadsylvania";
 
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
@@ -12,7 +12,7 @@ import { config } from "../../config.js";
 import { pluralize } from "../../utils.js";
 import { DREAD_CLANS } from "./_clans.js";
 
-const dreadsylvania = new Dreadsylvania(kolClient);
+const dungeon = new DreadsylvaniaDungeon(kolClient);
 
 async function constructDreadStatusMessage(): Promise<{
   pingableClans: string[];
@@ -22,7 +22,8 @@ async function constructDreadStatusMessage(): Promise<{
 
   const messages = await Promise.all(
     DREAD_CLANS.map(async (clan) => {
-      const overview = await dreadsylvania.getDreadStatusOverview(clan.id);
+      const raid = await dungeon.getRaid(clan.id);
+      const overview = raid.getOverview();
 
       const skills = overview.castle.remaining > 0 ? overview.remainingSkills : 0;
 

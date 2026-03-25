@@ -12,7 +12,7 @@ import { JoinClanError, RaidLogMissingError } from "kol.js/domains/ClanDungeon";
 import {
   type DetailedDreadStatus,
   type DreadBoss,
-  Dreadsylvania,
+  DreadsylvaniaDungeon,
 } from "kol.js/domains/Dreadsylvania";
 
 import { createEmbed, discordClient } from "../../clients/discord.js";
@@ -20,7 +20,7 @@ import { kolClient } from "../../clients/kol.js";
 import { pluralize } from "../../utils.js";
 import { DREAD_CLANS } from "./_clans.js";
 
-const dreadsylvania = new Dreadsylvania(kolClient);
+const dungeon = new DreadsylvaniaDungeon(kolClient);
 
 export const data = new SlashCommandBuilder()
   .setName("clan")
@@ -194,7 +194,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
   try {
-    const status = await dreadsylvania.getDetailedDreadStatus(clan.id);
+    const raid = await dungeon.getRaid(clan.id);
+    const status = raid.getDetailedStatus();
     const embed = createEmbed().setTitle(`Status update for ${clan.name}`);
 
     embed.setDescription(

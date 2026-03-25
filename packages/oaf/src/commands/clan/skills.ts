@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { Player } from "kol.js";
 import { JoinClanError, RaidLogMissingError } from "kol.js/domains/ClanDungeon";
-import { Dreadsylvania } from "kol.js/domains/Dreadsylvania";
+import { DreadsylvaniaRaid, DreadsylvaniaDungeon } from "kol.js/domains/Dreadsylvania";
 
 import {
   createRaidsWithParticipation,
@@ -15,7 +15,7 @@ import { pluralize } from "../../utils.js";
 import { identifyPlayer } from "../_player.js";
 import { DREAD_CLANS } from "./_clans.js";
 
-const dreadsylvania = new Dreadsylvania(kolClient);
+const dungeon = new DreadsylvaniaDungeon(kolClient);
 
 export const data = new SlashCommandBuilder()
   .setName("skills")
@@ -30,14 +30,12 @@ export const data = new SlashCommandBuilder()
   );
 
 async function getParticipationFromCurrentRaid() {
-  return (
-    await Promise.all(
-      DREAD_CLANS.map(async (clan) => {
-        const log = await dreadsylvania.getRaidLog(clan.id);
-        return Dreadsylvania.parseParticipation(log);
-      }),
-    )
-  ).flat();
+  return await Promise.all(
+    DREAD_CLANS.map(async (clan) => {
+      const raid = await dungeon.getRaid(clan.id);
+      return raid.getParticipation();
+    }),
+  );
 }
 
 async function parseLogs() {
@@ -59,18 +57,18 @@ async function parseLogs() {
   }[] = [];
 
   for (const clan of DREAD_CLANS) {
-    const raids = (
-      await dreadsylvania.getMissingRaidLogs(clan.id, parsedRaids)
+    const raidIds = (
+      await dungeon.getRaidIds(clan.id, parsedRaids)
     ).filter((id) => !parsedRaids.includes(id));
-    const raidLogs = await Promise.all(
-      raids.map(async (id) => ({
+    const raids = await Promise.all(
+      raidIds.map(async (id) => ({
         id,
-        log: await dreadsylvania.getFinishedRaidLog(id),
+        raid: await dungeon.getRaid(clan.id, id),
       })),
     );
 
-    for (const { id, log } of raidLogs) {
-      if (log.includes("No such raid was found.")) {
+    for (const { id, raid } of raids) {
+      if (raid.events.length === 0) {
         await discordClient.alert(
           `Discovered raid ${id} from clan ${clan.name} but couldn't load the log`,
         );
@@ -79,7 +77,7 @@ async function parseLogs() {
 
       const participation = await Promise.all(
         Object.values(
-          Dreadsylvania.parseParticipation(log),
+          raid.getParticipation(),
         ).map(async ({ playerId, skills, kills }) => ({
           playerId,
           playerName:
@@ -110,24 +108,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     await parseLogs();
 
-    const { players, participation: allParticipation } =
+    const { players, participation: dbParticipation } =
       await getPlayersWithRaidParticipation();
 
-    const participationByPlayer = Map.groupBy(
-      allParticipation,
-      (r) => r.playerId,
-    );
-
-    const playersWithParticipation = players.map((p) => ({
-      ...p,
-      raidParticipation: participationByPlayer.get(p.playerId) ?? [],
-    }));
-
-    const participation = Dreadsylvania.mergeParticipation(
-      {},
-      ...playersWithParticipation
-        .map((p) => p.raidParticipation.map((r) => ({ [p.playerId]: r })))
-        .flat(),
+    const participation = DreadsylvaniaRaid.mergeParticipation(
+      ...dbParticipation.map((r) => ({
+        [r.playerId]: { playerId: r.playerId, skills: r.skills, kills: r.kills },
+      })),
       ...(await getParticipationFromCurrentRaid()),
     );
 
@@ -152,16 +139,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ));
     }
 
-    const skillsOwed = playersWithParticipation
+    const skillsOwed = players
       .filter(
         (player) =>
-          player.doneWithSkills !== true && player.raidParticipation.length > 0,
+          !player.doneWithSkills && participation[player.playerId],
       )
       .map((player) => {
-        const { skills, kills } = participation[player.playerId] ?? {
-          skills: 0,
-          kills: 0,
-        };
+        const { skills, kills } = participation[player.playerId];
         return [
           player,
           Math.floor(((kills ?? 0) + 450) / 900) - (skills ?? 0),
