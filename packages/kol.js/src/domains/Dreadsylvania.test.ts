@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { loadFixture } from "../testUtils.js";
-import { Dreadsylvania, type ZoneEvent } from "./Dreadsylvania.js";
+import { Dreadsylvania, type DreadEvent } from "./Dreadsylvania.js";
 
 function loadDreadFixture(name: string): string {
   return readFileSync(
@@ -53,8 +53,10 @@ describe("parseOverview", () => {
     });
 
     test.skip("false when not fixed", () => {
-      // We need a log with no fixed capacitor
-      const overview = Dreadsylvania.parseOverview("<b>0</b> kisses");
+      // Needs a fixture with no fixed capacitor (none of ours have this)
+      const overview = Dreadsylvania.parseOverview(
+        loadDreadFixture("no-capacitor.html"),
+      );
       expect(overview.capacitor).toBe(false);
     });
   });
@@ -129,11 +131,12 @@ describe("boss detection", () => {
   });
 
   test("low-confidence prediction with few balanced kills", async () => {
-    // Legacy fixture: forest has 14 bugbear vs 11 werewolf kills — very few,
-    // close to balanced. Model still picks a side but with low confidence.
     const log = await loadFixture(import.meta.dirname, "raidlog.html");
     const overview = Dreadsylvania.parseOverview(log);
     expect(overview.forest.boss.status).toBe("predicted");
+    // 14 bugbear vs 11 werewolf — between 0.5 and 1
+    expect(overview.forest.boss.confidence).toBeGreaterThan(0.5);
+    expect(overview.forest.boss.confidence).toBeLessThan(0.9);
   });
 
 });
@@ -215,7 +218,7 @@ describe("village details", () => {
     expect(village.hanging).toBe(true);
   });
 
-  test("nothing unlocked", () => {
+  test("only schoolhouse unlocked", () => {
     const { village } = Dreadsylvania.parse(loadDreadFixture("cdr2-current.html"));
     expect(village).toEqual({
       schoolhouse: true,
@@ -332,13 +335,12 @@ describe("participation", () => {
 });
 
 describe("predictBoss", () => {
-  // monster 0 = first in pair (bugbear/ghost/vampire)
-  // monster 1 = second in pair (werewolf/zombie/skeleton)
-  function kills(monster: 0 | 1, count: number): ZoneEvent {
-    return { type: "kill", monster, count };
+  const MONSTERS = ["bugbear", "werewolf"] as const;
+  function kills(monster: 0 | 1, count: number): DreadEvent {
+    return { type: "kill", playerName: "Test", playerId: 1, monster: MONSTERS[monster], count, boss: false };
   }
-  function banish(monster: 0 | 1): ZoneEvent {
-    return { type: "banish", monster };
+  function banish(monster: 0 | 1): DreadEvent {
+    return { type: "banish", playerName: "Test", playerId: 1, monster: MONSTERS[monster] };
   }
 
   test("no information gives 50/50 confidence", () => {
@@ -429,17 +431,16 @@ describe("predictBoss", () => {
   });
 
   test("works for village zone", () => {
-    const prediction = Dreadsylvania.predictBoss("village", [banish(0)]);
-    // ghost banished → zombie boss predicted
+    const ghostBanish: DreadEvent = { type: "banish", playerName: "Test", playerId: 1, monster: "ghost" };
+    const prediction = Dreadsylvania.predictBoss("village", [ghostBanish]);
     expect(prediction.boss).toBe("zombie");
     expect(prediction.confidence).toBeGreaterThan(0.5);
   });
 
   test("works for castle zone", () => {
-    const prediction = Dreadsylvania.predictBoss("castle", [
-      kills(0, 100),
-      kills(1, 300),
-    ]);
+    const vKills: DreadEvent = { type: "kill", playerName: "Test", playerId: 1, monster: "vampire", count: 100, boss: false };
+    const sKills: DreadEvent = { type: "kill", playerName: "Test", playerId: 1, monster: "skeleton", count: 300, boss: false };
+    const prediction = Dreadsylvania.predictBoss("castle", [vKills, sKills]);
     expect(prediction.boss).toBe("skeleton");
     expect(prediction.confidence).toBeGreaterThan(0.5);
   });
