@@ -84,7 +84,8 @@ const { gameDayFromRealDate } = vi.hoisted(() => ({
   gameDayFromRealDate: vi.fn().mockReturnValue(100),
 }));
 
-vi.mock("../../clients/LoathingDate.js", () => ({
+vi.mock("kol.js", async (importOriginal) => ({
+  ...(await importOriginal()),
   LoathingDate: { gameDayFromRealDate },
 }));
 

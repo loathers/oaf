@@ -1,4 +1,4 @@
-import { LoathingDate } from "../../../clients/LoathingDate.js";
+import { LoathingDate } from "kol.js";
 import { toWikiLink } from "../../../utils.js";
 import type { CalendarData } from "../types/calendar.js";
 import WardrobeSection from "./WardrobeSection.js";

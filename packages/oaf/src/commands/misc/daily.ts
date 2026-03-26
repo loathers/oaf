@@ -10,7 +10,7 @@ import {
   messageLink,
 } from "discord.js";
 
-import { LoathingDate } from "../../clients/LoathingDate.js";
+import { LoathingDate } from "kol.js";
 import { getBirthdays, setGlobalsMessage } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";

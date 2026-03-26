@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
-import { LoathingDate } from "../../../clients/LoathingDate.js";
+import { LoathingDate } from "kol.js";
 import DayDetail from "../components/DayDetail.js";
 import GregorianCalendar from "../components/GregorianCalendar.js";
 import KolCalendar from "../components/KolCalendar.js";

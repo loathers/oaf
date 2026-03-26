@@ -6,7 +6,7 @@ import {
 } from "discord.js";
 import { dedent } from "ts-dedent";
 
-import { LoathingDate } from "../../clients/LoathingDate.js";
+import { LoathingDate } from "kol.js";
 import { renderSvg } from "../../svgConverter.js";
 
 export const data = new SlashCommandBuilder()

@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { LoathingDate } from "../../clients/LoathingDate.js";
+import { LoathingDate } from "kol.js";
 import {
   getDailiesForGameday,
   getDailySubmissionsForKey,

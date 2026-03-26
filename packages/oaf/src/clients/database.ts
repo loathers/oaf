@@ -3,7 +3,7 @@ import pg from "pg";
 
 import { config } from "../config.js";
 import type { DB, Player } from "../database-types.js";
-import { LoathingDate } from "./LoathingDate.js";
+import { LoathingDate } from "kol.js";
 
 function getConnectionString() {
   if (!config.DATABASE_URL) return undefined;

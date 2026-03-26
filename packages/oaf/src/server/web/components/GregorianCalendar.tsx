@@ -1,4 +1,4 @@
-import { LoathingDate } from "../../../clients/LoathingDate.js";
+import { LoathingDate } from "kol.js";
 import CalendarNav from "./CalendarNav.js";
 import { HOLIDAY_EMOJI } from "./holidayEmoji.js";
 

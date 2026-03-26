@@ -1,6 +1,6 @@
 import { userMention } from "discord.js";
 
-import { LoathingDate } from "../../clients/LoathingDate.js";
+import { LoathingDate } from "kol.js";
 import {
   type SubmissionSummary,
   clearDailySubmissions,
