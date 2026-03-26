@@ -2,7 +2,7 @@ import { bold, hyperlink } from "discord.js";
 import { Memoize } from "typescript-memoize";
 
 import { inlineExpression } from "../discordUtils.js";
-import { toWikiLink } from "../utils.js";
+import { toWikiLink } from "kol.js";
 import { Thing } from "./Thing.js";
 import { TData } from "./query.js";
 

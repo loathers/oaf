@@ -1,5 +1,3 @@
-import { decodeHTML } from "entities";
-
 export function indent(textToIndent: string): string {
   return textToIndent
     .split("\n")
@@ -9,19 +7,6 @@ export function indent(textToIndent: string): string {
 
 export function notNull<T>(value: T | null): value is T {
   return value !== null;
-}
-
-export function cleanString(input: string | undefined): string {
-  if (!input) return "";
-  return decodeHTML(input).replace(/<[^>]+>/g, "");
-}
-
-export function toWikiLink(input: string): string {
-  return `https://wiki.kingdomofloathing.com/${encodeURI(
-    input.replace(/\s/g, "_"),
-  )
-    .replace(/\(/g, "%28")
-    .replace(/\)/g, "%29")}`;
 }
 
 export function resolveWikiLink(path: string) {
@@ -35,10 +20,6 @@ export function toSamsaraLink(id: number): string {
 
 export function toMuseumLink(id: number): string {
   return `https://museum.loathers.net/player/${id}`;
-}
-
-export function parseNumber(input?: string): number {
-  return parseInt(input?.replace(",", "") || "0");
 }
 
 export function clamp(num: number, min: number, max: number): number {

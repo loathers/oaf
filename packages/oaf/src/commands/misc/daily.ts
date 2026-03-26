@@ -18,7 +18,8 @@ import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { renderSvg } from "../../svgConverter.js";
 import { formatPlayer } from "../../discordUtils.js";
-import { englishJoin, getRandom, toWikiLink } from "../../utils.js";
+import { toWikiLink } from "kol.js";
+import { englishJoin, getRandom } from "../../utils.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
 import { buildGlobals } from "./_globals.js";
 

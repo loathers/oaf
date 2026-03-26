@@ -6,7 +6,7 @@ import {
   getRafflesForGamedayRange,
 } from "../../clients/database.js";
 import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
-import { toWikiLink } from "../../utils.js";
+import { toWikiLink } from "kol.js";
 import type { CalendarData, TextSegment } from "../web/types/calendar.js";
 
 const numberFormat = new Intl.NumberFormat();

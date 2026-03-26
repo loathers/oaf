@@ -10,7 +10,7 @@ import {
   Thing,
 } from "../things/index.js";
 import { getQueryData } from "../things/query.js";
-import { cleanString, toWikiLink } from "../utils.js";
+import { cleanString, toWikiLink } from "kol.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 import { wikiClient } from "./wiki.js";

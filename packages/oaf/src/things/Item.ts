@@ -3,7 +3,8 @@ import { bold, hyperlink } from "discord.js";
 import { MemoizeExpiring } from "typescript-memoize";
 
 import { getMallPrice, kolClient } from "../clients/kol.js";
-import { pluralize, titleCase, toWikiLink } from "../utils.js";
+import { toWikiLink } from "kol.js";
+import { pluralize, titleCase } from "../utils.js";
 import { Familiar } from "./Familiar.js";
 import { Thing } from "./Thing.js";
 import packages from "./iotmPackages.json" with { type: "json" };
