@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   bold,
 } from "discord.js";
+import { AutomatedFuture } from "kol.js/domains/AutomatedFuture";
 
 import { createEmbed } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
@@ -11,31 +12,7 @@ export const data = new SlashCommandBuilder()
   .setName("automatedfuture")
   .setDescription("Find information about the current TTT Level 9 status");
 
-async function visitTTT(): Promise<string> {
-  return await kolClient.actionMutex.runExclusive(async () => {
-    await kolClient.fetchText("town.php");
-    return kolClient.fetchText("place.php", {
-      searchParams: { whichplace: "twitch" },
-    });
-  });
-}
-
-export function parseScores(page: string) {
-  const pattern = /title='(-?\d+)' href=adventure.php\?snarfblat=(581|582)/gs;
-  const matches = [...page.matchAll(pattern)];
-
-  if (matches.length !== 2) return null;
-
-  const scores = matches.reduce(
-    (acc, m) => ({ ...acc, [m[2]]: Number(m[1]) }),
-    {} as Record<string, number>,
-  );
-
-  return {
-    solenoids: scores["581"] ?? 0,
-    bearings: scores["582"] ?? 0,
-  };
-}
+const automatedFuture = new AutomatedFuture(kolClient);
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -45,18 +22,11 @@ const formatWinner = (predicate: boolean, text: string) =>
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
 
-  const page = await visitTTT();
+  const scores = await automatedFuture.getScores();
 
-  if (page.includes("faded back into the swirling mists"))
+  if (scores === null)
     return void (await interaction.editReply(
-      "The Time-Twitch Tower has faded back into the swirling mists.",
-    ));
-
-  const scores = parseScores(page);
-
-  if (!scores)
-    return void (await interaction.editReply(
-      "I wasn't able to read the current scores",
+      "The Time-Twitch Tower has faded back into the swirling mists, or I wasn't able to read the current scores.",
     ));
 
   const embed = createEmbed().setTitle(`Automated Future`);
