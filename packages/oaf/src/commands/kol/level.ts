@@ -1,12 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { statsForLevel } from "kol.js";
 
 import { clamp } from "../../utils.js";
-
-export const fromLevel = (level: number) => ({
-  level,
-  mainstat: Math.pow(level, 2) - level * 2 + 5,
-  substat: Math.pow(Math.pow(level - 1, 2) + 4, 2),
-});
 
 export const data = new SlashCommandBuilder()
   .setName("level")
@@ -23,7 +18,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   const level = clamp(interaction.options.getInteger("level", true), 1, 255);
 
-  const { mainstat, substat } = fromLevel(level);
+  const { mainstat, substat } = statsForLevel(level);
 
   await interaction.reply(
     `Level ${level}${

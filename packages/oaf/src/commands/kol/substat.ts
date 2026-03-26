@@ -1,10 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-
-import { fromLevel } from "./level.js";
-import { fromMainstat } from "./stat.js";
-
-const fromSubstat = (substat: number) =>
-  fromMainstat(Math.floor(Math.sqrt(Math.max(0, substat))));
+import { levelForSubstat, statsForLevel } from "kol.js";
 
 export const data = new SlashCommandBuilder()
   .setName("substat")
@@ -20,14 +15,14 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   const substat = interaction.options.getInteger("substat", true);
 
-  const { level, mainstat } = fromSubstat(substat);
+  const { level, mainstat } = levelForSubstat(substat);
 
   let reply = `Substat total ${substat.toLocaleString()} reaches mainstat ${mainstat.toLocaleString()} and ${
     level >= 255 ? "maximum " : ""
   }level ${level}.`;
 
   if (level < 255) {
-    const next = fromLevel(level + 1);
+    const next = statsForLevel(level + 1);
 
     reply += ` An additional ${(
       next.substat - substat

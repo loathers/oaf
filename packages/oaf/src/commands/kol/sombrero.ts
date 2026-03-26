@@ -1,7 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-
-const sombreroSubstats = (weight: number, ml: number) =>
-  (ml / 4) * (0.1 + 0.005 * weight);
+import { sombreroSubstats } from "kol.js/domains/Familiar";
 
 export const data = new SlashCommandBuilder()
   .setName("sombrero")

@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { toDrop } from "../../utils.js";
+import { fairyItemDrop } from "kol.js/domains/Familiar";
 
 export const data = new SlashCommandBuilder()
   .setName("fairy")
@@ -17,7 +17,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
 
   await interaction.reply(
-    `A ${weight}lb fairy provides +${toDrop(weight).toFixed(2)}% item drop. ` +
-      `(+${toDrop(weight, 1.25).toFixed(2)}% for Jumpsuited Hound Dog)`,
+    `A ${weight}lb fairy provides +${fairyItemDrop(weight).toFixed(2)}% item drop. ` +
+      `(+${fairyItemDrop(weight, 1.25).toFixed(2)}% for Jumpsuited Hound Dog)`,
   );
 }

@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { toDrop } from "../../utils.js";
+import { leprechaunMeatDrop } from "kol.js/domains/Familiar";
 
 export const data = new SlashCommandBuilder()
   .setName("leprechaun")
@@ -19,9 +19,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
 
   await interaction.reply(
-    `A ${weight}lb leprechaun provides +${(2 * toDrop(weight)).toFixed(
+    `A ${weight}lb leprechaun provides +${leprechaunMeatDrop(weight).toFixed(
       2,
     )}% meat drop. ` +
-      `(+${(2 * toDrop(weight, 1.25)).toFixed(2)}% for Hobo Monkey)`,
+      `(+${leprechaunMeatDrop(weight, 1.25).toFixed(2)}% for Hobo Monkey)`,
   );
 }

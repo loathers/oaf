@@ -1,13 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { levelForMainstat, statsForLevel } from "kol.js";
 
 import { pluralize } from "../../utils.js";
-import { fromLevel } from "./level.js";
-
-export const fromMainstat = (mainstat: number) => ({
-  level: 1 + Math.floor(Math.sqrt(Math.max(0, mainstat - 4))),
-  mainstat,
-  substat: Math.pow(mainstat, 2),
-});
 
 export const data = new SlashCommandBuilder()
   .setName("stat")
@@ -23,7 +17,7 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
   const mainstat = interaction.options.getInteger("stat", true);
 
-  const { level, substat } = fromMainstat(mainstat);
+  const { level, substat } = levelForMainstat(mainstat);
 
   let reply = `Mainstat ${mainstat.toLocaleString()} (reached at ${pluralize(
     substat,
@@ -31,7 +25,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   )}) reaches ${level >= 255 ? "maximum " : ""}level ${level}.`;
 
   if (level <= 255) {
-    const next = fromLevel(level + 1);
+    const next = statsForLevel(level + 1);
     reply += ` An additional ${(
       next.mainstat - mainstat
     ).toLocaleString()} mainstat (requiring ${pluralize(

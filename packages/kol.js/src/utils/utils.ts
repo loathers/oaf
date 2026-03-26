@@ -54,3 +54,23 @@ const RESISTANCE_ADJECTIVES: Record<number, string> = {
 export function getElementalResistanceAdjective(level: number): string {
   return RESISTANCE_ADJECTIVES[level] ?? "Unknown";
 }
+
+/** Strip HTML tags and decode entities from KoL output. */
+export function cleanString(input: string | undefined): string {
+  if (!input) return "";
+  return decodeHTML(input).replace(/<[^>]+>/g, "");
+}
+
+/** Build a URL to the KoL wiki for a given page name. */
+export function toWikiLink(input: string): string {
+  return `https://wiki.kingdomofloathing.com/${encodeURI(
+    input.replace(/\s/g, "_"),
+  )
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29")}`;
+}
+
+/** Parse a KoL-formatted number (with comma separators). */
+export function parseKoLNumber(input?: string): number {
+  return parseInt(input?.replaceAll(",", "") || "0");
+}

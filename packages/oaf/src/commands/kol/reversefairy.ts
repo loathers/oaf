@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
-import { toWeight } from "../../utils.js";
+import { fairyWeightForItemDrop } from "kol.js/domains/Familiar";
 
 export const data = new SlashCommandBuilder()
   .setName("reversefairy")
@@ -20,8 +20,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.reply(
     `To get ${itemDrop}% item drop from a fairy, ` +
-      `it should be weigh at least ${toWeight(itemDrop).toFixed(1)} lbs, ` +
-      `or be a Jumpsuited Hounddog that weighs at least ${toWeight(
+      `it should be weigh at least ${fairyWeightForItemDrop(itemDrop).toFixed(1)} lbs, ` +
+      `or be a Jumpsuited Hounddog that weighs at least ${fairyWeightForItemDrop(
         itemDrop,
         1.25,
       ).toFixed(1)} lbs.`,

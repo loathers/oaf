@@ -1,4 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { volleyballSubstats } from "kol.js/domains/Familiar";
 
 export const data = new SlashCommandBuilder()
   .setName("volleyball")
@@ -18,7 +19,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.reply(
     `A ${weight}lb volleyball provides +${
-      2 + 0.2 * weight
+      volleyballSubstats(weight)
     } substats per combat.`,
   );
 }

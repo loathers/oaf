@@ -1,4 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { itemDropBonusToCap } from "kol.js/domains/Familiar";
 
 export const data = new SlashCommandBuilder()
   .setName("itemdrop")
@@ -17,7 +18,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
   await interaction.reply(
     `A ${drop.toFixed(1)}% drop requires a +${
-      Math.ceil(10000 / drop) - 100
+      itemDropBonusToCap(drop)
     }% item drop bonus to cap.`,
   );
 }
