@@ -1,5 +1,4 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-import { Player } from "kol.js";
 import { JoinClanError, RaidLogMissingError } from "kol.js/domains/ClanDungeon";
 import { DreadsylvaniaRaid, DreadsylvaniaDungeon } from "kol.js/domains/Dreadsylvania";
 
@@ -82,7 +81,7 @@ async function parseLogs() {
           playerId,
           playerName:
             (!knownPlayerIds.includes(playerId) &&
-              (await Player.getNameFromId(kolClient, playerId))) ||
+              (await kolClient.players.getNameFromId(playerId))) ||
             "Unknown",
           skills,
           kills,

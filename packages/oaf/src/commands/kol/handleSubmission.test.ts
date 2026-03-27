@@ -30,8 +30,8 @@ const { updateGlobalsMessage } = vi.hoisted(() => ({
   updateGlobalsMessage: vi.fn(),
 }));
 
-const { playersFetch } = vi.hoisted(() => ({
-  playersFetch: vi.fn(),
+const { playersResolve } = vi.hoisted(() => ({
+  playersResolve: vi.fn(),
 }));
 
 vi.mock("../../clients/database.js", () => ({
@@ -52,7 +52,7 @@ vi.mock("../../clients/discord.js", () => ({
 vi.mock("../../clients/kol.js", () => ({
   kolClient: {
     on: vi.fn(),
-    players: { fetch: playersFetch },
+    players: { resolve: playersResolve },
   },
 }));
 
@@ -237,7 +237,7 @@ describe("handleSubmission", () => {
         value: "testvalue",
         thresholdReached: true,
       });
-      playersFetch.mockResolvedValueOnce({ name: "Player One" });
+      playersResolve.mockResolvedValueOnce({ name: "Player One" });
 
       await handleSubmission(1, "Player One", "snootee:wrongvalue");
 

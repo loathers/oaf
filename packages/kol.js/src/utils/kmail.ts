@@ -13,7 +13,7 @@ export type KmailItem = {
 };
 
 export type KoLChatMessage = {
-  who?: Player<false>;
+  who?: Player;
   type?: string;
   msg?: string;
   link?: string;
@@ -27,7 +27,7 @@ export const isValidMessage = (
   msg: KoLChatMessage,
 ): msg is KoLChatMessage & {
   type: KoLMessageType;
-  who: Player<false>;
+  who: Player;
   msg: string;
 } => msg.who !== undefined && msg.msg !== undefined;
 
@@ -43,7 +43,7 @@ export type KoLKmail = {
 
 export type BaseKoLMessage = {
   type: KoLMessageType;
-  who: Player<false>;
+  who: Player;
   msg: string;
   time: Date;
 };

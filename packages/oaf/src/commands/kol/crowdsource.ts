@@ -94,7 +94,7 @@ export async function handleSubmission(
       );
       await updateGlobalsMessage();
     } else if (value !== summary.value) {
-      const player = await kolClient.players.fetch(playerId);
+      const player = await kolClient.players.resolve(playerId);
       const playerDisplay = player?.name ?? playerName;
       await discordClient.alert(
         `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${summary.value}\`)`,
