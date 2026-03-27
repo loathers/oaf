@@ -31,13 +31,7 @@ export class Players {
   }
 
   async resolve(identifier: string | number): Promise<Player | null> {
-    const cached = this.#getCached(identifier);
-    if (cached) return cached;
-
-    const player = await this.#resolveUncached(identifier);
-    if (!player) return null;
-
-    return player;
+    return this.#getCached(identifier) ?? this.#resolveUncached(identifier);
   }
 
   async fetch(identifier: string | number): Promise<Player.Profiled | null> {
@@ -74,7 +68,7 @@ export class Players {
       const html = await this.#client.fetchText("submitnewchat.php", {
         searchParams: { graf: `/whois ${id}` },
       });
-      return Player.parseWhois(html);
+      return Player.parseNameFromWhois(html);
     } catch {
       return null;
     }

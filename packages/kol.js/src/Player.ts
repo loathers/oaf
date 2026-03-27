@@ -21,22 +21,21 @@ export type ProfileData = {
 export class Player {
   readonly id: number;
   readonly name: string;
-  /** @internal */
-  readonly client: Client;
+  #client: Client;
 
   constructor(client: Client, id: number, name: string) {
-    this.client = client;
+    this.#client = client;
     this.id = id;
     this.name = name;
   }
 
   async fetch(): Promise<Player.Profiled | null> {
     if (this instanceof Player.Profiled) return this;
-    return this.client.players.fetch(this.id);
+    return this.#client.players.fetch(this.id);
   }
 
   async isOnline(): Promise<boolean> {
-    const response = await this.client.useChatMacro(`/whois ${this.name}`);
+    const response = await this.#client.useChatMacro(`/whois ${this.name}`);
     return (
       response?.output.includes("This player is currently online") ?? false
     );
@@ -70,7 +69,7 @@ export class Player {
     };
   }
 
-  static parseWhois(html: string): string | null {
+  static parseNameFromWhois(html: string): string | null {
     return (
       html.match(/<a.*?><b.*?>(.*?) \(#(\d+)\)<\/b><\/a>/)?.[1] ?? null
     );
