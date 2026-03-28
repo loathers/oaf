@@ -5,10 +5,31 @@ import {
   getDailiesForGameday,
   getDailySubmissionsForKey,
   getSubmissionCountsForGameday,
+  setCrowdsourcingIgnored,
 } from "../../clients/database.js";
 import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
 
 export const dailiesRouter = Router();
+
+dailiesRouter.post("/ignore/:playerId", async (req, res) => {
+  const playerId = parseInt(req.params.playerId, 10);
+  if (isNaN(playerId)) {
+    res.status(400).json({ error: "Invalid player ID" });
+    return;
+  }
+  await setCrowdsourcingIgnored(playerId, true);
+  res.json({ ok: true });
+});
+
+dailiesRouter.delete("/ignore/:playerId", async (req, res) => {
+  const playerId = parseInt(req.params.playerId, 10);
+  if (isNaN(playerId)) {
+    res.status(400).json({ error: "Invalid player ID" });
+    return;
+  }
+  await setCrowdsourcingIgnored(playerId, false);
+  res.json({ ok: true });
+});
 
 dailiesRouter.get("/", async (_req, res) => {
   const gameday = LoathingDate.gameDayFromRealDate(new Date());

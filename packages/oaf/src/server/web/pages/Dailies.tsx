@@ -14,6 +14,7 @@ type Submission = {
   playerName: string;
   value: string;
   submittedAt: string;
+  crowdsourcingIgnored: boolean;
 };
 
 export default function Dailies() {
@@ -22,6 +23,15 @@ export default function Dailies() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  const unignore = async (playerId: number) => {
+    await fetch(`/api/admin/dailies/ignore/${playerId}`, { method: "DELETE" });
+    setSubmissions((prev) =>
+      prev.map((s) =>
+        s.playerId === playerId ? { ...s, crowdsourcingIgnored: false } : s,
+      ),
+    );
+  };
 
   useEffect(() => {
     void (async () => {
@@ -163,16 +173,33 @@ export default function Dailies() {
                       <tr>
                         <th>Player</th>
                         <th>Submitted At</th>
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
                       {subs.map((s) => (
-                        <tr key={s.playerId}>
+                        <tr
+                          key={s.playerId}
+                          style={
+                            s.crowdsourcingIgnored
+                              ? { opacity: 0.4 }
+                              : undefined
+                          }
+                        >
                           <td>
                             {s.playerName} (#{s.playerId})
                           </td>
                           <td>
                             {new Date(s.submittedAt).toLocaleTimeString()}
+                          </td>
+                          <td>
+                            {s.crowdsourcingIgnored && (
+                              <button
+                                onClick={() => void unignore(s.playerId)}
+                              >
+                                Unignore
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}

@@ -1,4 +1,12 @@
-import { userMention } from "discord.js";
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonInteraction,
+  ButtonStyle,
+  Events,
+  MessageFlags,
+  userMention,
+} from "discord.js";
 
 import { LoathingDate } from "kol.js";
 import {
@@ -8,12 +16,15 @@ import {
   getDaily,
   getDissentersForKey,
   getSubmissionSummaryForKey,
+  isPlayerIgnoredForCrowdsourcing,
+  setCrowdsourcingIgnored,
   upsertDaily,
   upsertDailySubmission,
   upsertPlayerInfo,
 } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
+import { config } from "../../config.js";
 import {
   CONSENSUS_THRESHOLD,
   DAILY_GLOBALS,
@@ -46,6 +57,71 @@ function formatDissenter(d: {
 }) {
   const mention = d.discordId ? ` (${userMention(d.discordId)})` : "";
   return `- ${d.playerName}${mention}: ${d.value}`;
+}
+
+const IGNORE_BUTTON_PREFIX = "ignore-crowdsource:";
+
+function ignoreButtonsFor(
+  dissenters: { playerId: number; playerName: string }[],
+): ActionRowBuilder<ButtonBuilder>[] {
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+  for (let i = 0; i < dissenters.length; i += 5) {
+    rows.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        dissenters.slice(i, i + 5).map((d) =>
+          new ButtonBuilder()
+            .setCustomId(`${IGNORE_BUTTON_PREFIX}${d.playerId}`)
+            .setLabel(`Ignore ${d.playerName}`)
+            .setStyle(ButtonStyle.Danger),
+        ),
+      ),
+    );
+  }
+  return rows;
+}
+
+async function handleIgnoreButton(interaction: ButtonInteraction) {
+  if (!interaction.inCachedGuild()) {
+    await interaction.reply({
+      flags: [MessageFlags.Ephemeral],
+      content: "This can only be done in a guild.",
+    });
+    return;
+  }
+
+  const roleToCompare = await interaction.guild.roles.fetch(
+    config.EXTENDED_TEAM_ROLE_ID,
+  );
+  if (!roleToCompare) {
+    await interaction.reply({
+      flags: [MessageFlags.Ephemeral],
+      content: "Could not find the required role.",
+    });
+    return;
+  }
+
+  const canAct = interaction.guild.roles.comparePositions(
+    interaction.member.roles.highest,
+    roleToCompare,
+  );
+  if (canAct < 0) {
+    await interaction.reply({
+      flags: [MessageFlags.Ephemeral],
+      content: "Only moderators can ignore crowdsourcing players.",
+    });
+    return;
+  }
+
+  const playerId = parseInt(
+    interaction.customId.slice(IGNORE_BUTTON_PREFIX.length),
+    10,
+  );
+  await setCrowdsourcingIgnored(playerId, true);
+  await interaction.update({ components: [] });
+  await interaction.followUp({
+    flags: [MessageFlags.Ephemeral],
+    content: `Player #${playerId} will be ignored for crowdsourcing alerts.`,
+  });
 }
 
 export async function handleSubmission(
@@ -85,15 +161,20 @@ export async function handleSubmission(
         gameday,
         summary.value,
       );
-      const dissenterSuffix =
-        dissenters.length > 0
-          ? ` Dissenters:\n${dissenters.map(formatDissenter).join("\n")}`
-          : "";
-      await discordClient.alert(
-        `Consensus reached for **${key}** = \`${summary.value}\` (${summary.topCount} votes).${dissenterSuffix}`,
+      const activeDissenters = dissenters.filter(
+        (d) => !d.crowdsourcingIgnored,
       );
+      const dissenterSuffix =
+        activeDissenters.length > 0
+          ? ` Dissenters:\n${activeDissenters.map(formatDissenter).join("\n")}`
+          : "";
+      await discordClient.alert({
+        content: `Consensus reached for **${key}** = \`${summary.value}\` (${summary.topCount} votes).${dissenterSuffix}`,
+        components: ignoreButtonsFor(activeDissenters),
+      });
       await updateGlobalsMessage();
     } else if (value !== summary.value) {
+      if (await isPlayerIgnoredForCrowdsourcing(playerId)) return;
       const player = await kolClient.players.fetch(playerId);
       const playerDisplay = player?.name ?? playerName;
       await discordClient.alert(
@@ -122,5 +203,11 @@ export function init() {
   kolClient.on("rollover", (time) => {
     const gameday = LoathingDate.gameDayFromRealDate(time);
     void clearDailySubmissions(gameday);
+  });
+
+  discordClient.on(Events.InteractionCreate, (interaction) => {
+    if (!interaction.isButton()) return;
+    if (!interaction.customId.startsWith(IGNORE_BUTTON_PREFIX)) return;
+    void handleIgnoreButton(interaction);
   });
 }

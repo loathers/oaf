@@ -764,11 +764,34 @@ export async function getDissentersForKey(
       "Player.playerId",
       "Player.playerName",
       "Player.discordId",
+      "Player.crowdsourcingIgnored",
       "DailySubmission.value",
     ])
     .where("DailySubmission.key", "=", key)
     .where("DailySubmission.gameday", "=", gameday)
     .where("DailySubmission.value", "!=", consensusValue)
+    .execute();
+}
+
+export async function isPlayerIgnoredForCrowdsourcing(
+  playerId: number,
+): Promise<boolean> {
+  const player = await db
+    .selectFrom("Player")
+    .select("crowdsourcingIgnored")
+    .where("playerId", "=", playerId)
+    .executeTakeFirst();
+  return player?.crowdsourcingIgnored ?? false;
+}
+
+export async function setCrowdsourcingIgnored(
+  playerId: number,
+  ignored: boolean,
+) {
+  await db
+    .updateTable("Player")
+    .set({ crowdsourcingIgnored: ignored })
+    .where("playerId", "=", playerId)
     .execute();
 }
 
@@ -877,6 +900,7 @@ export async function getDailySubmissionsForKey(key: string, gameday: number) {
     .select([
       "Player.playerId",
       "Player.playerName",
+      "Player.crowdsourcingIgnored",
       "DailySubmission.value",
       "DailySubmission.submittedAt",
     ])
