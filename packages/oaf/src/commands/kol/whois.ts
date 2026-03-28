@@ -13,8 +13,8 @@ import { upsertPlayerInfo } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { greenboxClient } from "../../clients/greenbox.js";
 import { snapshotClient } from "../../clients/snapshot.js";
-import { renderSvg } from "../../svgConverter.js";
 import { formatPlayer } from "../../discordUtils.js";
+import { renderSvg } from "../../svgConverter.js";
 import { toMuseumLink, toSamsaraLink } from "../../utils.js";
 import { findPlayer, identifyPlayer } from "../_player.js";
 
@@ -43,8 +43,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const player = identification[0];
+  const player = await identification[0].fetch();
   let knownPlayer = identification[1];
+
+  if (!player) {
+    await interaction.editReply(
+      "I was unable to fetch this user's profile, sorry.",
+    );
+    return;
+  }
 
   const astralSpirit = player.level === 0;
 
