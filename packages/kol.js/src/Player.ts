@@ -1,215 +1,152 @@
-import { Client } from "./Client.js";
+import type { Client } from "./Client.js";
 import { generateAvatarSvg } from "./utils/avatar.js";
 import { parsePlayerDate } from "./utils/utils.js";
 
-export type If<
-  Value extends boolean,
-  TrueResult,
-  FalseResult = null,
-> = Value extends true
-  ? TrueResult
-  : Value extends false
-    ? FalseResult
-    : TrueResult | FalseResult;
-
-export class Player<IsFull extends boolean = boolean> {
-  #client: Client;
-
+export type ProfileData = {
   id: number;
   name: string;
+  level: number;
+  kolClass: string;
+  avatar: string;
+  ascensions: number;
+  trophies: number;
+  tattoos: number;
+  favoriteFood: string | null;
+  favoriteBooze: string | null;
+  createdDate: Date;
+  lastLogin: Date;
+  hasDisplayCase: boolean;
+};
 
-  level: If<IsFull, number>;
-  kolClass: If<IsFull, string>;
-  avatar: If<IsFull, string>;
-  ascensions: If<IsFull, number>;
-  trophies: If<IsFull, number>;
-  tattoos: If<IsFull, number>;
-  favoriteFood: If<IsFull, string | null>;
-  favoriteBooze: If<IsFull, string | null>;
-  createdDate: If<IsFull, Date>;
-  lastLogin: If<IsFull, Date>;
-  hasDisplayCase: If<IsFull, boolean>;
+export class Player {
+  readonly id: number;
+  readonly name: string;
+  #client: Client;
 
-  constructor(
-    client: Client,
-    id: number,
-    name: string,
-    level: number | null = null,
-    kolClass: string | null = null,
-  ) {
+  constructor(client: Client, id: number, name: string) {
     this.#client = client;
     this.id = id;
     this.name = name;
-    this.level = level as If<IsFull, number>;
-    this.kolClass = kolClass as If<IsFull, string>;
-    this.avatar = null as If<IsFull, string>;
-    this.ascensions = null as If<IsFull, number>;
-    this.trophies = null as If<IsFull, number>;
-    this.tattoos = null as If<IsFull, number>;
-    this.favoriteFood = null as If<IsFull, string>;
-    this.favoriteBooze = null as If<IsFull, string>;
-    this.createdDate = null as If<IsFull, Date>;
-    this.lastLogin = null as If<IsFull, Date>;
-    this.hasDisplayCase = null as If<IsFull, boolean>;
   }
 
-  isFull(): this is Player<true> {
-    return this.createdDate !== null;
+  async fetch(): Promise<Player.Profiled | null> {
+    if (this instanceof Player.Profiled) return this;
+    return this.#client.players.fetch(this.id);
   }
 
-  isPartial(): this is Player<false> {
-    return this.createdDate === null;
-  }
-
-  static async getNameFromId(
-    client: Client,
-    id: number,
-  ): Promise<string | null> {
-    try {
-      const profile = await client.fetchText("submitnewchat.php", {
-        searchParams: { graf: `/whois ${id}` },
-      });
-      const name = profile.match(/<a.*?><b.*?>(.*?) \(#(\d+)\)<\/b><\/a>/)?.[1];
-      return name ?? null;
-    } catch {
-      return null;
-    }
-  }
-
-  static async fromName(
-    client: Client,
-    name: string,
-  ): Promise<Player<false> | null> {
-    try {
-      const matcher =
-        /<tr><td class=small><b><a target=mainpane href="showplayer\.php\?who=(?<playerId>\d+)">(?<playerName>[^<]+)<\/a><\/b>.*?<\/td><td valign=top class=small>\d*<\/td><td valign=top class=small>(?:<img src=".*?">|(?<level>\d+))<\/td><td class=small valign=top>(?<class>[^<]*)<\/td><\/tr>/i;
-      const search = await client.fetchText("searchplayer.php", {
-        searchParams: {
-          searchstring: name.replace(/_/g, "\\_"),
-          searching: "Yep.",
-          for: "",
-          startswith: 1,
-          hardcoreonly: 0,
-        },
-      });
-      const match = matcher.exec(search)?.groups;
-
-      if (!match) {
-        return null;
-      }
-
-      const clazz = match.level ? match.class : "Astral Spirit";
-
-      return new Player(
-        client,
-        Number(match.playerId),
-        match.playerName,
-        parseInt(match.level) || 0,
-        clazz,
-      );
-    } catch (error) {
-      return null;
-    }
-  }
-
-  static async fromId(
-    client: Client,
-    id: number,
-  ): Promise<Player<false> | null> {
-    const name = await Player.getNameFromId(client, id);
-    if (!name) return null;
-    return await Player.fromName(client, name);
-  }
-
-  static async from(
-    client: Client,
-    identifier: string | number,
-  ): Promise<Player<false> | null> {
-    const id = Number(identifier);
-
-    if (!Number.isNaN(id) || typeof identifier === "number") {
-      return await Player.fromId(client, id);
-    }
-
-    return await Player.fromName(client, identifier);
-  }
-
-  matchesIdentifier(identifier: string | number) {
-    const id = Number(identifier);
-    if (!Number.isNaN(id) || typeof identifier === "number") {
-      return this.id === identifier;
-    }
-
-    return this.name.toLowerCase() === identifier.toLowerCase();
-  }
-
-  async full(): Promise<Player<true> | null> {
-    const t = this as unknown as Player<true>;
-
-    if (this.isFull()) return this;
-
-    try {
-      const profile = await this.#client.fetchText("showplayer.php", {
-        searchParams: {
-          who: this.id,
-        },
-      });
-      const header = profile.match(
-        /<center><table><tr><td><center>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
-      );
-      if (!header) return null;
-
-      t.avatar = (await generateAvatarSvg(profile)) || header[1];
-
-      t.ascensions =
-        Number(
-          profile
-            .match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1]
-            ?.replace(/,/g, ""),
-        ) || 0;
-
-      t.trophies = Number(
-        profile.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
-          0,
-      );
-
-      t.tattoos = Number(
-        profile.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
-          0,
-      );
-
-      t.favoriteFood =
-        profile.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? null;
-      t.favoriteBooze =
-        profile.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
-        null;
-
-      t.createdDate = parsePlayerDate(
-        profile.match(/>Account Created:<\/b><\/td><td>(.*?)<\/td>/)?.[1],
-      );
-
-      t.lastLogin = parsePlayerDate(
-        profile.match(/>Last Login:<\/b><\/td><td>(.*?)<\/td>/)?.[1],
-      );
-
-      t.hasDisplayCase =
-        profile.match(/Display Case<\/b><\/a> in the Museum<\/td>/) !== null;
-
-      return t;
-    } catch (error) {
-      console.error(error);
-      return null;
-    }
-  }
-
-  async isOnline() {
+  async isOnline(): Promise<boolean> {
     const response = await this.#client.useChatMacro(`/whois ${this.name}`);
     return (
       response?.output.includes("This player is currently online") ?? false
     );
   }
 
-  toString() {
+  matches(identifier: string | number): boolean {
+    const id = Number(identifier);
+    if (!Number.isNaN(id) || typeof identifier === "number") {
+      return this.id === id;
+    }
+    return this.name.toLowerCase() === identifier.toLowerCase();
+  }
+
+  toString(): string {
     return `${this.name} (#${this.id})`;
+  }
+
+  static parseSearch(
+    html: string,
+  ): { id: number; name: string; level: number; kolClass: string } | null {
+    const matcher =
+      /<tr><td class=small><b><a target=mainpane href="showplayer\.php\?who=(?<playerId>\d+)">(?<playerName>[^<]+)<\/a><\/b>.*?<\/td><td valign=top class=small>\d*<\/td><td valign=top class=small>(?:<img src=".*?">|(?<level>\d+))<\/td><td class=small valign=top>(?<class>[^<]*)<\/td><\/tr>/i;
+    const match = matcher.exec(html)?.groups;
+    if (!match) return null;
+
+    return {
+      id: Number(match.playerId),
+      name: match.playerName,
+      level: parseInt(match.level) || 0,
+      kolClass: match.level ? match.class : "Astral Spirit",
+    };
+  }
+
+  static parseNameFromWhois(html: string): string | null {
+    return (
+      html.match(/<a.*?><b.*?>(.*?) \(#(\d+)\)<\/b><\/a>/)?.[1] ?? null
+    );
+  }
+}
+
+export namespace Player {
+  export class Profiled extends Player {
+    readonly level: number;
+    readonly kolClass: string;
+    readonly avatar: string;
+    readonly ascensions: number;
+    readonly trophies: number;
+    readonly tattoos: number;
+    readonly favoriteFood: string | null;
+    readonly favoriteBooze: string | null;
+    readonly createdDate: Date;
+    readonly lastLogin: Date;
+    readonly hasDisplayCase: boolean;
+
+    constructor(client: Client, data: ProfileData) {
+      super(client, data.id, data.name);
+      this.level = data.level;
+      this.kolClass = data.kolClass;
+      this.avatar = data.avatar;
+      this.ascensions = data.ascensions;
+      this.trophies = data.trophies;
+      this.tattoos = data.tattoos;
+      this.favoriteFood = data.favoriteFood;
+      this.favoriteBooze = data.favoriteBooze;
+      this.createdDate = data.createdDate;
+      this.lastLogin = data.lastLogin;
+      this.hasDisplayCase = data.hasDisplayCase;
+    }
+
+    override async fetch(): Promise<Player.Profiled> {
+      return this;
+    }
+
+    static async parseProfile(
+      html: string,
+    ): Promise<Omit<ProfileData, "id" | "name" | "level" | "kolClass"> | null> {
+      const header = html.match(
+        /<center><table><tr><td><center>.*?<img.*?src="(.*?)".*?<b>([^>]*?)<\/b> \(#(\d+)\)<br>/,
+      );
+      if (!header) return null;
+
+      return {
+        avatar: (await generateAvatarSvg(html)) || header[1],
+        ascensions:
+          Number(
+            html
+              .match(/>Ascensions<\/a>:<\/b><\/td><td>(.*?)<\/td>/)?.[1]
+              ?.replace(/,/g, ""),
+          ) || 0,
+        trophies: Number(
+          html.match(/>Trophies Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
+            0,
+        ),
+        tattoos: Number(
+          html.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
+            0,
+        ),
+        favoriteFood:
+          html.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? null,
+        favoriteBooze:
+          html.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
+          null,
+        createdDate: parsePlayerDate(
+          html.match(/>Account Created:<\/b><\/td><td>(.*?)<\/td>/)?.[1],
+        ),
+        lastLogin: parsePlayerDate(
+          html.match(/>Last Login:<\/b><\/td><td>(.*?)<\/td>/)?.[1],
+        ),
+        hasDisplayCase:
+          html.match(/Display Case<\/b><\/a> in the Museum<\/td>/) !== null,
+      };
+    }
   }
 }

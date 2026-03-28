@@ -1,10 +1,10 @@
 import { expect, test } from "vitest";
 
-import { loadFixture } from "../../testUtils.js";
-import { parseScores } from "./automatedfuture.js";
+import { loadFixture } from "../testUtils.js";
+import { parseScores } from "./AutomatedFuture.js";
 
 test("Can read scores", async () => {
-  const page = await loadFixture(__dirname, "automated_future.html");
+  const page = await loadFixture(import.meta.dirname, "automated_future.html");
 
   const scores = parseScores(page);
 

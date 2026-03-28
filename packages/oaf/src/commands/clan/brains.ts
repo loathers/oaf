@@ -60,7 +60,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const nameUpdates = [];
 
   for (const player of players) {
-    const current = await kolClient.players.fetch(player.playerId, true);
+    const current = await kolClient.players.fetch(player.playerId);
 
     // If not found, continue
     if (!current) continue;

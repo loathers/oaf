@@ -80,7 +80,7 @@ async function processClaim(
     return `That code is invalid. Hopefully it timed out and you're not being a naughty little ${member.user.username}`;
   }
 
-  const player = await kolClient.players.fetch(playerId, true);
+  const player = await kolClient.players.fetch(playerId);
 
   if (!player) return null;
 

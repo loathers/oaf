@@ -602,7 +602,6 @@ export async function createRaffleWin(data: {
   secondPrize: number;
   playerId: number;
   playerName: string;
-  accountCreationDate?: Date | null;
   tickets: number;
   place: number;
 }) {
@@ -623,7 +622,6 @@ export async function createRaffleWin(data: {
       .values({
         playerId: data.playerId,
         playerName: data.playerName,
-        accountCreationDate: data.accountCreationDate ?? null,
       })
       .onConflict((oc) => oc.column("playerId").doNothing())
       .execute();

@@ -13,7 +13,7 @@ import {
   isValidMessage,
   parseKmailMessage,
 } from "./utils/kmail.js";
-import { PlayerCache } from "./Cache.js";
+import { Players } from "./domains/Players.js";
 import { CookieJar } from "tough-cookie";
 import got, {
   type OptionsOfJSONResponseBody,
@@ -79,7 +79,7 @@ export class Client extends (EventEmitter as unknown as new () => TypedEmitter<E
       },
     ],
   });
-  players = new PlayerCache(this);
+  players = new Players(this);
 
   #username: string;
   #password: string;

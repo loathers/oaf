@@ -71,7 +71,6 @@ async function trackRaffle(raffle: RaffleResult, messageId: string) {
       secondPrize: raffle.yesterday.find((w) => w.place === 2)?.item ?? 0,
       playerId: winner.player.id,
       playerName: winner.player.name,
-      accountCreationDate: winner.player.createdDate,
       tickets: winner.tickets,
       place: winner.place,
     });
