@@ -1,4 +1,4 @@
-import { type Player } from "kol.js";
+import { Player } from "kol.js";
 
 import { findPlayerWithRaffleWins } from "../clients/database.js";
 import { kolClient } from "../clients/kol.js";
@@ -20,7 +20,7 @@ type FoundPlayer = Awaited<ReturnType<typeof findPlayer>>;
 
 export async function identifyPlayer(
   input: string,
-): Promise<string | [Player.Profiled, FoundPlayer]> {
+): Promise<string | [Player, FoundPlayer]> {
   // Check if this is a discord mention
   if (input.match(/^<@\d+>$/)) {
     const knownPlayer = await findPlayer({ discordId: input.slice(2, -1) });
@@ -29,7 +29,7 @@ export async function identifyPlayer(
       return "That user hasn't claimed a KoL account.";
     }
 
-    const player = await kolClient.players.fetch(knownPlayer.playerId);
+    const player = await kolClient.players.resolve(knownPlayer.playerId);
 
     if (!player) {
       return "That user has claimed a KoL account, but I can't find it in-game.";
@@ -43,7 +43,7 @@ export async function identifyPlayer(
     return "Come now, you know that isn't a player. Can't believe you'd try and trick me like this. After all we've been through? 😔";
   }
 
-  const player = await kolClient.players.fetch(input);
+  const player = await kolClient.players.resolve(input);
 
   if (!player)
     return `According to KoL, player ${typeof input === "number" ? "#" : ""}${input} does not exist.`;
