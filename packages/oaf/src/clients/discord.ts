@@ -179,7 +179,13 @@ export class DiscordClient extends Client {
     }
   }
 
-  async alert(description: string, interaction?: Interaction, error?: unknown) {
+  async alert(
+    content: string | MessageCreateOptions,
+    interaction?: Interaction,
+    error?: unknown,
+  ) {
+    const description =
+      typeof content === "string" ? content : (content.content ?? "");
     if (!interaction) {
       console.warn(description);
     } else if (error) {
@@ -187,6 +193,7 @@ export class DiscordClient extends Client {
     } else {
       console.error(description);
     }
+
 
     if (config.DEBUG) {
       return;
@@ -230,9 +237,9 @@ export class DiscordClient extends Client {
       }
     }
 
-    const alert = {
-      content: description,
-      embeds,
+    const alert: MessageCreateOptions = {
+      ...(typeof content === "string" ? { content } : content),
+      embeds: [...(typeof content === "string" ? [] : content.embeds ?? []), ...embeds],
       allowedMentions: { users: [] },
     };
 

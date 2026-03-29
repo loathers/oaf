@@ -94,6 +94,7 @@ export async function findPlayerWithRaffleWins(where: {
     longitude: rows[0].longitude,
     thiccEntered: rows[0].thiccEntered,
     thiccGifteeId: rows[0].thiccGifteeId,
+    crowdsourcingIgnored: rows[0].crowdsourcingIgnored,
   } satisfies Player;
 
   const raffleWins = rows
@@ -731,13 +732,15 @@ export async function getSubmissionSummaryForKey(
     totalCount: string;
   }>`
     SELECT "key", "value", "topCount", "totalCount" FROM (
-      SELECT "key", "value",
+      SELECT ds."key", ds."value",
         COUNT(*) as "topCount",
         SUM(COUNT(*)) OVER () as "totalCount",
         ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) as rn
-      FROM "DailySubmission"
-      WHERE "key" = ${key} AND "gameday" = ${gameday}
-      GROUP BY "key", "value"
+      FROM "DailySubmission" ds
+      INNER JOIN "Player" p ON p."playerId" = ds."playerId"
+      WHERE ds."key" = ${key} AND ds."gameday" = ${gameday}
+        AND p."crowdsourcingIgnored" = FALSE
+      GROUP BY ds."key", ds."value"
     ) sub
     WHERE rn = 1
   `.execute(db);
@@ -762,11 +765,34 @@ export async function getDissentersForKey(
       "Player.playerId",
       "Player.playerName",
       "Player.discordId",
+      "Player.crowdsourcingIgnored",
       "DailySubmission.value",
     ])
     .where("DailySubmission.key", "=", key)
     .where("DailySubmission.gameday", "=", gameday)
     .where("DailySubmission.value", "!=", consensusValue)
+    .execute();
+}
+
+export async function isPlayerIgnoredForCrowdsourcing(
+  playerId: number,
+): Promise<boolean> {
+  const player = await db
+    .selectFrom("Player")
+    .select("crowdsourcingIgnored")
+    .where("playerId", "=", playerId)
+    .executeTakeFirst();
+  return player?.crowdsourcingIgnored ?? false;
+}
+
+export async function setCrowdsourcingIgnored(
+  playerId: number,
+  ignored: boolean,
+) {
+  await db
+    .updateTable("Player")
+    .set({ crowdsourcingIgnored: ignored })
+    .where("playerId", "=", playerId)
     .execute();
 }
 
@@ -875,6 +901,7 @@ export async function getDailySubmissionsForKey(key: string, gameday: number) {
     .select([
       "Player.playerId",
       "Player.playerName",
+      "Player.crowdsourcingIgnored",
       "DailySubmission.value",
       "DailySubmission.submittedAt",
     ])

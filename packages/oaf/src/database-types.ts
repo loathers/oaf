@@ -15,6 +15,7 @@ export interface PlayerTable {
   longitude: number | null;
   thiccEntered: Generated<boolean>;
   thiccGifteeId: number | null;
+  crowdsourcingIgnored: Generated<boolean>;
 }
 
 export interface StandingOfferTable {
