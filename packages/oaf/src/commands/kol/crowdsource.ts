@@ -31,8 +31,12 @@ import {
   updateGlobalsMessage,
 } from "../misc/_globals.js";
 
-function isUnanimous(summary: SubmissionSummary) {
+function isInquorateUnanimous(summary: SubmissionSummary) {
   return summary.topCount === summary.totalCount;
+}
+
+function isQuorateConsensus(summary: SubmissionSummary) {
+  return summary.topCount >= CONSENSUS_THRESHOLD;
 }
 
 const CROWDSOURCED_KEY_SET: Set<string> = new Set(
@@ -146,12 +150,12 @@ export async function handleSubmission(
   const summary = await getSubmissionSummaryForKey(key, gameday);
   if (!summary) return;
 
-  if (summary.topCount >= CONSENSUS_THRESHOLD) {
+  if (isQuorateConsensus(summary)) {
     const existing = await getDaily(key, gameday);
     await upsertDaily(key, gameday, summary.value, true);
 
-    // True if this is a new consensus, a changed value, or a sub-threshold
-    // preliminary value that just crossed the threshold
+    // True if this is a new quorate consensus, a changed value, or an
+    // inquorate preliminary value that just crossed the threshold
     const justFormed =
       !existing || existing.value !== summary.value || !existing.thresholdReached;
 
@@ -181,15 +185,15 @@ export async function handleSubmission(
         `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${summary.value}\`)`,
       );
     }
-  } else if (isUnanimous(summary)) {
-    // Sub-threshold but unanimous: store as preliminary value
+  } else if (isInquorateUnanimous(summary)) {
+    // Inquorate but unanimous: store as preliminary value
     const existing = await getDaily(key, gameday);
     await upsertDaily(key, gameday, summary.value, false);
     if (!existing || existing.value !== summary.value) {
       await updateGlobalsMessage();
     }
   } else {
-    // Sub-threshold with dissent: remove any preliminary value
+    // Inquorate with dissent: remove any preliminary value
     await deleteDaily(key, gameday);
     await updateGlobalsMessage();
   }
