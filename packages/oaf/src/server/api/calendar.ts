@@ -30,7 +30,7 @@ function renderSocp(data: string): TextSegment[] {
   const item = dataOfLoathingClient.findItemById(itemId);
   if (!item) return [{ text: data }];
   const wikiLink = dataOfLoathingClient.getWikiLink(item);
-  const itemName = LoathingDate.isAprilFools() ? "Uncle Hobo's Epic Beard" : item.name
+  const itemName = LoathingDate.isAprilFools() ? "Uncle Hobo's epic beard" : item.name
   return [
     { text: itemName, href: wikiLink ?? undefined },
     { text: ` for ${numberFormat.format(price)} knucklebones` },
