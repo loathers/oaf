@@ -6,7 +6,7 @@ import {
   getRafflesForGamedayRange,
 } from "../../clients/database.js";
 import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
-import { toWikiLink } from "kol.js";
+import { LoathingDate, toWikiLink } from "kol.js";
 import type { CalendarData, TextSegment } from "../web/types/calendar.js";
 
 const numberFormat = new Intl.NumberFormat();
@@ -30,8 +30,9 @@ function renderSocp(data: string): TextSegment[] {
   const item = dataOfLoathingClient.findItemById(itemId);
   if (!item) return [{ text: data }];
   const wikiLink = dataOfLoathingClient.getWikiLink(item);
+  const itemName = LoathingDate.isAprilFools() ? "Uncle Hobo's epic beard" : item.name
   return [
-    { text: item.name, href: wikiLink ?? undefined },
+    { text: itemName, href: wikiLink ?? undefined },
     { text: ` for ${numberFormat.format(price)} knucklebones` },
   ];
 }
