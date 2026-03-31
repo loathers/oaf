@@ -32,6 +32,7 @@ const ADJECTIVES = [
   "edible",
   "fragrant",
   "hungry",
+  "japing",
   "muscular",
   "poppin'",
   "relaxed",
