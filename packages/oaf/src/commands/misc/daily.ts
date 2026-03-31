@@ -144,7 +144,7 @@ async function onRollover() {
     return;
   }
 
-  const adjective = getRandom(ADJECTIVES);
+  const adjective = LoathingDate.isAprilFools() ? 'foolish' : getRandom(ADJECTIVES);
   const titleMessage = await buildTitleMessage(adjective);
   await channel.send({ ...titleMessage, allowedMentions: { users: [] } });
 
