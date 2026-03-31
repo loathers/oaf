@@ -51,6 +51,7 @@ const ADJECTIVES = [
   "fabulous",
   "friendly",
   "glamorous",
+  "homely",
   "humble",
   "jocular",
   "jovial",
@@ -64,7 +65,6 @@ const ADJECTIVES = [
   "radical",
   "spectacular",
   "steadfast",
-  "homely",
   "toothsome",
 ];
 
