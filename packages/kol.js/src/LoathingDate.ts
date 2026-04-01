@@ -78,7 +78,7 @@ export class LoathingDate {
     return (kolYear - 1) * 96 + kolMonth * 8 + (kolDate - 1) - LoathingDate.CALENDAR_OFFSET;
   }
 
-  private static MS_PER_DAY = 24 * 60 * 60 * 1000;
+  private static MS_PER_DAY = 24 * 60 * 60 * 1_000;
 
   static gameDayFromRealDate(realDate: Date) {
     return Math.floor(
@@ -109,6 +109,7 @@ export class LoathingDate {
           : first;
 
     this.#realDate = addDays(LoathingDate.EPOCH.getTime(), gameday);
+    this.#realDate.setUTCHours(LoathingDate.EPOCH.getUTCHours())
     const calendarDay = gameday + LoathingDate.CALENDAR_OFFSET;
     this.#year = Math.floor(calendarDay / 96) + 1;
     this.#month = Math.floor((calendarDay % 96) / 8);
