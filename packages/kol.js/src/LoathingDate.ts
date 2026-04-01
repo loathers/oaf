@@ -88,7 +88,7 @@ export class LoathingDate {
 
   static isAprilFools(): boolean {
     const today = new this().toRealDate();
-    return today.getMonth() === 3 && today.getDate() === 1;
+    return today.getUTCMonth() === 3 && today.getUTCDate() === 1;
   }
 
   #year: number;
