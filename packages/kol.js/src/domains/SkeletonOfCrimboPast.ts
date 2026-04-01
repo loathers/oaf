@@ -25,7 +25,7 @@ export class SkeletonOfCrimboPast {
     if (!(await this.hasFamiliar())) return null;
 
     const page = await this.#client.fetchText("main.php", {
-      searchParams: { talktosocp: "1" },
+      query: { talktosocp: "1" },
     });
 
     const match = page.match(
