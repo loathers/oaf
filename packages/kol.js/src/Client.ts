@@ -29,13 +29,15 @@ export type MallPrice = {
 
 class LoginRedirectError extends Error {}
 
+type FormData = Record<string, string | number | boolean>;
+
 type RequestOptions = {
   method?: string;
   query?: Record<string, unknown>;
-  form?: Record<string, unknown>;
+  form?: FormData;
 };
 
-function formToBody(form: Record<string, unknown>): URLSearchParams {
+function formToBody(form: FormData): URLSearchParams {
   return new URLSearchParams(
     Object.entries(form).map(([k, v]) => [k, String(v)]),
   );
@@ -86,8 +88,10 @@ export class Client extends Emittery<Events> {
         }
       },
       onResponse: ({ request, response }) => {
+        const requestUrl =
+          typeof request === "string" ? request : request.url;
         if (
-          !String(request).includes("login.php") &&
+          !requestUrl.includes("login.php") &&
           response.url.includes("/login.php")
         ) {
           throw new LoginRedirectError();
@@ -121,6 +125,7 @@ export class Client extends Emittery<Events> {
     path: string,
     options: RequestOptions = {},
     fallback?: string,
+    retried = false,
   ): Promise<string> {
     // With no pwd, try to log in
     if (!this.#pwd && !(await this.login())) return fallback ?? "";
@@ -135,9 +140,9 @@ export class Client extends Emittery<Events> {
         responseType: "text",
       });
     } catch (error) {
-      if (!(error instanceof LoginRedirectError)) throw error;
+      if (retried || !(error instanceof LoginRedirectError)) throw error;
       this.#pwd = "";
-      return this.fetchText(path, options);
+      return this.fetchText(path, options, fallback, true);
     }
   }
 
@@ -145,6 +150,7 @@ export class Client extends Emittery<Events> {
     path: string,
     options: RequestOptions = {},
     fallback?: Result,
+    retried = false,
   ): Promise<Result | null> {
     if (!(await this.login())) return fallback ?? null;
 
@@ -157,11 +163,11 @@ export class Client extends Emittery<Events> {
         responseType: "json",
       });
     } catch (error) {
-      if (error instanceof LoginRedirectError) {
-        this.#pwd = "";
-        return this.fetchJson(path, options);
+      if (retried || !(error instanceof LoginRedirectError)) {
+        return fallback ?? null;
       }
-      return fallback ?? null;
+      this.#pwd = "";
+      return this.fetchJson(path, options, fallback, true);
     }
   }
 
@@ -245,9 +251,10 @@ export class Client extends Emittery<Events> {
   }
 
   private async loopChatBot() {
-    await Promise.all([this.checkMessages(), this.checkKmails()]);
-    await wait(3000);
-    await this.loopChatBot();
+    while (true) {
+      await Promise.all([this.checkMessages(), this.checkKmails()]);
+      await wait(3000);
+    }
   }
 
   async checkMessages() {
