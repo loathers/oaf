@@ -29,6 +29,18 @@ export type MallPrice = {
 
 class LoginRedirectError extends Error {}
 
+type RequestOptions = {
+  method?: string;
+  query?: Record<string, unknown>;
+  form?: Record<string, unknown>;
+};
+
+function formToBody(form: Record<string, unknown>): URLSearchParams {
+  return new URLSearchParams(
+    Object.entries(form).map(([k, v]) => [k, String(v)]),
+  );
+}
+
 type Events = {
   kmail: KmailMessage;
   whisper: KoLMessage;
@@ -107,20 +119,19 @@ export class Client extends Emittery<Events> {
 
   async fetchText(
     path: string,
-    options: {
-      method?: string;
-      query?: Record<string, unknown>;
-      body?: URLSearchParams;
-    } = {},
+    options: RequestOptions = {},
     fallback?: string,
   ): Promise<string> {
     // With no pwd, try to log in
     if (!this.#pwd && !(await this.login())) return fallback ?? "";
 
+    const { form, ...rest } = options;
+
     try {
       return await this.session(path, {
         method: "POST",
-        ...options,
+        ...rest,
+        body: form ? formToBody(form) : undefined,
         responseType: "text",
       });
     } catch (error) {
@@ -132,13 +143,18 @@ export class Client extends Emittery<Events> {
 
   async fetchJson<Result>(
     path: string,
-    options: { method?: string; query?: Record<string, unknown> } = {},
+    options: RequestOptions = {},
     fallback?: Result,
   ): Promise<Result | null> {
     if (!(await this.login())) return fallback ?? null;
 
+    const { form, ...rest } = options;
+
     try {
-      return await this.session<Result>(path, options);
+      return await this.session<Result>(path, {
+        ...rest,
+        body: form ? formToBody(form) : undefined,
+      });
     } catch (error) {
       if (!(error instanceof LoginRedirectError)) throw error;
       this.#pwd = "";
@@ -153,7 +169,7 @@ export class Client extends Emittery<Events> {
       const result = await this.session("login.php", {
         method: "POST",
         responseType: "text",
-        body: new URLSearchParams({
+        body: formToBody({
           loggingin: "Yup.",
           loginname: this.#username,
           password: this.#password,
@@ -300,11 +316,11 @@ export class Client extends Emittery<Events> {
     if (ids.length === 0) return true;
 
     const response = await this.fetchText("messages.php", {
-      body: new URLSearchParams({
+      form: {
         the_action: "delete",
         box: "Inbox",
         ...Object.fromEntries(ids.map((id) => [`sel${id}`, "on"])),
-      }),
+      },
     });
 
     return response.includes(

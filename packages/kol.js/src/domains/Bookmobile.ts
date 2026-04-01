@@ -35,10 +35,10 @@ export class Bookmobile {
       });
       if (p.includes("name=whichchoice")) {
         await this.#client.fetchText("choice.php", {
-          body: new URLSearchParams({
-            whichchoice: "1200",
-            option: "2",
-          }),
+          form: {
+            whichchoice: 1200,
+            option: 2,
+          },
         });
       }
       return p;
