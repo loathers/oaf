@@ -154,11 +154,14 @@ export class Client extends Emittery<Events> {
       return await this.session<Result>(path, {
         ...rest,
         body: form ? formToBody(form) : undefined,
+        responseType: "json",
       });
     } catch (error) {
-      if (!(error instanceof LoginRedirectError)) throw error;
-      this.#pwd = "";
-      return this.fetchJson(path, options);
+      if (error instanceof LoginRedirectError) {
+        this.#pwd = "";
+        return this.fetchJson(path, options);
+      }
+      return fallback ?? null;
     }
   }
 

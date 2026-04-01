@@ -10,7 +10,7 @@ vi.mock("./Client.js", async (importOriginal) => {
 });
 
 describe("fetchJson", () => {
-  it("throws on non-login errors instead of retrying", async () => {
+  it("returns null on non-login errors instead of retrying", async () => {
     const client = new Client("", "");
 
     // Mock session to throw a regular error (not a login redirect)
@@ -21,9 +21,20 @@ describe("fetchJson", () => {
       { raw: vi.fn(), native: fetch, create: vi.fn() },
     ) as unknown as typeof client.session;
 
-    await expect(client.fetchJson("api.php")).rejects.toThrow(
-      "500 Internal Server Error",
-    );
+    expect(await client.fetchJson("api.php")).toBeNull();
+  });
+
+  it("returns fallback on non-login errors", async () => {
+    const client = new Client("", "");
+
+    client.session = Object.assign(
+      () => {
+        throw new Error("Parse error");
+      },
+      { raw: vi.fn(), native: fetch, create: vi.fn() },
+    ) as unknown as typeof client.session;
+
+    expect(await client.fetchJson("api.php", {}, "default")).toBe("default");
   });
 });
 
