@@ -147,7 +147,7 @@ export class ClanDungeon {
     return await this.#client.actionMutex.runExclusive(async () => {
       if (!(await this.#client.joinClan(clanId))) throw new JoinClanError();
       return await this.#client.fetchText("clan_viewraidlog.php", {
-        searchParams: {
+        query: {
           viewlog: raidId,
           backstart: 0,
         },
@@ -184,7 +184,7 @@ export class ClanDungeon {
         if (!done) {
           row += 10;
           raidLogs = await this.#client.fetchText("clan_oldraidlogs.php", {
-            searchParams: {
+            query: {
               startrow: row,
             },
           });

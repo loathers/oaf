@@ -107,7 +107,11 @@ export class Client extends Emittery<Events> {
 
   async fetchText(
     path: string,
-    options: { method?: string; query?: Record<string, unknown> } = {},
+    options: {
+      method?: string;
+      query?: Record<string, unknown>;
+      body?: URLSearchParams;
+    } = {},
     fallback?: string,
   ): Promise<string> {
     // With no pwd, try to log in
@@ -116,8 +120,8 @@ export class Client extends Emittery<Events> {
     try {
       return await this.session(path, {
         method: "POST",
-        responseType: "text",
         ...options,
+        responseType: "text",
       });
     } catch (error) {
       if (!(error instanceof LoginRedirectError)) throw error;
@@ -135,7 +139,8 @@ export class Client extends Emittery<Events> {
 
     try {
       return await this.session<Result>(path, options);
-    } catch {
+    } catch (error) {
+      if (!(error instanceof LoginRedirectError)) throw error;
       this.#pwd = "";
       return this.fetchJson(path, options);
     }
@@ -294,18 +299,12 @@ export class Client extends Emittery<Events> {
   async deleteKmails(ids: number[]) {
     if (ids.length === 0) return true;
 
-    if (!this.#pwd && !(await this.login())) return false;
-
-    const body = new URLSearchParams({
-      the_action: "delete",
-      box: "Inbox",
-      ...Object.fromEntries(ids.map((id) => [`sel${id}`, "on"])),
-    });
-
-    const response = await this.session("messages.php", {
-      method: "POST",
-      responseType: "text",
-      body,
+    const response = await this.fetchText("messages.php", {
+      body: new URLSearchParams({
+        the_action: "delete",
+        box: "Inbox",
+        ...Object.fromEntries(ids.map((id) => [`sel${id}`, "on"])),
+      }),
     });
 
     return response.includes(

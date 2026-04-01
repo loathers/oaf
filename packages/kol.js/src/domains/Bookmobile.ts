@@ -31,14 +31,14 @@ export class Bookmobile {
     const page = await this.#client.actionMutex.runExclusive(async () => {
       await this.#client.fetchText("town.php");
       const p = await this.#client.fetchText("place.php", {
-        searchParams: { whichplace: "town_market", action: "town_bookmobile" },
+        query: { whichplace: "town_market", action: "town_bookmobile" },
       });
       if (p.includes("name=whichchoice")) {
         await this.#client.fetchText("choice.php", {
-          form: {
-            whichchoice: 1200,
-            option: 2,
-          },
+          body: new URLSearchParams({
+            whichchoice: "1200",
+            option: "2",
+          }),
         });
       }
       return p;

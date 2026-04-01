@@ -5088,7 +5088,6 @@ __metadata:
     kol-rng: "npm:3"
     ofetch: "npm:^1.5.1"
     prettier: "npm:^3.8.1"
-    querystring: "npm:^0.2.1"
     tough-cookie: "npm:^6.0.0"
     ts-dedent: "npm:^2.2.0"
     typescript: "npm:^5.9.3"
@@ -6422,13 +6421,6 @@ __metadata:
   dependencies:
     side-channel: "npm:^1.1.0"
   checksum: 10c0/0e3b22dc451f48ce5940cbbc7c7d9068d895074f8c969c0801ac15c1313d1859c4d738e46dc4da2f498f41a9ffd8c201bd9fb12df67799b827db94cc373d2613
-  languageName: node
-  linkType: hard
-
-"querystring@npm:^0.2.1":
-  version: 0.2.1
-  resolution: "querystring@npm:0.2.1"
-  checksum: 10c0/6841b32bec4f16ffe7f5b5e4373b47ad451f079cde3a7f45e63e550f0ecfd8f8189ef81fb50079413b3fc1c59b06146e4c98192cb74ed7981aca72090466cd94
   languageName: node
   linkType: hard
 

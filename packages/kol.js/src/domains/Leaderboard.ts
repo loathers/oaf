@@ -161,7 +161,7 @@ export class Leaderboard {
 
   async getLeaderboard(boardId: number): Promise<LeaderboardInfo> {
     const page = await this.#client.fetchText("museum.php", {
-      searchParams: {
+      query: {
         floor: 1,
         place: "leaderboards",
         whichboard: boardId,

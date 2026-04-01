@@ -43,7 +43,7 @@ export class Players {
     if (!identity) return null;
 
     const html = await this.#client.fetchText("showplayer.php", {
-      searchParams: { who: identity.id },
+      query: { who: identity.id },
     });
 
     const profileData = await Player.Profiled.parseProfile(html);
@@ -66,7 +66,7 @@ export class Players {
   async getNameFromId(id: number): Promise<string | null> {
     try {
       const html = await this.#client.fetchText("submitnewchat.php", {
-        searchParams: { graf: `/whois ${id}` },
+        query: { graf: `/whois ${id}` },
       });
       return Player.parseNameFromWhois(html);
     } catch {
@@ -91,7 +91,7 @@ export class Players {
   async #resolveByName(name: string): Promise<Player | null> {
     try {
       const html = await this.#client.fetchText("searchplayer.php", {
-        searchParams: {
+        query: {
           searchstring: name.replace(/_/g, "\\_"),
           searching: "Yep.",
           for: "",

@@ -33,7 +33,7 @@ export class AutomatedFuture {
     return await this.#client.actionMutex.runExclusive(async () => {
       await this.#client.fetchText("town.php");
       return this.#client.fetchText("place.php", {
-        searchParams: { whichplace: "twitch" },
+        query: { whichplace: "twitch" },
       });
     });
   }
