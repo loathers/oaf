@@ -27,11 +27,7 @@ export type MallPrice = {
   minPrice: number | null;
 };
 
-type RequestOptions = {
-  method?: string;
-  form?: Record<string, unknown>;
-  query?: Record<string, unknown>;
-};
+class LoginRedirectError extends Error {}
 
 type Events = {
   kmail: KmailMessage;
@@ -77,6 +73,14 @@ export class Client extends Emittery<Events> {
           options.body.set("pwd", this.#pwd);
         }
       },
+      onResponse: ({ request, response }) => {
+        if (
+          !String(request).includes("login.php") &&
+          response.url.includes("/login.php")
+        ) {
+          throw new LoginRedirectError();
+        }
+      },
     },
     { fetch: makeFetchCookie(fetch, this.#cookieJar) },
   );
@@ -101,76 +105,59 @@ export class Client extends Emittery<Events> {
     return this.#username;
   }
 
-
-  #request(path: string, options: RequestOptions = {}) {
-    const { form, ...rest } = options;
-    if (form) {
-      const { pwd: _, ...fields } = form;
-      const body = new URLSearchParams();
-      for (const [k, v] of Object.entries(fields)) body.set(k, String(v));
-      return this.session.raw(path, { ...rest, body });
-    }
-    return this.session.raw(path, rest);
-  }
-
   async fetchText(
     path: string,
-    options: RequestOptions = {},
+    options: { method?: string; query?: Record<string, unknown> } = {},
     fallback?: string,
   ): Promise<string> {
     // With no pwd, try to log in
     if (!this.#pwd && !(await this.login())) return fallback ?? "";
 
-    // Make the request
-    const response = await this.#request(path, {
-      method: "POST",
-      ...options,
-    });
-
-    // If we've been redirected to the login page, clear the pwd and try again
-    if (response.url.includes("/login.php")) {
+    try {
+      return await this.session(path, {
+        method: "POST",
+        responseType: "text",
+        ...options,
+      });
+    } catch (error) {
+      if (!(error instanceof LoginRedirectError)) throw error;
       this.#pwd = "";
       return this.fetchText(path, options);
     }
-
-    return response._data;
   }
 
   async fetchJson<Result>(
     path: string,
-    options: RequestOptions = {},
+    options: { method?: string; query?: Record<string, unknown> } = {},
     fallback?: Result,
   ): Promise<Result | null> {
     if (!(await this.login())) return fallback ?? null;
 
-    // Make the request
     try {
-      const response = await this.#request(path, options);
-      if (!response.url.includes("/login.php"))
-        return response._data as Result;
-    } catch {}
-
-    // If we've not been successful, clear the pwd and try again
-    this.#pwd = "";
-    return this.fetchJson(path, options);
+      return await this.session<Result>(path, options);
+    } catch {
+      this.#pwd = "";
+      return this.fetchJson(path, options);
+    }
   }
 
   async login(): Promise<boolean> {
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
     try {
-      const response = await this.#request("login.php", {
+      const result = await this.session("login.php", {
         method: "POST",
-        form: {
+        responseType: "text",
+        body: new URLSearchParams({
           loggingin: "Yup.",
           loginname: this.#username,
           password: this.#password,
           secure: "0",
           submitbutton: "Log In",
-        },
+        }),
       });
 
-      if (Client.#rolloverPattern.test(response._data)) {
+      if (Client.#rolloverPattern.test(result)) {
         throw new Error("It's rollover!");
       }
 
@@ -196,11 +183,10 @@ export class Client extends Emittery<Events> {
 
   async checkLoggedIn(): Promise<boolean> {
     try {
-      const response = await this.#request("api.php", {
+      const api = await this.session<{ pwd: string }>("api.php", {
         query: { what: "status", for: `${this.#username} bot` },
       });
-      if (response.url.includes("/login.php")) return false;
-      const api = response._data as { pwd: string };
+      if (!api || typeof api !== "object" || !api.pwd) return false;
       this.#pwd = api.pwd;
       return true;
     } catch {
@@ -308,12 +294,18 @@ export class Client extends Emittery<Events> {
   async deleteKmails(ids: number[]) {
     if (ids.length === 0) return true;
 
-    const response = await this.fetchText("messages.php", {
-      form: {
-        the_action: "delete",
-        box: "Inbox",
-        ...Object.fromEntries(ids.map((id) => [`sel${id}`, "on"])),
-      },
+    if (!this.#pwd && !(await this.login())) return false;
+
+    const body = new URLSearchParams({
+      the_action: "delete",
+      box: "Inbox",
+      ...Object.fromEntries(ids.map((id) => [`sel${id}`, "on"])),
+    });
+
+    const response = await this.session("messages.php", {
+      method: "POST",
+      responseType: "text",
+      body,
     });
 
     return response.includes(
