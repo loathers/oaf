@@ -54,6 +54,10 @@ describe("gameDayFromRealDate", () => {
       LoathingDate.gameDayFromRealDate(beforeRollover) + 1,
     );
   });
+  test("Real date records game day", () => {
+    const realDate = new Date(Date.UTC(2026, 3, 1, 3, 29, 59));
+    expect(new LoathingDate(realDate).toRealDate().getTime()).toBe(new Date(Date.UTC(2026, 2, 31, 3, 30, 0)).getTime())
+  });
 });
 
 describe("Ronald", () => {
