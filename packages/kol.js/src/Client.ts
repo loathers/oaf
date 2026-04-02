@@ -109,7 +109,7 @@ export class Client extends Emittery<Events> {
   #pwd = "";
 
   private lastFetchedMessages = "0";
-  private postRolloverLatch = false;
+  #postRolloverLatch = false;
 
   constructor(username: string, password: string) {
     super();
@@ -125,50 +125,56 @@ export class Client extends Emittery<Events> {
     path: string,
     options: RequestOptions = {},
     fallback?: string,
-    retried = false,
   ): Promise<string> {
-    // With no pwd, try to log in
     if (!this.#pwd && !(await this.login())) return fallback ?? "";
 
     const { form, ...rest } = options;
 
-    try {
-      return await this.session(path, {
-        method: "POST",
-        ...rest,
-        body: form ? formToBody(form) : undefined,
-        responseType: "text",
-      });
-    } catch (error) {
-      if (retried || !(error instanceof LoginRedirectError)) throw error;
-      this.#pwd = "";
-      return this.fetchText(path, options, fallback, true);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await this.session(path, {
+          method: "POST",
+          ...rest,
+          body: form ? formToBody(form) : undefined,
+          responseType: "text",
+        });
+      } catch (error) {
+        if (attempt > 0 || !(error instanceof LoginRedirectError)) throw error;
+        this.#pwd = "";
+      }
     }
+
+    return fallback ?? "";
   }
 
+  // Unlike fetchText, fetchJson returns fallback/null on non-login errors
+  // rather than throwing — callers expect null for missing/unavailable data.
   async fetchJson<Result>(
     path: string,
     options: RequestOptions = {},
     fallback?: Result,
-    retried = false,
   ): Promise<Result | null> {
     if (!(await this.login())) return fallback ?? null;
 
     const { form, ...rest } = options;
 
-    try {
-      return await this.session<Result>(path, {
-        ...rest,
-        body: form ? formToBody(form) : undefined,
-        responseType: "json",
-      });
-    } catch (error) {
-      if (retried || !(error instanceof LoginRedirectError)) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await this.session<Result>(path, {
+          ...rest,
+          body: form ? formToBody(form) : undefined,
+          responseType: "json",
+        });
+      } catch (error) {
+        if (error instanceof LoginRedirectError && attempt === 0) {
+          this.#pwd = "";
+          continue;
+        }
         return fallback ?? null;
       }
-      this.#pwd = "";
-      return this.fetchJson(path, options, fallback, true);
     }
+
+    return fallback ?? null;
   }
 
   async login(): Promise<boolean> {
@@ -193,8 +199,8 @@ export class Client extends Emittery<Events> {
 
       if (!(await this.checkLoggedIn())) return false;
 
-      if (this.postRolloverLatch) {
-        this.postRolloverLatch = false;
+      if (this.#postRolloverLatch) {
+        this.#postRolloverLatch = false;
         this.emit("rollover", new Date());
       }
 
@@ -232,7 +238,7 @@ export class Client extends Emittery<Events> {
 
     if (this.#isRollover && !isRollover) {
       // Set the post-rollover latch so the bot can react on next log in.
-      this.postRolloverLatch = true;
+      this.#postRolloverLatch = true;
     }
 
     this.#isRollover = isRollover;
@@ -461,7 +467,7 @@ export class Client extends Emittery<Events> {
       blueText: sanitiseBlueText(blueText?.groups?.description),
       effect: effect?.groups
         ? {
-            name: effect.groups?.name,
+            name: effect.groups?.effect,
             duration: Number(effect.groups?.duration) || 0,
             descid: effect.groups?.descid,
           }

@@ -243,14 +243,14 @@ describe("fetchJson error handling", () => {
     expect(await client.fetchJson("api.php", {}, "default")).toBe("default");
   });
 
-  it("does not retry more than once", async () => {
+  it("does not retry more than once on non-login errors", async () => {
     const client = new Client("", "");
     let calls = 0;
     client.session = mockSession(() => {
       calls++;
       throw new Error("persistent error");
     });
-    expect(await client.fetchJson("test.php", {}, null, true)).toBeNull();
+    expect(await client.fetchJson("test.php")).toBeNull();
     expect(calls).toBe(1);
   });
 });
@@ -266,16 +266,16 @@ describe("fetchText error handling", () => {
     );
   });
 
-  it("does not retry more than once", async () => {
+  it("does not retry more than once on non-login errors", async () => {
     const client = new Client("", "");
     let calls = 0;
     client.session = mockSession(() => {
       calls++;
       throw new Error("persistent error");
     });
-    await expect(
-      client.fetchText("test.php", {}, undefined, true),
-    ).rejects.toThrow("persistent error");
+    await expect(client.fetchText("test.php")).rejects.toThrow(
+      "persistent error",
+    );
     expect(calls).toBe(1);
   });
 });
