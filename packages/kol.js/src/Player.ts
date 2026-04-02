@@ -68,9 +68,7 @@ export class Player {
   }
 
   static parseNameFromWhois(html: string): string | null {
-    return (
-      html.match(/<a.*?><b.*?>(.*?) \(#(\d+)\)<\/b><\/a>/)?.[1] ?? null
-    );
+    return html.match(/<a.*?><b.*?>(.*?) \(#(\d+)\)<\/b><\/a>/)?.[1] ?? null;
   }
 }
 
@@ -128,14 +126,12 @@ export namespace Player {
             0,
         ),
         tattoos: Number(
-          html.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
-            0,
+          html.match(/>Tattoos Collected:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? 0,
         ),
         favoriteFood:
           html.match(/>Favorite Food:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? null,
         favoriteBooze:
-          html.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ??
-          null,
+          html.match(/>Favorite Booze:<\/b><\/td><td>(.*?)<\/td>/)?.[1] ?? null,
         createdDate: parsePlayerDate(
           html.match(/>Account Created:<\/b><\/td><td>(.*?)<\/td>/)?.[1],
         ),

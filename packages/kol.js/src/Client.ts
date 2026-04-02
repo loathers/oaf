@@ -102,8 +102,7 @@ export class Client extends Emittery<Events> {
         }
       },
       onResponse: ({ request, response }) => {
-        const requestUrl =
-          typeof request === "string" ? request : request.url;
+        const requestUrl = typeof request === "string" ? request : request.url;
         if (
           !requestUrl.includes("login.php") &&
           response.url.includes("/login.php")
@@ -119,6 +118,7 @@ export class Client extends Emittery<Events> {
   #username: string;
   #password: string;
   #isRollover = false;
+  #rolloverCheckScheduled = false;
   #chatBotStarted = false;
   #pwd = "";
 
@@ -137,7 +137,10 @@ export class Client extends Emittery<Events> {
 
   async #withReauth<T>(fn: () => Promise<T>): Promise<T> {
     if (this.#isRollover) throw new RolloverError();
-    if (!this.#pwd && !(await this.login())) throw new AuthError();
+    if (!this.#pwd && !(await this.login())) {
+      if (this.#isRollover) throw new RolloverError();
+      throw new AuthError();
+    }
 
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
@@ -146,7 +149,10 @@ export class Client extends Emittery<Events> {
         if (error instanceof RolloverError) throw error;
         if (error instanceof LoginRedirectError && attempt === 0) {
           this.#pwd = "";
-          if (!(await this.login())) throw new AuthError();
+          if (!(await this.login())) {
+            if (this.#isRollover) throw new RolloverError();
+            throw new AuthError();
+          }
           continue;
         }
         throw error;
@@ -156,10 +162,7 @@ export class Client extends Emittery<Events> {
     throw new AuthError();
   }
 
-  async fetchText(
-    path: string,
-    options: RequestOptions = {},
-  ): Promise<string> {
+  async fetchText(path: string, options: RequestOptions = {}): Promise<string> {
     const { form, ...rest } = options;
     return this.#withReauth(() =>
       this.session(path, {
@@ -214,8 +217,9 @@ export class Client extends Emittery<Events> {
 
       return true;
     } catch (error) {
-      console.error("Login failed:", error);
-      // Login failed, let's check if it is due to rollover
+      if (!(error instanceof RolloverError)) {
+        console.error("Login failed:", error);
+      }
       await this.#checkForRollover();
       return false;
     }
@@ -241,6 +245,7 @@ export class Client extends Emittery<Events> {
   static #rolloverPattern =
     /The system is currently down for nightly maintenance/;
 
+  // Uses this.session directly to avoid recursion through fetchText → login
   async #checkForRollover() {
     try {
       const html = await this.session("login.php", { responseType: "text" });
@@ -255,20 +260,33 @@ export class Client extends Emittery<Events> {
       // Can't reach server — don't change rollover state
     }
 
-    if (this.#isRollover) {
-      setTimeout(() => void this.#checkForRollover(), 60_000);
+    if (this.#isRollover && !this.#rolloverCheckScheduled) {
+      this.#rolloverCheckScheduled = true;
+      setTimeout(() => {
+        this.#rolloverCheckScheduled = false;
+        void this.#checkForRollover();
+      }, 60_000);
     }
   }
 
   async startChatBot() {
     if (this.#chatBotStarted) return;
     this.#chatBotStarted = true;
+    this.on("rollover", () => void this.#joinChat());
+    await this.#joinChat();
+    this.loopChatBot().catch((error) => {
+      console.error("Chat bot stopped:", error);
+    });
+  }
+
+  async #joinChat() {
     try {
       await this.useChatMacro("/join talkie");
     } catch (error) {
-      if (!(error instanceof RolloverError)) throw error;
+      if (!(error instanceof RolloverError)) {
+        console.error("Failed to join chat:", error);
+      }
     }
-    this.loopChatBot();
   }
 
   private async loopChatBot() {
@@ -281,7 +299,7 @@ export class Client extends Emittery<Events> {
           console.error("Chat bot loop error:", error);
         }
       }
-      await wait(3000);
+      await wait(this.#isRollover ? 60_000 : 3000);
     }
   }
 
@@ -381,9 +399,11 @@ export class Client extends Emittery<Events> {
 
   async getUpdates() {
     const result = await this.sendChat("/updates");
-    return [...result.output.matchAll(
-      /<p><b>[A-za-z]+ \d+<\/b> - (.*?)(?=<p>(?:<b>|<hr>))/g,
-    )].map((m) => m[1]);
+    return [
+      ...result.output.matchAll(
+        /<p><b>[A-za-z]+ \d+<\/b> - (.*?)(?=<p>(?:<b>|<hr>))/g,
+      ),
+    ].map((m) => m[1]);
   }
 
   async useChatMacro(macro: string) {

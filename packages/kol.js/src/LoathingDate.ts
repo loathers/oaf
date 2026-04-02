@@ -75,14 +75,20 @@ export class LoathingDate {
   static COLLISION = 1209; // June 3, 2006 — comet created Hamburglar
 
   static getDaysSinceEpoch(kolYear: number, kolMonth: number, kolDate: number) {
-    return (kolYear - 1) * 96 + kolMonth * 8 + (kolDate - 1) - LoathingDate.CALENDAR_OFFSET;
+    return (
+      (kolYear - 1) * 96 +
+      kolMonth * 8 +
+      (kolDate - 1) -
+      LoathingDate.CALENDAR_OFFSET
+    );
   }
 
   private static MS_PER_DAY = 24 * 60 * 60 * 1_000;
 
   static gameDayFromRealDate(realDate: Date) {
     return Math.floor(
-      (realDate.getTime() - LoathingDate.EPOCH.getTime()) / LoathingDate.MS_PER_DAY,
+      (realDate.getTime() - LoathingDate.EPOCH.getTime()) /
+        LoathingDate.MS_PER_DAY,
     );
   }
 
@@ -100,7 +106,11 @@ export class LoathingDate {
   constructor(gameday: number);
   constructor(realDate: Date);
   constructor(kolYear: number, kolMonth: number, kolDate: number);
-  constructor(first: Date | number = new Date(), kolMonth?: number, kolDate?: number) {
+  constructor(
+    first: Date | number = new Date(),
+    kolMonth?: number,
+    kolDate?: number,
+  ) {
     const gameday =
       first instanceof Date
         ? LoathingDate.gameDayFromRealDate(first)
@@ -109,7 +119,7 @@ export class LoathingDate {
           : first;
 
     this.#realDate = addDays(LoathingDate.EPOCH.getTime(), gameday);
-    this.#realDate.setUTCHours(LoathingDate.EPOCH.getUTCHours())
+    this.#realDate.setUTCHours(LoathingDate.EPOCH.getUTCHours());
     const calendarDay = gameday + LoathingDate.CALENDAR_OFFSET;
     this.#year = Math.floor(calendarDay / 96) + 1;
     this.#month = Math.floor((calendarDay % 96) / 8);
@@ -304,7 +314,8 @@ export class LoathingDate {
 
     const gameday = this.getDaysSinceEpoch();
     if (gameday === LoathingDate.BLACK_SUNDAY) holidays.add("Black Sunday");
-    if (gameday === LoathingDate.WHITE_WEDNESDAY) holidays.add("White Wednesday");
+    if (gameday === LoathingDate.WHITE_WEDNESDAY)
+      holidays.add("White Wednesday");
     if (gameday === LoathingDate.COLLISION) holidays.add("The Comet");
 
     const statDay = this.getStatDay();

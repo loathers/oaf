@@ -328,13 +328,7 @@ const SHIRT_MATERIALS = [
   "wool",
 ];
 
-const SHIRT_MATERIAL_QUALITIES = [
-  "super",
-  "hyper",
-  "ultra",
-  "mega",
-  "reroll",
-];
+const SHIRT_MATERIAL_QUALITIES = ["super", "hyper", "ultra", "mega", "reroll"];
 
 const SHIRT_BASE_NAMES = [
   "t-shirt",
@@ -584,7 +578,8 @@ function generateItem(
   const rng = new RNG(seed);
 
   const imageNum = rng.mtRand.roll(1, 9);
-  const imagePrefix = slot === "hat" && imageNum === 9 ? "hw_hat" : SLOT_IMAGE_PREFIX[slot];
+  const imagePrefix =
+    slot === "hat" && imageNum === 9 ? "hw_hat" : SLOT_IMAGE_PREFIX[slot];
   const image = `${imagePrefix}${imageNum}`;
 
   let name: string;

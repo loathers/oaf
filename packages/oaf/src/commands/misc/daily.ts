@@ -9,16 +9,16 @@ import {
   italic,
   messageLink,
 } from "discord.js";
-
 import { LoathingDate } from "kol.js";
+import { toWikiLink } from "kol.js";
+
 import { getBirthdays, setGlobalsMessage } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
-import { renderSvg } from "../../svgConverter.js";
 import { formatPlayer } from "../../discordUtils.js";
-import { toWikiLink } from "kol.js";
+import { renderSvg } from "../../svgConverter.js";
 import { englishJoin, getRandom } from "../../utils.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
 import { buildGlobals } from "./_globals.js";
@@ -145,7 +145,9 @@ async function onRollover() {
     return;
   }
 
-  const adjective = LoathingDate.isAprilFools() ? 'foolish' : getRandom(ADJECTIVES);
+  const adjective = LoathingDate.isAprilFools()
+    ? "foolish"
+    : getRandom(ADJECTIVES);
   const titleMessage = await buildTitleMessage(adjective);
   await channel.send({ ...titleMessage, allowedMentions: { users: [] } });
 
@@ -165,7 +167,10 @@ async function onRollover() {
 
   for (const message of messages) {
     if (!message) continue;
-    const sentMessage = await channel.send({ ...message, allowedMentions: { users: [] } });
+    const sentMessage = await channel.send({
+      ...message,
+      allowedMentions: { users: [] },
+    });
     await sentMessage.crosspost();
   }
 
@@ -201,5 +206,17 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export function init() {
-  kolClient.on("rollover", () => void onRollover());
+  kolClient.on("rollover", () => {
+    void (async () => {
+      try {
+        await onRollover();
+      } catch (error) {
+        await discordClient.alert(
+          "Failed to post newsletter after rollover",
+          undefined,
+          error,
+        );
+      }
+    })();
+  });
 }
