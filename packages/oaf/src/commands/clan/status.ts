@@ -25,7 +25,8 @@ async function constructDreadStatusMessage(): Promise<{
       const raid = await dungeon.getRaid(clan.id);
       const overview = raid.getOverview();
 
-      const skills = overview.castle.remaining > 0 ? overview.remainingSkills : 0;
+      const skills =
+        overview.castle.remaining > 0 ? overview.remainingSkills : 0;
 
       const capacitorString = overview.capacitor
         ? `${pluralize(skills, "skill")} left`
@@ -82,29 +83,37 @@ export const data = new SlashCommandBuilder()
 export function init() {
   kolClient.on("rollover", () => {
     void (async () => {
-      const { messages, pingableClans } = await constructDreadStatusMessage();
-      const channel = discordClient.guild?.channels.cache.get(
-        config.DUNGEON_CHANNEL_ID,
-      );
-      if (!channel?.isTextBased()) {
-        await discordClient.alert("No clan dungeon channel found");
-      } else {
-        await channel.send({
-          ...(pingableClans.length
-            ? {
-                content: `${roleMention(config.DUNGEON_MASTER_ROLE_ID)}, looks like ${pingableClans.join(" and ")} ${pingableClans.length === 1 ? "is" : "are"} ready to rock (and roll).`,
-              }
-            : {}),
-          embeds: [
-            {
-              title: "Dread Status",
-              description: messages.join("\n"),
+      try {
+        const { messages, pingableClans } = await constructDreadStatusMessage();
+        const channel = discordClient.guild?.channels.cache.get(
+          config.DUNGEON_CHANNEL_ID,
+        );
+        if (!channel?.isTextBased()) {
+          await discordClient.alert("No clan dungeon channel found");
+        } else {
+          await channel.send({
+            ...(pingableClans.length
+              ? {
+                  content: `${roleMention(config.DUNGEON_MASTER_ROLE_ID)}, looks like ${pingableClans.join(" and ")} ${pingableClans.length === 1 ? "is" : "are"} ready to rock (and roll).`,
+                }
+              : {}),
+            embeds: [
+              {
+                title: "Dread Status",
+                description: messages.join("\n"),
+              },
+            ],
+            allowedMentions: {
+              roles: [config.DUNGEON_MASTER_ROLE_ID],
             },
-          ],
-          allowedMentions: {
-            roles: [config.DUNGEON_MASTER_ROLE_ID],
-          },
-        });
+          });
+        }
+      } catch (error) {
+        await discordClient.alert(
+          "Failed to post dread status after rollover",
+          undefined,
+          error,
+        );
       }
     })();
   });

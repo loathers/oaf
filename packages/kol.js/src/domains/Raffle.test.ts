@@ -28,6 +28,7 @@ describe("Raffle", () => {
     text.mockResolvedValueOnce("<!-- itemid: 4 -->");
     text.mockResolvedValueOnce("<!-- itemid: 4 -->");
     text.mockResolvedValueOnce("<!-- itemid: 4 -->");
+    json.mockResolvedValueOnce({ daynumber: "100" });
 
     const raffle = new Raffle(client);
     const result = await raffle.getRaffle();

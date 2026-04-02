@@ -49,10 +49,7 @@ describe("Player.Profiled.parseProfile", () => {
   });
 
   test("Can parse a profile picture on dependence day", async () => {
-    const html = await loadFixture(
-      __dirname,
-      "showplayer_dependence_day.html",
-    );
+    const html = await loadFixture(__dirname, "showplayer_dependence_day.html");
     const result = await Player.Profiled.parseProfile(html);
 
     expectNotNull(result);
