@@ -18,9 +18,7 @@ export class Players {
     if (!Number.isNaN(id) || typeof identifier === "number") {
       return this.#byId.get(id);
     }
-    const resolvedId = this.#nameToId.get(
-      String(identifier).toLowerCase(),
-    );
+    const resolvedId = this.#nameToId.get(String(identifier).toLowerCase());
     return resolvedId !== undefined ? this.#byId.get(resolvedId) : undefined;
   }
 
@@ -38,8 +36,7 @@ export class Players {
     const cached = this.#getCached(identifier);
     if (cached instanceof Player.Profiled) return cached;
 
-    const identity =
-      cached ?? (await this.#resolveUncached(identifier));
+    const identity = cached ?? (await this.#resolveUncached(identifier));
     if (!identity) return null;
 
     const html = await this.#client.fetchText("showplayer.php", {
@@ -74,9 +71,7 @@ export class Players {
     }
   }
 
-  async #resolveUncached(
-    identifier: string | number,
-  ): Promise<Player | null> {
+  async #resolveUncached(identifier: string | number): Promise<Player | null> {
     const id = Number(identifier);
 
     if (!Number.isNaN(id) || typeof identifier === "number") {

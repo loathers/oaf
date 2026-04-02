@@ -49,9 +49,7 @@ export class Raffle {
         : [],
     );
 
-    const { daynumber } = (await this.#client.fetchStatus()) ?? {
-      daynumber: "0",
-    };
+    const { daynumber } = await this.#client.fetchStatus();
 
     return {
       today: { first: first ?? null, second: second ?? null },

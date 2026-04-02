@@ -25,10 +25,37 @@ import {
   codeBlock,
   userMention,
 } from "discord.js";
-import { resolveKoLImage } from "kol.js";
+import { AuthError, RolloverError, resolveKoLImage } from "kol.js";
 import { isErrorLike, serializeError } from "serialize-error";
 
 import { config } from "../config.js";
+
+function describeCommandError(error: unknown): {
+  reply: string;
+  alert: boolean;
+} {
+  if (error instanceof RolloverError) {
+    return {
+      reply:
+        "Kingdom of Loathing is currently down for its daily rollover (maintenance). This usually takes 3-10 minutes, please try again shortly!",
+      alert: false,
+    };
+  }
+
+  if (error instanceof AuthError) {
+    return {
+      reply:
+        "I was unable to log in to Kingdom of Loathing. This might be a temporary issue, please try again shortly!",
+      alert: true,
+    };
+  }
+
+  return {
+    reply:
+      "OAF recovered from a crash trying to process that command. This has been logged, but poke in #mafia-and-scripting if it keeps happening.",
+    alert: true,
+  };
+}
 
 function safeStringify(value: unknown): string {
   return JSON.stringify(value, (_key, v: unknown) =>
@@ -131,15 +158,16 @@ export class DiscordClient extends Client {
         try {
           await command.execute(interaction);
         } catch (error) {
-          await this.alert("Recovered from a crash", interaction, error);
-          const message =
-            "OAF recovered from a crash trying to process that command. This has been logged, but poke in #mafia-and-scripting if it keeps happening.";
+          const message = describeCommandError(error);
+          if (message.alert) {
+            await this.alert("Recovered from a crash", interaction, error);
+          }
           if (interaction.deferred) {
-            await interaction.editReply(message);
+            await interaction.editReply(message.reply);
           } else if (interaction.replied) {
-            await interaction.followUp(message);
+            await interaction.followUp(message.reply);
           } else {
-            await interaction.reply(message);
+            await interaction.reply(message.reply);
           }
         }
         return;
@@ -194,7 +222,6 @@ export class DiscordClient extends Client {
       console.error(description);
     }
 
-
     if (config.DEBUG) {
       return;
     }
@@ -239,7 +266,10 @@ export class DiscordClient extends Client {
 
     const alert: MessageCreateOptions = {
       ...(typeof content === "string" ? { content } : content),
-      embeds: [...(typeof content === "string" ? [] : content.embeds ?? []), ...embeds],
+      embeds: [
+        ...(typeof content === "string" ? [] : (content.embeds ?? [])),
+        ...embeds,
+      ],
       allowedMentions: { users: [] },
     };
 

@@ -44,7 +44,10 @@ export function leprechaunMeatDrop(weight: number, power = 1): number {
  * Inverse of leprechaunMeatDrop — halves the target then uses the
  * fairy inverse since meat drop = 2 * fairy item drop.
  */
-export function leprechaunWeightForMeatDrop(modifier: number, power = 1): number {
+export function leprechaunWeightForMeatDrop(
+  modifier: number,
+  power = 1,
+): number {
   return fairyWeightForItemDrop(modifier / 2, power);
 }
 

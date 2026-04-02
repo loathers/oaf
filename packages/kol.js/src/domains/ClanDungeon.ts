@@ -15,26 +15,52 @@ export class RaidLogMissingError extends Error {
 }
 
 export type RaidLogEvent =
-  | { type: "kill"; playerName: string; playerId: number; monster: string; count: number; boss: boolean }
-  | { type: "defeat"; playerName: string; playerId: number; monster: string; count: number; boss: boolean }
-  | { type: "loot"; playerName: string; playerId: number; item: string; recipientName: string; recipientId: number };
+  | {
+      type: "kill";
+      playerName: string;
+      playerId: number;
+      monster: string;
+      count: number;
+      boss: boolean;
+    }
+  | {
+      type: "defeat";
+      playerName: string;
+      playerId: number;
+      monster: string;
+      count: number;
+      boss: boolean;
+    }
+  | {
+      type: "loot";
+      playerName: string;
+      playerId: number;
+      item: string;
+      recipientName: string;
+      recipientId: number;
+    };
 
 export const PLAYER_PREFIX = `([A-Za-z0-9\\-_ ]+)\\s+\\(#(\\d+)\\)\\s+`;
 
 const KILL_MULTI = new RegExp(
-  `^${PLAYER_PREFIX}defeated\\s+(.+?)\\s+x\\s+(\\d+)`, "i",
+  `^${PLAYER_PREFIX}defeated\\s+(.+?)\\s+x\\s+(\\d+)`,
+  "i",
 );
 const KILL_SINGLE = new RegExp(
-  `^${PLAYER_PREFIX}defeated\\s+(.+?)\\s+\\(1 turn\\)`, "i",
+  `^${PLAYER_PREFIX}defeated\\s+(.+?)\\s+\\(1 turn\\)`,
+  "i",
 );
 const DEFEAT_MULTI = new RegExp(
-  `^${PLAYER_PREFIX}was defeated by\\s+(.+?)\\s+x\\s+(\\d+)`, "i",
+  `^${PLAYER_PREFIX}was defeated by\\s+(.+?)\\s+x\\s+(\\d+)`,
+  "i",
 );
 const DEFEAT_SINGLE = new RegExp(
-  `^${PLAYER_PREFIX}was defeated by\\s+(.+?)\\s+\\(1 turn\\)`, "i",
+  `^${PLAYER_PREFIX}was defeated by\\s+(.+?)\\s+\\(1 turn\\)`,
+  "i",
 );
 const LOOT = new RegExp(
-  `^${PLAYER_PREFIX}distributed\\s+(.+?)\\s+to\\s+(.+?)\\s+\\(#(\\d+)\\)`, "i",
+  `^${PLAYER_PREFIX}distributed\\s+(.+?)\\s+to\\s+(.+?)\\s+\\(#(\\d+)\\)`,
+  "i",
 );
 
 function matchKill(line: string, bossNames: string[]): RaidLogEvent | null {
@@ -47,7 +73,9 @@ function matchKill(line: string, bossNames: string[]): RaidLogEvent | null {
       playerId: parseInt(multi[2]),
       monster,
       count: parseInt(multi[4]),
-      boss: bossNames.some((b) => monster.toLowerCase().includes(b.toLowerCase())),
+      boss: bossNames.some((b) =>
+        monster.toLowerCase().includes(b.toLowerCase()),
+      ),
     };
   }
 
@@ -60,7 +88,9 @@ function matchKill(line: string, bossNames: string[]): RaidLogEvent | null {
       playerId: parseInt(single[2]),
       monster,
       count: 1,
-      boss: bossNames.some((b) => monster.toLowerCase().includes(b.toLowerCase())),
+      boss: bossNames.some((b) =>
+        monster.toLowerCase().includes(b.toLowerCase()),
+      ),
     };
   }
 
@@ -77,7 +107,9 @@ function matchDefeat(line: string, bossNames: string[]): RaidLogEvent | null {
       playerId: parseInt(multi[2]),
       monster,
       count: parseInt(multi[4]),
-      boss: bossNames.some((b) => monster.toLowerCase().includes(b.toLowerCase())),
+      boss: bossNames.some((b) =>
+        monster.toLowerCase().includes(b.toLowerCase()),
+      ),
     };
   }
 
@@ -90,7 +122,9 @@ function matchDefeat(line: string, bossNames: string[]): RaidLogEvent | null {
       playerId: parseInt(single[2]),
       monster,
       count: 1,
-      boss: bossNames.some((b) => monster.toLowerCase().includes(b.toLowerCase())),
+      boss: bossNames.some((b) =>
+        monster.toLowerCase().includes(b.toLowerCase()),
+      ),
     };
   }
 
@@ -114,7 +148,10 @@ function matchLoot(line: string): RaidLogEvent | null {
  * Try to parse a single stripped log line into a base raid log event.
  * Returns null if the line doesn't match any known pattern.
  */
-export function parseLine(line: string, bossNames: string[]): RaidLogEvent | null {
+export function parseLine(
+  line: string,
+  bossNames: string[],
+): RaidLogEvent | null {
   return (
     matchKill(line, bossNames) ??
     matchDefeat(line, bossNames) ??
@@ -155,10 +192,7 @@ export class ClanDungeon {
     });
   }
 
-  async getRaidIds(
-    clanId: number,
-    exclude: number[] = [],
-  ): Promise<number[]> {
+  async getRaidIds(clanId: number, exclude: number[] = []): Promise<number[]> {
     return await this.#client.actionMutex.runExclusive(async () => {
       if (!(await this.#client.joinClan(clanId))) throw new JoinClanError();
       let raidLogs = await this.#client.fetchText("clan_oldraidlogs.php");

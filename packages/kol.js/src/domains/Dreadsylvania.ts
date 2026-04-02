@@ -1,4 +1,9 @@
-import { ClanDungeon, PLAYER_PREFIX, parseLine, type RaidLogEvent } from "./ClanDungeon.js";
+import {
+  ClanDungeon,
+  PLAYER_PREFIX,
+  parseLine,
+  type RaidLogEvent,
+} from "./ClanDungeon.js";
 
 export type { RaidLogEvent };
 
@@ -91,8 +96,18 @@ const MONSTER_PAIRS: Record<DreadZone, readonly [MonsterType, MonsterType]> = {
 
 export type DreadEvent =
   | RaidLogEvent
-  | { type: "banish"; playerName: string; playerId: number; monster: MonsterType }
-  | { type: "learned_skill"; playerName: string; playerId: number; helpers: [string, string] }
+  | {
+      type: "banish";
+      playerName: string;
+      playerId: number;
+      monster: MonsterType;
+    }
+  | {
+      type: "learned_skill";
+      playerName: string;
+      playerId: number;
+      helpers: [string, string];
+    }
   | { type: "capacitor"; playerName: string; playerId: number }
   | { type: "noncombat"; action: string };
 
@@ -149,13 +164,16 @@ const MONSTER_PLURALS_PATTERN = ALL_MONSTER_TYPES.map(pluralise).join("|");
 const BOSS_NAMES_LIST = Object.values(BOSS_NAMES);
 
 const BANISH = new RegExp(
-  `^${PLAYER_PREFIX}drove some (${MONSTER_PLURALS_PATTERN}) out of the`, "i",
+  `^${PLAYER_PREFIX}drove some (${MONSTER_PLURALS_PATTERN}) out of the`,
+  "i",
 );
 const LEARNED_SKILL = new RegExp(
-  `^${PLAYER_PREFIX}used The Machine, assisted by (.+) and (.+)`, "i",
+  `^${PLAYER_PREFIX}used The Machine, assisted by (.+) and (.+)`,
+  "i",
 );
 const CAPACITOR = new RegExp(
-  `^${PLAYER_PREFIX}fixed The Machine \\(1 turn\\)`, "i",
+  `^${PLAYER_PREFIX}fixed The Machine \\(1 turn\\)`,
+  "i",
 );
 
 function parseNumber(input?: string): number {
@@ -206,9 +224,7 @@ function parseEvents(raidLog: string): DreadEvent[] {
   // Current raid pages combine all dungeons in separate divs.
   // Historical raid pages are single-dungeon and have a title like
   // "Dreadsylvania run, March 11, 2026".
-  const dreadBlock = raidLog.match(
-    /<div id='Dreadsylvania'>([\s\S]*?)<\/div>/,
-  );
+  const dreadBlock = raidLog.match(/<div id='Dreadsylvania'>([\s\S]*?)<\/div>/);
   if (!dreadBlock && !raidLog.includes("Dreadsylvania run,")) return [];
   const html = dreadBlock?.[1] ?? raidLog;
 
@@ -245,7 +261,9 @@ export class DreadsylvaniaRaid {
   }
 
   private hasAction(action: string): boolean {
-    return this.events.some((e) => e.type === "noncombat" && e.action === action);
+    return this.events.some(
+      (e) => e.type === "noncombat" && e.action === action,
+    );
   }
 
   // --- Boss prediction ---
@@ -305,8 +323,10 @@ export class DreadsylvaniaRaid {
     const finalM1H2 = Math.max(2 - banishesM1, 0);
     const finalM2H2 = Math.max(3 - banishesM2, 0);
 
-    const bossUnderH1 = finalM1H1 > finalM2H1 ? m1 : finalM2H1 > finalM1H1 ? m2 : null;
-    const bossUnderH2 = finalM1H2 > finalM2H2 ? m1 : finalM2H2 > finalM1H2 ? m2 : null;
+    const bossUnderH1 =
+      finalM1H1 > finalM2H1 ? m1 : finalM2H1 > finalM1H1 ? m2 : null;
+    const bossUnderH2 =
+      finalM1H2 > finalM2H2 ? m1 : finalM2H2 > finalM1H2 ? m2 : null;
 
     // If banishes are decisive (both hypotheses agree), no need for kill analysis
     if (bossUnderH1 !== null && bossUnderH1 === bossUnderH2) {
@@ -345,7 +365,8 @@ export class DreadsylvaniaRaid {
     // Posterior via log-sum-exp (equal prior)
     const maxLog = Math.max(logLikH1, logLikH2);
     const posteriorH1 = isFinite(maxLog)
-      ? Math.exp(logLikH1 - maxLog) / (Math.exp(logLikH1 - maxLog) + Math.exp(logLikH2 - maxLog))
+      ? Math.exp(logLikH1 - maxLog) /
+        (Math.exp(logLikH1 - maxLog) + Math.exp(logLikH2 - maxLog))
       : 0.5;
     const posteriorH2 = 1 - posteriorH1;
 
@@ -355,11 +376,17 @@ export class DreadsylvaniaRaid {
 
     if (bossUnderH1 === m1) pBossM1 += posteriorH1;
     else if (bossUnderH1 === m2) pBossM2 += posteriorH1;
-    else { pBossM1 += posteriorH1 * 0.5; pBossM2 += posteriorH1 * 0.5; }
+    else {
+      pBossM1 += posteriorH1 * 0.5;
+      pBossM2 += posteriorH1 * 0.5;
+    }
 
     if (bossUnderH2 === m1) pBossM1 += posteriorH2;
     else if (bossUnderH2 === m2) pBossM2 += posteriorH2;
-    else { pBossM1 += posteriorH2 * 0.5; pBossM2 += posteriorH2 * 0.5; }
+    else {
+      pBossM1 += posteriorH2 * 0.5;
+      pBossM2 += posteriorH2 * 0.5;
+    }
 
     if (pBossM1 >= pBossM2) {
       return { boss: m1, confidence: pBossM1 };
@@ -402,7 +429,9 @@ export class DreadsylvaniaRaid {
       /Your clan has defeated <b>(?<castle>[\d,]+)<\/b> monster\(s\) in the Castle/,
     );
 
-    const skillCount = this.events.filter((e) => e.type === "learned_skill").length;
+    const skillCount = this.events.filter(
+      (e) => e.type === "learned_skill",
+    ).length;
     const capacitor = this.events.some((e) => e.type === "capacitor");
 
     return {
@@ -474,7 +503,11 @@ export class DreadsylvaniaRaid {
     for (const event of this.events) {
       if (event.type !== "kill" && event.type !== "learned_skill") continue;
       const { playerId } = event;
-      const existing = participation[playerId] ?? { playerId, skills: 0, kills: 0 };
+      const existing = participation[playerId] ?? {
+        playerId,
+        skills: 0,
+        kills: 0,
+      };
 
       if (event.type === "kill") {
         existing.kills += event.count;
@@ -508,9 +541,10 @@ export class DreadsylvaniaDungeon extends ClanDungeon {
   async getRaid(clanId: number): Promise<DreadsylvaniaRaid>;
   async getRaid(clanId: number, raidId: number): Promise<DreadsylvaniaRaid>;
   async getRaid(clanId: number, raidId?: number): Promise<DreadsylvaniaRaid> {
-    const log = raidId !== undefined
-      ? await this.getRaidById(clanId, raidId)
-      : await this.getCurrentRaid(clanId);
+    const log =
+      raidId !== undefined
+        ? await this.getRaidById(clanId, raidId)
+        : await this.getCurrentRaid(clanId);
     return new DreadsylvaniaRaid(log);
   }
 }
