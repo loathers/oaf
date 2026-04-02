@@ -1,6 +1,6 @@
 import { describe, expect, it, test, vi } from "vitest";
 
-import { Client, RolloverError } from "./Client.js";
+import { AuthError, Client, RolloverError } from "./Client.js";
 import { loadFixture } from "./testUtils.js";
 
 function mockSession(fn: () => unknown) {
@@ -217,22 +217,15 @@ describe("Familiars", () => {
 });
 
 describe("fetchJson error handling", () => {
-  it("returns null on non-login errors instead of retrying", async () => {
+  it("throws on non-login errors", async () => {
     const client = new Client("", "");
     vi.spyOn(client, "login").mockResolvedValue(true);
     client.session = mockSession(() => {
       throw new Error("500 Internal Server Error");
     });
-    expect(await client.fetchJson("api.php")).toBeNull();
-  });
-
-  it("returns fallback on non-login errors", async () => {
-    const client = new Client("", "");
-    vi.spyOn(client, "login").mockResolvedValue(true);
-    client.session = mockSession(() => {
-      throw new Error("Parse error");
-    });
-    expect(await client.fetchJson("api.php", {}, "default")).toBe("default");
+    await expect(client.fetchJson("api.php")).rejects.toThrow(
+      "500 Internal Server Error",
+    );
   });
 
   it("does not retry more than once on non-login errors", async () => {
@@ -243,11 +236,13 @@ describe("fetchJson error handling", () => {
       calls++;
       throw new Error("persistent error");
     });
-    expect(await client.fetchJson("test.php")).toBeNull();
+    await expect(client.fetchJson("test.php")).rejects.toThrow(
+      "persistent error",
+    );
     expect(calls).toBe(1);
   });
 
-  it("propagates RolloverError instead of returning null", async () => {
+  it("propagates RolloverError", async () => {
     const client = new Client("", "");
     vi.spyOn(client, "login").mockResolvedValue(true);
     client.session = mockSession(() => {
@@ -255,6 +250,14 @@ describe("fetchJson error handling", () => {
     });
     await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
       RolloverError,
+    );
+  });
+
+  it("throws AuthError when login fails", async () => {
+    const client = new Client("", "");
+    vi.spyOn(client, "login").mockResolvedValue(false);
+    await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
+      AuthError,
     );
   });
 });
@@ -287,13 +290,21 @@ describe("fetchText error handling", () => {
 });
 
 describe("rollover handling", () => {
-  it("enters rollover state when login detects maintenance", async () => {
+  it("detects rollover from login.php response", async () => {
     const client = new Client("", "");
     client.session = mockSession(
-      () => "The system is currently down for nightly maintenance",
+      () => "The system is currently down for nightly maintenance.",
     );
     await client.login();
     expect(client.isRollover()).toBe(true);
+
+    // All fetch methods should fail fast
+    await expect(client.fetchText("test.php")).rejects.toBeInstanceOf(
+      RolloverError,
+    );
+    await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
+      RolloverError,
+    );
   });
 
   it("fetchText throws RolloverError immediately when in rollover", async () => {

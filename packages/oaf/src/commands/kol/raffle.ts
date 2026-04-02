@@ -32,7 +32,7 @@ const kolRaffle = new Raffle(kolClient);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-  const { daynumber } = (await kolClient.fetchStatus()) ?? { daynumber: "0" };
+  const { daynumber } = await kolClient.fetchStatus();
   const raffle = await findRaffle(Number(daynumber));
 
   if (!raffle) {
@@ -164,7 +164,7 @@ export async function postRaffleOnRollover(): Promise<{
   channelId: string;
   id: string;
 } | null> {
-  const { daynumber } = (await kolClient.fetchStatus()) ?? { daynumber: "0" };
+  const { daynumber } = await kolClient.fetchStatus();
   const existing = await findRaffle(Number(daynumber));
 
   if (existing) {

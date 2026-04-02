@@ -36,9 +36,7 @@ export class Player {
 
   async isOnline(): Promise<boolean> {
     const response = await this.#client.useChatMacro(`/whois ${this.name}`);
-    return (
-      response?.output.includes("This player is currently online") ?? false
-    );
+    return response.output.includes("This player is currently online");
   }
 
   matches(identifier: string | number): boolean {

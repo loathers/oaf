@@ -36,6 +36,13 @@ export class RolloverError extends Error {
   }
 }
 
+export class AuthError extends Error {
+  constructor() {
+    super("Unable to log in to Kingdom of Loathing");
+    this.name = "AuthError";
+  }
+}
+
 type FormData = Record<string, string | number | boolean>;
 
 type RequestOptions = {
@@ -128,63 +135,53 @@ export class Client extends Emittery<Events> {
     return this.#username;
   }
 
-  async fetchText(
-    path: string,
-    options: RequestOptions = {},
-    fallback?: string,
-  ): Promise<string> {
+  async #withReauth<T>(fn: () => Promise<T>): Promise<T> {
     if (this.#isRollover) throw new RolloverError();
-    if (!this.#pwd && !(await this.login())) return fallback ?? "";
-
-    const { form, ...rest } = options;
+    if (!this.#pwd && !(await this.login())) throw new AuthError();
 
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        return await this.session(path, {
-          method: "POST",
-          ...rest,
-          body: form ? formToBody(form) : undefined,
-          responseType: "text",
-        });
-      } catch (error) {
-        if (attempt > 0 || !(error instanceof LoginRedirectError)) throw error;
-        this.#pwd = "";
-      }
-    }
-
-    return fallback ?? "";
-  }
-
-  // Unlike fetchText, fetchJson returns fallback/null on non-login errors
-  // rather than throwing — callers expect null for missing/unavailable data.
-  async fetchJson<Result>(
-    path: string,
-    options: RequestOptions = {},
-    fallback?: Result,
-  ): Promise<Result | null> {
-    if (this.#isRollover) throw new RolloverError();
-    if (!(await this.login())) return fallback ?? null;
-
-    const { form, ...rest } = options;
-
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        return await this.session<Result>(path, {
-          ...rest,
-          body: form ? formToBody(form) : undefined,
-          responseType: "json",
-        });
+        return await fn();
       } catch (error) {
         if (error instanceof RolloverError) throw error;
         if (error instanceof LoginRedirectError && attempt === 0) {
           this.#pwd = "";
           continue;
         }
-        return fallback ?? null;
+        throw error;
       }
     }
 
-    return fallback ?? null;
+    throw new AuthError();
+  }
+
+  async fetchText(
+    path: string,
+    options: RequestOptions = {},
+  ): Promise<string> {
+    const { form, ...rest } = options;
+    return this.#withReauth(() =>
+      this.session(path, {
+        method: "POST",
+        ...rest,
+        body: form ? formToBody(form) : undefined,
+        responseType: "text",
+      }),
+    );
+  }
+
+  async fetchJson<Result>(
+    path: string,
+    options: RequestOptions = {},
+  ): Promise<Result> {
+    const { form, ...rest } = options;
+    return this.#withReauth(() =>
+      this.session<Result>(path, {
+        ...rest,
+        body: form ? formToBody(form) : undefined,
+        responseType: "json",
+      }),
+    );
   }
 
   async login(): Promise<boolean> {
@@ -297,9 +294,6 @@ export class Client extends Emittery<Events> {
       },
     });
 
-    if (!newChatMessagesResponse || typeof newChatMessagesResponse !== "object")
-      return;
-
     this.lastFetchedMessages = newChatMessagesResponse["last"];
 
     newChatMessagesResponse["msgs"]
@@ -324,12 +318,10 @@ export class Client extends Emittery<Events> {
       });
   }
 
-  async fetchStatus(): Promise<ApiStatus | null> {
-    const api = await this.fetchJson<ApiStatus>("api.php", {
+  async fetchStatus(): Promise<ApiStatus> {
+    return this.fetchJson<ApiStatus>("api.php", {
       query: { what: "status", for: `${this.#username} bot` },
     });
-
-    return api;
   }
 
   async fetchKmails(): Promise<KmailMessage[]> {
@@ -340,7 +332,7 @@ export class Client extends Emittery<Events> {
       },
     });
 
-    if (!Array.isArray(kmails) || kmails.length === 0) return [];
+    if (kmails.length === 0) return [];
 
     return kmails.map((msg: KoLKmail) => ({
       id: Number(msg.id),
@@ -387,11 +379,9 @@ export class Client extends Emittery<Events> {
 
   async getUpdates() {
     const result = await this.sendChat("/updates");
-    return [
-      ...(result?.output.matchAll(
-        /<p><b>[A-za-z]+ \d+<\/b> - (.*?)(?=<p>(?:<b>|<hr>))/g,
-      ) ?? []),
-    ].map((m) => m[1]);
+    return [...result.output.matchAll(
+      /<p><b>[A-za-z]+ \d+<\/b> - (.*?)(?=<p>(?:<b>|<hr>))/g,
+    )].map((m) => m[1]);
   }
 
   async useChatMacro(macro: string) {
