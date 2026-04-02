@@ -25,7 +25,7 @@ import {
   codeBlock,
   userMention,
 } from "discord.js";
-import { resolveKoLImage } from "kol.js";
+import { RolloverError, resolveKoLImage } from "kol.js";
 import { isErrorLike, serializeError } from "serialize-error";
 
 import { config } from "../config.js";
@@ -131,9 +131,13 @@ export class DiscordClient extends Client {
         try {
           await command.execute(interaction);
         } catch (error) {
-          await this.alert("Recovered from a crash", interaction, error);
           const message =
-            "OAF recovered from a crash trying to process that command. This has been logged, but poke in #mafia-and-scripting if it keeps happening.";
+            error instanceof RolloverError
+              ? "Kingdom of Loathing is currently down for its daily rollover (maintenance). This usually takes 3-10 minutes, please try again shortly!"
+              : "OAF recovered from a crash trying to process that command. This has been logged, but poke in #mafia-and-scripting if it keeps happening.";
+          if (!(error instanceof RolloverError)) {
+            await this.alert("Recovered from a crash", interaction, error);
+          }
           if (interaction.deferred) {
             await interaction.editReply(message);
           } else if (interaction.replied) {
@@ -194,7 +198,6 @@ export class DiscordClient extends Client {
       console.error(description);
     }
 
-
     if (config.DEBUG) {
       return;
     }
@@ -239,7 +242,10 @@ export class DiscordClient extends Client {
 
     const alert: MessageCreateOptions = {
       ...(typeof content === "string" ? { content } : content),
-      embeds: [...(typeof content === "string" ? [] : content.embeds ?? []), ...embeds],
+      embeds: [
+        ...(typeof content === "string" ? [] : (content.embeds ?? [])),
+        ...embeds,
+      ],
       allowedMentions: { users: [] },
     };
 

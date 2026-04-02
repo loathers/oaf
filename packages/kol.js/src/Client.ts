@@ -29,6 +29,13 @@ export type MallPrice = {
 
 class LoginRedirectError extends Error {}
 
+export class RolloverError extends Error {
+  constructor() {
+    super("Kingdom of Loathing is currently down for rollover");
+    this.name = "RolloverError";
+  }
+}
+
 type FormData = Record<string, string | number | boolean>;
 
 type RequestOptions = {
@@ -126,6 +133,7 @@ export class Client extends Emittery<Events> {
     options: RequestOptions = {},
     fallback?: string,
   ): Promise<string> {
+    if (this.#isRollover) throw new RolloverError();
     if (!this.#pwd && !(await this.login())) return fallback ?? "";
 
     const { form, ...rest } = options;
@@ -154,6 +162,7 @@ export class Client extends Emittery<Events> {
     options: RequestOptions = {},
     fallback?: Result,
   ): Promise<Result | null> {
+    if (this.#isRollover) throw new RolloverError();
     if (!(await this.login())) return fallback ?? null;
 
     const { form, ...rest } = options;
@@ -166,6 +175,7 @@ export class Client extends Emittery<Events> {
           responseType: "json",
         });
       } catch (error) {
+        if (error instanceof RolloverError) throw error;
         if (error instanceof LoginRedirectError && attempt === 0) {
           this.#pwd = "";
           continue;
@@ -234,31 +244,44 @@ export class Client extends Emittery<Events> {
     /The system is currently down for nightly maintenance/;
 
   async #checkForRollover() {
-    const isRollover = Client.#rolloverPattern.test(await this.fetchText(""));
+    try {
+      const html = await this.session("login.php", { responseType: "text" });
+      const isRollover = Client.#rolloverPattern.test(html);
 
-    if (this.#isRollover && !isRollover) {
-      // Set the post-rollover latch so the bot can react on next log in.
-      this.#postRolloverLatch = true;
+      if (this.#isRollover && !isRollover) {
+        this.#postRolloverLatch = true;
+      }
+
+      this.#isRollover = isRollover;
+    } catch {
+      // Can't reach server — don't change rollover state
     }
 
-    this.#isRollover = isRollover;
-
     if (this.#isRollover) {
-      // Rollover appears to be in progress. Check again in one minute.
-      setTimeout(() => this.#checkForRollover(), 60_000);
+      setTimeout(() => void this.#checkForRollover(), 60_000);
     }
   }
 
   async startChatBot() {
     if (this.#chatBotStarted) return;
-    await this.useChatMacro("/join talkie");
-    this.loopChatBot();
     this.#chatBotStarted = true;
+    try {
+      await this.useChatMacro("/join talkie");
+    } catch (error) {
+      if (!(error instanceof RolloverError)) throw error;
+    }
+    this.loopChatBot();
   }
 
   private async loopChatBot() {
     while (true) {
-      await Promise.all([this.checkMessages(), this.checkKmails()]);
+      try {
+        await Promise.all([this.checkMessages(), this.checkKmails()]);
+      } catch (error) {
+        if (!(error instanceof RolloverError)) {
+          console.error("Chat bot loop error:", error);
+        }
+      }
       await wait(3000);
     }
   }

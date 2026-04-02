@@ -1,5 +1,5 @@
 export { Player, type ProfileData } from "./Player.js";
-export { Client, type MallPrice } from "./Client.js";
+export { Client, type MallPrice, RolloverError } from "./Client.js";
 export { LoathingDate } from "./LoathingDate.js";
 export { statsForLevel, levelForMainstat, levelForSubstat } from "./stats.js";
 

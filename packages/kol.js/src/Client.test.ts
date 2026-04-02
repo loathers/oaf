@@ -1,14 +1,7 @@
 import { describe, expect, it, test, vi } from "vitest";
 
-import { Client } from "./Client.js";
+import { Client, RolloverError } from "./Client.js";
 import { loadFixture } from "./testUtils.js";
-
-vi.mock("./Client.js", async (importOriginal) => {
-  const client = await importOriginal<typeof import("./Client.js")>();
-  client.Client.prototype.login = async () => true;
-  client.Client.prototype.checkLoggedIn = async () => true;
-  return client;
-});
 
 function mockSession(fn: () => unknown) {
   return Object.assign(fn, {
@@ -202,14 +195,12 @@ describe("Familiars", () => {
 
     const familiars = await client.getFamiliars();
 
-    // Current
     expect(familiars).toContainEqual({
       id: 294,
       name: "Jill-of-All-Trades",
       image: "itemimages/darkjill2f.gif",
     });
 
-    // Problematic
     expect(familiars).toContainEqual({
       id: 278,
       name: "Left-Hand Man",
@@ -221,7 +212,6 @@ describe("Familiars", () => {
       image: "otherimages/camelfam_left.gif",
     });
 
-    // Just to be sure
     expect(familiars).toHaveLength(206);
   });
 });
@@ -229,6 +219,7 @@ describe("Familiars", () => {
 describe("fetchJson error handling", () => {
   it("returns null on non-login errors instead of retrying", async () => {
     const client = new Client("", "");
+    vi.spyOn(client, "login").mockResolvedValue(true);
     client.session = mockSession(() => {
       throw new Error("500 Internal Server Error");
     });
@@ -237,6 +228,7 @@ describe("fetchJson error handling", () => {
 
   it("returns fallback on non-login errors", async () => {
     const client = new Client("", "");
+    vi.spyOn(client, "login").mockResolvedValue(true);
     client.session = mockSession(() => {
       throw new Error("Parse error");
     });
@@ -245,6 +237,7 @@ describe("fetchJson error handling", () => {
 
   it("does not retry more than once on non-login errors", async () => {
     const client = new Client("", "");
+    vi.spyOn(client, "login").mockResolvedValue(true);
     let calls = 0;
     client.session = mockSession(() => {
       calls++;
@@ -253,11 +246,23 @@ describe("fetchJson error handling", () => {
     expect(await client.fetchJson("test.php")).toBeNull();
     expect(calls).toBe(1);
   });
+
+  it("propagates RolloverError instead of returning null", async () => {
+    const client = new Client("", "");
+    vi.spyOn(client, "login").mockResolvedValue(true);
+    client.session = mockSession(() => {
+      throw new RolloverError();
+    });
+    await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
+      RolloverError,
+    );
+  });
 });
 
 describe("fetchText error handling", () => {
   it("throws on non-login errors instead of retrying", async () => {
     const client = new Client("", "");
+    vi.spyOn(client, "login").mockResolvedValue(true);
     client.session = mockSession(() => {
       throw new Error("Network timeout");
     });
@@ -268,6 +273,7 @@ describe("fetchText error handling", () => {
 
   it("does not retry more than once on non-login errors", async () => {
     const client = new Client("", "");
+    vi.spyOn(client, "login").mockResolvedValue(true);
     let calls = 0;
     client.session = mockSession(() => {
       calls++;
@@ -277,5 +283,150 @@ describe("fetchText error handling", () => {
       "persistent error",
     );
     expect(calls).toBe(1);
+  });
+});
+
+describe("rollover handling", () => {
+  it("enters rollover state when login detects maintenance", async () => {
+    const client = new Client("", "");
+    client.session = mockSession(
+      () => "The system is currently down for nightly maintenance",
+    );
+    await client.login();
+    expect(client.isRollover()).toBe(true);
+  });
+
+  it("fetchText throws RolloverError immediately when in rollover", async () => {
+    const client = new Client("", "");
+    client.session = mockSession(
+      () => "The system is currently down for nightly maintenance",
+    );
+    await client.login();
+
+    let sessionCalled = false;
+    client.session = mockSession(() => {
+      sessionCalled = true;
+      return "";
+    });
+    await expect(client.fetchText("test.php")).rejects.toBeInstanceOf(
+      RolloverError,
+    );
+    expect(sessionCalled).toBe(false);
+  });
+
+  it("fetchJson throws RolloverError immediately when in rollover", async () => {
+    const client = new Client("", "");
+    client.session = mockSession(
+      () => "The system is currently down for nightly maintenance",
+    );
+    await client.login();
+
+    let sessionCalled = false;
+    client.session = mockSession(() => {
+      sessionCalled = true;
+      return {};
+    });
+    await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
+      RolloverError,
+    );
+    expect(sessionCalled).toBe(false);
+  });
+
+  it("recovers from rollover when server comes back", async () => {
+    vi.useFakeTimers();
+    const client = new Client("", "");
+
+    client.session = mockSession(
+      () => "The system is currently down for nightly maintenance",
+    );
+    await client.login();
+    expect(client.isRollover()).toBe(true);
+
+    client.session = mockSession(() => "<html>normal login page</html>");
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(client.isRollover()).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it("emits rollover event after recovery when login succeeds", async () => {
+    vi.useFakeTimers();
+    const client = new Client("", "");
+
+    // Enter rollover
+    client.session = mockSession(
+      () => "The system is currently down for nightly maintenance",
+    );
+    await client.login();
+
+    // Recover: checkForRollover sees normal page, then login flow works
+    let callCount = 0;
+    client.session = mockSession(() => {
+      callCount++;
+      // Call 1: #checkForRollover fetches login.php (normal)
+      if (callCount === 1) return "<html>normal login page</html>";
+      // Call 2+: checkLoggedIn/login succeed
+      return { pwd: "abc123" };
+    });
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(client.isRollover()).toBe(false);
+
+    // login needs checkLoggedIn to FAIL first so it goes through the
+    // full login flow where the latch is checked. Make first checkLoggedIn
+    // fail (no session yet), then login POST + second checkLoggedIn succeed.
+    callCount = 0;
+    client.session = mockSession(() => {
+      callCount++;
+      // Call 1: checkLoggedIn → returns non-object (fails validation)
+      if (callCount === 1) return "<html>not logged in</html>";
+      // Call 2: login POST → success (no rollover pattern)
+      if (callCount === 2) return "<html>game frameset</html>";
+      // Call 3: second checkLoggedIn → success
+      return { pwd: "def456" };
+    });
+
+    const rolloverSpy = vi.fn();
+    client.on("rollover", rolloverSpy);
+    const loggedIn = await client.login();
+    expect(loggedIn).toBe(true);
+    expect(rolloverSpy).toHaveBeenCalledOnce();
+
+    vi.useRealTimers();
+  });
+
+  it("stays in rollover if server is unreachable", async () => {
+    vi.useFakeTimers();
+    const client = new Client("", "");
+
+    client.session = mockSession(
+      () => "The system is currently down for nightly maintenance",
+    );
+    await client.login();
+    expect(client.isRollover()).toBe(true);
+
+    client.session = mockSession(() => {
+      throw new Error("Network error");
+    });
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(client.isRollover()).toBe(true);
+
+    client.session = mockSession(() => "<html>normal login page</html>");
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(client.isRollover()).toBe(false);
+
+    vi.useRealTimers();
+  });
+
+  it("does not recurse through fetchText/login during rollover check", async () => {
+    const client = new Client("", "");
+    let sessionCallCount = 0;
+    client.session = mockSession(() => {
+      sessionCallCount++;
+      return "The system is currently down for nightly maintenance";
+    });
+
+    await client.login();
+    expect(sessionCallCount).toBeLessThanOrEqual(3);
   });
 });
