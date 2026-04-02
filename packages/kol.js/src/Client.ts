@@ -146,6 +146,7 @@ export class Client extends Emittery<Events> {
         if (error instanceof RolloverError) throw error;
         if (error instanceof LoginRedirectError && attempt === 0) {
           this.#pwd = "";
+          if (!(await this.login())) throw new AuthError();
           continue;
         }
         throw error;
@@ -201,7 +202,7 @@ export class Client extends Emittery<Events> {
       });
 
       if (Client.#rolloverPattern.test(result)) {
-        throw new Error("It's rollover!");
+        throw new RolloverError();
       }
 
       if (!(await this.checkLoggedIn())) return false;
@@ -213,7 +214,7 @@ export class Client extends Emittery<Events> {
 
       return true;
     } catch (error) {
-      console.log("error", error);
+      console.error("Login failed:", error);
       // Login failed, let's check if it is due to rollover
       await this.#checkForRollover();
       return false;
@@ -275,6 +276,7 @@ export class Client extends Emittery<Events> {
       try {
         await Promise.all([this.checkMessages(), this.checkKmails()]);
       } catch (error) {
+        if (error instanceof AuthError) throw error;
         if (!(error instanceof RolloverError)) {
           console.error("Chat bot loop error:", error);
         }

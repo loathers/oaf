@@ -632,8 +632,8 @@ export class WardrobeOMatic {
 
   async getWardrobe(): Promise<WardrobeItem[]> {
     const status = await this.#client.fetchStatus();
-    const gameday = Number(status?.daynumber ?? 0);
-    const playerLevel = Number(status?.level ?? 1);
+    const gameday = Number(status.daynumber);
+    const playerLevel = Number(status.level);
     return WardrobeOMatic.getWardrobe(gameday, playerLevel);
   }
 

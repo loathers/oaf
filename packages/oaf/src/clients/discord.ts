@@ -46,7 +46,7 @@ function describeCommandError(error: unknown): {
     return {
       reply:
         "I was unable to log in to Kingdom of Loathing. This might be a temporary issue, please try again shortly!",
-      alert: false,
+      alert: true,
     };
   }
 
