@@ -24,6 +24,15 @@ export default function Dailies() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  const ignore = async (playerId: number) => {
+    await fetch(`/api/admin/dailies/ignore/${playerId}`, { method: "POST" });
+    setSubmissions((prev) =>
+      prev.map((s) =>
+        s.playerId === playerId ? { ...s, crowdsourcingIgnored: true } : s,
+      ),
+    );
+  };
+
   const unignore = async (playerId: number) => {
     await fetch(`/api/admin/dailies/ignore/${playerId}`, { method: "DELETE" });
     setSubmissions((prev) =>
@@ -193,11 +202,17 @@ export default function Dailies() {
                             {new Date(s.submittedAt).toLocaleTimeString()}
                           </td>
                           <td>
-                            {s.crowdsourcingIgnored && (
+                            {s.crowdsourcingIgnored ? (
                               <button
                                 onClick={() => void unignore(s.playerId)}
                               >
                                 Unignore
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => void ignore(s.playerId)}
+                              >
+                                Ignore
                               </button>
                             )}
                           </td>
