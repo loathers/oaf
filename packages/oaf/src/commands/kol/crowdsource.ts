@@ -7,8 +7,8 @@ import {
   MessageFlags,
   userMention,
 } from "discord.js";
-
 import { LoathingDate } from "kol.js";
+
 import {
   type SubmissionSummary,
   clearDailySubmissions,
@@ -72,12 +72,14 @@ function ignoreButtonsFor(
   for (let i = 0; i < dissenters.length; i += 5) {
     rows.push(
       new ActionRowBuilder<ButtonBuilder>().addComponents(
-        dissenters.slice(i, i + 5).map((d) =>
-          new ButtonBuilder()
-            .setCustomId(`${IGNORE_BUTTON_PREFIX}${d.playerId}`)
-            .setLabel(`Ignore ${d.playerName}`)
-            .setStyle(ButtonStyle.Danger),
-        ),
+        dissenters
+          .slice(i, i + 5)
+          .map((d) =>
+            new ButtonBuilder()
+              .setCustomId(`${IGNORE_BUTTON_PREFIX}${d.playerId}`)
+              .setLabel(`Ignore ${d.playerName}`)
+              .setStyle(ButtonStyle.Danger),
+          ),
       ),
     );
   }
@@ -157,14 +159,12 @@ export async function handleSubmission(
     // True if this is a new quorate consensus, a changed value, or an
     // inquorate preliminary value that just crossed the threshold
     const justFormed =
-      !existing || existing.value !== summary.value || !existing.thresholdReached;
+      !existing ||
+      existing.value !== summary.value ||
+      !existing.thresholdReached;
 
     if (justFormed) {
-      const dissenters = await getDissentersForKey(
-        key,
-        gameday,
-        summary.value,
-      );
+      const dissenters = await getDissentersForKey(key, gameday, summary.value);
       const activeDissenters = dissenters.filter(
         (d) => !d.crowdsourcingIgnored,
       );
@@ -181,9 +181,10 @@ export async function handleSubmission(
       if (await isPlayerIgnoredForCrowdsourcing(playerId)) return;
       const player = await kolClient.players.resolve(playerId);
       const playerDisplay = player?.name ?? playerName;
-      await discordClient.alert(
-        `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${summary.value}\`)`,
-      );
+      await discordClient.alert({
+        content: `Disagreeing submission for **${key}**: ${playerDisplay} (#${playerId}) submitted \`${value}\` (consensus is \`${summary.value}\`)`,
+        components: ignoreButtonsFor([{ playerId, playerName: playerDisplay }]),
+      });
     }
   } else if (isInquorateUnanimous(summary)) {
     // Inquorate but unanimous: store as preliminary value
@@ -201,7 +202,12 @@ export async function handleSubmission(
 
 export function init() {
   kolClient.on("whisper", (whisper) => {
-    void handleSubmission(whisper.who.id, whisper.who.name, whisper.msg, whisper.time);
+    void handleSubmission(
+      whisper.who.id,
+      whisper.who.name,
+      whisper.msg,
+      whisper.time,
+    );
   });
 
   kolClient.on("rollover", (time) => {
