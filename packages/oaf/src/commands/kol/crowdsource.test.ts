@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { SubmissionSummary } from "../../clients/database.js";
@@ -259,7 +260,9 @@ describe("handleSubmission", () => {
         true,
       );
       expect(alert).toHaveBeenCalledWith(
-        expect.objectContaining({ content: expect.stringContaining("Consensus reached") }),
+        expect.objectContaining({
+          content: expect.stringContaining("Consensus reached"),
+        }),
       );
       expect(updateGlobalsMessage).toHaveBeenCalled();
     });
@@ -277,7 +280,9 @@ describe("handleSubmission", () => {
 
       expect(upsertDaily).toHaveBeenCalledWith("snootee", 100, "new", true);
       expect(alert).toHaveBeenCalledWith(
-        expect.objectContaining({ content: expect.stringContaining("Consensus reached") }),
+        expect.objectContaining({
+          content: expect.stringContaining("Consensus reached"),
+        }),
       );
       expect(updateGlobalsMessage).toHaveBeenCalled();
     });
@@ -300,7 +305,9 @@ describe("handleSubmission", () => {
         true,
       );
       expect(alert).toHaveBeenCalledWith(
-        expect.objectContaining({ content: expect.stringContaining("Consensus reached") }),
+        expect.objectContaining({
+          content: expect.stringContaining("Consensus reached"),
+        }),
       );
       expect(updateGlobalsMessage).toHaveBeenCalled();
     });
@@ -334,7 +341,9 @@ describe("handleSubmission", () => {
       await handleSubmission(1, "Player One", "snootee:wrongvalue");
 
       expect(alert).toHaveBeenCalledWith(
-        expect.stringContaining("Disagreeing submission"),
+        expect.objectContaining({
+          content: expect.stringContaining("Disagreeing submission"),
+        }),
       );
       expect(updateGlobalsMessage).not.toHaveBeenCalled();
     });
@@ -355,7 +364,9 @@ describe("handleSubmission", () => {
       await handleSubmission(1, "player", "snootee:testvalue");
 
       expect(alert).toHaveBeenCalledWith(
-        expect.objectContaining({ content: expect.stringContaining("Dissenters") }),
+        expect.objectContaining({
+          content: expect.stringContaining("Dissenters"),
+        }),
       );
     });
 
@@ -375,7 +386,9 @@ describe("handleSubmission", () => {
       await handleSubmission(1, "player", "snootee:testvalue");
 
       expect(alert).toHaveBeenCalledWith(
-        expect.objectContaining({ content: expect.not.stringContaining("Dissenters") }),
+        expect.objectContaining({
+          content: expect.not.stringContaining("Dissenters"),
+        }),
       );
     });
 
