@@ -360,7 +360,7 @@ describe("rollover handling", () => {
     vi.useRealTimers();
   });
 
-  it("emits rollover event after recovery when login succeeds", async () => {
+  it("emits rollover event when recovery is detected", async () => {
     vi.useFakeTimers();
     const client = new Client("", "");
 
@@ -369,38 +369,17 @@ describe("rollover handling", () => {
       () => "The system is currently down for nightly maintenance",
     );
     await client.login();
+    expect(client.isRollover()).toBe(true);
 
-    // Recover: checkForRollover sees normal page, then login flow works
-    let callCount = 0;
-    client.session = mockSession(() => {
-      callCount++;
-      // Call 1: #checkForRollover fetches login.php (normal)
-      if (callCount === 1) return "<html>normal login page</html>";
-      // Call 2+: checkLoggedIn/login succeed
-      return { pwd: "abc123" };
-    });
-
-    await vi.advanceTimersByTimeAsync(60_000);
-    expect(client.isRollover()).toBe(false);
-
-    // login needs checkLoggedIn to FAIL first so it goes through the
-    // full login flow where the latch is checked. Make first checkLoggedIn
-    // fail (no session yet), then login POST + second checkLoggedIn succeed.
-    callCount = 0;
-    client.session = mockSession(() => {
-      callCount++;
-      // Call 1: checkLoggedIn → returns non-object (fails validation)
-      if (callCount === 1) return "<html>not logged in</html>";
-      // Call 2: login POST → success (no rollover pattern)
-      if (callCount === 2) return "<html>game frameset</html>";
-      // Call 3: second checkLoggedIn → success
-      return { pwd: "def456" };
-    });
-
+    // Listen for rollover event
     const rolloverSpy = vi.fn();
     client.on("rollover", rolloverSpy);
-    const loggedIn = await client.login();
-    expect(loggedIn).toBe(true);
+
+    // Recover: #checkForRollover sees normal page → emits rollover event
+    client.session = mockSession(() => "<html>normal login page</html>");
+    await vi.advanceTimersByTimeAsync(60_000);
+
+    expect(client.isRollover()).toBe(false);
     expect(rolloverSpy).toHaveBeenCalledOnce();
 
     vi.useRealTimers();
