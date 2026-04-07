@@ -123,7 +123,6 @@ export class Client extends Emittery<Events> {
   #pwd = "";
 
   private lastFetchedMessages = "0";
-  #postRolloverLatch = false;
 
   constructor(username: string, password: string) {
     super();
@@ -210,11 +209,6 @@ export class Client extends Emittery<Events> {
 
       if (!(await this.checkLoggedIn())) return false;
 
-      if (this.#postRolloverLatch) {
-        this.#postRolloverLatch = false;
-        this.emit("rollover", new Date());
-      }
-
       return true;
     } catch (error) {
       if (!(error instanceof RolloverError)) {
@@ -252,12 +246,14 @@ export class Client extends Emittery<Events> {
       const isRollover = Client.#rolloverPattern.test(html);
 
       if (this.#isRollover && !isRollover) {
-        this.#postRolloverLatch = true;
+        this.#isRollover = false;
+        await this.emit("rollover", new Date());
+        return;
       }
 
       this.#isRollover = isRollover;
     } catch {
-      // Can't reach server — don't change rollover state
+      // Can't reach server or handler failed — don't change rollover state
     }
 
     if (this.#isRollover && !this.#rolloverCheckScheduled) {
@@ -382,7 +378,7 @@ export class Client extends Emittery<Events> {
   async checkKmails() {
     const kmails = await this.fetchKmails();
     await this.deleteKmails(kmails.map((k) => k.id));
-    kmails.forEach((m) => this.emit("kmail", m));
+    for (const m of kmails) await this.emit("kmail", m);
   }
 
   async sendChat(message: string) {
