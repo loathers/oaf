@@ -121,6 +121,7 @@ export class Client extends Emittery<Events> {
   #rolloverCheckScheduled = false;
   #chatBotStarted = false;
   #pwd = "";
+  #loginPromise: Promise<boolean> | null = null;
 
   private lastFetchedMessages = "0";
 
@@ -188,6 +189,16 @@ export class Client extends Emittery<Events> {
   }
 
   async login(): Promise<boolean> {
+    if (this.#loginPromise) return this.#loginPromise;
+    this.#loginPromise = this.#doLogin();
+    try {
+      return await this.#loginPromise;
+    } finally {
+      this.#loginPromise = null;
+    }
+  }
+
+  async #doLogin(): Promise<boolean> {
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
     try {

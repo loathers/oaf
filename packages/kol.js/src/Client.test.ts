@@ -289,6 +289,52 @@ describe("fetchText error handling", () => {
   });
 });
 
+describe("login deduplication", () => {
+  it("concurrent login() calls share one in-flight request", async () => {
+    const client = new Client("", "");
+    let loginPostCount = 0;
+
+    // First checkLoggedIn fails, login POST succeeds, second checkLoggedIn succeeds
+    let callCount = 0;
+    client.session = mockSession(() => {
+      callCount++;
+      if (callCount === 1) return "<html>not logged in</html>";
+      if (callCount === 2) {
+        loginPostCount++;
+        return "<html>game frameset</html>";
+      }
+      return { pwd: "abc123" };
+    });
+
+    // Fire three concurrent login() calls
+    const results = await Promise.all([
+      client.login(),
+      client.login(),
+      client.login(),
+    ]);
+
+    expect(results).toEqual([true, true, true]);
+    expect(loginPostCount).toBe(1);
+  });
+
+  it("allows a new login after the first one completes", async () => {
+    const client = new Client("", "");
+    let loginPostCount = 0;
+
+    client.session = mockSession(() => {
+      loginPostCount++;
+      // checkLoggedIn succeeds immediately
+      return { pwd: "abc123" };
+    });
+
+    await client.login();
+    await client.login();
+
+    // Each login() call is independent (not deduplicated) since the first completed
+    expect(loginPostCount).toBe(2);
+  });
+});
+
 describe("rollover handling", () => {
   it("detects rollover from login.php response", async () => {
     const client = new Client("", "");
