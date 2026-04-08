@@ -168,14 +168,12 @@ export async function handleSubmission(
       const activeDissenters = dissenters.filter(
         (d) => !d.crowdsourcingIgnored,
       );
-      const dissenterSuffix =
-        activeDissenters.length > 0
-          ? ` Dissenters:\n${activeDissenters.map(formatDissenter).join("\n")}`
-          : "";
-      await discordClient.alert({
-        content: `Consensus reached for **${key}** = \`${summary.value}\` (${summary.topCount} votes).${dissenterSuffix}`,
-        components: ignoreButtonsFor(activeDissenters),
-      });
+      if (activeDissenters.length > 0) {
+        await discordClient.alert({
+          content: `Consensus reached for **${key}** = \`${summary.value}\` (${summary.topCount} votes). Dissenters:\n${activeDissenters.map(formatDissenter).join("\n")}`,
+          components: ignoreButtonsFor(activeDissenters),
+        });
+      }
       await updateGlobalsMessage();
     } else if (value !== summary.value) {
       if (await isPlayerIgnoredForCrowdsourcing(playerId)) return;

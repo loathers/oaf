@@ -207,6 +207,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 export function init() {
   kolClient.on("rollover", () => {
+    void discordClient.alert("Rollover is complete");
+  });
+
+  kolClient.on("rollover", () => {
     void (async () => {
       try {
         await onRollover();

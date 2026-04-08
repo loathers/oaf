@@ -247,7 +247,7 @@ describe("handleSubmission", () => {
   });
 
   describe("consensus reached (topCount >= threshold)", () => {
-    test("creates daily with thresholdReached=true and alerts on new consensus", async () => {
+    test("creates daily with thresholdReached=true on new consensus", async () => {
       getSubmissionSummaryForKey.mockResolvedValueOnce(summary(5, 5));
       getDaily.mockResolvedValueOnce(undefined);
 
@@ -259,16 +259,12 @@ describe("handleSubmission", () => {
         "testvalue",
         true,
       );
-      expect(alert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("Consensus reached"),
-        }),
-      );
+      expect(alert).not.toHaveBeenCalled();
       expect(updateGlobalsMessage).toHaveBeenCalled();
     });
 
-    test("alerts when value changes at consensus", async () => {
-      getSubmissionSummaryForKey.mockResolvedValueOnce(summary(5, 6, "new"));
+    test("updates daily when value changes at consensus without dissent", async () => {
+      getSubmissionSummaryForKey.mockResolvedValueOnce(summary(5, 5, "new"));
       getDaily.mockResolvedValueOnce({
         key: "snootee",
         gameday: 100,
@@ -279,15 +275,11 @@ describe("handleSubmission", () => {
       await handleSubmission(1, "player", "snootee:new");
 
       expect(upsertDaily).toHaveBeenCalledWith("snootee", 100, "new", true);
-      expect(alert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("Consensus reached"),
-        }),
-      );
+      expect(alert).not.toHaveBeenCalled();
       expect(updateGlobalsMessage).toHaveBeenCalled();
     });
 
-    test("alerts when preliminary value reaches consensus", async () => {
+    test("updates daily when preliminary value reaches consensus without dissent", async () => {
       getSubmissionSummaryForKey.mockResolvedValueOnce(summary(5, 5));
       getDaily.mockResolvedValueOnce({
         key: "snootee",
@@ -304,11 +296,7 @@ describe("handleSubmission", () => {
         "testvalue",
         true,
       );
-      expect(alert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.stringContaining("Consensus reached"),
-        }),
-      );
+      expect(alert).not.toHaveBeenCalled();
       expect(updateGlobalsMessage).toHaveBeenCalled();
     });
 
@@ -370,7 +358,7 @@ describe("handleSubmission", () => {
       );
     });
 
-    test("excludes ignored dissenters from consensus alert", async () => {
+    test("does not alert when all dissenters are ignored", async () => {
       getSubmissionSummaryForKey.mockResolvedValueOnce(summary(5, 6));
       getDaily.mockResolvedValueOnce(undefined);
       getDissentersForKey.mockResolvedValueOnce([
@@ -385,11 +373,7 @@ describe("handleSubmission", () => {
 
       await handleSubmission(1, "player", "snootee:testvalue");
 
-      expect(alert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          content: expect.not.stringContaining("Dissenters"),
-        }),
-      );
+      expect(alert).not.toHaveBeenCalled();
     });
 
     test("does not alert for disagreeing submission from ignored player", async () => {
