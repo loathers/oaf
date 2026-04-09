@@ -1,5 +1,5 @@
 import { Events, ThreadAutoArchiveDuration, blockQuote } from "discord.js";
-import { type ChatMessage } from "kol.js";
+import { type ChatMessage } from "kol.js/domains/ChatMailbox";
 import { dedent } from "ts-dedent";
 
 import { discordClient } from "../../clients/discord.js";

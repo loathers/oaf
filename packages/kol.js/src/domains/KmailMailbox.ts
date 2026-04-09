@@ -3,15 +3,8 @@ import { type AnyNode, Element } from "domhandler";
 import { decodeHTML } from "entities";
 import { parseDocument } from "htmlparser2";
 
-import type { Client } from "../Client.js";
 import { Player } from "../Player.js";
-
-export type Message = {
-  type: "private" | "system" | "public" | "kmail";
-  who: Player;
-  msg: string;
-  time: Date;
-};
+import { type Message, Mailbox } from "./Mailbox.js";
 
 export type KmailItem = {
   id: number;
@@ -68,7 +61,7 @@ function extractMeatFromHtml(html: string): number {
   return Number(match[1].replace(/,/g, ""));
 }
 
-export class Kmail {
+export class KmailMailbox extends Mailbox<KmailMessage> {
   static parse(
     rawMessage: string,
     type: string,
@@ -119,17 +112,11 @@ export class Kmail {
     };
   }
 
-  #client: Client;
-
-  constructor(client: Client) {
-    this.#client = client;
-  }
-
   async fetch(): Promise<KmailMessage[]> {
-    const kmails = await this.#client.fetchJson<RawKmail[]>("api.php", {
+    const kmails = await this.client.fetchJson<RawKmail[]>("api.php", {
       query: {
         what: "kmail",
-        for: `${this.#client.username} bot`,
+        for: `${this.client.username} bot`,
       },
     });
 
@@ -138,16 +125,16 @@ export class Kmail {
     return kmails.map((msg: RawKmail) => ({
       id: Number(msg.id),
       type: "kmail" as const,
-      who: new Player(this.#client, Number(msg.fromid), msg.fromname),
+      who: new Player(this.client, Number(msg.fromid), msg.fromname),
       time: new Date(Number(msg.azunixtime) * 1000),
-      ...Kmail.parse(msg.message, msg.type),
+      ...KmailMailbox.parse(msg.message, msg.type),
     }));
   }
 
   async delete(ids: number[]) {
     if (ids.length === 0) return true;
 
-    const response = await this.#client.fetchText("messages.php", {
+    const response = await this.client.fetchText("messages.php", {
       form: {
         the_action: "delete",
         box: "Inbox",
@@ -163,11 +150,11 @@ export class Kmail {
   async check() {
     const kmails = await this.fetch();
     await this.delete(kmails.map((k) => k.id));
-    for (const m of kmails) await this.#client.emit("kmail", m);
+    for (const m of kmails) await this.client.emit("kmail", m);
   }
 
   async send(recipientId: number, message: string) {
-    await this.#client.fetchText("sendmessage.php", {
+    await this.client.fetchText("sendmessage.php", {
       query: {
         action: "send",
         j: 1,

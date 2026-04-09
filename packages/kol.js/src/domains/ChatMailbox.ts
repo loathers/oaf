@@ -1,6 +1,5 @@
-import type { Client } from "../Client.js";
 import { Player } from "../Player.js";
-import type { Message } from "./Kmail.js";
+import { type Message, Mailbox } from "./Mailbox.js";
 
 type RawChatMessage = {
   who?: Player;
@@ -23,16 +22,11 @@ const isValidMessage = (
   msg: string;
 } => msg.who !== undefined && msg.msg !== undefined;
 
-export class Chat {
-  #client: Client;
+export class ChatMailbox extends Mailbox<ChatMessage> {
   #lastFetchedMessages = "0";
 
-  constructor(client: Client) {
-    this.#client = client;
-  }
-
-  async check() {
-    const newChatMessagesResponse = await this.#client.fetchJson<{
+  async fetch(): Promise<ChatMessage[]> {
+    const response = await this.client.fetchJson<{
       last: string;
       msgs: RawChatMessage[];
     }>("newchatmessages.php", {
@@ -42,32 +36,34 @@ export class Chat {
       },
     });
 
-    this.#lastFetchedMessages = newChatMessagesResponse["last"];
+    this.#lastFetchedMessages = response["last"];
 
-    newChatMessagesResponse["msgs"]
-      .filter(isValidMessage)
-      .map(
-        (msg): ChatMessage => ({
-          type: msg.type,
-          who: new Player(this.#client, Number(msg.who.id), msg.who.name),
-          msg: msg.msg,
-          time: new Date(Number(msg.time) * 1000),
-        }),
-      )
-      .forEach((message) => {
-        switch (message.type) {
-          case "public":
-            return void this.#client.emit("public", message);
-          case "private":
-            return void this.#client.emit("whisper", message);
-          case "system":
-            return void this.#client.emit("system", message);
-        }
-      });
+    return response["msgs"].filter(isValidMessage).map(
+      (msg): ChatMessage => ({
+        type: msg.type,
+        who: new Player(this.client, Number(msg.who.id), msg.who.name),
+        msg: msg.msg,
+        time: new Date(Number(msg.time) * 1000),
+      }),
+    );
+  }
+
+  async check() {
+    const messages = await this.fetch();
+    messages.forEach((message) => {
+      switch (message.type) {
+        case "public":
+          return void this.client.emit("public", message);
+        case "private":
+          return void this.client.emit("whisper", message);
+        case "system":
+          return void this.client.emit("system", message);
+      }
+    });
   }
 
   async macro(command: string) {
-    return await this.#client.fetchJson<{ output: string; msgs: string[] }>(
+    return await this.client.fetchJson<{ output: string; msgs: string[] }>(
       "submitnewchat.php",
       {
         query: {

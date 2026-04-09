@@ -4,8 +4,8 @@ import makeFetchCookie from "fetch-cookie";
 import { ofetch } from "ofetch";
 import { CookieJar } from "tough-cookie";
 
-import { Chat, type ChatMessage } from "./domains/Chat.js";
-import { Kmail, type KmailMessage } from "./domains/Kmail.js";
+import { ChatMailbox, type ChatMessage } from "./domains/ChatMailbox.js";
+import { KmailMailbox, type KmailMessage } from "./domains/KmailMailbox.js";
 import { Players } from "./domains/Players.js";
 import pkg from "../package.json" with { type: "json" };
 import { sanitiseBlueText, wait } from "./utils/utils.js";
@@ -106,8 +106,8 @@ export class Client extends Emittery<Events> {
     { fetch: makeFetchCookie(fetch, this.#cookieJar) },
   );
   players = new Players(this);
-  chat = new Chat(this);
-  kmail = new Kmail(this);
+  chat = new ChatMailbox(this);
+  kmail = new KmailMailbox(this);
 
   #username: string;
   #password: string;

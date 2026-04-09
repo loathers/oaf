@@ -1,4 +1,4 @@
-import { type KmailMessage } from "kol.js";
+import { type KmailMessage } from "kol.js/domains/KmailMailbox";
 
 import { discordClient } from "./clients/discord.js";
 import { greenboxClient } from "./clients/greenbox.js";
