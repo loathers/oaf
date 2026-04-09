@@ -228,7 +228,7 @@ export function init() {
 
       const token = await generatePlayer(playerId);
 
-      await kolClient.whisper(
+      await kolClient.chat.send(
         playerId,
         `Your token is ${token} (expires in ${getRemainingTime(undefined, TOTP_PERIOD) + 120} seconds)`,
       );

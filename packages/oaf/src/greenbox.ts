@@ -1,12 +1,10 @@
-import { type KoLMessage } from "kol.js";
+import { type KmailMessage } from "kol.js/domains/KmailMailbox";
 
 import { discordClient } from "./clients/discord.js";
 import { greenboxClient } from "./clients/greenbox.js";
 import { kolClient } from "./clients/kol.js";
 
-export async function handleGreenboxKmail(message: KoLMessage) {
-  if (message.type !== "kmail") return;
-
+export async function handleGreenboxKmail(message: KmailMessage) {
   // Remove spaces - KoL adds weird spaces to long messages.
   const text = message.msg.replace(/ /g, "").slice(9);
 
@@ -41,7 +39,7 @@ async function update(
       undefined,
       `Failed to update greenbox for player ${playerId}: ${String(error)}`,
     );
-    await kolClient.kmail(
+    await kolClient.kmail.send(
       playerId,
       "There was an error processing your greenbox submission",
     );
@@ -52,7 +50,7 @@ async function wipe(playerId: number) {
   try {
     const response = await greenboxClient.wipe(playerId);
     console.log(`Wiped greenbox for player ${playerId}`, response);
-    await kolClient.kmail(
+    await kolClient.kmail.send(
       playerId,
       "At your request, your public greenbox profile, if it existed, has been removed",
     );
@@ -62,7 +60,7 @@ async function wipe(playerId: number) {
       undefined,
       `Failed to wipe greenbox for player ${playerId}: ${String(error)}`,
     );
-    await kolClient.kmail(
+    await kolClient.kmail.send(
       playerId,
       "There was an error processing your greenbox wipe request",
     );

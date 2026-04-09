@@ -9,4 +9,3 @@ export {
   toWikiLink,
   parseKoLNumber,
 } from "./utils/utils.js";
-export type { KmailItem, KoLMessage } from "./utils/kmail.js";

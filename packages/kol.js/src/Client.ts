@@ -4,17 +4,9 @@ import makeFetchCookie from "fetch-cookie";
 import { ofetch } from "ofetch";
 import { CookieJar } from "tough-cookie";
 
-import { Player } from "./Player.js";
+import { ChatMailbox, type ChatMessage } from "./domains/ChatMailbox.js";
+import { KmailMailbox, type KmailMessage } from "./domains/KmailMailbox.js";
 import { Players } from "./domains/Players.js";
-import {
-  type ChatMessage,
-  type KmailMessage,
-  type KoLChatMessage,
-  type KoLKmail,
-  type KoLMessage,
-  isValidMessage,
-  parseKmailMessage,
-} from "./utils/kmail.js";
 import pkg from "../package.json" with { type: "json" };
 import { sanitiseBlueText, wait } from "./utils/utils.js";
 
@@ -59,9 +51,9 @@ function formToBody(form: FormData): URLSearchParams {
 
 type Events = {
   kmail: KmailMessage;
-  whisper: KoLMessage;
-  system: KoLMessage;
-  public: KoLMessage;
+  whisper: ChatMessage;
+  system: ChatMessage;
+  public: ChatMessage;
   rollover: Date;
 };
 
@@ -114,6 +106,8 @@ export class Client extends Emittery<Events> {
     { fetch: makeFetchCookie(fetch, this.#cookieJar) },
   );
   players = new Players(this);
+  chat = new ChatMailbox(this);
+  kmail = new KmailMailbox(this);
 
   #username: string;
   #password: string;
@@ -122,8 +116,6 @@ export class Client extends Emittery<Events> {
   #chatBotStarted = false;
   #pwd = "";
   #loginPromise: Promise<boolean> | null = null;
-
-  private lastFetchedMessages = "0";
 
   constructor(username: string, password: string) {
     super();
@@ -288,7 +280,7 @@ export class Client extends Emittery<Events> {
 
   async #joinChat() {
     try {
-      await this.useChatMacro("/join talkie");
+      await this.chat.macro("/join talkie");
     } catch (error) {
       if (!(error instanceof RolloverError)) {
         console.error("Failed to join chat:", error);
@@ -299,7 +291,7 @@ export class Client extends Emittery<Events> {
   private async loopChatBot() {
     while (true) {
       try {
-        await Promise.all([this.checkMessages(), this.checkKmails()]);
+        await Promise.all([this.chat.check(), this.kmail.check()]);
       } catch (error) {
         if (error instanceof AuthError) throw error;
         if (!(error instanceof RolloverError)) {
@@ -313,129 +305,9 @@ export class Client extends Emittery<Events> {
     }
   }
 
-  async checkMessages() {
-    const newChatMessagesResponse = await this.fetchJson<{
-      last: string;
-      msgs: KoLChatMessage[];
-    }>("newchatmessages.php", {
-      query: {
-        j: 1,
-        lasttime: this.lastFetchedMessages,
-      },
-    });
-
-    this.lastFetchedMessages = newChatMessagesResponse["last"];
-
-    newChatMessagesResponse["msgs"]
-      .filter(isValidMessage)
-      .map(
-        (msg): ChatMessage => ({
-          type: msg.type as ChatMessage["type"],
-          who: new Player(this, Number(msg.who.id), msg.who.name),
-          msg: msg.msg,
-          time: new Date(Number(msg.time) * 1000),
-        }),
-      )
-      .forEach((message) => {
-        switch (message.type) {
-          case "public":
-            return void this.emit("public", message);
-          case "private":
-            return void this.emit("whisper", message);
-          case "system":
-            return void this.emit("system", message);
-        }
-      });
-  }
-
   async fetchStatus(): Promise<ApiStatus> {
     return this.fetchJson<ApiStatus>("api.php", {
       query: { what: "status", for: `${this.#username} bot` },
-    });
-  }
-
-  async fetchKmails(): Promise<KmailMessage[]> {
-    const kmails = await this.fetchJson<KoLKmail[]>("api.php", {
-      query: {
-        what: "kmail",
-        for: `${this.#username} bot`,
-      },
-    });
-
-    if (!Array.isArray(kmails) || kmails.length === 0) return [];
-
-    return kmails.map((msg: KoLKmail) => ({
-      id: Number(msg.id),
-      type: "kmail" as const,
-      who: new Player(this, Number(msg.fromid), msg.fromname),
-      time: new Date(Number(msg.azunixtime) * 1000),
-      ...parseKmailMessage(msg.message, msg.type),
-    }));
-  }
-
-  async deleteKmails(ids: number[]) {
-    if (ids.length === 0) return true;
-
-    const response = await this.fetchText("messages.php", {
-      form: {
-        the_action: "delete",
-        box: "Inbox",
-        ...Object.fromEntries(ids.map((id) => [`sel${id}`, "on"])),
-      },
-    });
-
-    return response.includes(
-      `<td>${ids.length} message${ids.length === 1 ? "" : "s"} deleted.</td>`,
-    );
-  }
-
-  async checkKmails() {
-    const kmails = await this.fetchKmails();
-    await this.deleteKmails(kmails.map((k) => k.id));
-    for (const m of kmails) await this.emit("kmail", m);
-  }
-
-  async sendChat(message: string) {
-    return await this.fetchJson<{ output: string; msgs: string[] }>(
-      "submitnewchat.php",
-      {
-        query: {
-          graf: message,
-          j: 1,
-        },
-      },
-    );
-  }
-
-  async getUpdates() {
-    const result = await this.sendChat("/updates");
-    return [
-      ...result.output.matchAll(
-        /<p><b>[A-za-z]+ \d+<\/b> - (.*?)(?=<p>(?:<b>|<hr>))/g,
-      ),
-    ].map((m) => m[1]);
-  }
-
-  async useChatMacro(macro: string) {
-    return await this.sendChat(`/clan ${macro}`);
-  }
-
-  async whisper(recipientId: number, message: string) {
-    await this.useChatMacro(`/w ${recipientId} ${message}`);
-  }
-
-  async kmail(recipientId: number, message: string) {
-    await this.fetchText("sendmessage.php", {
-      query: {
-        action: "send",
-        j: 1,
-        towho: recipientId,
-        contact: 0,
-        message: message,
-        howmany1: 1,
-        whichitem1: 0,
-        sendmeat: 0,
-      },
     });
   }
 
