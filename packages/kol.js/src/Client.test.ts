@@ -216,6 +216,58 @@ describe("Familiars", () => {
   });
 });
 
+describe("fetchKmails", () => {
+  it("returns parsed kmails for a valid array response", async () => {
+    const client = new Client("", "");
+    vi.spyOn(client, "fetchJson").mockResolvedValueOnce([
+      {
+        id: "123",
+        fromid: "456",
+        fromname: "TestPlayer",
+        azunixtime: "1698787642",
+        message: "hello",
+        type: "normal",
+      },
+    ]);
+
+    const result = await client.fetchKmails();
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: 123,
+      type: "kmail",
+      msg: "hello",
+    });
+  });
+
+  it("returns empty array for empty array response", async () => {
+    const client = new Client("", "");
+    vi.spyOn(client, "fetchJson").mockResolvedValueOnce([]);
+
+    const result = await client.fetchKmails();
+
+    expect(result).toEqual([]);
+  });
+
+  it("returns empty array when API returns an object instead of array", async () => {
+    const client = new Client("", "");
+    vi.spyOn(client, "fetchJson").mockResolvedValueOnce({});
+
+    const result = await client.fetchKmails();
+
+    expect(result).toEqual([]);
+  });
+
+  it("returns empty array when API returns null", async () => {
+    const client = new Client("", "");
+    vi.spyOn(client, "fetchJson").mockResolvedValueOnce(null);
+
+    const result = await client.fetchKmails();
+
+    expect(result).toEqual([]);
+  });
+});
+
 describe("fetchJson error handling", () => {
   it("throws on non-login errors", async () => {
     const client = new Client("", "");

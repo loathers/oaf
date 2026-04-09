@@ -305,6 +305,9 @@ export class Client extends Emittery<Events> {
         if (!(error instanceof RolloverError)) {
           console.error("Chat bot loop error:", error);
         }
+        if (!this.#isRollover) {
+          await this.#checkForRollover();
+        }
       }
       await wait(this.#isRollover ? 60_000 : 3000);
     }
@@ -359,7 +362,7 @@ export class Client extends Emittery<Events> {
       },
     });
 
-    if (kmails.length === 0) return [];
+    if (!Array.isArray(kmails) || kmails.length === 0) return [];
 
     return kmails.map((msg: KoLKmail) => ({
       id: Number(msg.id),
