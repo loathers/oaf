@@ -1,9 +1,64 @@
-import { describe, expect, it } from "vitest";
-import { parseKmailMessage } from "./kmail.js";
+import { describe, expect, it, vi } from "vitest";
 
-describe("Kmail parsing", () => {
+import type { Client } from "../Client.js";
+import { Kmail } from "./Kmail.js";
+
+function mockClient(fetchJson: () => unknown) {
+  return { fetchJson: vi.fn().mockResolvedValueOnce(fetchJson()), username: "oaf" } as unknown as Client;
+}
+
+describe("kmail.fetch", () => {
+  it("returns parsed kmails for a valid array response", async () => {
+    const client = mockClient(() => [
+      {
+        id: "123",
+        fromid: "456",
+        fromname: "TestPlayer",
+        azunixtime: "1698787642",
+        message: "hello",
+        type: "normal",
+      },
+    ]);
+    const kmail = new Kmail(client);
+
+    const result = await kmail.fetch();
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      id: 123,
+      type: "kmail",
+      msg: "hello",
+    });
+  });
+
+  it("returns empty array for empty array response", async () => {
+    const kmail = new Kmail(mockClient(() => []));
+
+    const result = await kmail.fetch();
+
+    expect(result).toEqual([]);
+  });
+
+  it("returns empty array when API returns an object instead of array", async () => {
+    const kmail = new Kmail(mockClient(() => ({})));
+
+    const result = await kmail.fetch();
+
+    expect(result).toEqual([]);
+  });
+
+  it("returns empty array when API returns null", async () => {
+    const kmail = new Kmail(mockClient(() => null));
+
+    const result = await kmail.fetch();
+
+    expect(result).toEqual([]);
+  });
+});
+
+describe("parseKmailMessage", () => {
   it("strips a valentine", () => {
-    const result = parseKmailMessage(
+    const result = Kmail.parse(
       "<center><table><tr><td><img src=\"https://d2uyhvukfffg5a.cloudfront.net/adventureimages/smiley.gif\" width=100 height=100></td><td valign=center>You zerg rush'd my heart<br>Your love gets me high<br>Come give me a kiss<br>You're oh em gee KAWAIIIIIIII!!11!!11!!!?!!?!</td></tr></table></center>",
       "normal",
     );
@@ -16,7 +71,7 @@ describe("Kmail parsing", () => {
   });
 
   it("parses a kmail with items and a message", () => {
-    const result = parseKmailMessage(
+    const result = Kmail.parse(
       'Enjoy!<center><table class="item" style="float: none" rel="id=641&s=14&q=0&d=1&g=0&t=1&n=1&m=0&p=0&u=e"><tr><td><img src="https://d2uyhvukfffg5a.cloudfront.net/itemimages/toast.gif" alt="toast" title="toast" class=hand onClick=\'descitem(931984879)\' ></td><td valign=center class=effect>You acquire an item: <b>toast</b></td></tr></table></center>',
       "normal",
     );
@@ -31,7 +86,7 @@ describe("Kmail parsing", () => {
   });
 
   it("parses a kmail with items but no message", () => {
-    const result = parseKmailMessage(
+    const result = Kmail.parse(
       '<center><table class="item" style="float: none" rel="id=6863&s=1&q=0&d=1&g=0&t=1&n=2&m=0&p=0&u=e"><tr><td><img src="https://d2uyhvukfffg5a.cloudfront.net/itemimages/butterpat.gif" alt="pat of butter" title="pat of butter" class=hand onClick=\'descitem(310457727)\' ></td><td valign=center class=effect>You acquire <b>2 pats of butter</b></td></tr></table></center>',
       "normal",
     );
@@ -51,7 +106,7 @@ describe("Kmail parsing", () => {
   });
 
   it("parses a kmail with meat", () => {
-    const result = parseKmailMessage(
+    const result = Kmail.parse(
       "<center>You acquire <b>5,000</b> Meat.<br>You gain 5,000 Meat</center>",
       "normal",
     );
@@ -63,7 +118,7 @@ describe("Kmail parsing", () => {
   });
 
   it("parses a kmail with items and meat", () => {
-    const result = parseKmailMessage(
+    const result = Kmail.parse(
       'Here you go<center><table class="item" style="float: none" rel="id=641&s=14&q=0&d=1&g=0&t=1&n=1&m=0&p=0&u=e"><tr><td><img src="https://d2uyhvukfffg5a.cloudfront.net/itemimages/toast.gif" alt="toast" title="toast" class=hand onClick=\'descitem(931984879)\' ></td><td valign=center class=effect>You acquire an item: <b>toast</b></td></tr></table></center><center>You gain 1,000 Meat</center>',
       "normal",
     );
@@ -77,7 +132,7 @@ describe("Kmail parsing", () => {
   });
 
   it("parses a plain text kmail", () => {
-    const result = parseKmailMessage("Hello there!", "normal");
+    const result = Kmail.parse("Hello there!", "normal");
 
     expect(result.msg).toBe("Hello there!");
     expect(result.valentine).toBeNull();
@@ -87,7 +142,7 @@ describe("Kmail parsing", () => {
   });
 
   it("parses a gift shop kmail", () => {
-    const result = parseKmailMessage(
+    const result = Kmail.parse(
       "Thanks for everything!<p>Inside Note:<p>Hope you enjoy this!",
       "giftshop",
     );
@@ -100,7 +155,7 @@ describe("Kmail parsing", () => {
   });
 
   it("decodes HTML entities", () => {
-    const result = parseKmailMessage(
+    const result = Kmail.parse(
       "That&apos;s a &quot;great&quot; idea &amp; I love it",
       "normal",
     );

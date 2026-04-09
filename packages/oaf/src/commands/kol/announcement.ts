@@ -1,18 +1,18 @@
 import { Events, ThreadAutoArchiveDuration, blockQuote } from "discord.js";
-import { type KoLMessage } from "kol.js";
+import { type ChatMessage } from "kol.js";
 import { dedent } from "ts-dedent";
 
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 
-function isAnnouncement(message: KoLMessage) {
+function isAnnouncement(message: ChatMessage) {
   return !/^(The system will go down for nightly maintenance in \d+ minutes?|Rollover is over).$/.test(
     message.msg,
   );
 }
 
-function isUpdatesMessage(message: KoLMessage) {
+function isUpdatesMessage(message: ChatMessage) {
   return (
     message.msg ===
     "A new update has been posted. Use the /updates command to read it."
@@ -25,7 +25,7 @@ function listenForAnnouncements() {
       if (!isAnnouncement(systemMessage)) return;
 
       const announcement = isUpdatesMessage(systemMessage)
-        ? (await kolClient.getUpdates())[0]
+        ? (await kolClient.chat.getUpdates())[0]
         : systemMessage.msg;
 
       const guild = await discordClient.guilds.fetch(config.GUILD_ID);

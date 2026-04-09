@@ -9,4 +9,5 @@ export {
   toWikiLink,
   parseKoLNumber,
 } from "./utils/utils.js";
-export type { KmailItem, KoLMessage } from "./utils/kmail.js";
+export type { ChatMessage } from "./domains/Chat.js";
+export type { KmailItem, KmailMessage, Message } from "./domains/Kmail.js";

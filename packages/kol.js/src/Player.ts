@@ -35,7 +35,7 @@ export class Player {
   }
 
   async isOnline(): Promise<boolean> {
-    const response = await this.#client.useChatMacro(`/whois ${this.name}`);
+    const response = await this.#client.chat.macro(`/whois ${this.name}`);
     return response.output.includes("This player is currently online");
   }
 
