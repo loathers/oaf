@@ -54,6 +54,7 @@ function getRealWorldHoliday(realDate: Date): string | undefined {
     ["0,1", "Festival of Jarlsberg"],
     ["1,14", "Valentine's Day"],
     ["2,17", "St. Sneaky Pete's Day"],
+    ["3,1", "April Fools Day"],
     [`${easterMonth},${easterDate}`, "Oyster Egg Day"],
     ["6,4", "Dependence Day"],
     ["9,31", "Halloween"],

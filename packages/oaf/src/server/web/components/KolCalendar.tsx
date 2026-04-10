@@ -1,6 +1,7 @@
 import { LoathingDate } from "kol.js";
 import React from "react";
 
+import { BouncingEmoji } from "./BouncingEmoji.js";
 import CalendarNav from "./CalendarNav.js";
 import { HOLIDAY_EMOJI } from "./holidayEmoji.js";
 
