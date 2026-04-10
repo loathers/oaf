@@ -122,6 +122,9 @@ export class KmailMailbox extends Mailbox<KmailMessage> {
     });
 
     if (!Array.isArray(kmails)) {
+      console.log(
+        `[rollover] kmail api.php returned non-array: ${JSON.stringify(kmails)}`,
+      );
       throw new RolloverError();
     }
 
