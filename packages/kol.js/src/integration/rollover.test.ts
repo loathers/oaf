@@ -1,21 +1,22 @@
-import { type Server, createServer } from "node:http";
 import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "vitest";
+  type IncomingMessage,
+  type Server,
+  type ServerResponse,
+  createServer,
+} from "node:http";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { Client } from "../Client.js";
 import { RolloverError } from "../errors.js";
 import { loadFixture } from "../testUtils.js";
 
 class TestClient extends Client {
+  private server: Server;
+  private port = 0;
+  private rollover = false;
+
   protected override get baseURL() {
-    return `http://127.0.0.1:${port}`;
+    return `http://127.0.0.1:${this.port}`;
   }
 
   protected override get pollInterval() {
@@ -25,72 +26,53 @@ class TestClient extends Client {
   protected override get rolloverCheckInterval() {
     return 100;
   }
-}
 
-let server: Server;
-let port: number;
-let state: "normal" | "rollover" = "normal";
+  constructor() {
+    super("testuser", "testpass");
+    this.server = createServer((req, res) => this.handle(req, res));
+  }
 
-function startServer(): Promise<void> {
-  return new Promise((resolve) => {
-    server = createServer((req, res) => {
-      const url = new URL(req.url ?? "/", `http://127.0.0.1`);
-      const path = url.pathname.replace(/^\//, "");
+  async start() {
+    return new Promise<void>((resolve) => {
+      this.server.listen(0, "127.0.0.1", () => {
+        const addr = this.server.address();
+        this.port = typeof addr === "object" && addr ? addr.port : 0;
+        resolve();
+      });
+    });
+  }
 
-      if (state === "rollover") {
-        if (path === "login.php") {
-          res.writeHead(200, { "content-type": "text/html" });
-          loadFixture(__dirname, "login_maintenance.html").then((html) =>
-            res.end(html),
-          );
-          return;
-        }
-        if (path === "api.php") {
-          // TODO: verify this is what KoL actually returns during rollover
-          res.writeHead(200, { "content-type": "application/json" });
-          res.end("{}");
-          return;
-        }
-        if (path === "newchatmessages.php") {
-          // TODO: verify this is what KoL actually returns during rollover
-          res.writeHead(200, { "content-type": "application/json" });
-          res.end(JSON.stringify({ last: "0", msgs: [] }));
-          return;
-        }
-        if (path === "submitnewchat.php") {
-          res.writeHead(200, { "content-type": "application/json" });
-          res.end(JSON.stringify({ output: "", msgs: [] }));
-          return;
-        }
-        res.writeHead(302, { location: "/login.php" });
-        res.end();
-        return;
-      }
+  simulateRollover(rollover: boolean) {
+    this.rollover = rollover;
+  }
 
-      // Normal operation
+  dispose() {
+    this.stopChatBot();
+    this.server.close();
+  }
+
+  private handle(req: IncomingMessage, res: ServerResponse) {
+    const url = new URL(req.url ?? "/", `http://127.0.0.1`);
+    const path = url.pathname.replace(/^\//, "");
+
+    if (this.rollover) {
       if (path === "login.php") {
         res.writeHead(200, { "content-type": "text/html" });
-        loadFixture(__dirname, "login_normal.html").then((html) =>
+        loadFixture(__dirname, "login_maintenance.html").then((html) =>
           res.end(html),
         );
         return;
       }
       if (path === "api.php") {
-        const what = url.searchParams.get("what");
-        if (what === "status") {
-          res.writeHead(200, { "content-type": "application/json" });
-          res.end(JSON.stringify({ pwd: "abc123" }));
-          return;
-        }
-        if (what === "kmail") {
-          res.writeHead(200, { "content-type": "application/json" });
-          res.end("[]");
-          return;
-        }
+        // TODO: verify with real rollover response
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end("{}");
+        return;
       }
       if (path === "newchatmessages.php") {
+        // TODO: verify with real rollover response
         res.writeHead(200, { "content-type": "application/json" });
-        res.end(JSON.stringify({ last: "1", msgs: [] }));
+        res.end(JSON.stringify({ last: "0", msgs: [] }));
         return;
       }
       if (path === "submitnewchat.php") {
@@ -98,59 +80,86 @@ function startServer(): Promise<void> {
         res.end(JSON.stringify({ output: "", msgs: [] }));
         return;
       }
-
-      res.writeHead(404);
+      res.writeHead(302, { location: "/login.php" });
       res.end();
-    });
+      return;
+    }
 
-    server.listen(0, "127.0.0.1", () => {
-      const addr = server.address();
-      port = typeof addr === "object" && addr ? addr.port : 0;
-      resolve();
-    });
-  });
+    // Normal operation
+    if (path === "login.php") {
+      res.writeHead(200, { "content-type": "text/html" });
+      loadFixture(__dirname, "login_normal.html").then((html) =>
+        res.end(html),
+      );
+      return;
+    }
+    if (path === "api.php") {
+      const what = url.searchParams.get("what");
+      if (what === "status") {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ pwd: "abc123" }));
+        return;
+      }
+      if (what === "kmail") {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end("[]");
+        return;
+      }
+    }
+    if (path === "newchatmessages.php") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ last: "1", msgs: [] }));
+      return;
+    }
+    if (path === "submitnewchat.php") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ output: "", msgs: [] }));
+      return;
+    }
+
+    res.writeHead(404);
+    res.end();
+  }
 }
 
 let client: TestClient;
 
-beforeAll(async () => {
-  await startServer();
-});
-
-afterAll(() => {
-  server?.close();
-});
-
-beforeEach(() => {
-  state = "normal";
-  client = new TestClient("testuser", "testpass");
-});
-
 afterEach(() => {
-  client.stopChatBot();
+  client?.dispose();
 });
 
 describe("rollover integration", () => {
   it("login succeeds in normal state", async () => {
+    client = new TestClient();
+    await client.start();
+
     expect(await client.login()).toBe(true);
     expect(client.isRollover()).toBe(false);
   });
 
   it("login fails and detects rollover from maintenance page", async () => {
-    state = "rollover";
+    client = new TestClient();
+    await client.start();
+    client.simulateRollover(true);
 
     expect(await client.login()).toBe(false);
     expect(client.isRollover()).toBe(true);
   });
 
-  it("kmail.fetch throws when API returns non-array during rollover", async () => {
+  it("kmail.fetch throws RolloverError when API returns non-array during rollover", async () => {
+    client = new TestClient();
+    await client.start();
     await client.login();
-    state = "rollover";
+
+    client.simulateRollover(true);
 
     await expect(client.kmail.fetch()).rejects.toBeInstanceOf(RolloverError);
   });
 
-  it("detects rollover and recovers via chat loop", async () => {
+  it("detects rollover and emits event on recovery via chat loop", async () => {
+    client = new TestClient();
+    await client.start();
+
     let rolloverEmitted = false;
     client.on("rollover", () => {
       rolloverEmitted = true;
@@ -158,12 +167,10 @@ describe("rollover integration", () => {
 
     await client.startChatBot();
 
-    // Enter rollover — the loop will hit errors and call #checkForRollover
-    state = "rollover";
+    client.simulateRollover(true);
     await expect.poll(() => client.isRollover()).toBe(true);
 
-    // End rollover — the scheduled recheck will detect recovery and emit
-    state = "normal";
+    client.simulateRollover(false);
     await expect.poll(() => rolloverEmitted).toBe(true);
     expect(client.isRollover()).toBe(false);
   });

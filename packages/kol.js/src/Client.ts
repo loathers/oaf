@@ -73,10 +73,10 @@ export class Client extends Emittery<Events> {
 
   session = ofetch.create(
     {
-      baseURL: this.baseURL,
       retry: 0,
       headers: { "user-agent": `kol.js/${pkg.version}` },
       onRequest: ({ options }) => {
+        options.baseURL = this.baseURL;
         if (options.query) {
           const { pwd: _, ...rest } = options.query;
           options.query = { ...rest, pwd: this.#pwd };
