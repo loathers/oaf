@@ -162,7 +162,7 @@ describe.concurrent("rollover integration", () => {
     await client.startChatBot();
 
     // kmail.fetch gets {} from api.php → throws RolloverError
-    // chat loop catches it → calls #waitForRolloverEnd
+    // chat loop catches it → calls waitForRolloverEnd
     client.simulateRollover(true);
     await expect.poll(() => client.isRollover()).toBe(true);
 

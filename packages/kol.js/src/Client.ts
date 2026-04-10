@@ -137,11 +137,11 @@ export class Client extends Emittery<Events> {
   }
 
   async #withRecovery<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.#isRollover) await this.#waitForRolloverEnd();
+    if (this.#isRollover) await this.waitForRolloverEnd();
 
     if (!this.#pwd && !(await this.login())) {
       if (this.#isRollover) {
-        await this.#waitForRolloverEnd();
+        await this.waitForRolloverEnd();
         if (!(await this.login())) throw new AuthError();
       } else {
         throw new AuthError();
@@ -153,7 +153,7 @@ export class Client extends Emittery<Events> {
         return await fn();
       } catch (error) {
         if (error instanceof RolloverError) {
-          await this.#waitForRolloverEnd();
+          await this.waitForRolloverEnd();
           if (!(await this.login())) throw new AuthError();
           continue;
         }
@@ -161,7 +161,7 @@ export class Client extends Emittery<Events> {
           this.#pwd = "";
           if (!(await this.login())) {
             if (this.#isRollover) {
-              await this.#waitForRolloverEnd();
+              await this.waitForRolloverEnd();
               if (!(await this.login())) throw new AuthError();
             } else {
               throw new AuthError();
@@ -207,7 +207,7 @@ export class Client extends Emittery<Events> {
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
     try {
-      const result = await this.session("login.php", {
+      await this.session("login.php", {
         method: "POST",
         responseType: "text",
         body: formToBody({
@@ -219,9 +219,7 @@ export class Client extends Emittery<Events> {
         }),
       });
 
-      if (!(await this.checkLoggedIn())) return false;
-
-      return true;
+      return await this.checkLoggedIn();
     } catch (error) {
       if (error instanceof RolloverError) return false;
       console.error("Login failed:", error);
@@ -247,7 +245,7 @@ export class Client extends Emittery<Events> {
   }
 
   @deduplicate
-  async #waitForRolloverEnd(): Promise<void> {
+  async waitForRolloverEnd(): Promise<void> {
     while (this.#isRollover) {
       await wait(this.rolloverCheckInterval);
       try {
@@ -300,7 +298,7 @@ export class Client extends Emittery<Events> {
       } catch (error) {
         if (error instanceof AuthError) throw error;
         if (error instanceof RolloverError) {
-          await this.#waitForRolloverEnd();
+          await this.waitForRolloverEnd();
           continue;
         }
         console.error("Chat bot loop error:", error);
