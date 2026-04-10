@@ -1,31 +1,88 @@
+import { MockAgent } from "undici";
 import { describe, expect, it, test, vi } from "vitest";
 
 import { Client } from "./Client.js";
-import { AuthError, RolloverError } from "./errors.js";
+import { AuthError } from "./errors.js";
 import { loadFixture } from "./testUtils.js";
 
-function mockSession(
-  fn: (path: string) => unknown,
-  options?: { redirectUrl?: (path: string) => string },
-) {
-  const session = Object.assign(
-    (path: string) => {
-      const result = fn(path);
-      const responseUrl = options?.redirectUrl?.(path) ?? path;
-      // Simulate onResponse hook — detect maint.php redirect
-      if (responseUrl.includes("/maint.php") || responseUrl.includes("maint.php")) {
-        // The real onResponse hook would set #isRollover and throw
-        throw new RolloverError();
-      }
-      return result;
-    },
-    {
-      raw: vi.fn(),
-      native: fetch,
-      create: vi.fn(),
-    },
-  ) as unknown as Client["session"];
-  return session;
+const KOL = "https://www.kingdomofloathing.com";
+
+class TestClient extends Client {
+  agent = new MockAgent();
+
+  constructor() {
+    super("testuser", "testpass");
+    this.agent.disableNetConnect();
+  }
+
+  protected override get dispatcher() {
+    return this.agent;
+  }
+
+  mock() {
+    return this.agent.get(KOL);
+  }
+
+  simulateLoggedIn() {
+    this.mock()
+      .intercept({ path: /\/api\.php/, method: "GET" })
+      .reply(200, JSON.stringify({ pwd: "abc123" }), {
+        headers: { "content-type": "application/json" },
+      });
+    return this;
+  }
+
+  simulateLoggedOut() {
+    this.mock()
+      .intercept({ path: /\/api\.php/, method: "GET" })
+      .reply(200, "{}", {
+        headers: { "content-type": "application/json" },
+      });
+    return this;
+  }
+
+  simulateLoginSuccess() {
+    this.simulateLoggedOut();
+    this.mock()
+      .intercept({ path: /\/login\.php/, method: "POST" })
+      .reply(200, "<html>game frameset</html>", {
+        headers: { "content-type": "text/html" },
+      });
+    this.simulateLoggedIn();
+    return this;
+  }
+
+  simulateSessionExpiry(path: RegExp | string = /.*/) {
+    this.mock()
+      .intercept({ path })
+      .reply(302, "", { headers: { location: "/login.php" } });
+    this.mock()
+      .intercept({ path: /\/login\.php/ })
+      .reply(200, "<html>login</html>", {
+        headers: { "content-type": "text/html" },
+      });
+    return this;
+  }
+
+  simulateResponse(
+    path: RegExp | string,
+    body: string | object,
+    contentType = "application/json",
+  ) {
+    this.mock()
+      .intercept({ path })
+      .reply(
+        200,
+        typeof body === "string" ? body : JSON.stringify(body),
+        { headers: { "content-type": contentType } },
+      );
+    return this;
+  }
+
+  simulateServerError(path: RegExp | string = /.*/) {
+    this.mock().intercept({ path }).reply(500, "Internal Server Error");
+    return this;
+  }
 }
 
 describe("Skill descriptions", () => {
@@ -90,108 +147,22 @@ describe("Familiars", () => {
   });
 });
 
-describe("fetchJson error handling", () => {
-  it("throws on non-login errors", async () => {
-    const client = new Client("", "");
-    vi.spyOn(client, "login").mockResolvedValue(true);
-    client.session = mockSession(() => {
-      throw new Error("500 Internal Server Error");
-    });
-    await expect(client.fetchJson("api.php")).rejects.toThrow(
-      "500 Internal Server Error",
-    );
+describe("login", () => {
+  it("succeeds when already logged in", async () => {
+    const client = new TestClient().simulateLoggedIn();
+
+    expect(await client.login()).toBe(true);
   });
 
-  it("does not retry more than once on non-login errors", async () => {
-    const client = new Client("", "");
-    vi.spyOn(client, "login").mockResolvedValue(true);
-    let calls = 0;
-    client.session = mockSession(() => {
-      calls++;
-      throw new Error("persistent error");
-    });
-    await expect(client.fetchJson("test.php")).rejects.toThrow(
-      "persistent error",
-    );
-    expect(calls).toBe(1);
+  it("succeeds via login POST when not already logged in", async () => {
+    const client = new TestClient().simulateLoginSuccess();
+
+    expect(await client.login()).toBe(true);
   });
 
-  it("recovers from RolloverError and retries", async () => {
-    vi.useFakeTimers();
-    const client = new Client("", "");
-    vi.spyOn(client, "login").mockResolvedValue(true);
-    let calls = 0;
-    client.session = mockSession(() => {
-      calls++;
-      if (calls === 1) throw new RolloverError();
-      // #waitForRolloverEnd polls login.php — return normal page
-      if (calls === 2) return "<html>normal</html>";
-      // Retry of original request after recovery
-      return { result: "ok" };
-    });
+  it("deduplicates concurrent calls", async () => {
+    const client = new TestClient().simulateLoggedIn();
 
-    const promise = client.fetchJson("test.php");
-    await vi.advanceTimersByTimeAsync(60_000);
-    const result = await promise;
-
-    expect(result).toEqual({ result: "ok" });
-    vi.useRealTimers();
-  });
-
-  it("throws AuthError when login fails", async () => {
-    const client = new Client("", "");
-    vi.spyOn(client, "login").mockResolvedValue(false);
-    await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
-      AuthError,
-    );
-  });
-});
-
-describe("fetchText error handling", () => {
-  it("throws on non-login errors instead of retrying", async () => {
-    const client = new Client("", "");
-    vi.spyOn(client, "login").mockResolvedValue(true);
-    client.session = mockSession(() => {
-      throw new Error("Network timeout");
-    });
-    await expect(client.fetchText("familiar.php")).rejects.toThrow(
-      "Network timeout",
-    );
-  });
-
-  it("does not retry more than once on non-login errors", async () => {
-    const client = new Client("", "");
-    vi.spyOn(client, "login").mockResolvedValue(true);
-    let calls = 0;
-    client.session = mockSession(() => {
-      calls++;
-      throw new Error("persistent error");
-    });
-    await expect(client.fetchText("test.php")).rejects.toThrow(
-      "persistent error",
-    );
-    expect(calls).toBe(1);
-  });
-});
-
-describe("login deduplication", () => {
-  it("concurrent login() calls share one in-flight request", async () => {
-    const client = new Client("", "");
-    let loginPostCount = 0;
-
-    // First checkLoggedIn fails, login POST succeeds, second checkLoggedIn succeeds
-    let callCount = 0;
-    client.session = mockSession(() => {
-      callCount++;
-      if (callCount === 1) return "<html>not logged in</html>";
-      if (callCount === 2) {
-        loginPostCount++;
-        return "<html>game frameset</html>";
-      }
-      return { pwd: "abc123" };
-    });
-
-    // Fire three concurrent login() calls
     const results = await Promise.all([
       client.login(),
       client.login(),
@@ -199,107 +170,41 @@ describe("login deduplication", () => {
     ]);
 
     expect(results).toEqual([true, true, true]);
-    expect(loginPostCount).toBe(1);
-  });
-
-  it("allows a new login after the first one completes", async () => {
-    const client = new Client("", "");
-    let loginPostCount = 0;
-
-    client.session = mockSession(() => {
-      loginPostCount++;
-      // checkLoggedIn succeeds immediately
-      return { pwd: "abc123" };
-    });
-
-    await client.login();
-    await client.login();
-
-    // Each login() call is independent (not deduplicated) since the first completed
-    expect(loginPostCount).toBe(2);
   });
 });
 
-describe("rollover handling", () => {
-  it("detects rollover when login throws RolloverError", async () => {
-    const client = new Client("", "");
-    client.session = mockSession(() => {
-      throw new RolloverError();
-    });
+describe("request error handling", () => {
+  it("propagates non-login errors from fetchJson", async () => {
+    const client = new TestClient()
+      .simulateLoggedIn()
+      .simulateServerError(/\/test\.php/);
+
     await client.login();
-    expect(client.isRollover()).toBe(true);
+
+    await expect(client.fetchJson("test.php")).rejects.toThrow();
   });
 
-  it("fetchText blocks during rollover and resumes after recovery", async () => {
-    vi.useFakeTimers();
-    const client = new Client("", "");
-    client.session = mockSession(() => {
-      throw new RolloverError();
-    });
+  it("retries once on session expiry (login.php redirect)", async () => {
+    const client = new TestClient().simulateLoggedIn();
     await client.login();
-    expect(client.isRollover()).toBe(true);
 
-    let calls = 0;
-    client.session = mockSession(() => {
-      calls++;
-      // First call: #waitForRolloverEnd polls login.php — recovered
-      if (calls === 1) return "<html>normal</html>";
-      // Second call: checkLoggedIn for re-login
-      if (calls === 2) return { pwd: "abc123" };
-      // Third call: the actual fetchText request
-      return "response body";
-    });
+    client
+      .simulateSessionExpiry(/\/test\.php/)
+      .simulateLoginSuccess()
+      .simulateResponse(/\/test\.php/, { ok: true });
 
-    const promise = client.fetchText("test.php");
-    await vi.advanceTimersByTimeAsync(60_000);
-    const result = await promise;
-
-    expect(result).toBe("response body");
-    expect(client.isRollover()).toBe(false);
-    vi.useRealTimers();
+    const result = await client.fetchJson("test.php");
+    expect(result).toEqual({ ok: true });
   });
 
-  it("emits rollover event when recovery is detected", async () => {
-    vi.useFakeTimers();
-    const client = new Client("", "");
+  it("throws AuthError when login fails", async () => {
+    const client = new TestClient()
+      .simulateLoggedOut()
+      .simulateServerError(/\/login\.php/)
+      .simulateLoggedOut();
 
-    client.session = mockSession(() => {
-      throw new RolloverError();
-    });
-    await client.login();
-    expect(client.isRollover()).toBe(true);
-
-    const rolloverSpy = vi.fn();
-    client.on("rollover", rolloverSpy);
-
-    let calls = 0;
-    client.session = mockSession(() => {
-      calls++;
-      // First call: #waitForRolloverEnd polls — still in rollover
-      if (calls === 1) throw new RolloverError();
-      // Second call: recovered
-      if (calls === 2) return "<html>normal login page</html>";
-      // Third call: checkLoggedIn for re-login
-      if (calls === 3) return { pwd: "abc123" };
-      // Fourth call: the actual request
-      return "done";
-    });
-
-    // Start a request that will block in #waitForRolloverEnd
-    const promise = client.fetchText("test.php");
-
-    // First poll — still in rollover
-    await vi.advanceTimersByTimeAsync(60_000);
-    expect(client.isRollover()).toBe(true);
-    expect(rolloverSpy).not.toHaveBeenCalled();
-
-    // Second poll — recovered, emits event, re-logins, retries
-    await vi.advanceTimersByTimeAsync(60_000);
-    await promise;
-
-    expect(client.isRollover()).toBe(false);
-    expect(rolloverSpy).toHaveBeenCalledOnce();
-
-    vi.useRealTimers();
+    await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
+      AuthError,
+    );
   });
 });

@@ -3,6 +3,7 @@ import Emittery from "emittery";
 import makeFetchCookie from "fetch-cookie";
 import { ofetch } from "ofetch";
 import { CookieJar } from "tough-cookie";
+import type { Dispatcher } from "undici";
 
 import { ChatMailbox, type ChatMessage } from "./domains/ChatMailbox.js";
 import { KmailMailbox, type KmailMessage } from "./domains/KmailMailbox.js";
@@ -72,12 +73,17 @@ export class Client extends Emittery<Events> {
     return "https://www.kingdomofloathing.com";
   }
 
+  protected get dispatcher(): Dispatcher | undefined {
+    return undefined;
+  }
+
   session = ofetch.create(
     {
       retry: 0,
       headers: { "user-agent": `kol.js/${pkg.version}` },
       onRequest: ({ options }) => {
         options.baseURL = this.baseURL;
+        options.dispatcher = this.dispatcher;
         if (options.query) {
           const { pwd: _, ...rest } = options.query;
           options.query = { ...rest, pwd: this.#pwd };
