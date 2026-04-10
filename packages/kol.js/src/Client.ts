@@ -203,6 +203,16 @@ export class Client extends Emittery<Events> {
   }
 
   @deduplicate
+  async logout(): Promise<void> {
+    try {
+      await this.session("logout.php", { responseType: "text" });
+    } catch (error) {
+      if (!(error instanceof LoginRedirectError)) throw error;
+    }
+    this.#pwd = "";
+  }
+
+  @deduplicate
   async login(): Promise<boolean> {
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
