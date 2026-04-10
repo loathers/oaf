@@ -1,6 +1,7 @@
 import { describe, expect, it, test, vi } from "vitest";
 
-import { AuthError, Client, RolloverError } from "./Client.js";
+import { Client } from "./Client.js";
+import { AuthError, RolloverError } from "./errors.js";
 import { loadFixture } from "./testUtils.js";
 
 function mockSession(fn: () => unknown) {

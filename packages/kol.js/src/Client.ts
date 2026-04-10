@@ -19,21 +19,9 @@ export type MallPrice = {
   minPrice: number | null;
 };
 
+import { AuthError, RolloverError } from "./errors.js";
+
 class LoginRedirectError extends Error {}
-
-export class RolloverError extends Error {
-  constructor() {
-    super("Kingdom of Loathing is currently down for rollover");
-    this.name = "RolloverError";
-  }
-}
-
-export class AuthError extends Error {
-  constructor() {
-    super("Unable to log in to Kingdom of Loathing");
-    this.name = "AuthError";
-  }
-}
 
 type FormData = Record<string, string | number | boolean>;
 
@@ -79,9 +67,13 @@ type ApiStatus = {
 export class Client extends Emittery<Events> {
   actionMutex = new Mutex();
   #cookieJar = new CookieJar();
+  protected get baseURL() {
+    return "https://www.kingdomofloathing.com";
+  }
+
   session = ofetch.create(
     {
-      baseURL: "https://www.kingdomofloathing.com",
+      baseURL: this.baseURL,
       retry: 0,
       headers: { "user-agent": `kol.js/${pkg.version}` },
       onRequest: ({ options }) => {
@@ -95,10 +87,18 @@ export class Client extends Emittery<Events> {
       },
       onResponse: ({ request, response }) => {
         const requestUrl = typeof request === "string" ? request : request.url;
+        if (this.#isRollover || response.status !== 200) {
+          console.log(
+            `[rollover] response: ${requestUrl} → ${response.status} ${response.url} body=${JSON.stringify(response._data)}`,
+          );
+        }
         if (
           !requestUrl.includes("login.php") &&
           response.url.includes("/login.php")
         ) {
+          console.log(
+            `[rollover] redirect to login.php detected for ${requestUrl}, body=${JSON.stringify(response._data)}`,
+          );
           throw new LoginRedirectError();
         }
       },
@@ -250,13 +250,14 @@ export class Client extends Emittery<Events> {
 
       if (this.#isRollover && !isRollover) {
         this.#isRollover = false;
+        console.log("[rollover] Recovery detected, emitting rollover event");
         await this.emit("rollover", new Date());
         return;
       }
 
       this.#isRollover = isRollover;
-    } catch {
-      // Can't reach server or handler failed — don't change rollover state
+    } catch (error) {
+      console.log(`[rollover] check failed: ${String(error)}`);
     }
 
     if (this.#isRollover && !this.#rolloverCheckScheduled) {
@@ -264,18 +265,35 @@ export class Client extends Emittery<Events> {
       setTimeout(() => {
         this.#rolloverCheckScheduled = false;
         void this.#checkForRollover();
-      }, 60_000);
+      }, this.rolloverCheckInterval);
     }
   }
+
+  protected get pollInterval() {
+    return 3000;
+  }
+
+  protected get rolloverCheckInterval() {
+    return 60_000;
+  }
+
+  #abortController: AbortController | null = null;
 
   async startChatBot() {
     if (this.#chatBotStarted) return;
     this.#chatBotStarted = true;
+    this.#abortController = new AbortController();
     this.on("rollover", () => void this.#joinChat());
     await this.#joinChat();
-    this.loopChatBot().catch((error) => {
+    this.#loopChatBot().catch((error) => {
       console.error("Chat bot stopped:", error);
     });
+  }
+
+  stopChatBot() {
+    this.#abortController?.abort();
+    this.#abortController = null;
+    this.#chatBotStarted = false;
   }
 
   async #joinChat() {
@@ -288,20 +306,20 @@ export class Client extends Emittery<Events> {
     }
   }
 
-  private async loopChatBot() {
-    while (true) {
+  async #loopChatBot() {
+    while (!this.#abortController?.signal.aborted) {
       try {
         await Promise.all([this.chat.check(), this.kmail.check()]);
       } catch (error) {
         if (error instanceof AuthError) throw error;
-        if (!(error instanceof RolloverError)) {
-          console.error("Chat bot loop error:", error);
-        }
+        console.log(
+          `[rollover] Chat loop error: ${error instanceof RolloverError ? "RolloverError" : String(error)}`,
+        );
         if (!this.#isRollover) {
           await this.#checkForRollover();
         }
       }
-      await wait(this.#isRollover ? 60_000 : 3000);
+      await wait(this.#isRollover ? this.rolloverCheckInterval : this.pollInterval);
     }
   }
 
