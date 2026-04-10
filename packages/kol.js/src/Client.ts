@@ -319,7 +319,9 @@ export class Client extends Emittery<Events> {
           await this.#checkForRollover();
         }
       }
-      await wait(this.#isRollover ? this.rolloverCheckInterval : this.pollInterval);
+      await wait(
+        this.#isRollover ? this.rolloverCheckInterval : this.pollInterval,
+      );
     }
   }
 

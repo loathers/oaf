@@ -4,7 +4,7 @@ import {
   type ServerResponse,
   createServer,
 } from "node:http";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it, onTestFinished } from "vitest";
 
 import { Client } from "../Client.js";
 import { RolloverError } from "../errors.js";
@@ -88,9 +88,7 @@ class TestClient extends Client {
     // Normal operation
     if (path === "login.php") {
       res.writeHead(200, { "content-type": "text/html" });
-      loadFixture(__dirname, "login_normal.html").then((html) =>
-        res.end(html),
-      );
+      loadFixture(__dirname, "login_normal.html").then((html) => res.end(html));
       return;
     }
     if (path === "api.php") {
@@ -122,24 +120,23 @@ class TestClient extends Client {
   }
 }
 
-let client: TestClient;
-
-afterEach(() => {
-  client?.dispose();
-});
+async function createTestClient() {
+  const client = new TestClient();
+  await client.start();
+  onTestFinished(() => client.dispose());
+  return client;
+}
 
 describe("rollover integration", () => {
   it("login succeeds in normal state", async () => {
-    client = new TestClient();
-    await client.start();
+    const client = await createTestClient();
 
     expect(await client.login()).toBe(true);
     expect(client.isRollover()).toBe(false);
   });
 
   it("login fails and detects rollover from maintenance page", async () => {
-    client = new TestClient();
-    await client.start();
+    const client = await createTestClient();
     client.simulateRollover(true);
 
     expect(await client.login()).toBe(false);
@@ -147,18 +144,15 @@ describe("rollover integration", () => {
   });
 
   it("kmail.fetch throws RolloverError when API returns non-array during rollover", async () => {
-    client = new TestClient();
-    await client.start();
+    const client = await createTestClient();
     await client.login();
-
     client.simulateRollover(true);
 
     await expect(client.kmail.fetch()).rejects.toBeInstanceOf(RolloverError);
   });
 
   it("detects rollover and emits event on recovery via chat loop", async () => {
-    client = new TestClient();
-    await client.start();
+    const client = await createTestClient();
 
     let rolloverEmitted = false;
     client.on("rollover", () => {
