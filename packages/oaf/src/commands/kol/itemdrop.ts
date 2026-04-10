@@ -17,8 +17,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const drop = interaction.options.getNumber("droprate", true);
 
   await interaction.reply(
-    `A ${drop.toFixed(1)}% drop requires a +${
-      itemDropBonusToCap(drop)
-    }% item drop bonus to cap.`,
+    `A ${drop.toFixed(1)}% drop requires a +${itemDropBonusToCap(
+      drop,
+    )}% item drop bonus to cap.`,
   );
 }

@@ -24,7 +24,7 @@ import {
   setPlayerDiscordId,
 } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
-import { kolClient } from "../../clients/kol.js";
+import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 
 const OAF_USER = config.KOL_USER.replaceAll(" ", "_");
@@ -113,6 +113,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
     return;
   }
+
+  assertNotRollover();
 
   await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 

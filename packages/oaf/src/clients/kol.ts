@@ -1,8 +1,12 @@
-import { Client, type MallPrice } from "kol.js";
+import { Client, type MallPrice, RolloverError } from "kol.js";
 
 import { config } from "../config.js";
 
 export const kolClient = new Client(config.KOL_USER, config.KOL_PASS);
+
+export function assertNotRollover(): void {
+  if (kolClient.isRollover()) throw new RolloverError();
+}
 
 const mallPriceCache = new Map<number, { data: MallPrice; expires: number }>();
 

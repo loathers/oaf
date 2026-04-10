@@ -14,7 +14,7 @@ import { toWikiLink } from "kol.js";
 
 import { getBirthdays, setGlobalsMessage } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
-import { kolClient } from "../../clients/kol.js";
+import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { formatPlayer } from "../../discordUtils.js";
@@ -199,6 +199,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
     return;
   }
+
+  assertNotRollover();
 
   await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
   console.log(

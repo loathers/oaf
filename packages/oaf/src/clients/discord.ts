@@ -13,6 +13,7 @@ import {
   Interaction,
   JSONEncodable,
   MessageCreateOptions,
+  MessageFlags,
   ModalSubmitInteraction,
   Partials,
   REST,
@@ -33,12 +34,14 @@ import { config } from "../config.js";
 function describeCommandError(error: unknown): {
   reply: string;
   alert: boolean;
+  ephemeral: boolean;
 } {
   if (error instanceof RolloverError) {
     return {
       reply:
         "Kingdom of Loathing is currently down for its daily rollover (maintenance). This usually takes 3-10 minutes, please try again shortly!",
       alert: false,
+      ephemeral: true,
     };
   }
 
@@ -47,6 +50,7 @@ function describeCommandError(error: unknown): {
       reply:
         "I was unable to log in to Kingdom of Loathing. This might be a temporary issue, please try again shortly!",
       alert: true,
+      ephemeral: false,
     };
   }
 
@@ -54,6 +58,7 @@ function describeCommandError(error: unknown): {
     reply:
       "OAF recovered from a crash trying to process that command. This has been logged, but poke in #mafia-and-scripting if it keeps happening.",
     alert: true,
+    ephemeral: false,
   };
 }
 
@@ -167,7 +172,10 @@ export class DiscordClient extends Client {
           } else if (interaction.replied) {
             await interaction.followUp(message.reply);
           } else {
-            await interaction.reply(message.reply);
+            await interaction.reply({
+              content: message.reply,
+              ...(message.ephemeral ? { flags: [MessageFlags.Ephemeral] } : {}),
+            });
           }
         }
         return;

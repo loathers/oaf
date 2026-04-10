@@ -18,8 +18,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const weight = interaction.options.getInteger("weight", true);
 
   await interaction.reply(
-    `A ${weight}lb volleyball provides +${
-      volleyballSubstats(weight)
-    } substats per combat.`,
+    `A ${weight}lb volleyball provides +${volleyballSubstats(
+      weight,
+    )} substats per combat.`,
   );
 }

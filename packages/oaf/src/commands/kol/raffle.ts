@@ -17,7 +17,7 @@ import {
   getPlayersByIdsWithDiscord,
 } from "../../clients/database.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
-import { kolClient } from "../../clients/kol.js";
+import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { formatPlayer } from "../../discordUtils.js";
@@ -31,6 +31,8 @@ const numberFormat = new Intl.NumberFormat();
 const kolRaffle = new Raffle(kolClient);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  assertNotRollover();
+
   await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
   const { daynumber } = await kolClient.fetchStatus();
   const raffle = await findRaffle(Number(daynumber));

@@ -1,7 +1,7 @@
 import { bold, heading, hideLinkEmbed, hyperlink, italic } from "discord.js";
+import { LoathingDate } from "kol.js";
 import { SkeletonOfCrimboPast } from "kol.js/domains/SkeletonOfCrimboPast";
 
-import { LoathingDate } from "kol.js";
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import {
   getDailiesForGameday,
