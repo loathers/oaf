@@ -8,6 +8,7 @@ import { ChatMailbox, type ChatMessage } from "./domains/ChatMailbox.js";
 import { KmailMailbox, type KmailMessage } from "./domains/KmailMailbox.js";
 import { Players } from "./domains/Players.js";
 import pkg from "../package.json" with { type: "json" };
+import { deduplicate } from "./utils/deduplicate.js";
 import { sanitiseBlueText, wait } from "./utils/utils.js";
 
 export type MallPrice = {
@@ -87,7 +88,7 @@ export class Client extends Emittery<Events> {
       },
       onResponse: ({ request, response }) => {
         const requestUrl = typeof request === "string" ? request : request.url;
-        if (this.#isRollover || response.status !== 200) {
+        if (this.#isRollover) {
           console.log(
             `[rollover] response: ${requestUrl} → ${response.status} ${response.url} body=${JSON.stringify(response._data)}`,
           );
@@ -119,10 +120,8 @@ export class Client extends Emittery<Events> {
   #username: string;
   #password: string;
   #isRollover = false;
-  #rolloverCheckScheduled = false;
   #chatBotStarted = false;
   #pwd = "";
-  #loginPromise: Promise<boolean> | null = null;
 
   constructor(username: string, password: string) {
     super();
@@ -134,23 +133,36 @@ export class Client extends Emittery<Events> {
     return this.#username;
   }
 
-  async #withReauth<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.#isRollover) throw new RolloverError();
+  async #withRecovery<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.#isRollover) await this.#waitForRolloverEnd();
+
     if (!this.#pwd && !(await this.login())) {
-      if (this.#isRollover) throw new RolloverError();
-      throw new AuthError();
+      if (this.#isRollover) {
+        await this.#waitForRolloverEnd();
+        if (!(await this.login())) throw new AuthError();
+      } else {
+        throw new AuthError();
+      }
     }
 
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         return await fn();
       } catch (error) {
-        if (error instanceof RolloverError) throw error;
+        if (error instanceof RolloverError) {
+          await this.#waitForRolloverEnd();
+          if (!(await this.login())) throw new AuthError();
+          continue;
+        }
         if (error instanceof LoginRedirectError && attempt === 0) {
           this.#pwd = "";
           if (!(await this.login())) {
-            if (this.#isRollover) throw new RolloverError();
-            throw new AuthError();
+            if (this.#isRollover) {
+              await this.#waitForRolloverEnd();
+              if (!(await this.login())) throw new AuthError();
+            } else {
+              throw new AuthError();
+            }
           }
           continue;
         }
@@ -163,7 +175,7 @@ export class Client extends Emittery<Events> {
 
   async fetchText(path: string, options: RequestOptions = {}): Promise<string> {
     const { form, ...rest } = options;
-    return this.#withReauth(() =>
+    return this.#withRecovery(() =>
       this.session(path, {
         method: "POST",
         ...rest,
@@ -178,7 +190,7 @@ export class Client extends Emittery<Events> {
     options: RequestOptions = {},
   ): Promise<Result> {
     const { form, ...rest } = options;
-    return this.#withReauth(() =>
+    return this.#withRecovery(() =>
       this.session<Result>(path, {
         ...rest,
         body: form ? formToBody(form) : undefined,
@@ -187,17 +199,8 @@ export class Client extends Emittery<Events> {
     );
   }
 
+  @deduplicate
   async login(): Promise<boolean> {
-    if (this.#loginPromise) return this.#loginPromise;
-    this.#loginPromise = this.#doLogin();
-    try {
-      return await this.#loginPromise;
-    } finally {
-      this.#loginPromise = null;
-    }
-  }
-
-  async #doLogin(): Promise<boolean> {
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
     try {
@@ -214,17 +217,16 @@ export class Client extends Emittery<Events> {
       });
 
       if (Client.#rolloverPattern.test(result)) {
-        throw new RolloverError();
+        this.#isRollover = true;
+        return false;
       }
 
       if (!(await this.checkLoggedIn())) return false;
 
       return true;
     } catch (error) {
-      if (!(error instanceof RolloverError)) {
-        console.error("Login failed:", error);
-      }
-      await this.#checkForRollover();
+      if (error instanceof RolloverError) return false;
+      console.error("Login failed:", error);
       return false;
     }
   }
@@ -249,30 +251,23 @@ export class Client extends Emittery<Events> {
   static #rolloverPattern =
     /The system is currently down for nightly maintenance/;
 
-  // Uses this.session directly to avoid recursion through fetchText → login
-  async #checkForRollover() {
-    try {
-      const html = await this.session("login.php", { responseType: "text" });
-      const isRollover = Client.#rolloverPattern.test(html);
-
-      if (this.#isRollover && !isRollover) {
-        this.#isRollover = false;
-        console.log("[rollover] Recovery detected, emitting rollover event");
-        await this.emit("rollover", new Date());
-        return;
+  @deduplicate
+  async #waitForRolloverEnd(): Promise<void> {
+    this.#isRollover = true;
+    while (this.#isRollover) {
+      await wait(this.rolloverCheckInterval);
+      try {
+        const html = await this.session("login.php", {
+          responseType: "text",
+        });
+        if (!Client.#rolloverPattern.test(html)) {
+          this.#isRollover = false;
+          console.log("[rollover] Recovery detected, emitting rollover event");
+          await this.emit("rollover", new Date());
+        }
+      } catch {
+        // Server unreachable — stay in rollover
       }
-
-      this.#isRollover = isRollover;
-    } catch (error) {
-      console.log(`[rollover] check failed: ${String(error)}`);
-    }
-
-    if (this.#isRollover && !this.#rolloverCheckScheduled) {
-      this.#rolloverCheckScheduled = true;
-      setTimeout(() => {
-        this.#rolloverCheckScheduled = false;
-        void this.#checkForRollover();
-      }, this.rolloverCheckInterval);
     }
   }
 
@@ -307,9 +302,7 @@ export class Client extends Emittery<Events> {
     try {
       await this.chat.macro("/join talkie");
     } catch (error) {
-      if (!(error instanceof RolloverError)) {
-        console.error("Failed to join chat:", error);
-      }
+      console.error("Failed to join chat:", error);
     }
   }
 
@@ -319,16 +312,13 @@ export class Client extends Emittery<Events> {
         await Promise.all([this.chat.check(), this.kmail.check()]);
       } catch (error) {
         if (error instanceof AuthError) throw error;
-        console.log(
-          `[rollover] Chat loop error: ${error instanceof RolloverError ? "RolloverError" : String(error)}`,
-        );
-        if (!this.#isRollover) {
-          await this.#checkForRollover();
+        if (error instanceof RolloverError) {
+          await this.#waitForRolloverEnd();
+          continue;
         }
+        console.error("Chat bot loop error:", error);
       }
-      await wait(
-        this.#isRollover ? this.rolloverCheckInterval : this.pollInterval,
-      );
+      await wait(this.pollInterval);
     }
   }
 

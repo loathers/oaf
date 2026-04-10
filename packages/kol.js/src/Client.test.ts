@@ -100,15 +100,26 @@ describe("fetchJson error handling", () => {
     expect(calls).toBe(1);
   });
 
-  it("propagates RolloverError", async () => {
+  it("recovers from RolloverError and retries", async () => {
+    vi.useFakeTimers();
     const client = new Client("", "");
     vi.spyOn(client, "login").mockResolvedValue(true);
+    let calls = 0;
     client.session = mockSession(() => {
-      throw new RolloverError();
+      calls++;
+      if (calls === 1) throw new RolloverError();
+      // #waitForRolloverEnd polls login.php — return normal page
+      if (calls === 2) return "<html>normal</html>";
+      // Retry of original request after recovery
+      return { result: "ok" };
     });
-    await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
-      RolloverError,
-    );
+
+    const promise = client.fetchJson("test.php");
+    await vi.advanceTimersByTimeAsync(60_000);
+    const result = await promise;
+
+    expect(result).toEqual({ result: "ok" });
+    vi.useRealTimers();
   });
 
   it("throws AuthError when login fails", async () => {
@@ -201,65 +212,33 @@ describe("rollover handling", () => {
     );
     await client.login();
     expect(client.isRollover()).toBe(true);
-
-    // All fetch methods should fail fast
-    await expect(client.fetchText("test.php")).rejects.toBeInstanceOf(
-      RolloverError,
-    );
-    await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
-      RolloverError,
-    );
   });
 
-  it("fetchText throws RolloverError immediately when in rollover", async () => {
-    const client = new Client("", "");
-    client.session = mockSession(
-      () => "The system is currently down for nightly maintenance",
-    );
-    await client.login();
-
-    let sessionCalled = false;
-    client.session = mockSession(() => {
-      sessionCalled = true;
-      return "";
-    });
-    await expect(client.fetchText("test.php")).rejects.toBeInstanceOf(
-      RolloverError,
-    );
-    expect(sessionCalled).toBe(false);
-  });
-
-  it("fetchJson throws RolloverError immediately when in rollover", async () => {
-    const client = new Client("", "");
-    client.session = mockSession(
-      () => "The system is currently down for nightly maintenance",
-    );
-    await client.login();
-
-    let sessionCalled = false;
-    client.session = mockSession(() => {
-      sessionCalled = true;
-      return {};
-    });
-    await expect(client.fetchJson("test.php")).rejects.toBeInstanceOf(
-      RolloverError,
-    );
-    expect(sessionCalled).toBe(false);
-  });
-
-  it("recovers from rollover when server comes back", async () => {
+  it("fetchText blocks during rollover and resumes after recovery", async () => {
     vi.useFakeTimers();
     const client = new Client("", "");
-
     client.session = mockSession(
       () => "The system is currently down for nightly maintenance",
     );
     await client.login();
     expect(client.isRollover()).toBe(true);
 
-    client.session = mockSession(() => "<html>normal login page</html>");
-    await vi.advanceTimersByTimeAsync(60_000);
+    let calls = 0;
+    client.session = mockSession(() => {
+      calls++;
+      // First call: #waitForRolloverEnd polls login.php — recovered
+      if (calls === 1) return "<html>normal</html>";
+      // Second call: checkLoggedIn
+      if (calls === 2) return { pwd: "abc123" };
+      // Third call: the actual fetchText request
+      return "response body";
+    });
 
+    const promise = client.fetchText("test.php");
+    await vi.advanceTimersByTimeAsync(60_000);
+    const result = await promise;
+
+    expect(result).toBe("response body");
     expect(client.isRollover()).toBe(false);
     vi.useRealTimers();
   });
@@ -268,46 +247,43 @@ describe("rollover handling", () => {
     vi.useFakeTimers();
     const client = new Client("", "");
 
-    // Enter rollover
     client.session = mockSession(
       () => "The system is currently down for nightly maintenance",
     );
     await client.login();
     expect(client.isRollover()).toBe(true);
 
-    // Listen for rollover event
     const rolloverSpy = vi.fn();
     client.on("rollover", rolloverSpy);
 
-    // Recover: #checkForRollover sees normal page → emits rollover event
-    client.session = mockSession(() => "<html>normal login page</html>");
+    let calls = 0;
+    client.session = mockSession(() => {
+      calls++;
+      // First call: #waitForRolloverEnd polls login.php — still maintenance
+      if (calls === 1)
+        return "The system is currently down for nightly maintenance";
+      // Second call: recovered
+      if (calls === 2) return "<html>normal login page</html>";
+      // Third call: checkLoggedIn for re-login
+      if (calls === 3) return { pwd: "abc123" };
+      // Fourth call: the actual request
+      return "done";
+    });
+
+    // Start a request that will block in #waitForRolloverEnd
+    const promise = client.fetchText("test.php");
+
+    // First poll — still in rollover
     await vi.advanceTimersByTimeAsync(60_000);
+    expect(client.isRollover()).toBe(true);
+    expect(rolloverSpy).not.toHaveBeenCalled();
+
+    // Second poll — recovered, emits event, re-logins, retries
+    await vi.advanceTimersByTimeAsync(60_000);
+    await promise;
 
     expect(client.isRollover()).toBe(false);
     expect(rolloverSpy).toHaveBeenCalledOnce();
-
-    vi.useRealTimers();
-  });
-
-  it("stays in rollover if server is unreachable", async () => {
-    vi.useFakeTimers();
-    const client = new Client("", "");
-
-    client.session = mockSession(
-      () => "The system is currently down for nightly maintenance",
-    );
-    await client.login();
-    expect(client.isRollover()).toBe(true);
-
-    client.session = mockSession(() => {
-      throw new Error("Network error");
-    });
-    await vi.advanceTimersByTimeAsync(60_000);
-    expect(client.isRollover()).toBe(true);
-
-    client.session = mockSession(() => "<html>normal login page</html>");
-    await vi.advanceTimersByTimeAsync(60_000);
-    expect(client.isRollover()).toBe(false);
 
     vi.useRealTimers();
   });
