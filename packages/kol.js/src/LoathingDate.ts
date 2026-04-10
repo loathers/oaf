@@ -45,23 +45,26 @@ function getThanksgiving(year: number): number {
   return firstThursday + 21;
 }
 
-function getRealWorldHoliday(realDate: Date): string | undefined {
+function getRealWorldHolidays(realDate: Date): string[] {
   const year = realDate.getUTCFullYear();
   const [easterMonth, easterDate] = getEaster(year);
   const thanksgiving = getThanksgiving(year);
 
-  const realHolidays = new Map([
+  const key = `${realDate.getUTCMonth()},${realDate.getUTCDate()}`;
+
+  const realHolidays: [string, string][] = [
     ["0,1", "Festival of Jarlsberg"],
     ["1,14", "Valentine's Day"],
     ["2,17", "St. Sneaky Pete's Day"],
+    ["3,1", "April Fools Day"],
     [`${easterMonth},${easterDate}`, "Oyster Egg Day"],
     ["6,4", "Dependence Day"],
     ["9,31", "Halloween"],
     [`10,${thanksgiving}`, "Feast of Boris"],
     ["11,25", "Crimbo"],
-  ]);
+  ];
 
-  return realHolidays.get(`${realDate.getUTCMonth()},${realDate.getUTCDate()}`);
+  return realHolidays.filter(([k]) => k === key).map(([, v]) => v);
 }
 
 export class LoathingDate {
@@ -290,8 +293,7 @@ export class LoathingDate {
     const gameHoliday = GAME_HOLIDAYS.get(`${this.#month},${this.#date}`);
     if (gameHoliday) holidays.add(gameHoliday);
 
-    const realHoliday = getRealWorldHoliday(this.#realDate);
-    if (realHoliday) holidays.add(realHoliday);
+    for (const h of getRealWorldHolidays(this.#realDate)) holidays.add(h);
 
     // Combination holidays replace their components
     if (

@@ -1,5 +1,6 @@
 import { LoathingDate } from "kol.js";
 
+import { BouncingEmoji } from "./BouncingEmoji.js";
 import CalendarNav from "./CalendarNav.js";
 import { HOLIDAY_EMOJI } from "./holidayEmoji.js";
 
@@ -142,6 +143,7 @@ export default function GregorianCalendar({
                     {holidays.map((h) => HOLIDAY_EMOJI[h] ?? "🎉").join("")}
                   </span>
                 )}
+                {holidays.includes("April Fools Day") && <BouncingEmoji />}
               </div>
             );
           })}
