@@ -56,19 +56,17 @@ class TestClient extends Client {
     const path = url.pathname.replace(/^\//, "");
 
     if (this.rollover) {
-      return this.handleRollover(path, res);
+      return void this.handleRollover(path, res);
     }
 
-    this.handleNormal(path, url, res);
+    void this.handleNormal(path, url, res);
   }
 
-  private handleRollover(path: string, res: ServerResponse) {
+  private async handleRollover(path: string, res: ServerResponse) {
     switch (path) {
       case "login.php":
         res.writeHead(200, { "content-type": "text/html" });
-        loadFixture(__dirname, "login_maintenance.html").then((html) =>
-          res.end(html),
-        );
+        res.end(await loadFixture(__dirname, "login_maintenance.html"));
         return;
       case "api.php":
         // TODO: verify with real rollover response
@@ -91,13 +89,11 @@ class TestClient extends Client {
     }
   }
 
-  private handleNormal(path: string, url: URL, res: ServerResponse) {
+  private async handleNormal(path: string, url: URL, res: ServerResponse) {
     switch (path) {
       case "login.php":
         res.writeHead(200, { "content-type": "text/html" });
-        loadFixture(__dirname, "login_normal.html").then((html) =>
-          res.end(html),
-        );
+        res.end(await loadFixture(__dirname, "login_normal.html"));
         return;
       case "api.php": {
         const what = url.searchParams.get("what");

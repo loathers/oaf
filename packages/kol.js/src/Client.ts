@@ -92,6 +92,13 @@ export class Client extends Emittery<Events> {
             `[rollover] response: ${requestUrl} → ${response.status} ${response.url} body=${JSON.stringify(response._data)}`,
           );
         }
+        if (response.url.includes("/maint.php")) {
+          console.log(
+            `[rollover] redirect to maint.php detected for ${requestUrl}, body=${JSON.stringify(response._data)}`,
+          );
+          this.#isRollover = true;
+          throw new RolloverError();
+        }
         if (
           !requestUrl.includes("login.php") &&
           response.url.includes("/login.php")
