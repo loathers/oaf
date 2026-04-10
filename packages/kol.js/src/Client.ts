@@ -230,7 +230,7 @@ export class Client extends Emittery<Events> {
     );
   }
 
-  @deduplicate
+  @deduplicate()
   async logout(): Promise<void> {
     try {
       await this.session("logout.php", { responseType: "text" });
@@ -240,7 +240,7 @@ export class Client extends Emittery<Events> {
     this.#pwd = "";
   }
 
-  @deduplicate
+  @deduplicate()
   async login(): Promise<boolean> {
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
@@ -282,7 +282,7 @@ export class Client extends Emittery<Events> {
     }
   }
 
-  @deduplicate
+  @deduplicate()
   async waitForRolloverEnd(): Promise<void> {
     while (this.#isRollover) {
       await wait(this.rolloverCheckInterval);
@@ -309,7 +309,10 @@ export class Client extends Emittery<Events> {
     if (this.#chatBotStarted) return;
     this.#chatBotStarted = true;
     this.#abortController = new AbortController();
-    this.#disposeChatBotListeners = this.on("rollover", () => void this.#joinChat());
+    this.#disposeChatBotListeners = this.on(
+      "rollover",
+      () => void this.#joinChat(),
+    );
     await this.#joinChat();
     this.#loopChatBot().catch((error) => {
       console.error("Chat bot stopped:", error);

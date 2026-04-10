@@ -57,7 +57,6 @@
     "ts-dedent": "^2.2.0",
     "ts-dotenv": "^0.9.1",
     "typescript": "^5.9.3",
-    "typescript-memoize": "^1.1.1",
     "unidecode": "^1.1.0",
     "zod": "^4.3.6"
   },

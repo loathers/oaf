@@ -1,5 +1,5 @@
 import { EmbedBuilder } from "discord.js";
-import { Memoize, clear } from "typescript-memoize";
+import { cleanString, toWikiLink } from "kol.js";
 
 import {
   Effect,
@@ -10,7 +10,7 @@ import {
   Thing,
 } from "../things/index.js";
 import { getQueryData } from "../things/query.js";
-import { cleanString, toWikiLink } from "kol.js";
+import { clearMemoized, memoize } from "../utils/memoize.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 import { wikiClient } from "./wiki.js";
@@ -135,34 +135,34 @@ export class DataOfLoathingClient {
   async reload(): Promise<boolean> {
     if (this.lastDownloadTime < Date.now() - 3600000) {
       this.clearMaps();
-      clear(["things"]);
+      clearMemoized(["things"]);
       await this.load();
       return true;
     }
     return false;
   }
 
-  @Memoize({ tags: ["things"] })
+  @memoize({ tags: ["things"] })
   get items(): Item[] {
     return [...this.itemByName.values()];
   }
 
-  @Memoize({ tags: ["things"] })
+  @memoize({ tags: ["things"] })
   get monsters(): Monster[] {
     return [...this.monsterByName.values()];
   }
 
-  @Memoize({ tags: ["things"] })
+  @memoize({ tags: ["things"] })
   get skills(): Skill[] {
     return [...this.skillByName.values()];
   }
 
-  @Memoize({ tags: ["things"] })
+  @memoize({ tags: ["things"] })
   get familiars(): Familiar[] {
     return [...this.familiarByName.values()];
   }
 
-  @Memoize({ tags: ["things"] })
+  @memoize({ tags: ["things"] })
   get effects(): Effect[] {
     return [...this.effectByName.values()];
   }
@@ -211,7 +211,7 @@ export class DataOfLoathingClient {
     return thing.name.replace(/ /g, "_");
   }
 
-  @Memoize({ tags: ["things"] })
+  @memoize({ tags: ["things"] })
   getWikiLink(thing: Thing) {
     const wikiName = this.getWikiName(thing);
     if (!wikiName) return null;

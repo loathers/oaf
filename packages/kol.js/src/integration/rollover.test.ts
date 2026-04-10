@@ -135,7 +135,9 @@ describe.concurrent("rollover integration", () => {
     expect(client.isRollover()).toBe(false);
   });
 
-  it("login fails and detects rollover from maintenance page", async ({ expect }) => {
+  it("login fails and detects rollover from maintenance page", async ({
+    expect,
+  }) => {
     const client = await createTestClient();
     client.simulateRollover(true);
 
@@ -143,7 +145,9 @@ describe.concurrent("rollover integration", () => {
     expect(client.isRollover()).toBe(true);
   });
 
-  it("kmail.fetch throws RolloverError when API returns non-array during rollover", async ({ expect }) => {
+  it("kmail.fetch throws RolloverError when API returns non-array during rollover", async ({
+    expect,
+  }) => {
     const client = await createTestClient();
     await client.login();
     client.simulateRollover(true);
@@ -151,7 +155,9 @@ describe.concurrent("rollover integration", () => {
     await expect(client.kmail.fetch()).rejects.toBeInstanceOf(RolloverError);
   });
 
-  it("detects rollover and emits event on recovery via chat loop", async ({ expect }) => {
+  it("detects rollover and emits event on recovery via chat loop", async ({
+    expect,
+  }) => {
     const client = await createTestClient();
 
     let rolloverEmitted = false;

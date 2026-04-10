@@ -71,11 +71,9 @@ class TestClient extends Client {
   ) {
     this.mock()
       .intercept({ path })
-      .reply(
-        200,
-        typeof body === "string" ? body : JSON.stringify(body),
-        { headers: { "content-type": contentType } },
-      );
+      .reply(200, typeof body === "string" ? body : JSON.stringify(body), {
+        headers: { "content-type": contentType },
+      });
     return this;
   }
 

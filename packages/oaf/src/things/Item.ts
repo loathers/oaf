@@ -1,10 +1,10 @@
 import { ConsumableQuality } from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
-import { MemoizeExpiring } from "typescript-memoize";
+import { toWikiLink } from "kol.js";
 
 import { getMallPrice, kolClient } from "../clients/kol.js";
-import { toWikiLink } from "kol.js";
 import { pluralize, titleCase } from "../utils.js";
+import { memoizeExpiring } from "../utils/memoize.js";
 import { Familiar } from "./Familiar.js";
 import { Thing } from "./Thing.js";
 import packages from "./iotmPackages.json" with { type: "json" };
@@ -444,7 +444,7 @@ export class Item extends Thing {
     return output.join("\n");
   }
 
-  @MemoizeExpiring(15 * 60 * 1000) // Ensure that prices are accurate to the last 15 minutes
+  @memoizeExpiring(15 * 60 * 1000) // Ensure that prices are accurate to the last 15 minutes
   async getDescription(withAddl = true): Promise<string> {
     const description: (string | null)[] = [this.getShortDescription()];
 
