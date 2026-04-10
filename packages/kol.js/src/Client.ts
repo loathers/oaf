@@ -307,7 +307,7 @@ export class Client extends Emittery<Events> {
   }
 
   async #loopChatBot() {
-    while (!this.#abortController?.signal.aborted) {
+    while (this.#abortController && !this.#abortController.signal.aborted) {
       try {
         await Promise.all([this.chat.check(), this.kmail.check()]);
       } catch (error) {
