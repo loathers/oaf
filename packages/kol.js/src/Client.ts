@@ -230,18 +230,16 @@ export class Client extends Emittery<Events> {
     );
   }
 
-  @deduplicate()
-  async logout(): Promise<void> {
+  logout = deduplicate(async (): Promise<void> => {
     try {
       await this.session("logout.php", { responseType: "text" });
     } catch (error) {
       if (!(error instanceof LoginRedirectError)) throw error;
     }
     this.#pwd = "";
-  }
+  });
 
-  @deduplicate()
-  async login(): Promise<boolean> {
+  login = deduplicate(async (): Promise<boolean> => {
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
     try {
@@ -263,7 +261,7 @@ export class Client extends Emittery<Events> {
       console.error("Login failed:", error);
       return false;
     }
-  }
+  });
 
   isRollover() {
     return this.#isRollover;
@@ -282,8 +280,7 @@ export class Client extends Emittery<Events> {
     }
   }
 
-  @deduplicate()
-  async waitForRolloverEnd(): Promise<void> {
+  waitForRolloverEnd = deduplicate(async (): Promise<void> => {
     while (this.#isRollover) {
       await wait(this.rolloverCheckInterval);
       try {
@@ -292,7 +289,7 @@ export class Client extends Emittery<Events> {
         // Server unreachable during rollover
       }
     }
-  }
+  });
 
   protected get pollInterval() {
     return 3000;
