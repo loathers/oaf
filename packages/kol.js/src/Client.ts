@@ -110,9 +110,6 @@ export class Client extends Emittery<Events> {
           !requestUrl.includes("login.php") &&
           response.url.includes("/login.php")
         ) {
-          console.log(
-            `[rollover] redirect to login.php detected for ${requestUrl}, body=${JSON.stringify(response._data)}`,
-          );
           throw new LoginRedirectError();
         }
       },
