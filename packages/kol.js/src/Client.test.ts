@@ -4,12 +4,28 @@ import { Client } from "./Client.js";
 import { AuthError, RolloverError } from "./errors.js";
 import { loadFixture } from "./testUtils.js";
 
-function mockSession(fn: () => unknown) {
-  return Object.assign(fn, {
-    raw: vi.fn(),
-    native: fetch,
-    create: vi.fn(),
-  }) as unknown as Client["session"];
+function mockSession(
+  fn: (path: string) => unknown,
+  options?: { redirectUrl?: (path: string) => string },
+) {
+  const session = Object.assign(
+    (path: string) => {
+      const result = fn(path);
+      const responseUrl = options?.redirectUrl?.(path) ?? path;
+      // Simulate onResponse hook — detect maint.php redirect
+      if (responseUrl.includes("/maint.php") || responseUrl.includes("maint.php")) {
+        // The real onResponse hook would set #isRollover and throw
+        throw new RolloverError();
+      }
+      return result;
+    },
+    {
+      raw: vi.fn(),
+      native: fetch,
+      create: vi.fn(),
+    },
+  ) as unknown as Client["session"];
+  return session;
 }
 
 describe("Skill descriptions", () => {
@@ -205,11 +221,11 @@ describe("login deduplication", () => {
 });
 
 describe("rollover handling", () => {
-  it("detects rollover from login.php response", async () => {
+  it("detects rollover when login throws RolloverError", async () => {
     const client = new Client("", "");
-    client.session = mockSession(
-      () => "The system is currently down for nightly maintenance.",
-    );
+    client.session = mockSession(() => {
+      throw new RolloverError();
+    });
     await client.login();
     expect(client.isRollover()).toBe(true);
   });
@@ -217,9 +233,9 @@ describe("rollover handling", () => {
   it("fetchText blocks during rollover and resumes after recovery", async () => {
     vi.useFakeTimers();
     const client = new Client("", "");
-    client.session = mockSession(
-      () => "The system is currently down for nightly maintenance",
-    );
+    client.session = mockSession(() => {
+      throw new RolloverError();
+    });
     await client.login();
     expect(client.isRollover()).toBe(true);
 
@@ -228,7 +244,7 @@ describe("rollover handling", () => {
       calls++;
       // First call: #waitForRolloverEnd polls login.php — recovered
       if (calls === 1) return "<html>normal</html>";
-      // Second call: checkLoggedIn
+      // Second call: checkLoggedIn for re-login
       if (calls === 2) return { pwd: "abc123" };
       // Third call: the actual fetchText request
       return "response body";
@@ -247,9 +263,9 @@ describe("rollover handling", () => {
     vi.useFakeTimers();
     const client = new Client("", "");
 
-    client.session = mockSession(
-      () => "The system is currently down for nightly maintenance",
-    );
+    client.session = mockSession(() => {
+      throw new RolloverError();
+    });
     await client.login();
     expect(client.isRollover()).toBe(true);
 
@@ -259,9 +275,8 @@ describe("rollover handling", () => {
     let calls = 0;
     client.session = mockSession(() => {
       calls++;
-      // First call: #waitForRolloverEnd polls login.php — still maintenance
-      if (calls === 1)
-        return "The system is currently down for nightly maintenance";
+      // First call: #waitForRolloverEnd polls — still in rollover
+      if (calls === 1) throw new RolloverError();
       // Second call: recovered
       if (calls === 2) return "<html>normal login page</html>";
       // Third call: checkLoggedIn for re-login
@@ -286,17 +301,5 @@ describe("rollover handling", () => {
     expect(rolloverSpy).toHaveBeenCalledOnce();
 
     vi.useRealTimers();
-  });
-
-  it("does not recurse through fetchText/login during rollover check", async () => {
-    const client = new Client("", "");
-    let sessionCallCount = 0;
-    client.session = mockSession(() => {
-      sessionCallCount++;
-      return "The system is currently down for nightly maintenance";
-    });
-
-    await client.login();
-    expect(sessionCallCount).toBeLessThanOrEqual(3);
   });
 });

@@ -64,26 +64,17 @@ class TestClient extends Client {
 
   private async handleRollover(path: string, res: ServerResponse) {
     switch (path) {
-      case "login.php":
+      case "maint.php":
         res.writeHead(200, { "content-type": "text/html" });
-        res.end(await loadFixture(__dirname, "login_maintenance.html"));
+        res.end(await loadFixture(__dirname, "maint.html"));
         return;
       case "api.php":
-        // TODO: verify with real rollover response
+        // TODO: verify with real rollover response — we observed {} for kmail
         res.writeHead(200, { "content-type": "application/json" });
         res.end("{}");
         return;
-      case "newchatmessages.php":
-        // TODO: verify with real rollover response
-        res.writeHead(200, { "content-type": "application/json" });
-        res.end(JSON.stringify({ last: "0", msgs: [] }));
-        return;
-      case "submitnewchat.php":
-        res.writeHead(200, { "content-type": "application/json" });
-        res.end(JSON.stringify({ output: "", msgs: [] }));
-        return;
       default:
-        res.writeHead(302, { location: "/login.php" });
+        res.writeHead(302, { location: "/maint.php" });
         res.end();
         return;
     }
@@ -91,6 +82,10 @@ class TestClient extends Client {
 
   private async handleNormal(path: string, url: URL, res: ServerResponse) {
     switch (path) {
+      case "maint.php":
+        res.writeHead(302, { location: "/login.php" });
+        res.end();
+        return;
       case "login.php":
         res.writeHead(200, { "content-type": "text/html" });
         res.end(await loadFixture(__dirname, "login_normal.html"));

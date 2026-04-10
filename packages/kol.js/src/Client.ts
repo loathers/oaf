@@ -216,11 +216,6 @@ export class Client extends Emittery<Events> {
         }),
       });
 
-      if (Client.#rolloverPattern.test(result)) {
-        this.#isRollover = true;
-        return false;
-      }
-
       if (!(await this.checkLoggedIn())) return false;
 
       return true;
@@ -248,25 +243,20 @@ export class Client extends Emittery<Events> {
     }
   }
 
-  static #rolloverPattern =
-    /The system is currently down for nightly maintenance/;
-
   @deduplicate
   async #waitForRolloverEnd(): Promise<void> {
     this.#isRollover = true;
     while (this.#isRollover) {
       await wait(this.rolloverCheckInterval);
       try {
-        const html = await this.session("login.php", {
-          responseType: "text",
-        });
-        if (!Client.#rolloverPattern.test(html)) {
-          this.#isRollover = false;
-          console.log("[rollover] Recovery detected, emitting rollover event");
-          await this.emit("rollover", new Date());
-        }
+        // If this succeeds without a maint.php redirect, rollover is over.
+        // The onResponse hook throws RolloverError on maint.php redirect.
+        await this.session("login.php", { responseType: "text" });
+        this.#isRollover = false;
+        console.log("[rollover] Recovery detected, emitting rollover event");
+        await this.emit("rollover", new Date());
       } catch {
-        // Server unreachable — stay in rollover
+        // maint.php redirect or server unreachable — stay in rollover
       }
     }
   }
