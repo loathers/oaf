@@ -1,7 +1,6 @@
-import { Memoize, MemoizeExpiring } from "typescript-memoize";
-
 import { config } from "../config.js";
 import { resolveWikiLink } from "../utils.js";
+import { memoize, memoizeExpiring } from "../utils/memoize.js";
 
 type FoundName = {
   name: string;
@@ -104,7 +103,7 @@ export class WikiClient {
     );
   }
 
-  @Memoize()
+  @memoize()
   async findName(searchTerm: string): Promise<FoundName | null> {
     if (!searchTerm.length) return null;
     const clean = emoteNamesFromEmotes(searchTerm).replace(/\u2019/g, "'");
@@ -150,7 +149,7 @@ export class WikiClient {
     return imageMatch ? resolveWikiLink(imageMatch[1]) : "";
   }
 
-  @MemoizeExpiring(60 * 60 * 1000) // Cache for 60 minutes
+  @memoizeExpiring(60 * 60 * 1000) // Cache for 60 minutes
   async getAllPageTitles() {
     const request = {
       action: "query",

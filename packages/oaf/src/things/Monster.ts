@@ -1,8 +1,8 @@
 import { bold, hyperlink } from "discord.js";
-import { Memoize } from "typescript-memoize";
+import { toWikiLink } from "kol.js";
 
 import { inlineExpression } from "../discordUtils.js";
-import { toWikiLink } from "kol.js";
+import { memoize } from "../utils/memoize.js";
 import { Thing } from "./Thing.js";
 import { TData } from "./query.js";
 
@@ -163,7 +163,7 @@ export class Monster extends Thing {
     return description.join("\n");
   }
 
-  @Memoize()
+  @memoize()
   async getDescription(): Promise<string> {
     const description = [bold("Monster"), `(Monster ${this.id})`];
 

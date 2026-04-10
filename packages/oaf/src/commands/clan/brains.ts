@@ -9,7 +9,7 @@ import {
   batchUpdatePlayerNames,
   getPlayersEligibleForBrains,
 } from "../../clients/database.js";
-import { kolClient } from "../../clients/kol.js";
+import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import type { Player } from "../../database-types.js";
 import { formatPlayer } from "../../discordUtils.js";
 
@@ -49,6 +49,8 @@ function formatPlayerList(players: Player[]) {
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  assertNotRollover();
+
   await interaction.deferReply();
 
   const classToPlayers = Object.fromEntries(

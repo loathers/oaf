@@ -1,4 +1,5 @@
 import { LoathingDate } from "kol.js";
+
 import CalendarNav from "./CalendarNav.js";
 import { HOLIDAY_EMOJI } from "./holidayEmoji.js";
 
@@ -31,15 +32,11 @@ type Props = {
 function getGridDates(year: number, month: number) {
   const firstOfMonth = new Date(Date.UTC(year, month, 1));
   const startOffset = firstOfMonth.getUTCDay();
-  const start = new Date(
-    Date.UTC(year, month, 1 - startOffset),
-  );
+  const start = new Date(Date.UTC(year, month, 1 - startOffset));
 
   const lastOfMonth = new Date(Date.UTC(year, month + 1, 0));
   const endOffset = 6 - lastOfMonth.getUTCDay();
-  const end = new Date(
-    Date.UTC(year, month + 1, endOffset),
-  );
+  const end = new Date(Date.UTC(year, month + 1, endOffset));
 
   const dates: Date[] = [];
   const current = new Date(start);
@@ -79,67 +76,76 @@ export default function GregorianCalendar({
         onJumpToToday={onJumpToToday}
       />
       <div className="calendar-grid-wrapper">
-      <div className="calendar-grid gregorian-grid">
-        {DAY_NAMES.map((d) => (
-          <div key={d} className="calendar-header">
-            {d}
-          </div>
-        ))}
-        {dates.map((date) => {
-          const noon = new Date(date.getTime() + 12 * 60 * 60 * 1000);
-          const gameday = LoathingDate.gameDayFromRealDate(noon);
-          const preEpoch = gameday < 0;
-          const ld = preEpoch ? null : new LoathingDate(gameday);
-          const isCurrentMonth = date.getUTCMonth() === month;
-          const isToday = !preEpoch && gameday === todayGameday;
-          const isSelected = !preEpoch && gameday === selectedDay;
-          const statDay = ld?.getStatDay() ?? null;
-          const eventImage = preEpoch ? null : EVENT_IMAGES.get(gameday);
-          const holidays = ld?.getHolidays().filter(
-            (h) => !h.includes("Day") || !["Muscle Day", "Mysticality Day", "Moxie Day"].includes(h),
-          ) ?? [];
-
-          const classes = [
-            "calendar-cell",
-            (!isCurrentMonth || preEpoch) && "outside-month",
-            preEpoch && "pre-epoch",
-            isToday && "today",
-            isSelected && "selected",
-            statDay && STAT_CLASSES[statDay],
-          ]
-            .filter(Boolean)
-            .join(" ");
-
-          return (
-            <div
-              key={date.toISOString()}
-              className={classes}
-              style={{
-                ...(moonlightMode && ld ? { "--moonlight": ld.getMoonlight() } : {}),
-                ...(eventImage ? { backgroundImage: `url(${eventImage})` } : {}),
-              } as React.CSSProperties}
-              onClick={preEpoch ? undefined : () => onSelectDay(gameday)}
-            >
-              <span className="cell-day">{date.getUTCDate()}</span>
-              {preEpoch && (
-                <span className="cell-yore">Days of Yore</span>
-              )}
-              {ld && (
-                <img
-                  className="cell-moons"
-                  src={`data:image/svg+xml,${encodeURIComponent(ld.getMoonsAsSvg())}`}
-                  alt={ld.getMoonDescription()}
-                />
-              )}
-              {holidays.length > 0 && (
-                <span className="cell-holiday" title={holidays.join(", ")}>
-                  {holidays.map((h) => HOLIDAY_EMOJI[h] ?? "🎉").join("")}
-                </span>
-              )}
+        <div className="calendar-grid gregorian-grid">
+          {DAY_NAMES.map((d) => (
+            <div key={d} className="calendar-header">
+              {d}
             </div>
-          );
-        })}
-      </div>
+          ))}
+          {dates.map((date) => {
+            const noon = new Date(date.getTime() + 12 * 60 * 60 * 1000);
+            const gameday = LoathingDate.gameDayFromRealDate(noon);
+            const preEpoch = gameday < 0;
+            const ld = preEpoch ? null : new LoathingDate(gameday);
+            const isCurrentMonth = date.getUTCMonth() === month;
+            const isToday = !preEpoch && gameday === todayGameday;
+            const isSelected = !preEpoch && gameday === selectedDay;
+            const statDay = ld?.getStatDay() ?? null;
+            const eventImage = preEpoch ? null : EVENT_IMAGES.get(gameday);
+            const holidays =
+              ld
+                ?.getHolidays()
+                .filter(
+                  (h) =>
+                    !h.includes("Day") ||
+                    !["Muscle Day", "Mysticality Day", "Moxie Day"].includes(h),
+                ) ?? [];
+
+            const classes = [
+              "calendar-cell",
+              (!isCurrentMonth || preEpoch) && "outside-month",
+              preEpoch && "pre-epoch",
+              isToday && "today",
+              isSelected && "selected",
+              statDay && STAT_CLASSES[statDay],
+            ]
+              .filter(Boolean)
+              .join(" ");
+
+            return (
+              <div
+                key={date.toISOString()}
+                className={classes}
+                style={
+                  {
+                    ...(moonlightMode && ld
+                      ? { "--moonlight": ld.getMoonlight() }
+                      : {}),
+                    ...(eventImage
+                      ? { backgroundImage: `url(${eventImage})` }
+                      : {}),
+                  } as React.CSSProperties
+                }
+                onClick={preEpoch ? undefined : () => onSelectDay(gameday)}
+              >
+                <span className="cell-day">{date.getUTCDate()}</span>
+                {preEpoch && <span className="cell-yore">Days of Yore</span>}
+                {ld && (
+                  <img
+                    className="cell-moons"
+                    src={`data:image/svg+xml,${encodeURIComponent(ld.getMoonsAsSvg())}`}
+                    alt={ld.getMoonDescription()}
+                  />
+                )}
+                {holidays.length > 0 && (
+                  <span className="cell-holiday" title={holidays.join(", ")}>
+                    {holidays.map((h) => HOLIDAY_EMOJI[h] ?? "🎉").join("")}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

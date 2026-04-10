@@ -1,9 +1,8 @@
-import { useState } from "react";
-
 import {
-  WardrobeOMatic,
   type WardrobeItem,
+  WardrobeOMatic,
 } from "kol.js/domains/WardrobeOMatic";
+import { useState } from "react";
 
 const LEVEL_TIERS = [
   { label: "1-4", representative: 1 },

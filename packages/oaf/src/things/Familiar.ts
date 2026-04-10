@@ -1,10 +1,10 @@
 import { type FamiliarCategory } from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
-import { Memoize } from "typescript-memoize";
+import { cleanString, toWikiLink } from "kol.js";
 
 import { kolClient } from "../clients/kol.js";
-import { cleanString, toWikiLink } from "kol.js";
 import { indent } from "../utils.js";
+import { memoize } from "../utils/memoize.js";
 import { Item } from "./Item.js";
 import { Thing } from "./Thing.js";
 import { TData } from "./query.js";
@@ -337,7 +337,7 @@ export class Familiar extends Thing {
     return output.join("\n");
   }
 
-  @Memoize()
+  @memoize()
   async getDescription(): Promise<string> {
     const description = [
       bold("Familiar"),

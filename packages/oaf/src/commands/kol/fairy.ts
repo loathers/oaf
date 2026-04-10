@@ -1,5 +1,4 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
-
 import { fairyItemDrop } from "kol.js/domains/Familiar";
 
 export const data = new SlashCommandBuilder()

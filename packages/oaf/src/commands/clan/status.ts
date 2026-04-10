@@ -7,7 +7,7 @@ import {
 import { DreadsylvaniaDungeon } from "kol.js/domains/Dreadsylvania";
 
 import { discordClient } from "../../clients/discord.js";
-import { kolClient } from "../../clients/kol.js";
+import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import { pluralize } from "../../utils.js";
 import { DREAD_CLANS } from "./_clans.js";
@@ -52,6 +52,8 @@ async function constructDreadStatusMessage(): Promise<{
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+  assertNotRollover();
+
   await interaction.deferReply();
 
   try {

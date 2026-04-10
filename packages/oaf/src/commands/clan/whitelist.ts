@@ -4,7 +4,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { kolClient } from "../../clients/kol.js";
+import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import { findPlayer } from "../_player.js";
 import { ALL_CLANS } from "./_clans.js";
@@ -33,6 +33,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     });
     return;
   }
+
+  assertNotRollover();
 
   await interaction.deferReply();
 

@@ -5776,7 +5776,6 @@ __metadata:
     tsx: "npm:^4.21.0"
     typescript: "npm:^5.9.3"
     typescript-eslint: "npm:^8.56.1"
-    typescript-memoize: "npm:^1.1.1"
     unidecode: "npm:^1.1.0"
     vite: "npm:^7.3.1"
     vitest: "npm:^4.0.18"
@@ -7516,13 +7515,6 @@ __metadata:
     eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
     typescript: ">=4.8.4 <6.0.0"
   checksum: 10c0/c33aeb9a8beab54308412dcd460ab60f845fee30eaed1fdc1083ff53c430a4dcbdfeac862136a21fb3a639538f8712d933fc410680c2a650e67b992720a0d9f6
-  languageName: node
-  linkType: hard
-
-"typescript-memoize@npm:^1.1.1":
-  version: 1.1.1
-  resolution: "typescript-memoize@npm:1.1.1"
-  checksum: 10c0/685f49c200fb94b461869f4945f50da2682541f745410bf548d79f41627dde23be8065854fe7e05793b0a3655c1e3583b96ee987486597620a6175010b6c42f8
   languageName: node
   linkType: hard
 

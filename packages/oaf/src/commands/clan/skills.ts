@@ -1,6 +1,9 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import { JoinClanError, RaidLogMissingError } from "kol.js/domains/ClanDungeon";
-import { DreadsylvaniaRaid, DreadsylvaniaDungeon } from "kol.js/domains/Dreadsylvania";
+import {
+  DreadsylvaniaDungeon,
+  DreadsylvaniaRaid,
+} from "kol.js/domains/Dreadsylvania";
 
 import {
   createRaidsWithParticipation,
@@ -8,7 +11,7 @@ import {
   getPlayersWithRaidParticipation,
 } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
-import { kolClient } from "../../clients/kol.js";
+import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { columnsByMaxLength, formatPlayer } from "../../discordUtils.js";
 import { pluralize } from "../../utils.js";
 import { identifyPlayer } from "../_player.js";
@@ -56,9 +59,9 @@ async function parseLogs() {
   }[] = [];
 
   for (const clan of DREAD_CLANS) {
-    const raidIds = (
-      await dungeon.getRaidIds(clan.id, parsedRaids)
-    ).filter((id) => !parsedRaids.includes(id));
+    const raidIds = (await dungeon.getRaidIds(clan.id, parsedRaids)).filter(
+      (id) => !parsedRaids.includes(id),
+    );
     const raids = await Promise.all(
       raidIds.map(async (id) => ({
         id,
@@ -75,17 +78,17 @@ async function parseLogs() {
       }
 
       const participation = await Promise.all(
-        Object.values(
-          raid.getParticipation(),
-        ).map(async ({ playerId, skills, kills }) => ({
-          playerId,
-          playerName:
-            (!knownPlayerIds.includes(playerId) &&
-              (await kolClient.players.getNameFromId(playerId))) ||
-            "Unknown",
-          skills,
-          kills,
-        })),
+        Object.values(raid.getParticipation()).map(
+          async ({ playerId, skills, kills }) => ({
+            playerId,
+            playerName:
+              (!knownPlayerIds.includes(playerId) &&
+                (await kolClient.players.getNameFromId(playerId))) ||
+              "Unknown",
+            skills,
+            kills,
+          }),
+        ),
       );
 
       raidUpdates.push({
@@ -102,6 +105,8 @@ async function parseLogs() {
 export async function execute(interaction: ChatInputCommandInteraction) {
   const input = interaction.options.getString("player", false);
 
+  assertNotRollover();
+
   await interaction.deferReply();
 
   try {
@@ -112,7 +117,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const participation = DreadsylvaniaRaid.mergeParticipation(
       ...dbParticipation.map((r) => ({
-        [r.playerId]: { playerId: r.playerId, skills: r.skills, kills: r.kills },
+        [r.playerId]: {
+          playerId: r.playerId,
+          skills: r.skills,
+          kills: r.kills,
+        },
       })),
       ...(await getParticipationFromCurrentRaid()),
     );
@@ -140,8 +149,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const skillsOwed = players
       .filter(
-        (player) =>
-          !player.doneWithSkills && participation[player.playerId],
+        (player) => !player.doneWithSkills && participation[player.playerId],
       )
       .map((player) => {
         const { skills, kills } = participation[player.playerId];

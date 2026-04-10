@@ -9,8 +9,8 @@ import {
   useState,
 } from "react";
 import * as THREE from "three";
-import { Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
 import type { Group, Mesh, Texture } from "three";
+import { Brush, Evaluator, SUBTRACTION } from "three-bvh-csg";
 
 // Orbital parameters
 const SUN_SEMI_MAJOR = 15;
@@ -75,7 +75,8 @@ function OrbitRing({
   }, [radiusX, rz]);
 
   const material = useMemo(
-    () => new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.3 }),
+    () =>
+      new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.3 }),
     [color],
   );
 
@@ -165,8 +166,10 @@ function LoathingSystem({
     // Grimace orbits Loathing (lower band)
     const grimaceAngle = t * GRIMACE_ORBIT_SPEED;
     if (grimaceRef.current) {
-      grimaceRef.current.position.x = Math.cos(grimaceAngle) * MOON_ORBIT_RADIUS;
-      grimaceRef.current.position.z = Math.sin(grimaceAngle) * MOON_ORBIT_RADIUS;
+      grimaceRef.current.position.x =
+        Math.cos(grimaceAngle) * MOON_ORBIT_RADIUS;
+      grimaceRef.current.position.z =
+        Math.sin(grimaceAngle) * MOON_ORBIT_RADIUS;
       grimaceRef.current.position.y = -0.4;
     }
 
@@ -177,16 +180,23 @@ function LoathingSystem({
     // Compute illumination phases (0-7) from elongation
     // Elongation 0 = new (phase 0), π = full (phase 4)
     // Normalize the angle to 0→2π then map to 0→8
-    const ronaldElong = ((ronaldAngle - sunAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-    const grimaceElong = ((grimaceAngle - sunAngle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+    const ronaldElong =
+      (((ronaldAngle - sunAngle) % (Math.PI * 2)) + Math.PI * 2) %
+      (Math.PI * 2);
+    const grimaceElong =
+      (((grimaceAngle - sunAngle) % (Math.PI * 2)) + Math.PI * 2) %
+      (Math.PI * 2);
     const ronaldPhase = (ronaldElong / (Math.PI * 2)) * 8;
     const grimacePhase = (grimaceElong / (Math.PI * 2)) * 8;
 
     // Update shared positions for the phase overlay
     positionsRef.current = {
-      sunAngle, ronaldAngle, grimaceAngle,
+      sunAngle,
+      ronaldAngle,
+      grimaceAngle,
       hamburglarPhase: rawPhase,
-      ronaldPhase, grimacePhase,
+      ronaldPhase,
+      grimacePhase,
     };
 
     // Hamburglar: keyframed to match the 11 phase descriptions
@@ -194,16 +204,16 @@ function LoathingSystem({
       const c = 0.6; // clearance from moon center
       // Phase keyframes: [target, radial, tangential, vertical]
       const keyframes: [string, number, number, number][] = [
-        ["g", -c, -0.3, 0],    // 0: in front of Grimace's left side
-        ["g", -c, 0.3, 0],     // 1: in front of Grimace's right side
-        ["g", 0, 0.5, 0.1],    // 2: heading behind Grimace
-        ["g", c, 0, 0.2],      // 3: hidden behind Grimace
-        ["g", 0, -0.5, 0.1],   // 4: appearing from behind Grimace
-        ["r", 0, -0.5, -0.1],  // 5: disappearing behind Ronald
-        ["r", c, 0, -0.2],     // 6: hidden behind Ronald
-        ["r", 0, 0.5, -0.1],   // 7: returning from behind Ronald
-        ["r", -c, -0.3, 0],    // 8: in front of Ronald's left side
-        ["r", -c, 0.3, 0],     // 9: in front of Ronald's right side
+        ["g", -c, -0.3, 0], // 0: in front of Grimace's left side
+        ["g", -c, 0.3, 0], // 1: in front of Grimace's right side
+        ["g", 0, 0.5, 0.1], // 2: heading behind Grimace
+        ["g", c, 0, 0.2], // 3: hidden behind Grimace
+        ["g", 0, -0.5, 0.1], // 4: appearing from behind Grimace
+        ["r", 0, -0.5, -0.1], // 5: disappearing behind Ronald
+        ["r", c, 0, -0.2], // 6: hidden behind Ronald
+        ["r", 0, 0.5, -0.1], // 7: returning from behind Ronald
+        ["r", -c, -0.3, 0], // 8: in front of Ronald's left side
+        ["r", -c, 0.3, 0], // 9: in front of Ronald's right side
         ["m", -c * 0.8, 0, 0], // 10: front and center
       ];
       const phaseIndex = Math.floor(rawPhase);
@@ -242,9 +252,13 @@ function LoathingSystem({
         } else {
           // Midpoint between both moons
           return [
-            (Math.cos(ronaldAngle) + Math.cos(grimaceAngle)) * MOON_ORBIT_RADIUS / 2,
+            ((Math.cos(ronaldAngle) + Math.cos(grimaceAngle)) *
+              MOON_ORBIT_RADIUS) /
+              2,
             0,
-            (Math.sin(ronaldAngle) + Math.sin(grimaceAngle)) * MOON_ORBIT_RADIUS / 2,
+            ((Math.sin(ronaldAngle) + Math.sin(grimaceAngle)) *
+              MOON_ORBIT_RADIUS) /
+              2,
           ];
         }
       }
@@ -403,13 +417,24 @@ function MoonPhaseSvg({
 
   return (
     <div style={{ textAlign: "center" }}>
-      <svg width={size * 1.6} height={size} viewBox={`${-size * 0.3} 0 ${size * 1.6} ${size}`}>
+      <svg
+        width={size * 1.6}
+        height={size}
+        viewBox={`${-size * 0.3} 0 ${size * 1.6} ${size}`}
+      >
         {/* Dark base (unlit moon) */}
         <circle cx={cx} cy={cy} r={r} fill="#222" />
         {/* Lit portion */}
         <path d={d} fill="#ddd" />
         {/* Moon outline */}
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#555" strokeWidth={0.5} />
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke="#555"
+          strokeWidth={0.5}
+        />
         {/* Hamburglar: white when illuminated, dark when casting shadow */}
         {hamburglar && hamburglar.light !== 0 && (
           <circle
@@ -434,7 +459,9 @@ function PhaseOverlay({
 }) {
   const [ronaldElong, setRonaldElong] = useState(0);
   const [grimaceElong, setGrimaceElong] = useState(0);
-  const [grimaceHamb, setGrimaceHamb] = useState<HamburglarOverlay | null>(null);
+  const [grimaceHamb, setGrimaceHamb] = useState<HamburglarOverlay | null>(
+    null,
+  );
   const [ronaldHamb, setRonaldHamb] = useState<HamburglarOverlay | null>(null);
 
   const updatePhases = useCallback(() => {
@@ -468,16 +495,28 @@ function PhaseOverlay({
     // Returns -1 (shadow), 0 (not visible), or 1 (illuminated)
     function hambLight(): -1 | 0 | 1 {
       switch (phaseInt) {
-        case 0: return (g > 0 && g < 5) ? -1 : 1;
-        case 1: return g < 4 ? 1 : -1;
-        case 2: return g > 3 ? 1 : 0;
-        case 4: return (g > 0 && g < 5) ? 1 : 0;
-        case 5: return r > 3 ? 1 : 0;
-        case 7: return (r > 0 && r < 5) ? 1 : 0;
-        case 8: return (r > 0 && r < 5) ? -1 : 1;
-        case 9: return r < 4 ? 1 : -1;
-        case 10: return Math.min((r > 3 ? 1 : 0) + (g > 0 && g < 5 ? 1 : 0), 1) as 0 | 1;
-        default: return 0;
+        case 0:
+          return g > 0 && g < 5 ? -1 : 1;
+        case 1:
+          return g < 4 ? 1 : -1;
+        case 2:
+          return g > 3 ? 1 : 0;
+        case 4:
+          return g > 0 && g < 5 ? 1 : 0;
+        case 5:
+          return r > 3 ? 1 : 0;
+        case 7:
+          return r > 0 && r < 5 ? 1 : 0;
+        case 8:
+          return r > 0 && r < 5 ? -1 : 1;
+        case 9:
+          return r < 4 ? 1 : -1;
+        case 10:
+          return Math.min((r > 3 ? 1 : 0) + (g > 0 && g < 5 ? 1 : 0), 1) as
+            | 0
+            | 1;
+        default:
+          return 0;
       }
     }
 
@@ -541,8 +580,16 @@ function PhaseOverlay({
         padding: "8px 12px",
       }}
     >
-      <MoonPhaseSvg elongation={ronaldElong} label="Ronald" hamburglar={ronaldHamb} />
-      <MoonPhaseSvg elongation={grimaceElong} label="Grimace" hamburglar={grimaceHamb} />
+      <MoonPhaseSvg
+        elongation={ronaldElong}
+        label="Ronald"
+        hamburglar={ronaldHamb}
+      />
+      <MoonPhaseSvg
+        elongation={grimaceElong}
+        label="Grimace"
+        hamburglar={grimaceHamb}
+      />
     </div>
   );
 }
@@ -590,7 +637,8 @@ export default function MoonOrbits({ onClose }: { onClose: () => void }) {
         }}
       >
         <span style={{ fontSize: "12px", opacity: 0.5, maxWidth: "60%" }}>
-          Work in progress — not accurate or lore-accurate. Drag to rotate, scroll to zoom.
+          Work in progress — not accurate or lore-accurate. Drag to rotate,
+          scroll to zoom.
         </span>
         <button
           onClick={onClose}
@@ -615,7 +663,11 @@ export default function MoonOrbits({ onClose }: { onClose: () => void }) {
           <ambientLight intensity={0.05} />
           <Starfield />
           <OrbitControls enablePan={false} />
-          <OrbitRing radiusX={SUN_SEMI_MAJOR} radiusZ={SUN_SEMI_MINOR} color="#ffdd44" />
+          <OrbitRing
+            radiusX={SUN_SEMI_MAJOR}
+            radiusZ={SUN_SEMI_MINOR}
+            color="#ffdd44"
+          />
           <Sun />
           <LoathingSystem positionsRef={positionsRef} />
         </Canvas>

@@ -3,11 +3,13 @@ import Emittery from "emittery";
 import makeFetchCookie from "fetch-cookie";
 import { ofetch } from "ofetch";
 import { CookieJar } from "tough-cookie";
+import type { Dispatcher } from "undici";
 
 import { ChatMailbox, type ChatMessage } from "./domains/ChatMailbox.js";
 import { KmailMailbox, type KmailMessage } from "./domains/KmailMailbox.js";
 import { Players } from "./domains/Players.js";
 import pkg from "../package.json" with { type: "json" };
+import { deduplicate } from "./utils/deduplicate.js";
 import { sanitiseBlueText, wait } from "./utils/utils.js";
 
 export type MallPrice = {
@@ -19,21 +21,9 @@ export type MallPrice = {
   minPrice: number | null;
 };
 
+import { AuthError, RolloverError } from "./errors.js";
+
 class LoginRedirectError extends Error {}
-
-export class RolloverError extends Error {
-  constructor() {
-    super("Kingdom of Loathing is currently down for rollover");
-    this.name = "RolloverError";
-  }
-}
-
-export class AuthError extends Error {
-  constructor() {
-    super("Unable to log in to Kingdom of Loathing");
-    this.name = "AuthError";
-  }
-}
 
 type FormData = Record<string, string | number | boolean>;
 
@@ -79,12 +69,21 @@ type ApiStatus = {
 export class Client extends Emittery<Events> {
   actionMutex = new Mutex();
   #cookieJar = new CookieJar();
+  protected get baseURL() {
+    return "https://www.kingdomofloathing.com";
+  }
+
+  protected get dispatcher(): Dispatcher | undefined {
+    return undefined;
+  }
+
   session = ofetch.create(
     {
-      baseURL: "https://www.kingdomofloathing.com",
       retry: 0,
       headers: { "user-agent": `kol.js/${pkg.version}` },
       onRequest: ({ options }) => {
+        options.baseURL = this.baseURL;
+        options.dispatcher = this.dispatcher;
         if (options.query) {
           const { pwd: _, ...rest } = options.query;
           options.query = { ...rest, pwd: this.#pwd };
@@ -95,11 +94,51 @@ export class Client extends Emittery<Events> {
       },
       onResponse: ({ request, response }) => {
         const requestUrl = typeof request === "string" ? request : request.url;
+
+        // Log all responses during rollover for fixture collection
+        if (this.#isRollover) {
+          console.log(
+            `[rollover] ${requestUrl} → ${response.status} ${response.url} body=${JSON.stringify(response._data)}`,
+          );
+        }
+
+        // Log unexpected kmail API responses even before #isRollover is set
+        if (
+          requestUrl.includes("what=kmail") &&
+          !Array.isArray(response._data)
+        ) {
+          console.log(
+            `[rollover] api.php?what=kmail returned non-array: ${requestUrl} → ${response.status} ${response.url} body=${JSON.stringify(response._data)}`,
+          );
+        }
+
+        if (response.url.includes("/maint.php")) {
+          if (!this.#isRollover) {
+            console.log(
+              `[rollover] entering rollover: ${requestUrl} → ${response.url} body=${JSON.stringify(response._data)}`,
+            );
+          }
+          this.#isRollover = true;
+          throw new RolloverError();
+        }
+        if (this.#isRollover && !response.url.includes("/api.php")) {
+          this.#isRollover = false;
+          console.log("[rollover] Recovery detected, emitting rollover event");
+          void this.emit("rollover", new Date());
+        }
         if (
           !requestUrl.includes("login.php") &&
           response.url.includes("/login.php")
         ) {
           throw new LoginRedirectError();
+        }
+      },
+      onResponseError: ({ request, response }) => {
+        const requestUrl = typeof request === "string" ? request : request.url;
+        if (requestUrl.includes("api.php")) {
+          console.log(
+            `[rollover] api.php error response: ${requestUrl} → ${response.status} ${response.url} body=${typeof response._data === "string" ? response._data : JSON.stringify(response._data)}`,
+          );
         }
       },
     },
@@ -112,10 +151,8 @@ export class Client extends Emittery<Events> {
   #username: string;
   #password: string;
   #isRollover = false;
-  #rolloverCheckScheduled = false;
   #chatBotStarted = false;
   #pwd = "";
-  #loginPromise: Promise<boolean> | null = null;
 
   constructor(username: string, password: string) {
     super();
@@ -127,23 +164,36 @@ export class Client extends Emittery<Events> {
     return this.#username;
   }
 
-  async #withReauth<T>(fn: () => Promise<T>): Promise<T> {
-    if (this.#isRollover) throw new RolloverError();
+  async #withRecovery<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.#isRollover) await this.waitForRolloverEnd();
+
     if (!this.#pwd && !(await this.login())) {
-      if (this.#isRollover) throw new RolloverError();
-      throw new AuthError();
+      if (this.#isRollover) {
+        await this.waitForRolloverEnd();
+        if (!(await this.login())) throw new AuthError();
+      } else {
+        throw new AuthError();
+      }
     }
 
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         return await fn();
       } catch (error) {
-        if (error instanceof RolloverError) throw error;
+        if (error instanceof RolloverError) {
+          await this.waitForRolloverEnd();
+          if (!(await this.login())) throw new AuthError();
+          continue;
+        }
         if (error instanceof LoginRedirectError && attempt === 0) {
           this.#pwd = "";
           if (!(await this.login())) {
-            if (this.#isRollover) throw new RolloverError();
-            throw new AuthError();
+            if (this.#isRollover) {
+              await this.waitForRolloverEnd();
+              if (!(await this.login())) throw new AuthError();
+            } else {
+              throw new AuthError();
+            }
           }
           continue;
         }
@@ -156,7 +206,7 @@ export class Client extends Emittery<Events> {
 
   async fetchText(path: string, options: RequestOptions = {}): Promise<string> {
     const { form, ...rest } = options;
-    return this.#withReauth(() =>
+    return this.#withRecovery(() =>
       this.session(path, {
         method: "POST",
         ...rest,
@@ -171,7 +221,7 @@ export class Client extends Emittery<Events> {
     options: RequestOptions = {},
   ): Promise<Result> {
     const { form, ...rest } = options;
-    return this.#withReauth(() =>
+    return this.#withRecovery(() =>
       this.session<Result>(path, {
         ...rest,
         body: form ? formToBody(form) : undefined,
@@ -180,21 +230,22 @@ export class Client extends Emittery<Events> {
     );
   }
 
-  async login(): Promise<boolean> {
-    if (this.#loginPromise) return this.#loginPromise;
-    this.#loginPromise = this.#doLogin();
+  @deduplicate()
+  async logout(): Promise<void> {
     try {
-      return await this.#loginPromise;
-    } finally {
-      this.#loginPromise = null;
+      await this.session("logout.php", { responseType: "text" });
+    } catch (error) {
+      if (!(error instanceof LoginRedirectError)) throw error;
     }
+    this.#pwd = "";
   }
 
-  async #doLogin(): Promise<boolean> {
+  @deduplicate()
+  async login(): Promise<boolean> {
     if (await this.checkLoggedIn()) return true;
     if (this.#isRollover) return false;
     try {
-      const result = await this.session("login.php", {
+      await this.session("login.php", {
         method: "POST",
         responseType: "text",
         body: formToBody({
@@ -206,18 +257,10 @@ export class Client extends Emittery<Events> {
         }),
       });
 
-      if (Client.#rolloverPattern.test(result)) {
-        throw new RolloverError();
-      }
-
-      if (!(await this.checkLoggedIn())) return false;
-
-      return true;
+      return await this.checkLoggedIn();
     } catch (error) {
-      if (!(error instanceof RolloverError)) {
-        console.error("Login failed:", error);
-      }
-      await this.#checkForRollover();
+      if (error instanceof RolloverError) return false;
+      console.error("Login failed:", error);
       return false;
     }
   }
@@ -239,69 +282,72 @@ export class Client extends Emittery<Events> {
     }
   }
 
-  static #rolloverPattern =
-    /The system is currently down for nightly maintenance/;
-
-  // Uses this.session directly to avoid recursion through fetchText → login
-  async #checkForRollover() {
-    try {
-      const html = await this.session("login.php", { responseType: "text" });
-      const isRollover = Client.#rolloverPattern.test(html);
-
-      if (this.#isRollover && !isRollover) {
-        this.#isRollover = false;
-        await this.emit("rollover", new Date());
-        return;
+  @deduplicate()
+  async waitForRolloverEnd(): Promise<void> {
+    while (this.#isRollover) {
+      await wait(this.rolloverCheckInterval);
+      try {
+        await this.session("login.php", { responseType: "text" });
+      } catch {
+        // Server unreachable during rollover
       }
-
-      this.#isRollover = isRollover;
-    } catch {
-      // Can't reach server or handler failed — don't change rollover state
-    }
-
-    if (this.#isRollover && !this.#rolloverCheckScheduled) {
-      this.#rolloverCheckScheduled = true;
-      setTimeout(() => {
-        this.#rolloverCheckScheduled = false;
-        void this.#checkForRollover();
-      }, 60_000);
     }
   }
+
+  protected get pollInterval() {
+    return 3000;
+  }
+
+  protected get rolloverCheckInterval() {
+    return 60_000;
+  }
+
+  #abortController: AbortController | null = null;
+  #disposeChatBotListeners: (() => void) | null = null;
 
   async startChatBot() {
     if (this.#chatBotStarted) return;
     this.#chatBotStarted = true;
-    this.on("rollover", () => void this.#joinChat());
+    this.#abortController = new AbortController();
+    this.#disposeChatBotListeners = this.on(
+      "rollover",
+      () => void this.#joinChat(),
+    );
     await this.#joinChat();
-    this.loopChatBot().catch((error) => {
+    this.#loopChatBot().catch((error) => {
       console.error("Chat bot stopped:", error);
     });
+  }
+
+  stopChatBot() {
+    this.#disposeChatBotListeners?.();
+    this.#disposeChatBotListeners = null;
+    this.#abortController?.abort();
+    this.#abortController = null;
+    this.#chatBotStarted = false;
   }
 
   async #joinChat() {
     try {
       await this.chat.macro("/join talkie");
     } catch (error) {
-      if (!(error instanceof RolloverError)) {
-        console.error("Failed to join chat:", error);
-      }
+      console.error("Failed to join chat:", error);
     }
   }
 
-  private async loopChatBot() {
-    while (true) {
+  async #loopChatBot() {
+    while (this.#abortController && !this.#abortController.signal.aborted) {
       try {
         await Promise.all([this.chat.check(), this.kmail.check()]);
       } catch (error) {
         if (error instanceof AuthError) throw error;
-        if (!(error instanceof RolloverError)) {
-          console.error("Chat bot loop error:", error);
+        if (error instanceof RolloverError) {
+          await this.waitForRolloverEnd();
+          continue;
         }
-        if (!this.#isRollover) {
-          await this.#checkForRollover();
-        }
+        console.error("Chat bot loop error:", error);
       }
-      await wait(this.#isRollover ? 60_000 : 3000);
+      await wait(this.pollInterval);
     }
   }
 

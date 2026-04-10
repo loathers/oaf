@@ -1,8 +1,8 @@
 import { type SkillTag } from "data-of-loathing";
 import { bold } from "discord.js";
-import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol.js";
+import { memoize } from "../utils/memoize.js";
 import { Thing } from "./Thing.js";
 import { TData } from "./query.js";
 
@@ -45,7 +45,7 @@ export class Skill extends Thing {
     >;
   }
 
-  @Memoize()
+  @memoize()
   async getDescription(): Promise<string> {
     const description: string[] = [];
 

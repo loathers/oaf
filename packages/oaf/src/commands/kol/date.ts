@@ -4,9 +4,9 @@ import {
   SlashCommandBuilder,
   bold,
 } from "discord.js";
+import { LoathingDate } from "kol.js";
 import { dedent } from "ts-dedent";
 
-import { LoathingDate } from "kol.js";
 import { renderSvg } from "../../svgConverter.js";
 
 export const data = new SlashCommandBuilder()

@@ -1,6 +1,13 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
-
 import { LoathingDate } from "kol.js";
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
 import DayDetail from "../components/DayDetail.js";
 import GregorianCalendar from "../components/GregorianCalendar.js";
 import KolCalendar from "../components/KolCalendar.js";
@@ -41,9 +48,14 @@ function getGamedayFromHash(): number | null {
 export default function CalendarPage() {
   const now = useMemo(() => {
     const d = new Date();
-    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12));
+    return new Date(
+      Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12),
+    );
   }, []);
-  const todayGameday = useMemo(() => LoathingDate.gameDayFromRealDate(now), [now]);
+  const todayGameday = useMemo(
+    () => LoathingDate.gameDayFromRealDate(now),
+    [now],
+  );
   const todayKolYear = useMemo(
     () => new LoathingDate(todayGameday).getYear(),
     [todayGameday],
@@ -103,12 +115,9 @@ export default function CalendarPage() {
     [gregYear, gregMonth],
   );
 
-  const navigateKol = useCallback(
-    (delta: number) => {
-      setKolYear((y) => y + delta);
-    },
-    [],
-  );
+  const navigateKol = useCallback((delta: number) => {
+    setKolYear((y) => y + delta);
+  }, []);
 
   const navigateTo = useCallback((ld: LoathingDate) => {
     const rd = ld.toRealDate();
@@ -117,13 +126,19 @@ export default function CalendarPage() {
     setKolYear(ld.getYear());
   }, []);
 
-  const jumpGregorian = useCallback((year: number, month: number) => {
-    navigateTo(new LoathingDate(new Date(Date.UTC(year, month, 15))));
-  }, [navigateTo]);
+  const jumpGregorian = useCallback(
+    (year: number, month: number) => {
+      navigateTo(new LoathingDate(new Date(Date.UTC(year, month, 15))));
+    },
+    [navigateTo],
+  );
 
-  const jumpKol = useCallback((year: number) => {
-    navigateTo(new LoathingDate(year, 0, 1));
-  }, [navigateTo]);
+  const jumpKol = useCallback(
+    (year: number) => {
+      navigateTo(new LoathingDate(year, 0, 1));
+    },
+    [navigateTo],
+  );
 
   const jumpToToday = useCallback(() => {
     navigateTo(new LoathingDate(todayGameday));
@@ -172,7 +187,9 @@ export default function CalendarPage() {
           />
           Moonlight
         </label>
-        <button onClick={() => setShow3D(true)} title="Orrery">🔭</button>
+        <button onClick={() => setShow3D(true)} title="Orrery">
+          🔭
+        </button>
       </div>
 
       {view === "gregorian" ? (

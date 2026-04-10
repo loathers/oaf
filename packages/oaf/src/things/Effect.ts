@@ -1,7 +1,7 @@
 import { bold } from "discord.js";
-import { Memoize } from "typescript-memoize";
 
 import { kolClient } from "../clients/kol.js";
+import { memoize } from "../utils/memoize.js";
 import { Thing } from "./Thing.js";
 import { TData } from "./query.js";
 
@@ -48,7 +48,7 @@ export class Effect extends Thing {
     return `Pizza: ${this.pizza.letters.padEnd(4, "✱")} (${options})`;
   }
 
-  @Memoize()
+  @memoize()
   async getDescription() {
     if (!this.effect.descid) return "This effect seems to have no description";
     const { blueText } = await kolClient.getEffectDescription(

@@ -3,6 +3,7 @@ import { type AnyNode, Element } from "domhandler";
 import { decodeHTML } from "entities";
 import { parseDocument } from "htmlparser2";
 
+import { RolloverError } from "../errors.js";
 import { Player } from "../Player.js";
 import { type Message, Mailbox } from "./Mailbox.js";
 
@@ -120,7 +121,14 @@ export class KmailMailbox extends Mailbox<KmailMessage> {
       },
     });
 
-    if (!Array.isArray(kmails) || kmails.length === 0) return [];
+    if (!Array.isArray(kmails)) {
+      console.log(
+        `[rollover] kmail api.php returned non-array: ${JSON.stringify(kmails)}`,
+      );
+      throw new RolloverError();
+    }
+
+    if (kmails.length === 0) return [];
 
     return kmails.map((msg: RawKmail) => ({
       id: Number(msg.id),
