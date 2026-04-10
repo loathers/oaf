@@ -394,7 +394,6 @@ code {
   width: 100%;
 }
 
-
 .calendar-jump-actions {
   display: flex;
   gap: 0.5rem;
@@ -816,19 +815,33 @@ body.moonlight-mode .calendar-jump-actions button[type="button"]:hover {
 }
 
 body.moonlight-mode .calendar-cell {
-  background: color-mix(in srgb, #c8dcff calc(var(--moonlight, 0) * 10%), #0f0f23);
+  background: color-mix(
+    in srgb,
+    #c8dcff calc(var(--moonlight, 0) * 10%),
+    #0f0f23
+  );
   color: #ccd6f6;
-  box-shadow: 0 0 calc(var(--moonlight, 0) * 3px) calc(var(--moonlight, 0) * 1px) rgba(200, 220, 255, calc(var(--moonlight, 0) * 0.1));
+  box-shadow: 0 0 calc(var(--moonlight, 0) * 3px)
+    calc(var(--moonlight, 0) * 1px)
+    rgba(200, 220, 255, calc(var(--moonlight, 0) * 0.1));
 }
 
 body.moonlight-mode .calendar-cell.stat-muscle,
 body.moonlight-mode .calendar-cell.stat-myst,
 body.moonlight-mode .calendar-cell.stat-moxie {
-  background: color-mix(in srgb, #c8dcff calc(var(--moonlight, 0) * 10%), #0f0f23);
+  background: color-mix(
+    in srgb,
+    #c8dcff calc(var(--moonlight, 0) * 10%),
+    #0f0f23
+  );
 }
 
 body.moonlight-mode .calendar-cell.outside-month {
-  background: color-mix(in srgb, #c8dcff calc(var(--moonlight, 0) * 10%), #0f0f23);
+  background: color-mix(
+    in srgb,
+    #c8dcff calc(var(--moonlight, 0) * 10%),
+    #0f0f23
+  );
   color: #4a4a6a;
 }
 
@@ -841,7 +854,11 @@ body.moonlight-mode .calendar-cell.pre-epoch:hover {
 }
 
 body.moonlight-mode .calendar-cell:hover {
-  background: color-mix(in srgb, #c8dcff calc(var(--moonlight, 0) * 10% + 8%), #0f0f23);
+  background: color-mix(
+    in srgb,
+    #c8dcff calc(var(--moonlight, 0) * 10% + 8%),
+    #0f0f23
+  );
 }
 
 body.moonlight-mode .calendar-cell.selected {

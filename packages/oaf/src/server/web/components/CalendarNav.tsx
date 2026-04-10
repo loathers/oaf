@@ -49,7 +49,12 @@ export default function CalendarNav(props: Props) {
     } else {
       setInputYear(String(props.kolYear));
     }
-  }, [open, props.mode, props.mode === "gregorian" ? props.year : props.kolYear, props.mode === "gregorian" ? props.month : 0]);
+  }, [
+    open,
+    props.mode,
+    props.mode === "gregorian" ? props.year : props.kolYear,
+    props.mode === "gregorian" ? props.month : 0,
+  ]);
 
   useEffect(() => {
     if (!open) return;
@@ -88,7 +93,9 @@ export default function CalendarNav(props: Props) {
 
   return (
     <div className="calendar-nav">
-      <button disabled={atStart} onClick={() => props.onNavigate(-1)}>&larr;</button>
+      <button disabled={atStart} onClick={() => props.onNavigate(-1)}>
+        &larr;
+      </button>
       <div className="calendar-nav-label-wrapper" ref={popupRef}>
         <button
           className="calendar-nav-label"

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { LoathingDate, toWikiLink } from "kol.js";
 
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import {
@@ -6,7 +7,6 @@ import {
   getRafflesForGamedayRange,
 } from "../../clients/database.js";
 import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
-import { LoathingDate, toWikiLink } from "kol.js";
 import type { CalendarData, TextSegment } from "../web/types/calendar.js";
 
 const numberFormat = new Intl.NumberFormat();
@@ -30,7 +30,9 @@ function renderSocp(data: string): TextSegment[] {
   const item = dataOfLoathingClient.findItemById(itemId);
   if (!item) return [{ text: data }];
   const wikiLink = dataOfLoathingClient.getWikiLink(item);
-  const itemName = LoathingDate.isAprilFools() ? "Uncle Hobo's epic beard" : item.name
+  const itemName = LoathingDate.isAprilFools()
+    ? "Uncle Hobo's epic beard"
+    : item.name;
   return [
     { text: itemName, href: wikiLink ?? undefined },
     { text: ` for ${numberFormat.format(price)} knucklebones` },
@@ -55,7 +57,12 @@ function renderJickJar(data: string): TextSegment[] {
 }
 
 function renderG9(data: string): TextSegment[] {
-  return [{ text: `+${data}% all stats`, href: toWikiLink("Experimental Effect G-9") }];
+  return [
+    {
+      text: `+${data}% all stats`,
+      href: toWikiLink("Experimental Effect G-9"),
+    },
+  ];
 }
 
 const RENDERERS: Record<string, (data: string) => TextSegment[]> = {

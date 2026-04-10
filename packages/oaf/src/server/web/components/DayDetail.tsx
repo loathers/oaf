@@ -1,5 +1,6 @@
 import { LoathingDate } from "kol.js";
 import { toWikiLink } from "kol.js";
+
 import type { CalendarData } from "../types/calendar.js";
 import WardrobeSection from "./WardrobeSection.js";
 
@@ -14,11 +15,20 @@ type Props = {
   onNavigateToDay?: () => void;
 };
 
-export default function DayDetail({ gameday, todayGameday, data, loading, visible = true, onNavigateToDay }: Props) {
+export default function DayDetail({
+  gameday,
+  todayGameday,
+  data,
+  loading,
+  visible = true,
+  onNavigateToDay,
+}: Props) {
   const ld = new LoathingDate(gameday);
   const realDate = ld.toRealDate();
 
-  const rollover = new Date(LoathingDate.EPOCH.getTime() + gameday * 24 * 60 * 60 * 1000);
+  const rollover = new Date(
+    LoathingDate.EPOCH.getTime() + gameday * 24 * 60 * 60 * 1000,
+  );
   const rolloverTime = new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
     minute: "2-digit",
@@ -96,7 +106,12 @@ export default function DayDetail({ gameday, todayGameday, data, loading, visibl
                   <strong>{d.displayName}</strong>:{" "}
                   {d.rendered.map((seg, i) =>
                     seg.href ? (
-                      <a key={i} href={seg.href} target="_blank" rel="noreferrer">
+                      <a
+                        key={i}
+                        href={seg.href}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
                         {seg.text}
                       </a>
                     ) : (
@@ -119,19 +134,29 @@ export default function DayDetail({ gameday, todayGameday, data, loading, visibl
           {raffle ? (
             <>
               {([1, 2] as const).map((place) => {
-                const prize = place === 1 ? raffle.firstPrize : raffle.secondPrize;
-                const winners = isToday ? [] : raffle.winners.filter((w) => w.place === place);
+                const prize =
+                  place === 1 ? raffle.firstPrize : raffle.secondPrize;
+                const winners = isToday
+                  ? []
+                  : raffle.winners.filter((w) => w.place === place);
                 return (
                   <p key={place}>
                     {place === 1 ? "🥇" : "🥈"}{" "}
-                    <a href={toWikiLink(prize.name)} target="_blank" rel="noreferrer">
+                    <a
+                      href={toWikiLink(prize.name)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
                       {prize.name}
                     </a>
                     {winners.length > 0 && (
                       <>
                         {" - "}
                         {winners
-                          .map((w) => `${w.playerName} (#${w.playerId}) ${w.tickets.toLocaleString()} tickets`)
+                          .map(
+                            (w) =>
+                              `${w.playerName} (#${w.playerId}) ${w.tickets.toLocaleString()} tickets`,
+                          )
                           .join(", ")}
                       </>
                     )}
