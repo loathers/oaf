@@ -123,6 +123,7 @@ export default function KolCalendar({
                         {holidays.map((h) => HOLIDAY_EMOJI[h] ?? "🎉").join("")}
                       </span>
                     )}
+                    {holidays.includes("April Fools Day") && <BouncingEmoji />}
                   </div>
                 );
               })}
