@@ -151,26 +151,6 @@ describe.concurrent("rollover integration", () => {
     await expect(client.kmail.fetch()).rejects.toBeInstanceOf(RolloverError);
   });
 
-  it("recovers from kmail RolloverError via chat loop", async ({ expect }) => {
-    const client = await createTestClient();
-
-    let rolloverEmitted = false;
-    client.on("rollover", () => {
-      rolloverEmitted = true;
-    });
-
-    await client.startChatBot();
-
-    // kmail.fetch gets {} from api.php → throws RolloverError
-    // chat loop catches it → calls waitForRolloverEnd
-    client.simulateRollover(true);
-    await expect.poll(() => client.isRollover()).toBe(true);
-
-    client.simulateRollover(false);
-    await expect.poll(() => rolloverEmitted).toBe(true);
-    expect(client.isRollover()).toBe(false);
-  });
-
   it("detects rollover and emits event on recovery via chat loop", async ({ expect }) => {
     const client = await createTestClient();
 

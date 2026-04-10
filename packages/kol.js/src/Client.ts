@@ -94,10 +94,30 @@ export class Client extends Emittery<Events> {
       },
       onResponse: ({ request, response }) => {
         const requestUrl = typeof request === "string" ? request : request.url;
-        if (response.url.includes("/maint.php")) {
+
+        // Log all responses during rollover for fixture collection
+        if (this.#isRollover) {
           console.log(
-            `[rollover] redirect to maint.php detected for ${requestUrl}, body=${JSON.stringify(response._data)}`,
+            `[rollover] ${requestUrl} → ${response.status} ${response.url} body=${JSON.stringify(response._data)}`,
           );
+        }
+
+        // Log unexpected kmail API responses even before #isRollover is set
+        if (
+          requestUrl.includes("what=kmail") &&
+          !Array.isArray(response._data)
+        ) {
+          console.log(
+            `[rollover] api.php?what=kmail returned non-array: ${requestUrl} → ${response.status} ${response.url} body=${JSON.stringify(response._data)}`,
+          );
+        }
+
+        if (response.url.includes("/maint.php")) {
+          if (!this.#isRollover) {
+            console.log(
+              `[rollover] entering rollover: ${requestUrl} → ${response.url} body=${JSON.stringify(response._data)}`,
+            );
+          }
           this.#isRollover = true;
           throw new RolloverError();
         }
@@ -111,6 +131,14 @@ export class Client extends Emittery<Events> {
           response.url.includes("/login.php")
         ) {
           throw new LoginRedirectError();
+        }
+      },
+      onResponseError: ({ request, response }) => {
+        const requestUrl = typeof request === "string" ? request : request.url;
+        if (requestUrl.includes("api.php")) {
+          console.log(
+            `[rollover] api.php error response: ${requestUrl} → ${response.status} ${response.url} body=${typeof response._data === "string" ? response._data : JSON.stringify(response._data)}`,
+          );
         }
       },
     },
@@ -275,12 +303,13 @@ export class Client extends Emittery<Events> {
   }
 
   #abortController: AbortController | null = null;
+  #disposeChatBotListeners: (() => void) | null = null;
 
   async startChatBot() {
     if (this.#chatBotStarted) return;
     this.#chatBotStarted = true;
     this.#abortController = new AbortController();
-    this.on("rollover", () => void this.#joinChat());
+    this.#disposeChatBotListeners = this.on("rollover", () => void this.#joinChat());
     await this.#joinChat();
     this.#loopChatBot().catch((error) => {
       console.error("Chat bot stopped:", error);
@@ -288,6 +317,8 @@ export class Client extends Emittery<Events> {
   }
 
   stopChatBot() {
+    this.#disposeChatBotListeners?.();
+    this.#disposeChatBotListeners = null;
     this.#abortController?.abort();
     this.#abortController = null;
     this.#chatBotStarted = false;
