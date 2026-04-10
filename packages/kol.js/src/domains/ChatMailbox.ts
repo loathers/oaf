@@ -1,4 +1,3 @@
-import { RolloverError } from "../errors.js";
 import { Player } from "../Player.js";
 import { type Message, Mailbox } from "./Mailbox.js";
 
@@ -38,10 +37,6 @@ export class ChatMailbox extends Mailbox<ChatMessage> {
     });
 
     this.#lastFetchedMessages = response["last"];
-
-    if (!response["msgs"] || !Array.isArray(response["msgs"])) {
-      throw new RolloverError();
-    }
 
     return response["msgs"].filter(isValidMessage).map(
       (msg): ChatMessage => ({

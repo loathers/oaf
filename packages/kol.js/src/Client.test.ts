@@ -208,3 +208,26 @@ describe("request error handling", () => {
     );
   });
 });
+
+describe("stopChatBot", () => {
+  it("stops the chat loop", async () => {
+    const client = new TestClient();
+    client
+      .simulateLoggedIn()
+      .simulateResponse(/\/newchatmessages\.php/, { last: "1", msgs: [] })
+      .simulateResponse(/\/api\.php/, []);
+
+    await client.login();
+    await client.startChatBot();
+
+    // Loop is running — stop it
+    client.stopChatBot();
+
+    // Starting again should work (proves it was fully stopped)
+    client
+      .simulateResponse(/\/newchatmessages\.php/, { last: "1", msgs: [] })
+      .simulateResponse(/\/api\.php/, []);
+    await client.startChatBot();
+    client.stopChatBot();
+  });
+});
