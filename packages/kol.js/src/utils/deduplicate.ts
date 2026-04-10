@@ -2,12 +2,16 @@ function wrap<This extends WeakKey, Args extends unknown[], Return>(
   fn: (this: This, ...args: Args) => Promise<Return>,
 ): (this: This, ...args: Args) => Promise<Return> {
   const pending = new WeakMap<This, Promise<Return>>();
-  return function (this: This, ...args: Args) {
+  return async function (this: This, ...args: Args) {
     const existing = pending.get(this);
     if (existing) return existing;
     const promise = fn.call(this, ...args);
     pending.set(this, promise);
-    return promise.finally(() => pending.delete(this));
+    try {
+      return await promise;
+    } finally {
+      pending.delete(this);
+    }
   };
 }
 
