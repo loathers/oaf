@@ -4,7 +4,7 @@ import {
   type ServerResponse,
   createServer,
 } from "node:http";
-import { describe, it, onTestFinished } from "vitest";
+import { type TestContext, describe, it } from "vitest";
 
 import { Client } from "../Client.js";
 import { loadFixture } from "../testUtils.js";
@@ -114,49 +114,43 @@ class TestClient extends Client {
   }
 }
 
-async function createTestClient() {
+async function createTestClient(ctx: TestContext) {
   const client = new TestClient();
   await client.start();
-  onTestFinished(() => client.dispose());
+  ctx.onTestFinished(() => client.dispose());
   return client;
 }
 
-describe("rollover integration", () => {
-  it("login succeeds in normal state", async ({ expect }) => {
-    const client = await createTestClient();
+describe.concurrent("rollover integration", () => {
+  it("login succeeds in normal state", async (ctx) => {
+    const client = await createTestClient(ctx);
 
-    expect(await client.login()).toBe(true);
-    expect(client.isRollover()).toBe(false);
+    ctx.expect(await client.login()).toBe(true);
+    ctx.expect(client.isRollover()).toBe(false);
   });
 
-  it("login fails and detects rollover from maintenance page", async ({
-    expect,
-  }) => {
-    const client = await createTestClient();
+  it("login fails and detects rollover from maintenance page", async (ctx) => {
+    const client = await createTestClient(ctx);
     client.simulateRollover(true);
 
-    expect(await client.login()).toBe(false);
-    expect(client.isRollover()).toBe(true);
+    ctx.expect(await client.login()).toBe(false);
+    ctx.expect(client.isRollover()).toBe(true);
   });
 
-  it("kmail.fetch blocks during rollover and resumes after recovery", async ({
-    expect,
-  }) => {
-    const client = await createTestClient();
+  it("kmail.fetch blocks during rollover and resumes after recovery", async (ctx) => {
+    const client = await createTestClient(ctx);
     await client.login();
     client.simulateRollover(true);
 
     setTimeout(() => client.simulateRollover(false), 200);
     const kmails = await client.kmail.fetch();
 
-    expect(kmails).toEqual([]);
-    expect(client.isRollover()).toBe(false);
+    ctx.expect(kmails).toEqual([]);
+    ctx.expect(client.isRollover()).toBe(false);
   });
 
-  it("chat.fetch blocks during rollover and resumes after recovery", async ({
-    expect,
-  }) => {
-    const client = await createTestClient();
+  it("chat.fetch blocks during rollover and resumes after recovery", async (ctx) => {
+    const client = await createTestClient(ctx);
     await client.login();
     client.simulateRollover(true);
 
@@ -168,15 +162,13 @@ describe("rollover integration", () => {
     setTimeout(() => client.simulateRollover(false), 200);
     const messages = await client.chat.fetch();
 
-    expect(messages).toEqual([]);
-    expect(rolloverEmitted).toBe(true);
-    expect(client.isRollover()).toBe(false);
+    ctx.expect(messages).toEqual([]);
+    ctx.expect(rolloverEmitted).toBe(true);
+    ctx.expect(client.isRollover()).toBe(false);
   });
 
-  it("detects rollover and emits event on recovery via chat loop", async ({
-    expect,
-  }) => {
-    const client = await createTestClient();
+  it("detects rollover and emits event on recovery via chat loop", async (ctx) => {
+    const client = await createTestClient(ctx);
 
     let rolloverEmitted = false;
     client.on("rollover", () => {
@@ -186,10 +178,10 @@ describe("rollover integration", () => {
     await client.startChatBot();
 
     client.simulateRollover(true);
-    await expect.poll(() => client.isRollover()).toBe(true);
+    await ctx.expect.poll(() => client.isRollover()).toBe(true);
 
     client.simulateRollover(false);
-    await expect.poll(() => rolloverEmitted).toBe(true);
-    expect(client.isRollover()).toBe(false);
+    await ctx.expect.poll(() => rolloverEmitted).toBe(true);
+    ctx.expect(client.isRollover()).toBe(false);
   });
 });
