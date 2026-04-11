@@ -119,6 +119,7 @@ export class Client extends Emittery<Events> {
   #username: string;
   #password: string;
   #isRollover = false;
+  #disposed = false;
   #chatBotStarted = false;
   #pwd = "";
 
@@ -249,7 +250,7 @@ export class Client extends Emittery<Events> {
   }
 
   waitForRolloverEnd = deduplicate(async (): Promise<void> => {
-    while (this.#isRollover) {
+    while (this.#isRollover && !this.#disposed) {
       await wait(this.rolloverCheckInterval);
       try {
         await this.session("login.php", { responseType: "text" });
@@ -290,6 +291,11 @@ export class Client extends Emittery<Events> {
     this.#abortController?.abort();
     this.#abortController = null;
     this.#chatBotStarted = false;
+  }
+
+  dispose() {
+    this.#disposed = true;
+    this.stopChatBot();
   }
 
   async #joinChat() {

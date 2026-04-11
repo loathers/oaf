@@ -45,8 +45,8 @@ class TestClient extends Client {
     this.rollover = rollover;
   }
 
-  dispose() {
-    this.stopChatBot();
+  override dispose() {
+    super.dispose();
     this.server.closeAllConnections();
     this.server.close();
   }
@@ -69,7 +69,7 @@ class TestClient extends Client {
       return;
     }
 
-    // All endpoints redirect to maint.php during rollover (confirmed via logs)
+    // All endpoints redirect to maint.php during rollover
     res.writeHead(302, { location: "/maint.php" });
     res.end();
   }
@@ -121,7 +121,7 @@ async function createTestClient() {
   return client;
 }
 
-describe.concurrent("rollover integration", () => {
+describe("rollover integration", () => {
   it("login succeeds in normal state", async ({ expect }) => {
     const client = await createTestClient();
 
@@ -170,6 +170,26 @@ describe.concurrent("rollover integration", () => {
 
     expect(messages).toEqual([]);
     expect(rolloverEmitted).toBe(true);
+    expect(client.isRollover()).toBe(false);
+  });
+
+  it("detects rollover and emits event on recovery via chat loop", async ({
+    expect,
+  }) => {
+    const client = await createTestClient();
+
+    let rolloverEmitted = false;
+    client.on("rollover", () => {
+      rolloverEmitted = true;
+    });
+
+    await client.startChatBot();
+
+    client.simulateRollover(true);
+    await expect.poll(() => client.isRollover()).toBe(true);
+
+    client.simulateRollover(false);
+    await expect.poll(() => rolloverEmitted).toBe(true);
     expect(client.isRollover()).toBe(false);
   });
 });
