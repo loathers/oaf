@@ -218,10 +218,10 @@ describe("stopChatBot", () => {
     await client.login();
     await client.startChatBot();
 
-    // Loop is running — stop it
+    // Stop the loop
     client.stopChatBot();
 
-    // Starting again should work (proves it was fully stopped)
+    // Starting again should work
     client
       .simulateResponse(/\/newchatmessages\.php/, { last: "1", msgs: [] })
       .simulateResponse(/\/api\.php/, []);
