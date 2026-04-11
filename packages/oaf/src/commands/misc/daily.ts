@@ -203,9 +203,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   assertNotRollover();
 
   await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-  console.log(
-    `[rollover] /daily manually triggered by ${interaction.user.username} (${interaction.user.id})`,
-  );
   await onRollover();
   await interaction.editReply("Newsletter posted!");
 }

@@ -7,7 +7,6 @@ import {
 import { describe, it, onTestFinished } from "vitest";
 
 import { Client } from "../Client.js";
-import { RolloverError } from "../errors.js";
 import { loadFixture } from "../testUtils.js";
 
 class TestClient extends Client {
@@ -24,7 +23,7 @@ class TestClient extends Client {
   }
 
   protected override get rolloverCheckInterval() {
-    return 100;
+    return 50;
   }
 
   constructor() {
@@ -48,6 +47,7 @@ class TestClient extends Client {
 
   dispose() {
     this.stopChatBot();
+    this.server.closeAllConnections();
     this.server.close();
   }
 
@@ -63,21 +63,15 @@ class TestClient extends Client {
   }
 
   private async handleRollover(path: string, res: ServerResponse) {
-    switch (path) {
-      case "maint.php":
-        res.writeHead(200, { "content-type": "text/html" });
-        res.end(await loadFixture(__dirname, "maint.html"));
-        return;
-      case "api.php":
-        // TODO: verify with real rollover response — we observed {} for kmail
-        res.writeHead(200, { "content-type": "application/json" });
-        res.end("{}");
-        return;
-      default:
-        res.writeHead(302, { location: "/maint.php" });
-        res.end();
-        return;
+    if (path === "maint.php") {
+      res.writeHead(200, { "content-type": "text/html" });
+      res.end(await loadFixture(__dirname, "maint.html"));
+      return;
     }
+
+    // All endpoints redirect to maint.php during rollover (confirmed via logs)
+    res.writeHead(302, { location: "/maint.php" });
+    res.end();
   }
 
   private async handleNormal(path: string, url: URL, res: ServerResponse) {
@@ -88,7 +82,7 @@ class TestClient extends Client {
         return;
       case "login.php":
         res.writeHead(200, { "content-type": "text/html" });
-        res.end(await loadFixture(__dirname, "login_normal.html"));
+        res.end(await loadFixture(__dirname, "login.html"));
         return;
       case "api.php": {
         const what = url.searchParams.get("what");
@@ -145,33 +139,37 @@ describe.concurrent("rollover integration", () => {
     expect(client.isRollover()).toBe(true);
   });
 
-  it("kmail.fetch throws RolloverError when API returns non-array during rollover", async ({
+  it("kmail.fetch blocks during rollover and resumes after recovery", async ({
     expect,
   }) => {
     const client = await createTestClient();
     await client.login();
     client.simulateRollover(true);
 
-    await expect(client.kmail.fetch()).rejects.toBeInstanceOf(RolloverError);
+    setTimeout(() => client.simulateRollover(false), 200);
+    const kmails = await client.kmail.fetch();
+
+    expect(kmails).toEqual([]);
+    expect(client.isRollover()).toBe(false);
   });
 
-  it("detects rollover and emits event on recovery via chat loop", async ({
+  it("chat.fetch blocks during rollover and resumes after recovery", async ({
     expect,
   }) => {
     const client = await createTestClient();
+    await client.login();
+    client.simulateRollover(true);
 
     let rolloverEmitted = false;
     client.on("rollover", () => {
       rolloverEmitted = true;
     });
 
-    await client.startChatBot();
+    setTimeout(() => client.simulateRollover(false), 200);
+    const messages = await client.chat.fetch();
 
-    client.simulateRollover(true);
-    await expect.poll(() => client.isRollover()).toBe(true);
-
-    client.simulateRollover(false);
-    await expect.poll(() => rolloverEmitted).toBe(true);
+    expect(messages).toEqual([]);
+    expect(rolloverEmitted).toBe(true);
     expect(client.isRollover()).toBe(false);
   });
 });

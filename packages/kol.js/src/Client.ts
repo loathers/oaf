@@ -94,36 +94,12 @@ export class Client extends Emittery<Events> {
       },
       onResponse: ({ request, response }) => {
         const requestUrl = typeof request === "string" ? request : request.url;
-
-        // Log all responses during rollover for fixture collection
-        if (this.#isRollover) {
-          console.log(
-            `[rollover] ${requestUrl} → ${response.status} ${response.url} body=${JSON.stringify(response._data)}`,
-          );
-        }
-
-        // Log unexpected kmail API responses even before #isRollover is set
-        if (
-          requestUrl.includes("what=kmail") &&
-          !Array.isArray(response._data)
-        ) {
-          console.log(
-            `[rollover] api.php?what=kmail returned non-array: ${requestUrl} → ${response.status} ${response.url} body=${JSON.stringify(response._data)}`,
-          );
-        }
-
         if (response.url.includes("/maint.php")) {
-          if (!this.#isRollover) {
-            console.log(
-              `[rollover] entering rollover: ${requestUrl} → ${response.url} body=${JSON.stringify(response._data)}`,
-            );
-          }
           this.#isRollover = true;
           throw new RolloverError();
         }
-        if (this.#isRollover && !response.url.includes("/api.php")) {
+        if (this.#isRollover) {
           this.#isRollover = false;
-          console.log("[rollover] Recovery detected, emitting rollover event");
           void this.emit("rollover", new Date());
         }
         if (
@@ -131,14 +107,6 @@ export class Client extends Emittery<Events> {
           response.url.includes("/login.php")
         ) {
           throw new LoginRedirectError();
-        }
-      },
-      onResponseError: ({ request, response }) => {
-        const requestUrl = typeof request === "string" ? request : request.url;
-        if (requestUrl.includes("api.php")) {
-          console.log(
-            `[rollover] api.php error response: ${requestUrl} → ${response.status} ${response.url} body=${typeof response._data === "string" ? response._data : JSON.stringify(response._data)}`,
-          );
         }
       },
     },
@@ -286,7 +254,7 @@ export class Client extends Emittery<Events> {
       try {
         await this.session("login.php", { responseType: "text" });
       } catch {
-        // Server unreachable during rollover
+        // maint.php redirect or server unreachable
       }
     }
   });
@@ -338,10 +306,6 @@ export class Client extends Emittery<Events> {
         await Promise.all([this.chat.check(), this.kmail.check()]);
       } catch (error) {
         if (error instanceof AuthError) throw error;
-        if (error instanceof RolloverError) {
-          await this.waitForRolloverEnd();
-          continue;
-        }
         console.error("Chat bot loop error:", error);
       }
       await wait(this.pollInterval);

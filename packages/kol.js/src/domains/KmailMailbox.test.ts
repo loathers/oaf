@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { Client } from "../Client.js";
-import { RolloverError } from "../errors.js";
 import { KmailMailbox } from "./KmailMailbox.js";
 
 function mockClient(fetchJson: () => unknown) {
@@ -43,16 +42,16 @@ describe("kmail.fetch", () => {
     expect(result).toEqual([]);
   });
 
-  it("throws RolloverError when API returns an object instead of array", async () => {
+  it("returns empty array when API returns an object instead of array", async () => {
     const kmail = new KmailMailbox(mockClient(() => ({})));
 
-    await expect(kmail.fetch()).rejects.toBeInstanceOf(RolloverError);
+    expect(await kmail.fetch()).toEqual([]);
   });
 
-  it("throws RolloverError when API returns null", async () => {
+  it("returns empty array when API returns null", async () => {
     const kmail = new KmailMailbox(mockClient(() => null));
 
-    await expect(kmail.fetch()).rejects.toBeInstanceOf(RolloverError);
+    expect(await kmail.fetch()).toEqual([]);
   });
 });
 
