@@ -661,7 +661,7 @@ export async function getFlowerPriceHistory(since: Date) {
 
 export async function getFlowerPriceHistoryBucketed(
   since: Date,
-  bucketInterval: string,
+  bucketInterval: "hour" | "day",
 ) {
   return await db
     .selectFrom("FlowerPrices")

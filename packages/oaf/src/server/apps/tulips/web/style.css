@@ -21,6 +21,13 @@ body {
   flex-direction: column;
 }
 
+.error-state {
+  text-align: center;
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+}
+
 .loading-state {
   color: #4a4a6a;
   text-align: center;

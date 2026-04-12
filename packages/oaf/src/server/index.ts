@@ -1,48 +1,50 @@
-import express from "express";
+import express, { type Express } from "express";
+import type { ViteDevServer } from "vite";
 
 import { config } from "../config.js";
 import { createCalendarApp } from "./apps/calendar/app.js";
 import { createOafApp } from "./apps/oaf/app.js";
 import { createTulipsApp } from "./apps/tulips/app.js";
 
-const oafViteDevServer =
-  process.env.NODE_ENV === "production"
-    ? null
-    : await import("vite").then((vite) =>
-        vite.createServer({
-          configFile: "vite.oaf.config.ts",
-          server: { middlewareMode: true },
-          appType: "custom",
-        }),
-      );
+const isDev = process.env.NODE_ENV !== "production";
 
-const calendarViteDevServer =
-  process.env.NODE_ENV === "production"
-    ? null
-    : await import("vite").then((vite) =>
-        vite.createServer({
-          configFile: "vite.calendar.config.ts",
-          server: { middlewareMode: true },
-          appType: "custom",
-        }),
-      );
+async function createViteDevServer(configFile: string): Promise<ViteDevServer> {
+  const vite = await import("vite");
+  return await vite.createServer({
+    configFile,
+    server: { middlewareMode: true },
+    appType: "custom",
+  });
+}
 
-const tulipsViteDevServer =
-  process.env.NODE_ENV === "production"
-    ? null
-    : await import("vite").then((vite) =>
-        vite.createServer({
-          configFile: "vite.tulips.config.ts",
-          server: { middlewareMode: true },
-          appType: "custom",
-        }),
-      );
+function lazyApp(
+  configFile: string,
+  factory: (vite: ViteDevServer | null) => Express,
+): Express {
+  if (!isDev) return factory(null);
 
-const oafApp = createOafApp(oafViteDevServer);
-const calendarApp = createCalendarApp(calendarViteDevServer);
-const tulipsApp = createTulipsApp(tulipsViteDevServer);
+  let inner: Promise<Express> | null = null;
+  const wrapper = express();
+  wrapper.use(async (req, res, next) => {
+    inner ??= (async () => {
+      console.log("Lazily starting Vite dev server with config", configFile);
+      const server = await createViteDevServer(configFile);
+      return factory(server);
+    })();
+    await (
+      await inner
+    )(req, res, next);
+  });
+  return wrapper;
+}
+
+const oafApp = lazyApp("vite.oaf.config.ts", createOafApp);
+const calendarApp = lazyApp("vite.calendar.config.ts", createCalendarApp);
+const tulipsApp = lazyApp("vite.tulips.config.ts", createTulipsApp);
 
 const app = express();
+
+app.set("trust proxy", true);
 
 app.use((req, res, next) => {
   const subdomain = req.hostname.split(".")[0];

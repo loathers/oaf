@@ -24,7 +24,7 @@ async function getNextMonster() {
       ([id]) =>
         dataOfLoathingClient.findMonsterById(Number(id))?.copyable ?? true,
     )
-    .reduce((e, acc) => (e[1] > acc[1] ? e : acc));
+    .reduce((acc, e) => (e[1] > acc[1] ? e : acc));
   return [Number(closest[0]), closest[1]] as const;
 }
 
