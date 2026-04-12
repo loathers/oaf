@@ -105,6 +105,31 @@ export interface DailySubmissionTable {
   submittedAt: ColumnType<Date, Date | undefined, Date>;
 }
 
+export interface IotmTable {
+  id: Generated<number>;
+  itemName: string | null;
+  itemDescid: number | null;
+  itemImage: string | null;
+  month: ColumnType<Date, Date | string, Date | string>;
+  mraCost: number | null;
+  subscriberItem: Generated<boolean>;
+  addedToStore: ColumnType<
+    Date | null,
+    Date | string | null,
+    Date | string | null
+  >;
+  removedFromStore: ColumnType<
+    Date | null,
+    Date | string | null,
+    Date | string | null
+  >;
+  distributedToSubscribers: ColumnType<
+    Date | null,
+    Date | string | null,
+    Date | string | null
+  >;
+}
+
 export interface DB {
   Player: PlayerTable;
   StandingOffer: StandingOfferTable;
@@ -119,6 +144,7 @@ export interface DB {
   FlowerPriceAlert: FlowerPriceAlertTable;
   Daily: DailyTable;
   DailySubmission: DailySubmissionTable;
+  Iotm: IotmTable;
 }
 
 export type Player = Selectable<PlayerTable>;
@@ -134,3 +160,4 @@ export type FlowerPrices = Selectable<FlowerPricesTable>;
 export type FlowerPriceAlert = Selectable<FlowerPriceAlertTable>;
 export type Daily = Selectable<DailyTable>;
 export type DailySubmission = Selectable<DailySubmissionTable>;
+export type Iotm = Selectable<IotmTable>;
