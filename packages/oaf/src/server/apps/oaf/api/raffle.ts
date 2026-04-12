@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { getRafflesWithWinners } from "../../clients/database.js";
+import { getRafflesWithWinners } from "../../../../clients/database.js";
 
 export const raffleRouter = Router();
 

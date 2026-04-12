@@ -6,8 +6,8 @@ import {
   getDailySubmissionsForKey,
   getSubmissionCountsForGameday,
   setCrowdsourcingIgnored,
-} from "../../clients/database.js";
-import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
+} from "../../../../clients/database.js";
+import { DAILY_GLOBALS } from "../../../../commands/misc/_globals.js";
 
 export const dailiesRouter = Router();
 

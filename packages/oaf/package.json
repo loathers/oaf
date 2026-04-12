@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "migrate": "kysely migrate:latest",
     "migrate:make": "kysely migrate:make",
-    "build": "vite build",
+    "build": "vite build --config vite.oaf.config.ts && vite build --config vite.calendar.config.ts",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "prepare": "husky install"

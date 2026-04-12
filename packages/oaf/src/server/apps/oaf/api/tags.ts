@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { getAllTags } from "../../clients/database.js";
+import { getAllTags } from "../../../../clients/database.js";
 
 export const tagsRouter = Router();
 

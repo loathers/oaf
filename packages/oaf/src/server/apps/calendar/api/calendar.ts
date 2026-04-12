@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { LoathingDate, toWikiLink } from "kol.js";
 
-import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
+import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
 import {
   getDailiesForGamedayRange,
   getRafflesForGamedayRange,
-} from "../../clients/database.js";
-import { DAILY_GLOBALS } from "../../commands/misc/_globals.js";
+} from "../../../../clients/database.js";
+import { DAILY_GLOBALS } from "../../../../commands/misc/_globals.js";
 import type { CalendarData, TextSegment } from "../web/types/calendar.js";
 
 const numberFormat = new Intl.NumberFormat();

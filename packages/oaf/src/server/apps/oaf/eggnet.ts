@@ -1,10 +1,10 @@
 import { hyperlink } from "discord.js";
 import * as z from "zod";
 
-import { dataOfLoathingClient } from "../clients/dataOfLoathing.js";
-import { createEmbed, discordClient } from "../clients/discord.js";
-import { config } from "../config.js";
-import { fetchWithRetry } from "../utils.js";
+import { dataOfLoathingClient } from "../../../clients/dataOfLoathing.js";
+import { createEmbed, discordClient } from "../../../clients/discord.js";
+import { config } from "../../../config.js";
+import { fetchWithRetry } from "../../../utils.js";
 
 export const eggnetNewUnlockSchema = z.object({
   monsterId: z.number(),

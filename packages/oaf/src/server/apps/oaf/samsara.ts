@@ -1,9 +1,9 @@
 import { bold } from "discord.js";
 import * as z from "zod";
 
-import { discordClient } from "../clients/discord.js";
-import { config } from "../config.js";
-import { titleCase } from "../utils.js";
+import { discordClient } from "../../../clients/discord.js";
+import { config } from "../../../config.js";
+import { titleCase } from "../../../utils.js";
 
 export const samsaraRecordsSchema = z.object({
   player: z.object({

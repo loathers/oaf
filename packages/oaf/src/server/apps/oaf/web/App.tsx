@@ -8,7 +8,6 @@ import {
   Routes,
 } from "react-router";
 
-import CalendarPage from "./pages/CalendarPage.js";
 import Dailies from "./pages/Dailies.js";
 import Offers from "./pages/Offers.js";
 import Pilot from "./pages/Pilot.js";
@@ -83,14 +82,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={
-            <div className="container">
-              <CalendarPage />
-            </div>
-          }
-        />
+        <Route path="/" element={<Navigate to="/admin" replace />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="offers" replace />} />
           <Route path="dailies" element={<Dailies />} />

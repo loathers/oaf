@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { getVerifiedPlayers } from "../../clients/database.js";
+import { getVerifiedPlayers } from "../../../../clients/database.js";
 
 export const verifiedRouter = Router();
 

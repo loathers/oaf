@@ -4,10 +4,11 @@ import { defineConfig } from "vite";
 export default defineConfig({
   logLevel: "warn",
   clearScreen: false,
-  root: "src/server/web",
+  root: "src/server/apps/calendar/web",
   build: {
-    outDir: "../../../build/client",
+    outDir: "../../../../../build/client/calendar",
     emptyOutDir: true,
   },
+  server: { hmr: { port: 24679 } },
   plugins: [react()],
 });

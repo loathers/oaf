@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { discordClient } from "../../clients/discord.js";
+import { discordClient } from "../../../../clients/discord.js";
 
 export const messageRouter = Router();
 

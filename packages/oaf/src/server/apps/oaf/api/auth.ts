@@ -2,7 +2,7 @@ import { Router } from "express";
 import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
-import { config } from "../../config.js";
+import { config } from "../../../../config.js";
 
 export type User = {
   id: string;
