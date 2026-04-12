@@ -5,9 +5,23 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  type TooltipContentProps,
 } from "recharts";
 
 const numberFormat = new Intl.NumberFormat();
+
+type RawEntry = { time: string; value: number };
+type OHLCEntry = RawEntry & {
+  open: number;
+  high: number;
+  low: number;
+  range: [number, number];
+};
+type HistoryEntry = RawEntry | OHLCEntry;
+
+function isOHLCEntry(e: HistoryEntry): e is OHLCEntry {
+  return "open" in e;
+}
 
 export default function TulipCard({
   name,
@@ -23,14 +37,19 @@ export default function TulipCard({
   dotColor: string;
   current: number;
   first: number | null;
-  history: { time: string; value: number }[];
+  history: HistoryEntry[];
   dataKey: string;
 }) {
+  const bucketed = history.some(isOHLCEntry);
   const [high, low] = history.reduce<[number | null, number | null]>(
-    ([hi, lo], { value }) => [
-      hi === null || value > hi ? value : hi,
-      lo === null || value < lo ? value : lo,
-    ],
+    ([hi, lo], entry) => {
+      const pointHigh = isOHLCEntry(entry) ? entry.high : entry.value;
+      const pointLow = isOHLCEntry(entry) ? entry.low : entry.value;
+      return [
+        hi === null || pointHigh > hi ? pointHigh : hi,
+        lo === null || pointLow < lo ? pointLow : lo,
+      ];
+    },
     [null, null],
   );
   const change = first !== null ? current - first : null;
@@ -86,6 +105,16 @@ export default function TulipCard({
                 <stop offset="0%" stopColor={color} stopOpacity={0.2} />
                 <stop offset="100%" stopColor={color} stopOpacity={0} />
               </linearGradient>
+              <linearGradient
+                id={`gradient-range-${dataKey}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop offset="0%" stopColor={color} stopOpacity={0.12} />
+                <stop offset="100%" stopColor={color} stopOpacity={0.04} />
+              </linearGradient>
             </defs>
             <XAxis
               dataKey="time"
@@ -97,8 +126,14 @@ export default function TulipCard({
             />
             <YAxis
               domain={[
-                (min: number) => Math.floor(min - (min * 0.05 || 1)),
-                (max: number) => Math.ceil(max + (max * 0.05 || 1)),
+                (min: number) => {
+                  const m = low !== null && low < min ? low : min;
+                  return Math.floor(m - (m * 0.05 || 1));
+                },
+                (max: number) => {
+                  const m = high !== null && high > max ? high : max;
+                  return Math.ceil(m + (m * 0.05 || 1));
+                },
               ]}
               tick={{ fill: "#4a4a6a", fontSize: 10 }}
               tickLine={false}
@@ -107,19 +142,41 @@ export default function TulipCard({
               tickFormatter={(v: number) => numberFormat.format(v)}
             />
             <Tooltip
-              contentStyle={{
-                background: "#1a1a2e",
-                border: "1px solid #2a2a4e",
-                borderRadius: "4px",
-                fontSize: "0.75rem",
+              content={({ active, payload }: TooltipContentProps) => {
+                if (!active || !payload?.length) return null;
+                const entry: HistoryEntry = payload[0].payload;
+                return (
+                  <div className="tulip-tooltip">
+                    <p className="tulip-tooltip-label">{entry.time}</p>
+                    {isOHLCEntry(entry) ? (
+                      <p className="tulip-tooltip-value" style={{ color }}>
+                        O: {numberFormat.format(entry.open)} H:{" "}
+                        {numberFormat.format(entry.high)} L:{" "}
+                        {numberFormat.format(entry.low)} C:{" "}
+                        {numberFormat.format(entry.value)} meat
+                      </p>
+                    ) : (
+                      <p className="tulip-tooltip-value" style={{ color }}>
+                        {numberFormat.format(entry.value)} meat
+                      </p>
+                    )}
+                  </div>
+                );
               }}
-              labelStyle={{ color: "#8892b0" }}
-              itemStyle={{ color }}
-              formatter={(value) => [
-                numberFormat.format(value as number),
-                "meat",
-              ]}
             />
+            {bucketed && (
+              <Area
+                type="stepAfter"
+                dataKey="range"
+                stroke={color}
+                strokeOpacity={0.2}
+                strokeWidth={0.5}
+                fill={`url(#gradient-range-${dataKey})`}
+                dot={false}
+                isAnimationActive={false}
+                tooltipType="none"
+              />
+            )}
             <Area
               type="stepAfter"
               dataKey="value"

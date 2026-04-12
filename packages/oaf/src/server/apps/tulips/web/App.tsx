@@ -3,12 +3,26 @@ import { useCallback, useEffect, useState } from "react";
 import { RANGES, type Range } from "../types.js";
 import TulipCard from "./components/TulipCard.js";
 
+type OHLC = { open: number; high: number; low: number; close: number };
+type ColorValue = number | OHLC;
+
 type PriceEntry = {
-  red: number;
-  white: number;
-  blue: number;
+  red: ColorValue;
+  white: ColorValue;
+  blue: ColorValue;
   createdAt: string;
 };
+
+function isOHLC(v: ColorValue): v is OHLC {
+  return typeof v === "object";
+}
+
+function toClose(v: ColorValue): number;
+function toClose(v: ColorValue | null): number | null;
+function toClose(v: ColorValue | null): number | null {
+  if (v === null) return null;
+  return isOHLC(v) ? v.close : v;
+}
 
 const RANGE_KEYS = Object.keys(RANGES) as Range[];
 
@@ -126,12 +140,22 @@ export default function App() {
               color={t.color}
               dotColor={t.dotColor}
               dataKey={t.key}
-              current={current?.[t.key] ?? 0}
-              first={first?.[t.key] ?? null}
-              history={prices.map((p) => ({
-                time: formatTime(p.createdAt, range),
-                value: p[t.key],
-              }))}
+              current={toClose(current?.[t.key] ?? 0)}
+              first={toClose(first?.[t.key] ?? null)}
+              history={prices.map((p) => {
+                const v = p[t.key];
+                if (!isOHLC(v)) {
+                  return { time: formatTime(p.createdAt, range), value: v };
+                }
+                return {
+                  time: formatTime(p.createdAt, range),
+                  value: v.close,
+                  open: v.open,
+                  high: v.high,
+                  low: v.low,
+                  range: [v.low, v.high] satisfies [number, number],
+                };
+              })}
             />
           ))}
         </div>
