@@ -27,9 +27,20 @@ const calendarViteDevServer =
         }),
       );
 
+const tulipsViteDevServer =
+  process.env.NODE_ENV === "production"
+    ? null
+    : await import("vite").then((vite) =>
+        vite.createServer({
+          configFile: "vite.tulips.config.ts",
+          server: { middlewareMode: true },
+          appType: "custom",
+        }),
+      );
+
 const oafApp = createOafApp(oafViteDevServer);
 const calendarApp = createCalendarApp(calendarViteDevServer);
-const tulipsApp = createTulipsApp();
+const tulipsApp = createTulipsApp(tulipsViteDevServer);
 
 const app = express();
 

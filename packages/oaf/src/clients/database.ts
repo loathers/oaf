@@ -650,6 +650,35 @@ export async function getLatestFlowerPrices() {
     .executeTakeFirst();
 }
 
+export async function getFlowerPriceHistory(since: Date) {
+  return await db
+    .selectFrom("FlowerPrices")
+    .selectAll()
+    .where("createdAt", ">=", since)
+    .orderBy("createdAt", "asc")
+    .execute();
+}
+
+export async function getFlowerPriceHistoryBucketed(
+  since: Date,
+  bucketInterval: string,
+) {
+  return await db
+    .selectFrom("FlowerPrices")
+    .select([
+      sql<Date>`date_trunc(${sql.lit(bucketInterval)}, "createdAt")`.as(
+        "createdAt",
+      ),
+      sql<number>`avg(red)::int`.as("red"),
+      sql<number>`avg(white)::int`.as("white"),
+      sql<number>`avg(blue)::int`.as("blue"),
+    ])
+    .where("createdAt", ">=", since)
+    .groupBy(sql`date_trunc(${sql.lit(bucketInterval)}, "createdAt")`)
+    .orderBy("createdAt", "asc")
+    .execute();
+}
+
 export async function createFlowerPrices(prices: {
   red: number;
   white: number;

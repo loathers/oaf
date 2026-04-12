@@ -1,0 +1,185 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    "SF Mono", "Fira Code", "Cascadia Code", Menlo, Consolas, monospace;
+  line-height: 1.5;
+  color: #ccd6f6;
+  background: #0a0a1a;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 100%;
+  padding: 1.5rem 2rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.loading-state {
+  color: #4a4a6a;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+h1 {
+  font-size: 1.25rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #8892b0;
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.range-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.range-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #4a4a6a;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.range-btn:hover {
+  color: #8892b0;
+}
+
+.range-btn.active {
+  color: #ccd6f6;
+  border-color: #2a2a4e;
+  background: #1a1a3e;
+}
+
+.last-updated {
+  font-size: 0.7rem;
+  color: #4a4a6a;
+  margin-left: 0.75rem;
+}
+
+.ticker-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.tulip-card {
+  background: #111128;
+  border: 1px solid #1a1a3e;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  transition: border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.tulip-card:hover {
+  border-color: #2a2a4e;
+}
+
+.tulip-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tulip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tulip-name {
+  font-size: 0.875rem;
+  color: #8892b0;
+}
+
+.tulip-ticker {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #4a4a6a;
+  letter-spacing: 0.1em;
+}
+
+.tulip-price {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.2;
+}
+
+.tulip-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.tulip-unit {
+  font-size: 0.75rem;
+  color: #4a4a6a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tulip-change {
+  font-size: 0.8rem;
+}
+
+.tulip-change.up {
+  color: #22c55e;
+}
+
+.tulip-change.down {
+  color: #ef4444;
+}
+
+.tulip-change.flat {
+  color: #4a4a6a;
+}
+
+.tulip-range {
+  font-size: 0.7rem;
+  color: #4a4a6a;
+  margin-left: auto;
+}
+
+.tulip-chart {
+  margin: 0 -0.5rem -0.5rem;
+}
+
+/* Recharts tooltip overrides */
+.recharts-tooltip-cursor {
+  stroke: #2a2a4e;
+}

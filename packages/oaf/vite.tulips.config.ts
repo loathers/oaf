@@ -4,12 +4,12 @@ import { defineConfig } from "vite";
 export default defineConfig({
   logLevel: "warn",
   clearScreen: false,
-  cacheDir: "node_modules/.vite-oaf",
-  root: "src/server/apps/oaf/web",
+  cacheDir: "node_modules/.vite-tulips",
+  root: "src/server/apps/tulips/web",
+  server: { hmr: { port: 24680 } },
   build: {
-    outDir: "../../../../../build/client/oaf",
+    outDir: "../../../../../build/client/tulips",
     emptyOutDir: true,
   },
-  server: { hmr: { port: 24678 } },
   plugins: [react()],
 });

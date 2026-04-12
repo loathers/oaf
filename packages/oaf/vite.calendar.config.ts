@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 export default defineConfig({
   logLevel: "warn",
   clearScreen: false,
+  cacheDir: "node_modules/.vite-calendar",
   root: "src/server/apps/calendar/web",
   build: {
     outDir: "../../../../../build/client/calendar",
