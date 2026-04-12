@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ViteDevServer } from "vite";
 
-import { calendarRouter } from "./api/calendar.js";
+import { calendarRouter } from "./routes/calendar.js";
 
 export function createCalendarApp(
   viteDevServer: ViteDevServer | null,

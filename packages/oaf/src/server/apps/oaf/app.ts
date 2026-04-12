@@ -2,42 +2,27 @@ import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { type Express } from "express";
-import { StatusCodes } from "http-status-codes";
 import fs from "node:fs";
 import path from "node:path";
 import type { ViteDevServer } from "vite";
 
-import { dataOfLoathingClient } from "../../../clients/dataOfLoathing.js";
-import {
-  getRafflesForCsv,
-  getVerifiedPlayerIds,
-} from "../../../clients/database.js";
-import { config } from "../../../config.js";
 import {
   authRouter,
   loginHandler,
   logoutHandler,
   requireAuth,
-} from "./api/auth.js";
-import { dailiesRouter } from "./api/dailies.js";
-import { messageRouter } from "./api/message.js";
-import { offersRouter } from "./api/offers.js";
-import { pilotRouter } from "./api/pilot.js";
-import { raffleRouter } from "./api/raffle.js";
-import { tagsRouter } from "./api/tags.js";
-import { userRouter } from "./api/user.js";
-import { verifiedRouter } from "./api/verified.js";
-import { eggnet, eggnetNewUnlockSchema } from "./eggnet.js";
-import { samsara, samsaraRecordsSchema } from "./samsara.js";
-import { rollSubs } from "./subs.js";
-
-function arrayToCsv<T extends object>(data: T[], headers: (keyof T)[]): string {
-  const headerRow = headers.join(",");
-  const rows = data.map((item) =>
-    headers.map((header) => JSON.stringify(item[header] ?? "")).join(","),
-  );
-  return [headerRow, ...rows].join("\n");
-}
+} from "./routes/auth.js";
+import { dailiesRouter } from "./routes/dailies.js";
+import { eggnetRouter } from "./routes/eggnet.js";
+import { messageRouter } from "./routes/message.js";
+import { offersRouter } from "./routes/offers.js";
+import { pilotRouter } from "./routes/pilot.js";
+import { raffleCsvRouter, raffleRouter } from "./routes/raffle.js";
+import { samsaraRouter } from "./routes/samsara.js";
+import { subsRouter } from "./routes/subs.js";
+import { tagsRouter } from "./routes/tags.js";
+import { userRouter } from "./routes/user.js";
+import { verifiedJsonRouter, verifiedRouter } from "./routes/verified.js";
 
 export function createOafApp(viteDevServer: ViteDevServer | null): Express {
   const app = express();
@@ -52,155 +37,13 @@ export function createOafApp(viteDevServer: ViteDevServer | null): Express {
     )
     .use(bodyParser.json())
     .get("/favicon.ico", (_req, res) => void res.send())
-    .get("/verified.json", async (_req, res) => {
-      const verified = await getVerifiedPlayerIds();
-
-      return void res.set("Content-Type", "application/json").send(verified);
-    })
-    .get("/raffle.csv", async (_req, res) => {
-      const raffles = (await getRafflesForCsv()).map(({ winners, ...r }) => {
-        const firstPrize = dataOfLoathingClient.findItemById(r.firstPrize);
-        const secondPrize = dataOfLoathingClient.findItemById(r.secondPrize);
-        const firstWinner = winners.find((w) => w.place === 1)!;
-        const secondWinners = winners.filter((w) => w.place === 2);
-        return {
-          ...r,
-          firstPrize: firstPrize?.name ?? `Unknown item #${r.firstPrize}`,
-          secondPrize: secondPrize?.name ?? `Unknown item #${r.secondPrize}`,
-          firstPlaceWinner: firstWinner
-            ? `${firstWinner.player.playerName} (#${firstWinner.player.playerId})`
-            : "",
-          firstPlaceWinnerTickets: firstWinner ? firstWinner.tickets : "",
-          ...secondWinners.reduce<
-            Partial<
-              Record<
-                | `secondPlaceWinner${1 | 2 | 3}`
-                | `secondPlaceWinner${1 | 2 | 3}Tickets`,
-                string
-              >
-            >
-          >(
-            (acc, w, i) => ({
-              ...acc,
-              [`secondPlaceWinner${i + 1}`]: `${w.player.playerName} (#${w.player.playerId})`,
-              [`secondPlaceWinner${i + 1}Tickets`]: w.tickets,
-            }),
-            {},
-          ),
-        };
-      });
-
-      return void res
-        .set("Content-Type", "text/csv")
-        .send(
-          arrayToCsv(raffles, [
-            "gameday",
-            "firstPrize",
-            "firstPlaceWinner",
-            "firstPlaceWinnerTickets",
-            "secondPrize",
-            "secondPlaceWinner1",
-            "secondPlaceWinner1Tickets",
-            "secondPlaceWinner2",
-            "secondPlaceWinner2Tickets",
-            "secondPlaceWinner3",
-            "secondPlaceWinner3Tickets",
-          ]),
-        );
-    })
-    .get("/webhooks/subsrolling", async (req, res) => {
-      const token = req.query.token;
-
-      if (!token)
-        return void res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: "No token" });
-      if (token !== config.SUBS_ROLLING_TOKEN)
-        return void res
-          .status(StatusCodes.FORBIDDEN)
-          .json({ error: "Invalid token" });
-
-      try {
-        await rollSubs();
-        return void res
-          .status(StatusCodes.OK)
-          .json({ status: "Thanks Chris!" });
-      } catch (e) {
-        if (e instanceof Error) {
-          return void res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .json({ error: e.message });
-        }
-
-        throw e;
-      }
-    })
-    .post("/webhooks/samsara", async (req, res) => {
-      const token = req.query.token;
-
-      if (!token)
-        return void res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: "No token" });
-      if (token !== config.SAMSARA_TOKEN)
-        return void res
-          .status(StatusCodes.FORBIDDEN)
-          .json({ error: "Invalid token" });
-
-      const body = samsaraRecordsSchema.safeParse(req.body);
-
-      if (!body.success) {
-        return void res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "Invalid body" });
-      }
-
-      try {
-        await samsara(body.data);
-        return void res.status(StatusCodes.OK).json({ success: "true" });
-      } catch (e) {
-        if (e instanceof Error) {
-          return void res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .json({ error: e.message });
-        }
-
-        throw e;
-      }
-    })
-    .post("/webhooks/eggnet", async (req, res) => {
-      const token = req.query.token;
-
-      if (!token)
-        return void res
-          .status(StatusCodes.UNAUTHORIZED)
-          .json({ error: "No token" });
-      if (token !== config.EGGNET_TOKEN)
-        return void res
-          .status(StatusCodes.FORBIDDEN)
-          .json({ error: "Invalid token" });
-
-      const body = eggnetNewUnlockSchema.safeParse(req.body);
-
-      if (!body.success) {
-        return void res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "Invalid body" });
-      }
-
-      try {
-        await eggnet(body.data);
-        return void res.status(StatusCodes.OK).json({ success: "true" });
-      } catch (e) {
-        if (e instanceof Error) {
-          return void res
-            .status(StatusCodes.INTERNAL_SERVER_ERROR)
-            .json({ error: e.message });
-        }
-
-        throw e;
-      }
-    })
+    // Public data exports
+    .use("/verified.json", verifiedJsonRouter)
+    .use("/raffle.csv", raffleCsvRouter)
+    // Webhook routes
+    .use("/webhooks/subsrolling", subsRouter)
+    .use("/webhooks/samsara", samsaraRouter)
+    .use("/webhooks/eggnet", eggnetRouter)
     // Auth routes
     .get("/login", loginHandler)
     .get("/logout", logoutHandler)
