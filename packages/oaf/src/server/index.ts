@@ -27,9 +27,16 @@ function lazyApp(
   const wrapper = express();
   wrapper.use(async (req, res, next) => {
     inner ??= (async () => {
-      console.log("Lazily starting Vite dev server with config", configFile);
-      const server = await createViteDevServer(configFile);
-      return factory(server);
+      try {
+        console.log(
+          `Lazily starting Vite dev server with config ${configFile}`,
+        );
+        const server = await createViteDevServer(configFile);
+        return factory(server);
+      } catch (e) {
+        inner = null;
+        throw e;
+      }
     })();
     await (
       await inner

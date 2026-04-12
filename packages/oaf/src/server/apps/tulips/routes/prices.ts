@@ -23,7 +23,7 @@ pricesRouter.get("/", async (req, res) => {
       ? await getFlowerPriceHistoryBucketed(since, config.bucket)
       : await getFlowerPriceHistory(since);
 
-    res.json({ prices });
+    res.set("Cache-Control", "public, max-age=60").json({ prices });
   } catch (e) {
     if (e instanceof Error) {
       return void res

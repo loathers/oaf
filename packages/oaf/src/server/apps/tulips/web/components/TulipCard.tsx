@@ -26,9 +26,13 @@ export default function TulipCard({
   history: { time: string; value: number }[];
   dataKey: string;
 }) {
-  const values = history.map((h) => h.value);
-  const high = values.length ? Math.max(...values) : null;
-  const low = values.length ? Math.min(...values) : null;
+  const [high, low] = history.reduce<[number | null, number | null]>(
+    ([hi, lo], { value }) => [
+      hi === null || value > hi ? value : hi,
+      lo === null || value < lo ? value : lo,
+    ],
+    [null, null],
+  );
   const change = first !== null ? current - first : null;
   const pctChange = change !== null && first ? (change / first) * 100 : null;
   const direction =
