@@ -54,9 +54,7 @@ export interface TagTable {
   channelId: string;
   guildId: string;
   messageId: string;
-  createdAt: Generated<
-    ColumnType<Date, Date | string | undefined, Date | string>
-  >;
+  createdAt: Generated<Date>;
   createdBy: string;
 }
 
@@ -84,9 +82,7 @@ export interface FlowerPricesTable {
   red: number;
   white: number;
   blue: number;
-  createdAt: Generated<
-    ColumnType<Date, Date | string | undefined, Date | string>
-  >;
+  createdAt: Generated<Date>;
 }
 
 export interface FlowerPriceAlertTable {

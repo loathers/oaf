@@ -1,0 +1,105 @@
+import { hyperlink } from "discord.js";
+import { Router } from "express";
+import { StatusCodes } from "http-status-codes";
+import * as z from "zod";
+
+import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
+import { createEmbed, discordClient } from "../../../../clients/discord.js";
+import { config } from "../../../../config.js";
+import { fetchWithRetry } from "../../../../utils.js";
+
+const bodySchema = z.object({
+  monsterId: z.number(),
+});
+
+async function getNextMonster() {
+  const response = await fetchWithRetry(
+    "https://eggnet.loathers.net/status",
+    {},
+  );
+  const json = (await response.json()) as { eggs: Record<number, number> };
+  const closest = Object.entries(json.eggs)
+    .filter(([, count]) => count < 100)
+    .filter(
+      ([id]) =>
+        dataOfLoathingClient.findMonsterById(Number(id))?.copyable ?? true,
+    )
+    .reduce((acc, e) => (e[1] > acc[1] ? e : acc));
+  return [Number(closest[0]), closest[1]] as const;
+}
+
+export const eggnetRouter = Router();
+
+eggnetRouter.post("/", async (req, res) => {
+  const token = req.query.token;
+
+  if (!token)
+    return void res
+      .status(StatusCodes.UNAUTHORIZED)
+      .json({ error: "No token" });
+  if (token !== config.EGGNET_TOKEN)
+    return void res
+      .status(StatusCodes.FORBIDDEN)
+      .json({ error: "Invalid token" });
+
+  const body = bodySchema.safeParse(req.body);
+
+  if (!body.success) {
+    return void res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ error: "Invalid body" });
+  }
+
+  try {
+    const { monsterId } = body.data;
+    const guild = await discordClient.guilds.fetch(config.GUILD_ID);
+    const iotmChannel = guild?.channels.cache.get(config.IOTM_CHANNEL_ID);
+
+    if (!iotmChannel?.isTextBased()) {
+      await discordClient.alert(
+        "Someone has tried to hit an Eggnet webhook but the guild or iotm channel are incorrectly configured",
+      );
+      throw new Error("Something is configured wrong");
+    }
+
+    const monster = dataOfLoathingClient.findMonsterById(monsterId);
+
+    if (!monster) {
+      await discordClient.alert(
+        `Eggnet reported monster with id ${monsterId} was completed, but they're not in our database`,
+      );
+      throw new Error("Something is configured wrong");
+    }
+
+    let content = `Huh? ${monster.name} came out of its egg 🥚! New monster available in the ${hyperlink("Mimic DNA Bank", "https://eggnet.loathers.net")}.`;
+
+    const [nextMonsterId, nextEggs] = await getNextMonster();
+    const nextMonster = dataOfLoathingClient.findMonsterById(nextMonsterId);
+
+    if (nextMonster) {
+      const r = 100 - nextEggs;
+      content += ` Time to go work on ${nextMonster.name}, who only needs ${r} more egg${r === 1 ? "" : "s"}!`;
+    }
+
+    const embed = createEmbed();
+    embed
+      .setTitle(monster.name)
+      .setURL(dataOfLoathingClient.getWikiLink(monster));
+    await monster.addToEmbed(embed);
+
+    await iotmChannel.send({
+      content,
+      embeds: [embed],
+    });
+
+    return void res.status(StatusCodes.OK).json({ success: "true" });
+  } catch (e) {
+    if (e instanceof Error) {
+      return void res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: e.message });
+    }
+
+    throw e;
+  }
+});
