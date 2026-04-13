@@ -111,7 +111,7 @@ export interface IotmTable {
   itemDescid: number | null;
   itemImage: string | null;
   month: ColumnType<Date, Date | string, Date | string>;
-  mraCost: number | null;
+  mraCost: Generated<number>;
   subscriberItem: Generated<boolean>;
   addedToStore: ColumnType<
     Date | null,

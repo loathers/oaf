@@ -1002,7 +1002,7 @@ export async function upsertIotmByName(data: {
   itemDescid?: number | null;
   itemImage?: string | null;
   month: Date;
-  mraCost?: number | null;
+  mraCost?: number;
   subscriberItem?: boolean;
   addedToStore?: Date | null;
 }) {
@@ -1022,7 +1022,7 @@ export async function upsertIotmByName(data: {
         itemName: data.itemName,
         itemDescid: data.itemDescid ?? null,
         itemImage: data.itemImage ?? null,
-        mraCost: data.mraCost ?? null,
+        mraCost: data.mraCost,
         addedToStore: data.addedToStore ?? null,
       })
       .where("id", "=", existing.id)
@@ -1037,7 +1037,7 @@ export async function upsertIotmByName(data: {
       itemDescid: data.itemDescid ?? null,
       itemImage: data.itemImage ?? null,
       month: data.month,
-      mraCost: data.mraCost ?? null,
+      ...(data.mraCost !== undefined && { mraCost: data.mraCost }),
       subscriberItem: data.subscriberItem ?? false,
       addedToStore: data.addedToStore ?? null,
     })
@@ -1045,7 +1045,7 @@ export async function upsertIotmByName(data: {
       oc.column("itemName").doUpdateSet({
         itemDescid: data.itemDescid ?? null,
         itemImage: data.itemImage ?? null,
-        mraCost: data.mraCost ?? null,
+        ...(data.mraCost !== undefined && { mraCost: data.mraCost }),
         addedToStore: data.addedToStore ?? null,
       }),
     )
