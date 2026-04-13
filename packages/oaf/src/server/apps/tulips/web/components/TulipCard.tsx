@@ -102,18 +102,8 @@ export default function TulipCard({
                 x2="0"
                 y2="1"
               >
-                <stop offset="0%" stopColor={color} stopOpacity={0.2} />
-                <stop offset="100%" stopColor={color} stopOpacity={0} />
-              </linearGradient>
-              <linearGradient
-                id={`gradient-range-${dataKey}`}
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop offset="0%" stopColor={color} stopOpacity={0.12} />
-                <stop offset="100%" stopColor={color} stopOpacity={0.04} />
+                <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+                <stop offset="100%" stopColor={color} stopOpacity={0.15} />
               </linearGradient>
             </defs>
             <XAxis
@@ -169,9 +159,9 @@ export default function TulipCard({
                 type="stepAfter"
                 dataKey="range"
                 stroke={color}
-                strokeOpacity={0.2}
-                strokeWidth={0.5}
-                fill={`url(#gradient-range-${dataKey})`}
+                strokeOpacity={0.4}
+                strokeWidth={1}
+                fill={`url(#gradient-${dataKey})`}
                 dot={false}
                 isAnimationActive={false}
                 tooltipType="none"
@@ -182,8 +172,8 @@ export default function TulipCard({
               dataKey="value"
               stroke={color}
               strokeWidth={1.5}
-              fill={`url(#gradient-${dataKey})`}
-              dot={false}
+              fill="none"
+              dot={{ r: 1.5, fill: color, stroke: "none" }}
               isAnimationActive={false}
             />
           </AreaChart>
