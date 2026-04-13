@@ -19,7 +19,15 @@ export type RaffleInfo = {
   }[];
 };
 
+export type IotmEvent = {
+  itemName: string | null;
+  itemImage: string | null;
+  type: "added" | "removed" | "distributed";
+  time: string;
+};
+
 export type CalendarData = {
   dailies: Record<number, DailyInfo[]>;
   raffles: Record<number, RaffleInfo>;
+  iotmEvents: Record<number, IotmEvent[]>;
 };

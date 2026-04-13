@@ -4,10 +4,15 @@ import { LoathingDate, toWikiLink } from "kol.js";
 import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
 import {
   getDailiesForGamedayRange,
+  getIotmEventsForDateRange,
   getRafflesForGamedayRange,
 } from "../../../../clients/database.js";
 import { DAILY_GLOBALS } from "../../../../commands/misc/_globals.js";
-import type { CalendarData, TextSegment } from "../web/types/calendar.js";
+import type {
+  CalendarData,
+  IotmEvent,
+  TextSegment,
+} from "../web/types/calendar.js";
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -100,9 +105,15 @@ calendarRouter.get("/", async (req, res) => {
     return;
   }
 
-  const [dailies, raffles] = await Promise.all([
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const epochMs = LoathingDate.EPOCH.getTime();
+  const fromDate = new Date(epochMs + from * DAY_MS);
+  const toDate = new Date(epochMs + (to + 1) * DAY_MS);
+
+  const [dailies, raffles, iotms] = await Promise.all([
     getDailiesForGamedayRange(from, to),
     getRafflesForGamedayRange(from, to),
+    getIotmEventsForDateRange(fromDate, toDate),
   ]);
 
   const dailyDisplayNames = new Map(
@@ -110,6 +121,46 @@ calendarRouter.get("/", async (req, res) => {
   );
 
   const dailiesByGameday = Map.groupBy(dailies, (d) => d.gameday);
+
+  const dateToGameday = (d: Date) =>
+    Math.floor((d.getTime() - epochMs) / DAY_MS);
+
+  const iotmEvents: Record<number, IotmEvent[]> = {};
+  const pushEvent = (gameday: number, event: IotmEvent) => {
+    (iotmEvents[gameday] ??= []).push(event);
+  };
+
+  for (const iotm of iotms) {
+    if (iotm.addedToStore) {
+      pushEvent(dateToGameday(iotm.addedToStore), {
+        itemName: iotm.itemName,
+        itemImage: iotm.itemImage,
+        type: "added",
+        time: iotm.addedToStore.toISOString(),
+      });
+    }
+    if (iotm.removedFromStore) {
+      pushEvent(dateToGameday(iotm.removedFromStore), {
+        itemName: iotm.itemName,
+        itemImage: iotm.itemImage,
+        type: "removed",
+        time: iotm.removedFromStore.toISOString(),
+      });
+    }
+    if (iotm.distributedToSubscribers) {
+      pushEvent(dateToGameday(iotm.distributedToSubscribers), {
+        itemName: iotm.itemName,
+        itemImage: iotm.itemImage,
+        type: "distributed",
+        time: iotm.distributedToSubscribers.toISOString(),
+      });
+    }
+  }
+
+  const eventOrder = { distributed: 0, added: 1, removed: 2 };
+  for (const events of Object.values(iotmEvents)) {
+    events.sort((a, b) => eventOrder[a.type] - eventOrder[b.type]);
+  }
 
   const result: CalendarData = {
     dailies: Object.fromEntries(
@@ -146,6 +197,7 @@ calendarRouter.get("/", async (req, res) => {
         ];
       }),
     ),
+    iotmEvents,
   };
 
   res.json(result);

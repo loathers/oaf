@@ -1120,6 +1120,26 @@ export async function getIotmsInStore() {
     .execute();
 }
 
+export async function getIotmEventsForDateRange(from: Date, to: Date) {
+  return await db
+    .selectFrom("Iotm")
+    .selectAll()
+    .where((eb) =>
+      eb.or([
+        eb.and([eb("addedToStore", ">=", from), eb("addedToStore", "<=", to)]),
+        eb.and([
+          eb("removedFromStore", ">=", from),
+          eb("removedFromStore", "<=", to),
+        ]),
+        eb.and([
+          eb("distributedToSubscribers", ">=", from),
+          eb("distributedToSubscribers", "<=", to),
+        ]),
+      ]),
+    )
+    .execute();
+}
+
 export async function getIotmsForDateRange(from: Date, to: Date) {
   return await db
     .selectFrom("Iotm")

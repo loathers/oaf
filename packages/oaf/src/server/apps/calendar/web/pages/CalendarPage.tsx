@@ -86,7 +86,7 @@ export default function CalendarPage() {
     return () => document.body.classList.remove("moonlight-mode");
   }, [moonlightMode]);
 
-  const [data, setData] = useState<CalendarData>({ dailies: {}, raffles: {} });
+  const [data, setData] = useState<CalendarData>({ dailies: {}, raffles: {}, iotmEvents: {} });
   const [loading, setLoading] = useState(false);
 
   const range = useMemo(
@@ -102,7 +102,7 @@ export default function CalendarPage() {
     fetch(`/api/calendar?from=${range.from}&to=${range.to}`)
       .then((r) => r.json() as Promise<CalendarData>)
       .then(setData)
-      .catch(() => setData({ dailies: {}, raffles: {} }))
+      .catch(() => setData({ dailies: {}, raffles: {}, iotmEvents: {} }))
       .finally(() => setLoading(false));
   }, [range.from, range.to]);
 

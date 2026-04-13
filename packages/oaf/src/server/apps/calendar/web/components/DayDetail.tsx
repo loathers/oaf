@@ -1,10 +1,26 @@
 import { LoathingDate } from "kol.js";
 import { toWikiLink } from "kol.js";
 
-import type { CalendarData } from "../types/calendar.js";
+import type { CalendarData, IotmEvent } from "../types/calendar.js";
 import WardrobeSection from "./WardrobeSection.js";
 
 const MOON_ICONS = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
+
+function iotmEventSuffix(
+  event: IotmEvent,
+  timeFormat: Intl.DateTimeFormat,
+): string {
+  switch (event.type) {
+    case "added":
+      return " entered Mr. Store";
+    case "removed":
+      return " left Mr. Store";
+    case "distributed": {
+      const time = timeFormat.format(new Date(event.time));
+      return ` distributed to subscribers (${time})`;
+    }
+  }
+}
 
 type Props = {
   gameday: number;
@@ -26,14 +42,18 @@ export default function DayDetail({
   const ld = new LoathingDate(gameday);
   const realDate = ld.toRealDate();
 
-  const rollover = new Date(
-    LoathingDate.EPOCH.getTime() + gameday * 24 * 60 * 60 * 1000,
-  );
-  const rolloverTime = new Intl.DateTimeFormat(undefined, {
+  const localTimeFormat = new Intl.DateTimeFormat(undefined, {
     hour: "numeric",
     minute: "2-digit",
     timeZoneName: "short",
-  }).format(rollover);
+  });
+
+  const rollover = new Date(
+    LoathingDate.EPOCH.getTime() + gameday * 24 * 60 * 60 * 1000,
+  );
+  const rolloverTime = localTimeFormat.format(rollover);
+
+  const iotmEvents = data.iotmEvents[gameday];
 
   const DAILIES_START_GAMEDAY = 8432; // Started collecting dailies on March 13, 2026
   const isFuture = gameday > todayGameday;
@@ -90,6 +110,30 @@ export default function DayDetail({
                 <a href={toWikiLink(h)} target="_blank" rel="noreferrer">
                   {h}
                 </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {iotmEvents && iotmEvents.length > 0 && (
+        <div className="day-detail-section">
+          <h3>Mr. Store</h3>
+          <ul>
+            {iotmEvents.map((e, i) => (
+              <li key={i}>
+                {e.itemName ? (
+                  <a
+                    href={toWikiLink(e.itemName)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {e.itemName}
+                  </a>
+                ) : (
+                  "Unknown item"
+                )}
+                {iotmEventSuffix(e, localTimeFormat)}
               </li>
             ))}
           </ul>
