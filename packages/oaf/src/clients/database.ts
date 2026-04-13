@@ -994,3 +994,131 @@ export async function getLatestDailies() {
   `.execute(db);
   return results.rows;
 }
+
+// ── Iotm ──
+
+export async function upsertIotmByName(data: {
+  itemName: string;
+  itemDescid?: number | null;
+  itemImage?: string | null;
+  month: Date;
+  mraCost?: number;
+  subscriberItem?: boolean;
+  addedToStore?: Date | null;
+}) {
+  // Check if there's an existing nameless subscriber row for this month we should claim
+  const existing = await db
+    .selectFrom("Iotm")
+    .selectAll()
+    .where("month", "=", data.month)
+    .where("subscriberItem", "=", data.subscriberItem ?? false)
+    .where("itemName", "is", null)
+    .executeTakeFirst();
+
+  if (existing) {
+    await db
+      .updateTable("Iotm")
+      .set({
+        itemName: data.itemName,
+        itemDescid: data.itemDescid ?? null,
+        itemImage: data.itemImage ?? null,
+        mraCost: data.mraCost,
+        addedToStore: data.addedToStore ?? null,
+      })
+      .where("id", "=", existing.id)
+      .execute();
+    return;
+  }
+
+  await db
+    .insertInto("Iotm")
+    .values({
+      itemName: data.itemName,
+      itemDescid: data.itemDescid ?? null,
+      itemImage: data.itemImage ?? null,
+      month: data.month,
+      ...(data.mraCost !== undefined && { mraCost: data.mraCost }),
+      subscriberItem: data.subscriberItem ?? false,
+      addedToStore: data.addedToStore ?? null,
+    })
+    .onConflict((oc) =>
+      oc.column("itemName").doUpdateSet({
+        itemDescid: data.itemDescid ?? null,
+        itemImage: data.itemImage ?? null,
+        ...(data.mraCost !== undefined && { mraCost: data.mraCost }),
+        addedToStore: data.addedToStore ?? null,
+      }),
+    )
+    .execute();
+}
+
+export async function upsertSubsRoll(month: Date, distributedAt: Date) {
+  const existing = await db
+    .selectFrom("Iotm")
+    .selectAll()
+    .where("month", "=", month)
+    .where("subscriberItem", "=", true)
+    .executeTakeFirst();
+
+  if (existing) {
+    await db
+      .updateTable("Iotm")
+      .set({ distributedToSubscribers: distributedAt })
+      .where("id", "=", existing.id)
+      .execute();
+    return;
+  }
+
+  await db
+    .insertInto("Iotm")
+    .values({
+      month,
+      subscriberItem: true,
+      distributedToSubscribers: distributedAt,
+    })
+    .execute();
+}
+
+export async function setIotmRemovedFromStore(
+  itemName: string,
+  removedAt: Date,
+) {
+  await db
+    .updateTable("Iotm")
+    .set({ removedFromStore: removedAt })
+    .where("itemName", "=", itemName)
+    .where("removedFromStore", "is", null)
+    .execute();
+}
+
+export async function getIotmsInStore() {
+  return await db
+    .selectFrom("Iotm")
+    .selectAll()
+    .where("addedToStore", "is not", null)
+    .where("removedFromStore", "is", null)
+    .where("itemName", "is not", null)
+    .execute();
+}
+
+export async function getIotmsForDateRange(from: Date, to: Date) {
+  return await db
+    .selectFrom("Iotm")
+    .selectAll()
+    .where((eb) =>
+      eb.or([
+        // Added to store within the range
+        eb.and([eb("addedToStore", ">=", from), eb("addedToStore", "<=", to)]),
+        // In store during the range (added before, removed after or still in)
+        eb.and([
+          eb("addedToStore", "<=", to),
+          eb.or([
+            eb("removedFromStore", "is", null),
+            eb("removedFromStore", ">=", from),
+          ]),
+        ]),
+      ]),
+    )
+    .orderBy("month", "asc")
+    .execute();
+}

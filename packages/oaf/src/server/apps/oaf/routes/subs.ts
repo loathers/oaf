@@ -3,19 +3,23 @@ import { ThreadAutoArchiveDuration, roleMention } from "discord.js";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 
+import { upsertSubsRoll } from "../../../../clients/database.js";
 import { discordClient } from "../../../../clients/discord.js";
 import { config } from "../../../../config.js";
 
-export function determineIotmMonthYear(): string {
+export function determineIotmMonth(): Date {
   const today = new Date();
 
-  return format(
+  return (
     closestTo(today, [
       add(today, { months: 1 }).setDate(1),
       new Date(today).setDate(1),
-    ]) ?? today,
-    "MMMM y",
+    ]) ?? today
   );
+}
+
+export function formatIotmMonth(month: Date): string {
+  return format(month, "MMMM y");
 }
 
 export const subsRouter = Router();
@@ -52,6 +56,9 @@ subsRouter.get("/", async (req, res) => {
       guild.emojis.cache.find((e) => e.name === "subsRolling")?.toString() ??
       "";
 
+    const month = determineIotmMonth();
+    const monthLabel = formatIotmMonth(month);
+
     const message = await iotmChannel.send({
       content: `🚨${subRollEmoji} Attention ${roleMention(
         config.SUBSCRIBER_ROLE_ID,
@@ -64,10 +71,12 @@ Feel free to discuss spading and speed strats here in the main channel; speculat
     });
 
     await message.startThread({
-      name: `Farming Discussion for ${determineIotmMonthYear()} IotM`,
+      name: `Farming Discussion for ${monthLabel} IotM`,
       autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
-      reason: `to discuss & speculate about farming strategy for the ${determineIotmMonthYear()} IotM`,
+      reason: `to discuss & speculate about farming strategy for the ${monthLabel} IotM`,
     });
+
+    await upsertSubsRoll(month, new Date());
 
     return void res.status(StatusCodes.OK).json({ status: "Thanks Chris!" });
   } catch (e) {
