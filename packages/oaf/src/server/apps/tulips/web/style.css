@@ -55,6 +55,14 @@ h1 {
   margin-bottom: 1rem;
 }
 
+.data-note {
+  text-align: center;
+  font-size: 0.7rem;
+  color: #4a4a6a;
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
 .range-btn {
   background: none;
   border: 1px solid transparent;

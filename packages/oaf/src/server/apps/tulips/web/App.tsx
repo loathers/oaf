@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { formatTime, RANGES, type Range } from "../types.js";
+import { RANGES, type Range, formatTime } from "../types.js";
 import TulipCard from "./components/TulipCard.js";
 
 type OHLC = { open: number; high: number; low: number; close: number };
@@ -100,6 +100,12 @@ export default function App() {
         )}
       </div>
       {error && <div className="error-state">{error}</div>}
+      {range === "10Y" && (
+        <p className="data-note">
+          Live collection started Aug 2025. Earlier data imported from previous
+          tools and may contain gaps.
+        </p>
+      )}
       {loading ? (
         <div className="loading-state">Loading...</div>
       ) : (
@@ -116,11 +122,13 @@ export default function App() {
               range={range}
               history={prices.map((p) => {
                 const v = p[t.key];
+                const ts = new Date(p.createdAt).getTime();
                 if (!isOHLC(v)) {
-                  return { time: p.createdAt, value: v };
+                  return { time: p.createdAt, timestamp: ts, value: v };
                 }
                 return {
                   time: p.createdAt,
+                  timestamp: ts,
                   value: v.close,
                   open: v.open,
                   high: v.high,

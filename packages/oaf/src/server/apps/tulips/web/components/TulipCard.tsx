@@ -1,18 +1,39 @@
+import { useMemo } from "react";
 import {
   Area,
   AreaChart,
   ResponsiveContainer,
   Tooltip,
+  type TooltipContentProps,
   XAxis,
   YAxis,
-  type TooltipContentProps,
 } from "recharts";
 
-import { formatTime, type Range } from "../../types.js";
+import { type Range, formatTime } from "../../types.js";
 
 const numberFormat = new Intl.NumberFormat();
 
-type RawEntry = { time: string; value: number };
+function insertGapMarkers(history: HistoryEntry[]) {
+  if (history.length < 2) return history;
+
+  const intervals = history
+    .slice(1)
+    .map((h, i) => h.timestamp - history[i].timestamp);
+  const sorted = [...intervals].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)];
+  const threshold = median * 3;
+
+  const result: Record<string, unknown>[] = [];
+  for (let i = 0; i < history.length; i++) {
+    if (i > 0 && history[i].timestamp - history[i - 1].timestamp > threshold) {
+      result.push({ timestamp: history[i].timestamp - 1 });
+    }
+    result.push(history[i]);
+  }
+  return result;
+}
+
+type RawEntry = { time: string; timestamp: number; value: number };
 type OHLCEntry = RawEntry & {
   open: number;
   high: number;
@@ -45,6 +66,7 @@ export default function TulipCard({
   range: Range;
 }) {
   const bucketed = history.some(isOHLCEntry);
+  const chartData = useMemo(() => insertGapMarkers(history), [history]);
   const [high, low] = history.reduce<[number | null, number | null]>(
     ([hi, lo], entry) => {
       const pointHigh = isOHLCEntry(entry) ? entry.high : entry.value;
@@ -97,7 +119,7 @@ export default function TulipCard({
       </div>
       <div className="tulip-chart">
         <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={history}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient
                 id={`gradient-${dataKey}`}
@@ -111,13 +133,17 @@ export default function TulipCard({
               </linearGradient>
             </defs>
             <XAxis
-              dataKey="time"
+              dataKey="timestamp"
+              type="number"
+              scale="time"
+              domain={["dataMin", "dataMax"]}
               tick={{ fill: "#4a4a6a", fontSize: 10 }}
               tickLine={false}
               axisLine={{ stroke: "#1a1a3e" }}
-              interval="preserveStartEnd"
               minTickGap={40}
-              tickFormatter={(v: string) => formatTime(v, range)}
+              tickFormatter={(v: number) =>
+                formatTime(new Date(v).toISOString(), range)
+              }
             />
             <YAxis
               domain={[
