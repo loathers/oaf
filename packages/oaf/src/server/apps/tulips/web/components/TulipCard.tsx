@@ -92,7 +92,7 @@ export default function TulipCard({
       </div>
       <div className="tulip-price">{numberFormat.format(current)}</div>
       <div className="tulip-meta">
-        <span className="tulip-unit">meat</span>
+        <span className="tulip-unit">Chroner</span>
         {change !== null && (
           <span className={`tulip-change ${direction}`}>
             {direction === "up"
@@ -165,7 +165,7 @@ export default function TulipCard({
             <Tooltip
               content={({ active, payload }: TooltipContentProps) => {
                 if (!active || !payload?.length) return null;
-                const entry: HistoryEntry = payload[0].payload;
+                const entry = payload[0].payload as HistoryEntry;
                 return (
                   <div className="tulip-tooltip">
                     <p className="tulip-tooltip-label">

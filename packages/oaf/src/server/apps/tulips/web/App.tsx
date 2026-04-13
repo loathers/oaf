@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { RANGES, type Range, formatTime } from "../types.js";
+import { RANGES, type Range } from "../types.js";
 import TulipCard from "./components/TulipCard.js";
 
 type OHLC = { open: number; high: number; low: number; close: number };
