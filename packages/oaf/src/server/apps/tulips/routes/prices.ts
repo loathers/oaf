@@ -20,7 +20,29 @@ pricesRouter.get("/", async (req, res) => {
 
   try {
     const prices = config.bucket
-      ? await getFlowerPriceHistoryBucketed(since, config.bucket)
+      ? (await getFlowerPriceHistoryBucketed(since, config.bucket)).map(
+          (row) => ({
+            createdAt: row.createdAt,
+            red: {
+              open: row.redOpen,
+              high: row.redHigh,
+              low: row.redLow,
+              close: row.red,
+            },
+            white: {
+              open: row.whiteOpen,
+              high: row.whiteHigh,
+              low: row.whiteLow,
+              close: row.white,
+            },
+            blue: {
+              open: row.blueOpen,
+              high: row.blueHigh,
+              low: row.blueLow,
+              close: row.blue,
+            },
+          }),
+        )
       : await getFlowerPriceHistory(since);
 
     res.set("Cache-Control", "public, max-age=60").json({ prices });

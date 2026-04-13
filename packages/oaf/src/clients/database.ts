@@ -669,9 +669,28 @@ export async function getFlowerPriceHistoryBucketed(
       sql<Date>`date_trunc(${sql.lit(bucketInterval)}, "createdAt")`.as(
         "createdAt",
       ),
-      sql<number>`avg(red)::int`.as("red"),
-      sql<number>`avg(white)::int`.as("white"),
-      sql<number>`avg(blue)::int`.as("blue"),
+      sql<number>`(array_agg(red ORDER BY "createdAt" ASC))[1]::int`.as(
+        "redOpen",
+      ),
+      sql<number>`max(red)`.as("redHigh"),
+      sql<number>`min(red)`.as("redLow"),
+      sql<number>`(array_agg(red ORDER BY "createdAt" DESC))[1]::int`.as("red"),
+      sql<number>`(array_agg(white ORDER BY "createdAt" ASC))[1]::int`.as(
+        "whiteOpen",
+      ),
+      sql<number>`max(white)`.as("whiteHigh"),
+      sql<number>`min(white)`.as("whiteLow"),
+      sql<number>`(array_agg(white ORDER BY "createdAt" DESC))[1]::int`.as(
+        "white",
+      ),
+      sql<number>`(array_agg(blue ORDER BY "createdAt" ASC))[1]::int`.as(
+        "blueOpen",
+      ),
+      sql<number>`max(blue)`.as("blueHigh"),
+      sql<number>`min(blue)`.as("blueLow"),
+      sql<number>`(array_agg(blue ORDER BY "createdAt" DESC))[1]::int`.as(
+        "blue",
+      ),
     ])
     .where("createdAt", ">=", since)
     .groupBy(sql`date_trunc(${sql.lit(bucketInterval)}, "createdAt")`)

@@ -1,45 +1,30 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { RANGES, type Range } from "../types.js";
+import { RANGES, type Range, formatTime } from "../types.js";
 import TulipCard from "./components/TulipCard.js";
 
+type OHLC = { open: number; high: number; low: number; close: number };
+type ColorValue = number | OHLC;
+
 type PriceEntry = {
-  red: number;
-  white: number;
-  blue: number;
+  red: ColorValue;
+  white: ColorValue;
+  blue: ColorValue;
   createdAt: string;
 };
 
-const RANGE_KEYS = Object.keys(RANGES) as Range[];
-
-function formatTime(dateStr: string, range: Range): string {
-  const date = new Date(dateStr);
-  switch (range) {
-    case "1D":
-      return date.toLocaleTimeString(undefined, {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-    case "1W":
-      return date.toLocaleDateString(undefined, {
-        weekday: "short",
-        hour: "numeric",
-      });
-    case "1M":
-    case "YTD":
-      return date.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-      });
-    case "1Y":
-    case "10Y":
-      return date.toLocaleDateString(undefined, {
-        month: "short",
-        year: "2-digit",
-      });
-  }
+function isOHLC(v: ColorValue): v is OHLC {
+  return typeof v === "object";
 }
+
+function toClose(v: ColorValue): number;
+function toClose(v: ColorValue | null): number | null;
+function toClose(v: ColorValue | null): number | null {
+  if (v === null) return null;
+  return isOHLC(v) ? v.close : v;
+}
+
+const RANGE_KEYS = Object.keys(RANGES) as Range[];
 
 const tulips = [
   {
@@ -115,6 +100,12 @@ export default function App() {
         )}
       </div>
       {error && <div className="error-state">{error}</div>}
+      {range === "10Y" && (
+        <p className="data-note">
+          Live collection started Aug 2025. Earlier data imported from previous
+          tools and may contain gaps.
+        </p>
+      )}
       {loading ? (
         <div className="loading-state">Loading...</div>
       ) : (
@@ -126,12 +117,25 @@ export default function App() {
               color={t.color}
               dotColor={t.dotColor}
               dataKey={t.key}
-              current={current?.[t.key] ?? 0}
-              first={first?.[t.key] ?? null}
-              history={prices.map((p) => ({
-                time: formatTime(p.createdAt, range),
-                value: p[t.key],
-              }))}
+              current={toClose(current?.[t.key] ?? 0)}
+              first={toClose(first?.[t.key] ?? null)}
+              range={range}
+              history={prices.map((p) => {
+                const v = p[t.key];
+                const ts = new Date(p.createdAt).getTime();
+                if (!isOHLC(v)) {
+                  return { time: p.createdAt, timestamp: ts, value: v };
+                }
+                return {
+                  time: p.createdAt,
+                  timestamp: ts,
+                  value: v.close,
+                  open: v.open,
+                  high: v.high,
+                  low: v.low,
+                  range: [v.low, v.high] satisfies [number, number],
+                };
+              })}
             />
           ))}
         </div>
