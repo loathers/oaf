@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { RANGES, type Range } from "../types.js";
+import { formatTime, RANGES, type Range } from "../types.js";
 import TulipCard from "./components/TulipCard.js";
 
 type OHLC = { open: number; high: number; low: number; close: number };
@@ -25,35 +25,6 @@ function toClose(v: ColorValue | null): number | null {
 }
 
 const RANGE_KEYS = Object.keys(RANGES) as Range[];
-
-function formatTime(dateStr: string, range: Range): string {
-  const date = new Date(dateStr);
-  switch (range) {
-    case "1D":
-      return date.toLocaleTimeString(undefined, {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-    case "1W":
-      return date.toLocaleDateString(undefined, {
-        weekday: "short",
-        hour: "numeric",
-      });
-    case "1M":
-    case "YTD":
-      return date.toLocaleDateString(undefined, {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-      });
-    case "1Y":
-    case "10Y":
-      return date.toLocaleDateString(undefined, {
-        month: "short",
-        year: "2-digit",
-      });
-  }
-}
 
 const tulips = [
   {
@@ -142,13 +113,14 @@ export default function App() {
               dataKey={t.key}
               current={toClose(current?.[t.key] ?? 0)}
               first={toClose(first?.[t.key] ?? null)}
+              range={range}
               history={prices.map((p) => {
                 const v = p[t.key];
                 if (!isOHLC(v)) {
-                  return { time: formatTime(p.createdAt, range), value: v };
+                  return { time: p.createdAt, value: v };
                 }
                 return {
-                  time: formatTime(p.createdAt, range),
+                  time: p.createdAt,
                   value: v.close,
                   open: v.open,
                   high: v.high,

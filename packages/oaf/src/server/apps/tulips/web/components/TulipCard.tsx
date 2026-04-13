@@ -8,6 +8,8 @@ import {
   type TooltipContentProps,
 } from "recharts";
 
+import { formatTime, type Range } from "../../types.js";
+
 const numberFormat = new Intl.NumberFormat();
 
 type RawEntry = { time: string; value: number };
@@ -31,6 +33,7 @@ export default function TulipCard({
   first,
   history,
   dataKey,
+  range,
 }: {
   name: string;
   color: string;
@@ -39,6 +42,7 @@ export default function TulipCard({
   first: number | null;
   history: HistoryEntry[];
   dataKey: string;
+  range: Range;
 }) {
   const bucketed = history.some(isOHLCEntry);
   const [high, low] = history.reduce<[number | null, number | null]>(
@@ -113,6 +117,7 @@ export default function TulipCard({
               axisLine={{ stroke: "#1a1a3e" }}
               interval="preserveStartEnd"
               minTickGap={40}
+              tickFormatter={(v: string) => formatTime(v, range)}
             />
             <YAxis
               domain={[
@@ -137,7 +142,18 @@ export default function TulipCard({
                 const entry: HistoryEntry = payload[0].payload;
                 return (
                   <div className="tulip-tooltip">
-                    <p className="tulip-tooltip-label">{entry.time}</p>
+                    <p className="tulip-tooltip-label">
+                      {new Date(entry.time).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        ...(range === "1D" || range === "1W"
+                          ? { hour: "numeric", minute: "2-digit" }
+                          : range === "1M" || range === "YTD"
+                            ? { hour: "numeric" }
+                            : {}),
+                      })}
+                    </p>
                     {isOHLCEntry(entry) ? (
                       <p className="tulip-tooltip-value" style={{ color }}>
                         O: {numberFormat.format(entry.open)} H:{" "}
