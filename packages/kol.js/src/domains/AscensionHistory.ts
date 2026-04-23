@@ -49,23 +49,23 @@ export class AscensionHistory {
   async getAscensions(
     playerId: number,
     options: { includePreNS13?: boolean } = {},
-  ): Promise<Ascension[]> {
+  ): Promise<Ascension[] | null> {
     if (!options.includePreNS13) {
       const post = await this.#client.fetchText("ascensionhistory.php", {
         query: { who: playerId },
       });
+      if (!AscensionHistory.parsePlayer(post)) return null;
       return AscensionHistory.parse(post, playerId);
     }
 
-    const [pre, post] = await Promise.all([
-      this.#client.fetchText("ascensionhistory.php", {
-        query: { who: playerId, prens13: 1 },
-      }),
-      this.#client.fetchText("ascensionhistory.php", {
-        query: { who: playerId },
-      }),
-    ]);
+    const pre = await this.#client.fetchText("ascensionhistory.php", {
+      query: { who: playerId, prens13: 1 },
+    });
+    if (!AscensionHistory.parsePlayer(pre)) return null;
 
+    const post = await this.#client.fetchText("ascensionhistory.php", {
+      query: { who: playerId },
+    });
     return [
       ...AscensionHistory.parse(pre, playerId),
       ...AscensionHistory.parse(post, playerId),

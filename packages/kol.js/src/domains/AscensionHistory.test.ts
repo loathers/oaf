@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { Client } from "../Client.js";
 import { loadFixture } from "../testUtils.js";
 import { AscensionHistory, type Ascension } from "./AscensionHistory.js";
@@ -115,6 +115,8 @@ describe("AscensionHistory.parse", () => {
 });
 
 describe("AscensionHistory.getAscensions", () => {
+  beforeEach(() => text.mockReset());
+
   it("fetches and parses post-NS13 ascensions", async () => {
     const page = await loadFixture(
       import.meta.dirname,
@@ -131,7 +133,7 @@ describe("AscensionHistory.getAscensions", () => {
     });
   });
 
-  it("fetches pre- and post-NS13 ascensions in parallel when includePreNS13 is true", async () => {
+  it("fetches pre- and post-NS13 ascensions when includePreNS13 is true", async () => {
     const prePage = await loadFixture(
       import.meta.dirname,
       "gausie_pre_ns13_ascensionhistory.html",
@@ -153,7 +155,30 @@ describe("AscensionHistory.getAscensions", () => {
     expect(text).toHaveBeenCalledWith("ascensionhistory.php", {
       query: { who: 1197090 },
     });
-    expect(ascensions.length).toBeGreaterThan(1112);
+    expect(ascensions?.length).toBeGreaterThan(1112);
+  });
+
+  it("returns null for a non-existent player", async () => {
+    const page = await loadFixture(
+      import.meta.dirname,
+      "ascensionhistory_purged.html",
+    );
+    text.mockResolvedValueOnce(page);
+
+    const history = new AscensionHistory(client);
+    expect(await history.getAscensions(1)).toBeNull();
+  });
+
+  it("returns null without fetching post when pre page shows a non-existent player", async () => {
+    const page = await loadFixture(
+      import.meta.dirname,
+      "ascensionhistory_purged.html",
+    );
+    text.mockResolvedValueOnce(page);
+
+    const history = new AscensionHistory(client);
+    expect(await history.getAscensions(1, { includePreNS13: true })).toBeNull();
+    expect(text).toHaveBeenCalledTimes(1);
   });
 });
 

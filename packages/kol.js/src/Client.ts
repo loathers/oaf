@@ -31,6 +31,7 @@ type RequestOptions = {
   method?: string;
   query?: Record<string, unknown>;
   form?: FormData;
+  signal?: AbortSignal;
 };
 
 function formToBody(form: FormData): URLSearchParams {
