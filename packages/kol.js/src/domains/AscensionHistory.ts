@@ -29,7 +29,7 @@ export class AscensionHistory {
     this.#client = client;
   }
 
-  static parse(page: string, playerId: number): Ascension[] {
+  static #parse(page: string, playerId: number): Ascension[] {
     const rows = page.matchAll(
       /<\/tr>(?:<td.*?>.*?<\/td>){2}(?:<td colspan.*?>.*?<\/td>|(?:<td.*?>.*?<\/td>){7})/gs,
     );
@@ -38,38 +38,44 @@ export class AscensionHistory {
     );
   }
 
-  static parsePlayer(page: string): { id: number; name: string } | null {
+  static parseAscensions(
+    page: string,
+  ): { player: { id: number; name: string }; ascensions: Ascension[] } | null {
     const match = page.match(
       /\(<a href="showplayer.php\?who=(\d+)".*?><font.*?>(.*?)<\/font><\/a>\)/,
     );
     if (!match || match[1] === "0") return null;
-    return { id: parseInt(match[1]), name: match[2] };
+    const player = { id: parseInt(match[1]), name: match[2] };
+    return { player, ascensions: AscensionHistory.#parse(page, player.id) };
   }
 
   async getAscensions(
     playerId: number,
     options: { includePreNS13?: boolean } = {},
-  ): Promise<Ascension[] | null> {
+  ): Promise<{ player: { id: number; name: string }; ascensions: Ascension[] } | null> {
     if (!options.includePreNS13) {
       const post = await this.#client.fetchText("ascensionhistory.php", {
         query: { who: playerId },
       });
-      if (!AscensionHistory.parsePlayer(post)) return null;
-      return AscensionHistory.parse(post, playerId);
+      return AscensionHistory.parseAscensions(post);
     }
 
     const pre = await this.#client.fetchText("ascensionhistory.php", {
       query: { who: playerId, prens13: 1 },
     });
-    if (!AscensionHistory.parsePlayer(pre)) return null;
+    const preResult = AscensionHistory.parseAscensions(pre);
+    if (!preResult) return null;
 
     const post = await this.#client.fetchText("ascensionhistory.php", {
       query: { who: playerId },
     });
-    return [
-      ...AscensionHistory.parse(pre, playerId),
-      ...AscensionHistory.parse(post, playerId),
-    ];
+    return {
+      player: preResult.player,
+      ascensions: [
+        ...preResult.ascensions,
+        ...AscensionHistory.#parse(post, preResult.player.id),
+      ],
+    };
   }
 
   static #textContent(s: string) {

@@ -15,7 +15,7 @@ vi.mock("../Client.js", async (importOriginal) => {
 
 const client = new Client("", "");
 
-describe("AscensionHistory.parse", () => {
+describe("AscensionHistory.parseAscensions", () => {
   let gausieAscensions: Ascension[];
 
   beforeAll(async () => {
@@ -23,11 +23,22 @@ describe("AscensionHistory.parse", () => {
       import.meta.dirname,
       "gausie_post_ns13_ascensionhistory.html",
     );
-    gausieAscensions = AscensionHistory.parse(page, 1197090);
+    gausieAscensions = AscensionHistory.parseAscensions(page)?.ascensions ?? [];
   });
 
   it("parses all ascensions from a long page", () => {
     expect(gausieAscensions).toHaveLength(1112);
+  });
+
+  it("parses the player from the page header", async () => {
+    const page = await loadFixture(
+      import.meta.dirname,
+      "gausie_post_ns13_ascensionhistory.html",
+    );
+    expect(AscensionHistory.parseAscensions(page)?.player).toEqual({
+      id: 1197090,
+      name: "gAUSIE",
+    });
   });
 
   it("recognises a dropped run", () => {
@@ -42,8 +53,8 @@ describe("AscensionHistory.parse", () => {
       import.meta.dirname,
       "gausie_pre_ns13_ascensionhistory.html",
     );
-    const ascensions = AscensionHistory.parse(page, 1197090);
-    expect(ascensions.find((a) => a.ascensionNumber === 1)).toHaveProperty(
+    const ascensions = AscensionHistory.parseAscensions(page)?.ascensions;
+    expect(ascensions?.find((a) => a.ascensionNumber === 1)).toHaveProperty(
       "sign",
       "None",
     );
@@ -71,13 +82,13 @@ describe("AscensionHistory.parse", () => {
   });
 
   it.each(["before", "after"])(
-    "returns empty array for an account with no ascensions (%s NS13)",
+    "returns empty ascensions for an account with no ascensions (%s NS13)",
     async (relativeToNS13) => {
       const page = await loadFixture(
         import.meta.dirname,
         `ascensionhistory_none_${relativeToNS13}_ns13.html`,
       );
-      expect(AscensionHistory.parse(page, 1199739)).toHaveLength(0);
+      expect(AscensionHistory.parseAscensions(page)?.ascensions).toHaveLength(0);
     },
   );
 
@@ -87,7 +98,9 @@ describe("AscensionHistory.parse", () => {
       "ascensionhistory_with_abandoned.html",
     );
     expect(
-      AscensionHistory.parse(page, 725488).find((a) => a.ascensionNumber === 49),
+      AscensionHistory.parseAscensions(page)?.ascensions.find(
+        (a) => a.ascensionNumber === 49,
+      ),
     ).toHaveProperty("abandoned", true);
   });
 
@@ -97,7 +110,9 @@ describe("AscensionHistory.parse", () => {
       "ascensionhistory_two_asterisks.html",
     );
     expect(
-      AscensionHistory.parse(page, 2026359).find((a) => a.ascensionNumber === 113),
+      AscensionHistory.parseAscensions(page)?.ascensions.find(
+        (a) => a.ascensionNumber === 113,
+      ),
     ).toHaveProperty("dropped", true);
   });
 
@@ -112,6 +127,33 @@ describe("AscensionHistory.parse", () => {
       { Fun: 7018 },
     );
   });
+
+  it("returns null for a manually elided account", async () => {
+    const page = await loadFixture(
+      import.meta.dirname,
+      "ascensionhistory_jick.html",
+    );
+    expect(AscensionHistory.parseAscensions(page)).toBeNull();
+  });
+
+  it("returns null for a purged account", async () => {
+    const page = await loadFixture(
+      import.meta.dirname,
+      "ascensionhistory_purged.html",
+    );
+    expect(AscensionHistory.parseAscensions(page)).toBeNull();
+  });
+
+  it("parses a player with no ascensions", async () => {
+    const page = await loadFixture(
+      import.meta.dirname,
+      "ascensionhistory_none_before_ns13.html",
+    );
+    expect(AscensionHistory.parseAscensions(page)?.player).toEqual({
+      id: 1199739,
+      name: "onweb",
+    });
+  });
 });
 
 describe("AscensionHistory.getAscensions", () => {
@@ -125,9 +167,10 @@ describe("AscensionHistory.getAscensions", () => {
     text.mockResolvedValueOnce(page);
 
     const history = new AscensionHistory(client);
-    const ascensions = await history.getAscensions(1197090);
+    const result = await history.getAscensions(1197090);
 
-    expect(ascensions).toHaveLength(1112);
+    expect(result?.ascensions).toHaveLength(1112);
+    expect(result?.player).toEqual({ id: 1197090, name: "gAUSIE" });
     expect(text).toHaveBeenCalledWith("ascensionhistory.php", {
       query: { who: 1197090 },
     });
@@ -145,7 +188,7 @@ describe("AscensionHistory.getAscensions", () => {
     text.mockResolvedValueOnce(prePage).mockResolvedValueOnce(postPage);
 
     const history = new AscensionHistory(client);
-    const ascensions = await history.getAscensions(1197090, {
+    const result = await history.getAscensions(1197090, {
       includePreNS13: true,
     });
 
@@ -155,7 +198,7 @@ describe("AscensionHistory.getAscensions", () => {
     expect(text).toHaveBeenCalledWith("ascensionhistory.php", {
       query: { who: 1197090 },
     });
-    expect(ascensions?.length).toBeGreaterThan(1112);
+    expect(result?.ascensions.length).toBeGreaterThan(1112);
   });
 
   it("returns null for a non-existent player", async () => {
@@ -179,45 +222,5 @@ describe("AscensionHistory.getAscensions", () => {
     const history = new AscensionHistory(client);
     expect(await history.getAscensions(1, { includePreNS13: true })).toBeNull();
     expect(text).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe("AscensionHistory.parsePlayer", () => {
-  it("parses player name and id from the page header", async () => {
-    const page = await loadFixture(
-      import.meta.dirname,
-      "gausie_post_ns13_ascensionhistory.html",
-    );
-    expect(AscensionHistory.parsePlayer(page)).toEqual({
-      id: 1197090,
-      name: "gAUSIE",
-    });
-  });
-
-  it("parses a player with no ascensions", async () => {
-    const page = await loadFixture(
-      import.meta.dirname,
-      "ascensionhistory_none_before_ns13.html",
-    );
-    expect(AscensionHistory.parsePlayer(page)).toEqual({
-      id: 1199739,
-      name: "onweb",
-    });
-  });
-
-  it("returns null for a manually elided account", async () => {
-    const page = await loadFixture(
-      import.meta.dirname,
-      "ascensionhistory_jick.html",
-    );
-    expect(AscensionHistory.parsePlayer(page)).toBeNull();
-  });
-
-  it("returns null for a purged account", async () => {
-    const page = await loadFixture(
-      import.meta.dirname,
-      "ascensionhistory_purged.html",
-    );
-    expect(AscensionHistory.parsePlayer(page)).toBeNull();
   });
 });
