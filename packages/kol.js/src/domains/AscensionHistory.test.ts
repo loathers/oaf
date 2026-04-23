@@ -1,6 +1,19 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { Client } from "../Client.js";
 import { loadFixture } from "../testUtils.js";
 import { AscensionHistory, type Ascension } from "./AscensionHistory.js";
+
+const { text } = vi.hoisted(() => ({ text: vi.fn() }));
+
+vi.mock("../Client.js", async (importOriginal) => {
+  const client = await importOriginal<typeof import("../Client.js")>();
+  client.Client.prototype.login = async () => true;
+  client.Client.prototype.checkLoggedIn = async () => true;
+  client.Client.prototype.fetchText = text;
+  return client;
+});
+
+const client = new Client("", "");
 
 describe("AscensionHistory.parse", () => {
   let gausieAscensions: Ascension[];
@@ -98,6 +111,49 @@ describe("AscensionHistory.parse", () => {
     expect(gausieAscensions.find((a) => a.ascensionNumber === 279)?.extra).toEqual(
       { Fun: 7018 },
     );
+  });
+});
+
+describe("AscensionHistory.getAscensions", () => {
+  it("fetches and parses post-NS13 ascensions", async () => {
+    const page = await loadFixture(
+      import.meta.dirname,
+      "gausie_post_ns13_ascensionhistory.html",
+    );
+    text.mockResolvedValueOnce(page);
+
+    const history = new AscensionHistory(client);
+    const ascensions = await history.getAscensions(1197090);
+
+    expect(ascensions).toHaveLength(1112);
+    expect(text).toHaveBeenCalledWith("ascensionhistory.php", {
+      query: { who: 1197090 },
+    });
+  });
+
+  it("fetches pre- and post-NS13 ascensions in parallel when includePreNS13 is true", async () => {
+    const prePage = await loadFixture(
+      import.meta.dirname,
+      "gausie_pre_ns13_ascensionhistory.html",
+    );
+    const postPage = await loadFixture(
+      import.meta.dirname,
+      "gausie_post_ns13_ascensionhistory.html",
+    );
+    text.mockResolvedValueOnce(prePage).mockResolvedValueOnce(postPage);
+
+    const history = new AscensionHistory(client);
+    const ascensions = await history.getAscensions(1197090, {
+      includePreNS13: true,
+    });
+
+    expect(text).toHaveBeenCalledWith("ascensionhistory.php", {
+      query: { who: 1197090, prens13: 1 },
+    });
+    expect(text).toHaveBeenCalledWith("ascensionhistory.php", {
+      query: { who: 1197090 },
+    });
+    expect(ascensions.length).toBeGreaterThan(1112);
   });
 });
 

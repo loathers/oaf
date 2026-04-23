@@ -50,15 +50,21 @@ export class AscensionHistory {
     playerId: number,
     options: { includePreNS13?: boolean } = {},
   ): Promise<Ascension[]> {
-    const post = await this.#client.fetchText("ascensionhistory.php", {
-      query: { who: playerId },
-    });
+    if (!options.includePreNS13) {
+      const post = await this.#client.fetchText("ascensionhistory.php", {
+        query: { who: playerId },
+      });
+      return AscensionHistory.parse(post, playerId);
+    }
 
-    if (!options.includePreNS13) return AscensionHistory.parse(post, playerId);
-
-    const pre = await this.#client.fetchText("ascensionhistory.php", {
-      query: { who: playerId, prens13: 1 },
-    });
+    const [pre, post] = await Promise.all([
+      this.#client.fetchText("ascensionhistory.php", {
+        query: { who: playerId, prens13: 1 },
+      }),
+      this.#client.fetchText("ascensionhistory.php", {
+        query: { who: playerId },
+      }),
+    ]);
 
     return [
       ...AscensionHistory.parse(pre, playerId),
@@ -70,7 +76,7 @@ export class AscensionHistory {
     return s.match(/<span.*?>(.*?)<\/span>/)?.[1] ?? s;
   }
 
-  static #extractTitle(s: string) {
+  static #extractTitle(s: string | undefined) {
     return s?.match(/title="(.*?)"/s)?.[1];
   }
 
