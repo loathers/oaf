@@ -9,4 +9,5 @@ export {
   cleanString,
   toWikiLink,
   parseKoLNumber,
+  trim,
 } from "./utils/utils.js";
