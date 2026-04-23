@@ -170,4 +170,24 @@ export class Leaderboard {
 
     return Leaderboard.parse(page);
   }
+
+  static parseRecent(page: string): { id: number; name: string }[] {
+    const rows = page.matchAll(
+      /<td>\w{3}(?:&nbsp;)?\d+&nbsp;<\/td><td>.*?who=(\d+).*?<b>(.*?)<\/b>/gs,
+    );
+
+    const players = new Map<number, string>();
+    for (const row of rows) {
+      players.set(parseInt(row[1]), row[2]);
+    }
+
+    return [...players].map(([id, name]) => ({ id, name }));
+  }
+
+  async getRecent(): Promise<{ id: number; name: string }[]> {
+    const page = await this.#client.fetchText("museum.php", {
+      query: { place: "leaderboards", whichboard: 999, showhist: 500 },
+    });
+    return Leaderboard.parseRecent(page);
+  }
 }

@@ -49,6 +49,27 @@ describe("Leaderboards", () => {
   });
 });
 
+describe("Leaderboard.parseRecent", () => {
+  it("parses unique recent ascenders", async () => {
+    const page = await loadFixture(
+      import.meta.dirname,
+      "museum_recent_ascensions.html",
+    );
+    // 500 ascensions but only 405 unique players
+    expect(Leaderboard.parseRecent(page)).toHaveLength(405);
+  });
+
+  it("handles early-month date format", async () => {
+    const page = await loadFixture(
+      import.meta.dirname,
+      "museum_recent_ascensions_broken.html",
+    );
+    const recent = Leaderboard.parseRecent(page);
+    expect(recent).toContainEqual({ id: 892618, name: "ReveRKiller" });
+    expect(recent).toHaveLength(412);
+  });
+});
+
 describe("boardIdForStandardYear", () => {
   afterEach(() => {
     vi.useRealTimers();
