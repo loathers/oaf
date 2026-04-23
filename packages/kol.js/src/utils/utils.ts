@@ -74,3 +74,8 @@ export function toWikiLink(input: string): string {
 export function parseKoLNumber(input?: string): number {
   return parseInt(input?.replaceAll(",", "") || "0");
 }
+
+/** Trim whitespace and trailing &nbsp; entities from KoL page content. */
+export function trim(s: string): string {
+  return s.replace(/(?:&nbsp;)+$/g, "").trim();
+}
