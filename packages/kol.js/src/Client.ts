@@ -467,22 +467,6 @@ export class Client extends Emittery<Events> {
     throw new JoinClanError(join.reason);
   }
 
-  async addToWhitelist(playerId: number, clanId: number): Promise<Result> {
-    return await this.actionMutex.runExclusive(async () => {
-      const join = await this.joinClan(clanId);
-      if (!join.success) return join;
-      await this.fetchText("clan_whitelist.php", {
-        query: {
-          addwho: playerId,
-          level: 2,
-          title: "",
-          action: "add",
-        },
-      });
-      return { success: true };
-    });
-  }
-
   async useFamiliar(familiarId: number): Promise<boolean> {
     const result = await this.fetchText("familiar.php", {
       query: {

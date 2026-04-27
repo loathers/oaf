@@ -19,7 +19,7 @@ import {
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { pluralize } from "../../utils.js";
-import { DREAD_CLANS } from "./_clans.js";
+import { DUNGEON_RUNNING_CLANS } from "./_clans.js";
 
 const dungeon = new DreadsylvaniaDungeon(kolClient);
 
@@ -179,7 +179,7 @@ function parseCastleStatus(status: DetailedDreadStatus) {
 export async function execute(interaction: ChatInputCommandInteraction) {
   const clanName = interaction.options.getString("clan", true).toLowerCase();
 
-  const clan = DREAD_CLANS.find(
+  const clan = DUNGEON_RUNNING_CLANS.find(
     (clan) =>
       clan.name.toLowerCase() === clanName || clan.synonyms.includes(clanName),
   );
@@ -255,7 +255,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 export async function autocomplete(interaction: AutocompleteInteraction) {
   const focusedValue = interaction.options.getFocused().toLowerCase();
 
-  const filtered = DREAD_CLANS.filter(
+  const filtered = DUNGEON_RUNNING_CLANS.filter(
     (clan) =>
       clan.name.toLowerCase().includes(focusedValue) ||
       clan.synonyms.some((s) => s.includes(focusedValue)),
