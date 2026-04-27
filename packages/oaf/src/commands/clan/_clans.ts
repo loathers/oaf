@@ -4,7 +4,7 @@ type Clan = {
   id: number;
 };
 
-export const DREAD_CLANS: Clan[] = [
+export const DUNGEON_RUNNING_CLANS: Clan[] = [
   {
     name: "Collaborative Dungeon Running 1",
     synonyms: ["cdr1", "1"],
@@ -17,7 +17,7 @@ export const DREAD_CLANS: Clan[] = [
   },
 ];
 
-export const NON_DREAD_CLANS: Clan[] = [
+export const DUNGEON_ADMIN_CLANS: Clan[] = [
   {
     name: "Collaborative Dungeon Running Central",
     synonyms: ["central"],
@@ -25,4 +25,4 @@ export const NON_DREAD_CLANS: Clan[] = [
   },
 ];
 
-export const ALL_CLANS = DREAD_CLANS.concat(NON_DREAD_CLANS);
+export const DUNGEON_CLANS = DUNGEON_RUNNING_CLANS.concat(DUNGEON_ADMIN_CLANS);

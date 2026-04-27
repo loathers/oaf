@@ -4,10 +4,10 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
-import { assertNotRollover, kolClient } from "../../clients/kol.js";
+import { assertNotRollover, clan } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import { findPlayer } from "../_player.js";
-import { ALL_CLANS } from "./_clans.js";
+import { DUNGEON_CLANS } from "./_clans.js";
 
 const PERMITTED_ROLE_IDS = config.WHITELIST_ROLE_IDS.split(",");
 
@@ -54,8 +54,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     ));
   }
 
-  for (const clan of ALL_CLANS) {
-    await kolClient.addToWhitelist(player.playerId, clan.id);
+  for (const dungeonClan of DUNGEON_CLANS) {
+    await clan.addPlayerToWhitelist(player.playerId, dungeonClan.id);
   }
 
   await interaction.editReply({

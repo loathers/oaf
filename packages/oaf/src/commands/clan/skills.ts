@@ -16,7 +16,7 @@ import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { columnsByMaxLength, formatPlayer } from "../../discordUtils.js";
 import { pluralize } from "../../utils.js";
 import { identifyPlayer } from "../_player.js";
-import { DREAD_CLANS } from "./_clans.js";
+import { DUNGEON_RUNNING_CLANS } from "./_clans.js";
 
 const dungeon = new DreadsylvaniaDungeon(kolClient);
 
@@ -34,7 +34,7 @@ export const data = new SlashCommandBuilder()
 
 async function getParticipationFromCurrentRaid() {
   return await Promise.all(
-    DREAD_CLANS.map(async (clan) => {
+    DUNGEON_RUNNING_CLANS.map(async (clan) => {
       const raid = await dungeon.getRaid(clan.id);
       return raid.getParticipation();
     }),
@@ -59,7 +59,7 @@ async function parseLogs() {
     }[];
   }[] = [];
 
-  for (const clan of DREAD_CLANS) {
+  for (const clan of DUNGEON_RUNNING_CLANS) {
     const raidIds = (await dungeon.getRaidIds(clan.id, parsedRaids)).filter(
       (id) => !parsedRaids.includes(id),
     );

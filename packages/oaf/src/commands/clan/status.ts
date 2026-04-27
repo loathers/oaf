@@ -11,7 +11,7 @@ import { discordClient } from "../../clients/discord.js";
 import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import { pluralize } from "../../utils.js";
-import { DREAD_CLANS } from "./_clans.js";
+import { DUNGEON_RUNNING_CLANS } from "./_clans.js";
 
 const dungeon = new DreadsylvaniaDungeon(kolClient);
 
@@ -22,7 +22,7 @@ async function constructDreadStatusMessage(): Promise<{
   const pingableClans: string[] = [];
 
   const messages = await Promise.all(
-    DREAD_CLANS.map(async (clan) => {
+    DUNGEON_RUNNING_CLANS.map(async (clan) => {
       const raid = await dungeon.getRaid(clan.id);
       const overview = raid.getOverview();
 

@@ -1,8 +1,10 @@
 import { Client, type MallPrice, RolloverError } from "kol.js";
+import { Clan } from "kol.js/domains/Clan";
 
 import { config } from "../config.js";
 
 export const kolClient = new Client(config.KOL_USER, config.KOL_PASS);
+export const clan = new Clan(kolClient);
 
 export function assertNotRollover(): void {
   if (kolClient.isRollover()) throw new RolloverError();
