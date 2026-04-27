@@ -21,6 +21,8 @@ export type MallPrice = {
   minPrice: number | null;
 };
 
+type Result<T = void> = { success: true; data?: T } | { success: false; reason: string };
+
 import { AuthError, RolloverError } from "./errors.js";
 
 class LoginRedirectError extends Error {}
@@ -66,6 +68,13 @@ type ApiStatus = {
   /** session password */
   pwd: string;
 };
+
+export class JoinClanError extends Error {
+  constructor(reason: string) {
+    super(reason);
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
 
 export class Client extends Emittery<Events> {
   actionMutex = new Mutex();
@@ -427,7 +436,14 @@ export class Client extends Emittery<Events> {
     return { blueText: sanitiseBlueText(blueText?.groups?.description) };
   }
 
-  async joinClan(id: number): Promise<boolean> {
+  async leaveClan(): Promise<void> {
+    await this.fetchText("clan_members.php", {
+      method: "POST",
+      form: { action: "leaveclan", confirm: "on" },
+    });
+  }
+
+  async joinClan(id: number): Promise<Result> {
     const result = await this.fetchText("showclan.php", {
       query: {
         whichclan: id,
@@ -435,10 +451,13 @@ export class Client extends Emittery<Events> {
         confirm: "on",
       },
     });
-    return (
-      result.includes("clanhalltop.gif") ||
-      result.includes("a clan you're already in")
-    );
+    if (result.includes("clanhalltop.gif") || result.includes("a clan you're already in"))
+      return { success: true };
+    if (result.includes("leader of an existing clan"))
+      return { success: false, reason: "Already leader of a clan" };
+    if (result.includes("submitted a request to join"))
+      return { success: false, reason: "Not on the whitelist" };
+    return { success: false, reason: "Unknown" };
   }
 
   async getClanWhitelists(): Promise<{ id: number; name: string }[]> {
@@ -457,7 +476,8 @@ export class Client extends Emittery<Events> {
 
   async addToWhitelist(playerId: number, clanId: number): Promise<Result> {
     return await this.actionMutex.runExclusive(async () => {
-      if (!(await this.joinClan(clanId))) return false;
+      const join = await this.joinClan(clanId);
+      if (!join.success) return join;
       await this.fetchText("clan_whitelist.php", {
         query: {
           addwho: playerId,
@@ -466,7 +486,7 @@ export class Client extends Emittery<Events> {
           action: "add",
         },
       });
-      return true;
+      return { success: true };
     });
   }
 

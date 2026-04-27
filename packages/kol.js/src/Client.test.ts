@@ -134,6 +134,54 @@ describe("Clan whitelists", () => {
   });
 });
 
+describe("joinClan", () => {
+  const client = new Client("", "");
+
+  test("success on joining", async () => {
+    vi.spyOn(client, "fetchText").mockResolvedValueOnce(
+      await loadFixture(__dirname, "showclan_joinclan_success.html"),
+    );
+    expect(await client.joinClan(90485)).toStrictEqual({ success: true });
+  });
+
+  test("success when already in clan", async () => {
+    vi.spyOn(client, "fetchText").mockResolvedValueOnce(
+      await loadFixture(__dirname, "showclan_joinclan_already_in.html"),
+    );
+    expect(await client.joinClan(90485)).toStrictEqual({ success: true });
+  });
+
+  test("failure when leader of existing clan", async () => {
+    vi.spyOn(client, "fetchText").mockResolvedValueOnce(
+      await loadFixture(__dirname, "showclan_joinclan_leader_of_existing.html"),
+    );
+    expect(await client.joinClan(90485)).toStrictEqual({
+      success: false,
+      reason: "Already leader of a clan",
+    });
+  });
+
+  test("failure when not on whitelist", async () => {
+    vi.spyOn(client, "fetchText").mockResolvedValueOnce(
+      await loadFixture(__dirname, "showclan_joinclan_submitted_a_request.html"),
+    );
+    expect(await client.joinClan(90485)).toStrictEqual({
+      success: false,
+      reason: "Not on the whitelist",
+    });
+  });
+
+  test("failure with unknown response", async () => {
+    vi.spyOn(client, "fetchText").mockResolvedValueOnce(
+      await loadFixture(__dirname, "showclan_joinclan_unknown.html"),
+    );
+    expect(await client.joinClan(90485)).toStrictEqual({
+      success: false,
+      reason: "Unknown",
+    });
+  });
+});
+
 describe("Familiars", () => {
   const client = new Client("", "");
 
