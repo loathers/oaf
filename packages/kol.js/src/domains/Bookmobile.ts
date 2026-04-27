@@ -9,14 +9,14 @@ export type BookmobileStatus = {
 export class BookmobileNotInTownError extends Error {
   constructor() {
     super("The Bookmobile is not in town");
-    Object.setPrototypeOf(this, new.target.prototype);
+    this.name = "BookmobileNotInTownError";
   }
 }
 
 export class BookmobileParseError extends Error {
   constructor() {
     super("Could not parse the Bookmobile page");
-    Object.setPrototypeOf(this, new.target.prototype);
+    this.name = "BookmobileParseError";
   }
 }
 

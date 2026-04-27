@@ -3,7 +3,7 @@ import type { Client } from "../Client.js";
 export class RaidLogMissingError extends Error {
   constructor() {
     super("Raid log missing");
-    Object.setPrototypeOf(this, new.target.prototype);
+    this.name = "RaidLogMissingError";
   }
 }
 

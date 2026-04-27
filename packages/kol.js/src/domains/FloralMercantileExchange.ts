@@ -9,7 +9,7 @@ export type FlowerPrices = {
 export class FloralMercantileExchangeParseError extends Error {
   constructor() {
     super("Could not parse flower prices");
-    Object.setPrototypeOf(this, new.target.prototype);
+    this.name = "FloralMercantileExchangeParseError";
   }
 }
 

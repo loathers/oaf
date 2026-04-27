@@ -8,7 +8,8 @@ import {
   strikethrough,
   underline,
 } from "discord.js";
-import { JoinClanError, RaidLogMissingError } from "kol.js/domains/ClanDungeon";
+import { JoinClanError } from "kol.js";
+import { RaidLogMissingError } from "kol.js/domains/ClanDungeon";
 import {
   type DetailedDreadStatus,
   type DreadBoss,
@@ -226,7 +227,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   } catch (error) {
     if (error instanceof JoinClanError) {
       await discordClient.alert("Unable to join clan", interaction, error);
-      await interaction.editReply("I was unable to join that clan");
+      await interaction.editReply(
+        `I was unable to join that clan: ${error.message}`,
+      );
       return;
     }
 

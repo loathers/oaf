@@ -11,3 +11,10 @@ export class AuthError extends Error {
     this.name = "AuthError";
   }
 }
+
+export class JoinClanError extends Error {
+  constructor(reason: string) {
+    super(reason);
+    this.name = "JoinClanError";
+  }
+}

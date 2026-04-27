@@ -23,7 +23,7 @@ export type MallPrice = {
 
 type Result<T = void> = { success: true; data?: T } | { success: false; reason: string };
 
-import { AuthError, RolloverError } from "./errors.js";
+import { AuthError, JoinClanError, RolloverError } from "./errors.js";
 
 class LoginRedirectError extends Error {}
 
@@ -68,13 +68,6 @@ type ApiStatus = {
   /** session password */
   pwd: string;
 };
-
-export class JoinClanError extends Error {
-  constructor(reason: string) {
-    super(reason);
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-}
 
 export class Client extends Emittery<Events> {
   actionMutex = new Mutex();
