@@ -4,6 +4,7 @@ import {
   bold,
   roleMention,
 } from "discord.js";
+import { JoinClanError } from "kol.js";
 import { DreadsylvaniaDungeon } from "kol.js/domains/Dreadsylvania";
 
 import { discordClient } from "../../clients/discord.js";
@@ -69,9 +70,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       ],
     });
   } catch (error) {
+    if (error instanceof JoinClanError) {
+      await discordClient.alert("Unable to join clan", interaction, error);
+      await interaction.editReply(
+        `I was unable to join that clan: ${error.message}`,
+      );
+      return;
+    }
     await discordClient.alert("Unknown error", interaction, error);
     await interaction.editReply(
-      "I was unable to fetch clan status, sorry. I might be stuck in a clan, or I might be unable to log in.",
+      "I was unable to fetch clan status due to an unexpected error.",
     );
   }
 }
