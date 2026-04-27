@@ -2,22 +2,67 @@ import { describe, expect, test, vi } from "vitest";
 
 import { Client } from "../Client.js";
 import { loadFixture } from "../testUtils.js";
-import { Clan } from "./Clan.js";
+import { type ClanInfo, Clan } from "./Clan.js";
 
 describe("getInfo", () => {
   const client = new Client("", "");
   const clan = new Clan(client);
 
-  test("parses clan info from showclan page", async () => {
+  test.each<[string, number, ClanInfo]>([
+    [
+      "showclan_cdr1.html",
+      2047008362,
+      {
+        id: 2047008362,
+        name: "Collaborative Dungeon Running 1",
+        leader: { id: 1382257, name: "UberJew" },
+        credo: "Dungeon running managed by the Ascension Speed Society.  Management and coordination is done here: https://discord.gg/KphxvKa",
+        website: null,
+        memberCount: 7,
+        trophies: { "Space Shadow": 1 },
+      },
+    ],
+    [
+      "showclan_bafh.html",
+      90485,
+      {
+        id: 90485,
+        name: "Bonus Adventures from Hell",
+        leader: { id: 1883589, name: "BAFH" },
+        credo: "+Adv and VIP room for all",
+        website: "http://alliancefromhell.com/",
+        memberCount: 1626,
+        trophies: {
+          "Uncle Hobo's Cigar": 1,
+          "Bronzed Hot Dog": 111,
+          "Space Shadow": 8,
+          "Star Wallet": 7,
+          "Wolf Whistle": 2,
+          "Great Sheep's Clothing": 8,
+          "Self-Righteous Rib": 13,
+          "Bit of Devil Horn": 15,
+          "Meddling Finger": 5,
+          "Corporeal Necktie": 55,
+          "Ghost Diploma": 11,
+          "Bloody Bottlecap": 11,
+          "Antique Pewter Bottle Opener": 8,
+          "Vibrating Fingerbone": 4,
+          "Crackling Pelvis": 7,
+          "Evil Snowman Heart": 4,
+          "Garbage-covered Rags": 4,
+          "Massive Cracked Skull": 4,
+          "Handful of Chest Hair": 56,
+          "Filthy Crown": 320,
+          "Hodgman's skivvies": 4,
+          "Slimy Tooth": 76,
+        },
+      },
+    ],
+  ])("parses %s", async (fixture, clanId, expected) => {
     vi.spyOn(client, "fetchText").mockResolvedValueOnce(
-      await loadFixture(__dirname, "showclan_cdr1.html"),
+      await loadFixture(__dirname, fixture),
     );
-    expect(await clan.getInfo(2047008362)).toStrictEqual({
-      id: 2047008362,
-      name: "Collaborative Dungeon Running 1",
-      leader: { id: 1382257, name: "UberJew" },
-      credo: "Dungeon running managed by the Ascension Speed Society.  Management and coordination is done here: https://discord.gg/KphxvKa",
-    });
+    expect(await clan.getInfo(clanId)).toStrictEqual(expected);
   });
 });
 
