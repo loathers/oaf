@@ -1,12 +1,5 @@
 import type { Client } from "../Client.js";
 
-export class JoinClanError extends Error {
-  constructor() {
-    super("Could not join clan");
-    Object.setPrototypeOf(this, new.target.prototype);
-  }
-}
-
 export class RaidLogMissingError extends Error {
   constructor() {
     super("Raid log missing");
@@ -173,7 +166,7 @@ export class ClanDungeon {
 
   async getCurrentRaid(clanId: number): Promise<string> {
     return await this.#client.actionMutex.runExclusive(async () => {
-      if (!(await this.#client.joinClan(clanId))) throw new JoinClanError();
+      await this.#client.ensureClan(clanId);
       const log = await this.#client.fetchText("clan_raidlogs.php");
       if (!log) throw new RaidLogMissingError();
       return log;
@@ -182,7 +175,7 @@ export class ClanDungeon {
 
   async getRaidById(clanId: number, raidId: number): Promise<string> {
     return await this.#client.actionMutex.runExclusive(async () => {
-      if (!(await this.#client.joinClan(clanId))) throw new JoinClanError();
+      await this.#client.ensureClan(clanId);
       return await this.#client.fetchText("clan_viewraidlog.php", {
         query: {
           viewlog: raidId,
@@ -194,7 +187,7 @@ export class ClanDungeon {
 
   async getRaidIds(clanId: number, exclude: number[] = []): Promise<number[]> {
     return await this.#client.actionMutex.runExclusive(async () => {
-      if (!(await this.#client.joinClan(clanId))) throw new JoinClanError();
+      await this.#client.ensureClan(clanId);
       let raidLogs = await this.#client.fetchText("clan_oldraidlogs.php");
       const raidIds: number[] = [];
       let row = 0;
