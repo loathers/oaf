@@ -114,6 +114,26 @@ describe("Skill descriptions", () => {
   });
 });
 
+describe("Clan whitelists", () => {
+  const client = new Client("", "");
+
+  test("parses whitelisted clans from clan_signup.php", async () => {
+    vi.spyOn(client, "fetchText").mockResolvedValueOnce(
+      await loadFixture(__dirname, "clan_signup_whitelist.html"),
+    );
+
+    const clans = await client.getClanWhitelists();
+
+    expect(clans).toStrictEqual([
+      { id: 90485, name: "Bonus Adventures from Hell" },
+      { id: 2047008364, name: "Collaborative Dungeon Central" },
+      { id: 2047008362, name: "Collaborative Dungeon Running 1" },
+      { id: 2047008363, name: "Collaborative Dungeon Running 2" },
+      { id: 2046983557, name: "Inner Dreams" },
+    ]);
+  });
+});
+
 describe("Familiars", () => {
   const client = new Client("", "");
 

@@ -441,7 +441,21 @@ export class Client extends Emittery<Events> {
     );
   }
 
-  async addToWhitelist(playerId: number, clanId: number): Promise<boolean> {
+  async getClanWhitelists(): Promise<{ id: number; name: string }[]> {
+    const html = await this.fetchText("clan_signup.php");
+    const select = html.match(/<select name=whichclan>(.*?)<\/select>/s)?.[1] ?? "";
+    return [...select.matchAll(/<option value=(\d+)>([^<]+)/g)].map(
+      (m) => ({ id: Number(m[1]), name: m[2] }),
+    );
+  }
+
+  async ensureClan(clanId: number): Promise<void> {
+    const join = await this.joinClan(clanId);
+    if (join.success) return;
+    throw new JoinClanError(join.reason);
+  }
+
+  async addToWhitelist(playerId: number, clanId: number): Promise<Result> {
     return await this.actionMutex.runExclusive(async () => {
       if (!(await this.joinClan(clanId))) return false;
       await this.fetchText("clan_whitelist.php", {
