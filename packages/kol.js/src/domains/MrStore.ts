@@ -1,5 +1,13 @@
 import type { Client } from "../Client.js";
 
+export const MrStoreUrgency = {
+  None: 0,
+  Soon: 1,
+  Today: 2,
+} as const;
+
+export type MrStoreUrgency = (typeof MrStoreUrgency)[keyof typeof MrStoreUrgency];
+
 export type MrStoreItem = {
   name: string;
   descid: number;
@@ -7,7 +15,14 @@ export type MrStoreItem = {
   cost: number;
   currency: "mr_accessory" | "uncle_buck";
   category: string;
+  urgency: MrStoreUrgency;
 };
+
+function parseUrgency(box: string): MrStoreUrgency {
+  if (box.includes("leave the store today")) return MrStoreUrgency.Today;
+  if (box.includes("leave the store soon")) return MrStoreUrgency.Soon;
+  return MrStoreUrgency.None;
+}
 
 export class MrStore {
   #client: Client;
@@ -39,6 +54,8 @@ export class MrStore {
 
       if (!category || !descid || !name || !image || !cost) continue;
 
+      const urgency = parseUrgency(box);
+
       items.push({
         name,
         descid: Number(descid),
@@ -46,6 +63,7 @@ export class MrStore {
         cost: Number(cost),
         currency: isUncleBuck ? "uncle_buck" : "mr_accessory",
         category,
+        urgency,
       });
     }
 
