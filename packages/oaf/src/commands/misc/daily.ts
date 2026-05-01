@@ -8,9 +8,10 @@ import {
   hyperlink,
   italic,
   messageLink,
+  unorderedList,
 } from "discord.js";
-import { LoathingDate } from "kol.js";
-import { toWikiLink } from "kol.js";
+import { LoathingDate, toWikiLink } from "kol.js";
+import { MrStore, MrStoreUrgency } from "kol.js/domains/MrStore";
 
 import { getBirthdays, setGlobalsMessage } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
@@ -120,6 +121,21 @@ async function birthdaySection(): Promise<string | null> {
   return `${heading("In-Game Birthdays \u{1F382}", 2)}\n\n${content}`;
 }
 
+const mrStore = new MrStore(kolClient);
+
+async function mrStoreSection(): Promise<string | null> {
+  const items = await mrStore.getCurrentItems();
+  const urgent = items.filter((i) => i.urgency > MrStoreUrgency.None);
+  if (urgent.length === 0) return null;
+
+  const lines = urgent.map((i) => {
+    const urgency = i.urgency === MrStoreUrgency.Today ? bold("today") : "soon";
+    return `${bold(i.name)} is leaving ${urgency}`;
+  });
+
+  return `${heading("Mr. Store \u{1F642}", 2)}\n\n${unorderedList(lines)}`;
+}
+
 type Message = { content: string; files?: AttachmentBuilder[] };
 
 async function buildSection(
@@ -154,6 +170,10 @@ async function onRollover() {
   const messages = [
     await buildSection("Birthdays", async () => {
       const content = await birthdaySection();
+      return content ? { content } : null;
+    }),
+    await buildSection("Mr. Store", async () => {
+      const content = await mrStoreSection();
       return content ? { content } : null;
     }),
     await buildSection("Raffle", async () => {
