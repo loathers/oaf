@@ -17,7 +17,11 @@
     "target": "ESNext",
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "kol.js": ["../../kol.js/src/index.ts"],
+      "kol.js/*": ["../../kol.js/src/*.ts"]
+    }
   },
   "include": [
     "src/**/*.ts",
