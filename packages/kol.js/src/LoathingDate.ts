@@ -105,9 +105,9 @@ export class LoathingDate {
     return new Date(LoathingDate.EPOCH.getTime() + (gameday + 1) * LoathingDate.MS_PER_DAY);
   }
 
-  static isAprilFools(): boolean {
-    const today = new this().toRealDate();
-    return today.getUTCMonth() === 3 && today.getUTCDate() === 1;
+  isAprilFools(): boolean {
+    const realDate = this.toRealDate();
+    return realDate.getUTCMonth() === 3 && realDate.getUTCDate() === 1;
   }
 
   #year: number;

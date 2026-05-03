@@ -161,7 +161,7 @@ async function onRollover() {
     return;
   }
 
-  const adjective = LoathingDate.isAprilFools()
+  const adjective = new LoathingDate().isAprilFools()
     ? "foolish"
     : getRandom(ADJECTIVES);
   const titleMessage = await buildTitleMessage(adjective);
