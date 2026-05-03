@@ -68,3 +68,13 @@ test("Parses urgency=None for items without warning", async () => {
   const noUrgencyItem = items.find((i) => i.category === "May's Item-of-the-Month");
   expect(noUrgencyItem?.urgency).toBe(MrStoreUrgency.None);
 });
+
+test("Parses urgency=Today for items leaving today", async () => {
+  const page = await loadFixture(import.meta.dirname, "mrstore_act_now_today.html");
+
+  const items = MrStore.parse(page);
+
+  const todayItem = items.find((i) => i.urgency === MrStoreUrgency.Today);
+  expect(todayItem).toBeDefined();
+  expect(todayItem?.name).toBe("wrapped Baseball Diamond");
+});

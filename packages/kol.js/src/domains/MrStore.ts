@@ -19,7 +19,7 @@ export type MrStoreItem = {
 };
 
 function parseUrgency(box: string): MrStoreUrgency {
-  if (box.includes("leave the store today")) return MrStoreUrgency.Today;
+  if (box.includes("Today is your last chance")) return MrStoreUrgency.Today;
   if (box.includes("leave the store soon")) return MrStoreUrgency.Soon;
   return MrStoreUrgency.None;
 }
