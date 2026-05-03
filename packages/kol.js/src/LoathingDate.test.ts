@@ -62,6 +62,38 @@ describe("gameDayFromRealDate", () => {
   });
 });
 
+describe("getRollover", () => {
+  test("Returns start of current KoL day at 03:30 UTC", () => {
+    const midday = new Date(Date.UTC(2026, 4, 3, 12, 0, 0));
+    expect(LoathingDate.getRollover(midday).toISOString()).toBe(
+      new Date(Date.UTC(2026, 4, 3, 3, 30, 0)).toISOString(),
+    );
+  });
+
+  test("Before rollover returns previous day's rollover", () => {
+    const beforeRollover = new Date(Date.UTC(2026, 4, 3, 3, 29, 59));
+    expect(LoathingDate.getRollover(beforeRollover).toISOString()).toBe(
+      new Date(Date.UTC(2026, 4, 2, 3, 30, 0)).toISOString(),
+    );
+  });
+});
+
+describe("getNextRollover", () => {
+  test("Returns next rollover at 03:30 UTC the following day", () => {
+    const midday = new Date(Date.UTC(2026, 4, 3, 12, 0, 0));
+    expect(LoathingDate.getNextRollover(midday).toISOString()).toBe(
+      new Date(Date.UTC(2026, 4, 4, 3, 30, 0)).toISOString(),
+    );
+  });
+
+  test("Before rollover returns today's rollover", () => {
+    const beforeRollover = new Date(Date.UTC(2026, 4, 3, 3, 29, 59));
+    expect(LoathingDate.getNextRollover(beforeRollover).toISOString()).toBe(
+      new Date(Date.UTC(2026, 4, 3, 3, 30, 0)).toISOString(),
+    );
+  });
+});
+
 describe("Ronald", () => {
   test("Correct phase", () => {
     const d = new LoathingDate(new Date(Date.UTC(2023, 10, 16, 12, 0, 0)));

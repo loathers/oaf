@@ -1,12 +1,4 @@
-import {
-  Duration,
-  add,
-  endOfDay,
-  intervalToDuration,
-  milliseconds,
-  set,
-  sub,
-} from "date-fns";
+import { Duration, add, intervalToDuration, milliseconds, sub } from "date-fns";
 import {
   ChatInputCommandInteraction,
   DiscordAPIError,
@@ -17,6 +9,7 @@ import {
   time,
   userMention,
 } from "discord.js";
+import { LoathingDate } from "kol.js";
 import { dedent } from "ts-dedent";
 
 import {
@@ -32,23 +25,12 @@ const CHECK_DURATION: Duration = { seconds: 10 };
 const OAF_DURATION_PATTERN =
   /^(?:(?<weeks>\d+)w)?(?:(?<days>\d+)d)?(?:(?<hours>\d+)h)?(?:(?<minutes>\d+)m)?(?:(?<seconds>\d+)s)?$/;
 
-function getNextRollover(date = new Date()) {
-  const rolloverThisCalendarDay = set(date, { hours: 3, minutes: 40 });
-
-  // If you happen to ask at exactly rollover, you will get next rollover
-  if (date < rolloverThisCalendarDay) {
-    return rolloverThisCalendarDay;
-  }
-
-  return add(endOfDay(new Date()), { hours: 3, minutes: 40, seconds: 1 });
-}
-
 export function parseDuration(input: string): Duration | null {
   if (input === "rollover") {
     const now = new Date();
     return intervalToDuration({
       start: now,
-      end: getNextRollover(now),
+      end: LoathingDate.getNextRollover(now),
     });
   }
 

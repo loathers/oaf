@@ -1,6 +1,8 @@
-import { MrStore } from "kol.js/domains/MrStore";
+import { LoathingDate } from "kol.js";
+import { MrStore, MrStoreUrgency } from "kol.js/domains/MrStore";
 
 import {
+  clearIotmRemovedFromStore,
   getIotmsInStore,
   setIotmRemovedFromStore,
   upsertIotmByName,
@@ -22,7 +24,7 @@ async function checkStore() {
 
   if (items.length === 0) return;
 
-  const now = new Date();
+  const now = LoathingDate.getRollover();
   const month = determineIotmMonth();
 
   const currentNames = new Set<string>();
@@ -41,6 +43,12 @@ async function checkStore() {
       subscriberItem,
       addedToStore: now,
     });
+
+    // Always clear first so stale predictions are removed, then re-predict if still leaving today
+    await clearIotmRemovedFromStore(item.name);
+    if (item.urgency === MrStoreUrgency.Today) {
+      await setIotmRemovedFromStore(item.name, LoathingDate.getNextRollover());
+    }
   }
 
   // Mark any previously-tracked items no longer in the store as removed
