@@ -1110,6 +1110,14 @@ export async function setIotmRemovedFromStore(
     .execute();
 }
 
+export async function clearIotmRemovedFromStore(itemName: string) {
+  await db
+    .updateTable("Iotm")
+    .set({ removedFromStore: null })
+    .where("itemName", "=", itemName)
+    .execute();
+}
+
 export async function getIotmsInStore() {
   return await db
     .selectFrom("Iotm")

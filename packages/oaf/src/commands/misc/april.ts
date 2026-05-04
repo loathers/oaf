@@ -9,7 +9,7 @@ const APRIL_CHANNEL_IDS =
 
 const CHECK_DURATION: Duration = { seconds: 10 };
 async function startTyping() {
-  if (!LoathingDate.isAprilFools()) return;
+  if (!new LoathingDate().isAprilFools()) return;
 
   await Promise.all(
     APRIL_CHANNEL_IDS.split(",")

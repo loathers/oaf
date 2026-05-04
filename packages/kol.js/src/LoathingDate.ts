@@ -95,9 +95,19 @@ export class LoathingDate {
     );
   }
 
-  static isAprilFools(): boolean {
-    const today = new this().toRealDate();
-    return today.getUTCMonth() === 3 && today.getUTCDate() === 1;
+  static getRollover(date = new Date()): Date {
+    const gameday = LoathingDate.gameDayFromRealDate(date);
+    return new Date(LoathingDate.EPOCH.getTime() + gameday * LoathingDate.MS_PER_DAY);
+  }
+
+  static getNextRollover(date = new Date()): Date {
+    const gameday = LoathingDate.gameDayFromRealDate(date);
+    return new Date(LoathingDate.EPOCH.getTime() + (gameday + 1) * LoathingDate.MS_PER_DAY);
+  }
+
+  isAprilFools(): boolean {
+    const realDate = this.toRealDate();
+    return realDate.getUTCMonth() === 3 && realDate.getUTCDate() === 1;
   }
 
   #year: number;

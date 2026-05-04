@@ -14,25 +14,25 @@ describe("Parsing", () => {
   });
 
   test("Can parse rollover from midnight", () => {
-    vi.setSystemTime(new Date(2000, 1, 1));
+    vi.setSystemTime(new Date(Date.UTC(2000, 1, 1)));
 
     expect(parseDuration("rollover")).toEqual({
       hours: 3,
-      minutes: 40,
+      minutes: 30,
     });
   });
 
   test("Can parse rollover from midday", () => {
-    vi.setSystemTime(new Date(2000, 1, 1, 12));
+    vi.setSystemTime(new Date(Date.UTC(2000, 1, 1, 12)));
 
     expect(parseDuration("rollover")).toEqual({
       hours: 15,
-      minutes: 40,
+      minutes: 30,
     });
   });
 
   test("Can parse rollover from rollover", () => {
-    vi.setSystemTime(new Date(2000, 1, 1, 3, 40));
+    vi.setSystemTime(new Date(Date.UTC(2000, 1, 1, 3, 30)));
 
     expect(parseDuration("rollover")).toEqual({
       days: 1,
