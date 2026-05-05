@@ -41,6 +41,12 @@ async function getWikiReply(query: string) {
   } catch (error) {
     if (!(error instanceof WikiSearchError)) throw error;
 
+    if (error.statusCode === 403) {
+      return blankEmbed(
+        "The wiki is currently rate limiting the bot. Please try again later.",
+      );
+    }
+
     await discordClient.alert(
       `Wiki search query failed unexpectedly on step "${error.step}" ${error.url ? `(${error.url})` : ""}`,
       undefined,

@@ -21,10 +21,12 @@ const UA =
 export class WikiSearchError extends Error {
   step: string;
   url?: string;
-  constructor(step: string, url?: string) {
+  statusCode?: number;
+  constructor(step: string, url?: string, statusCode?: number) {
     super("Wiki search error");
     this.step = step;
     this.url = url;
+    this.statusCode = statusCode;
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
@@ -46,7 +48,7 @@ export class WikiClient {
     const response = await fetch(url, { headers: { "User-Agent": UA } });
 
     if (!response.ok) {
-      throw new WikiSearchError("kolwiki precise", url);
+      throw new WikiSearchError("kolwiki precise", url, response.status);
     }
 
     const json = (await response.json()) as
@@ -80,7 +82,11 @@ export class WikiClient {
     );
 
     if (!response.ok) {
-      throw new WikiSearchError(`kolwiki search ${what}`);
+      throw new WikiSearchError(
+        `kolwiki search ${what}`,
+        undefined,
+        response.status,
+      );
     }
 
     const json = (await response.json()) as
