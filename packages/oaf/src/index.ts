@@ -130,7 +130,11 @@ async function main() {
       if (message.msg.startsWith("GREENBOX:"))
         return await handleGreenboxKmail(message);
       const gorfBag = message.items.find((i) => i.name === "bag of GORF");
-      if (gorfBag) await displayCase.deposit(gorfBag.id, gorfBag.quantity);
+      if (gorfBag) {
+        const inventory = await kolClient.getInventory();
+        const quantity = inventory.get(gorfBag.id) ?? gorfBag.quantity;
+        await displayCase.deposit(gorfBag.id, quantity);
+      }
       const alert = [
         `Received ${message.valentine ? "valentine" : "kmail"} from ${inlineCode(`${message.who.name} (#${message.who.id})`)}`,
       ];

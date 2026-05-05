@@ -327,6 +327,13 @@ export class Client extends Emittery<Events> {
     });
   }
 
+  async getInventory(): Promise<Map<number, number>> {
+    const raw = await this.fetchJson<Record<string, string>>("api.php", {
+      query: { what: "inventory", for: `${this.#username} bot` },
+    });
+    return new Map(Object.entries(raw).map(([id, qty]) => [Number(id), Number(qty)]));
+  }
+
   async getMallPrice(itemId: number): Promise<MallPrice> {
     const prices = await this.fetchText("backoffice.php", {
       query: {
