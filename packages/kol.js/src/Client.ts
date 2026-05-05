@@ -21,7 +21,7 @@ export type MallPrice = {
   minPrice: number | null;
 };
 
-type Result<T = void> = { success: true; data?: T } | { success: false; reason: string };
+export type Result<T = void> = { success: true; data?: T } | { success: false; reason: string };
 
 import { AuthError, JoinClanError, RolloverError } from "./errors.js";
 
