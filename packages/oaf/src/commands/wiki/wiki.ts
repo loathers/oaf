@@ -156,7 +156,13 @@ export async function init() {
 
 export async function autocomplete(interaction: AutocompleteInteraction) {
   const value = interaction.options.getFocused();
-  const pages = await wikiClient.getAllPageTitles();
+  let pages: string[];
+  try {
+    pages = await wikiClient.getAllPageTitles();
+  } catch {
+    await interaction.respond([]);
+    return;
+  }
   const options = pages
     .filter((title) => title.toLowerCase().includes(value.toLowerCase()))
     .sort()
