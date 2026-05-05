@@ -40,7 +40,10 @@ function isInteractionHandler(value: object): value is InteractionHandler {
   );
 }
 
-async function registerHandler(imported: unknown): Promise<boolean> {
+async function registerHandler(
+  imported: unknown,
+  filePath: string,
+): Promise<boolean> {
   if (typeof imported !== "object" || imported === null) return false;
 
   let handled = false;
@@ -56,7 +59,11 @@ async function registerHandler(imported: unknown): Promise<boolean> {
   }
 
   if (isInteractionHandler(imported)) {
-    await imported.init();
+    try {
+      await imported.init();
+    } catch (error) {
+      console.error(`Init failed for ${filePath}:`, error);
+    }
     handled = true;
   }
 
@@ -71,7 +78,7 @@ async function loadSlashCommands() {
     if (!/\/[^_][^/]*(?<!\.test)\.(ts|js)$/.test(filePath)) continue;
     const command: unknown = await import(filePath);
 
-    if (!(await registerHandler(command))) {
+    if (!(await registerHandler(command, filePath))) {
       await discordClient.alert(
         `Unusable file found in command directory ${filePath}`,
       );

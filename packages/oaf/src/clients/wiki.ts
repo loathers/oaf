@@ -171,6 +171,11 @@ export class WikiClient {
 
       const url = `https://wiki.kingdomofloathing.com/api.php?${params.toString()}`;
       const response = await fetch(url, { headers: { "User-Agent": UA } });
+      if (!response.ok) {
+        throw new Error(
+          `${response.status} ${response.statusText} from ${url}`,
+        );
+      }
       const result = (await response.json()) as {
         query: { allpages: { title: string }[] };
         continue: Record<string, string>;

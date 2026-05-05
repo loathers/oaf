@@ -512,6 +512,11 @@ export async function fetchTopics(): Promise<LibramTopic[]> {
   if (topicsCache) return topicsCache;
 
   const response = await fetch(TYPEDOC_URL);
+  if (!response.ok) {
+    throw new Error(
+      `${response.status} ${response.statusText} from ${TYPEDOC_URL}`,
+    );
+  }
   const data = (await response.json()) as TypedocRoot;
   topicsCache = parseTopics(data);
   return topicsCache;
