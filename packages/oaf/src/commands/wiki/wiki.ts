@@ -153,8 +153,10 @@ export async function init() {
   discordClient.on(Events.MessageCreate, (message) => void onMessage(message));
   try {
     await wikiClient.getAllPageTitles();
-  } catch {
-    // Autocomplete will degrade gracefully if titles are unavailable
+  } catch (error) {
+    console.error(
+      `Wiki page title prefetch failed, autocomplete unavailable: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
