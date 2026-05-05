@@ -151,7 +151,11 @@ async function onMessage(message: Message) {
 
 export async function init() {
   discordClient.on(Events.MessageCreate, (message) => void onMessage(message));
-  await wikiClient.getAllPageTitles();
+  try {
+    await wikiClient.getAllPageTitles();
+  } catch {
+    // Autocomplete will degrade gracefully if titles are unavailable
+  }
 }
 
 export async function autocomplete(interaction: AutocompleteInteraction) {
