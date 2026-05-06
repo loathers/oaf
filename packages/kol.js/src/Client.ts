@@ -21,7 +21,7 @@ export type MallPrice = {
   minPrice: number | null;
 };
 
-type Result<T = void> = { success: true; data?: T } | { success: false; reason: string };
+export type Result<T = void> = { success: true; data?: T } | { success: false; reason: string };
 
 import { AuthError, JoinClanError, RolloverError } from "./errors.js";
 
@@ -325,6 +325,13 @@ export class Client extends Emittery<Events> {
     return this.fetchJson<ApiStatus>("api.php", {
       query: { what: "status", for: `${this.#username} bot` },
     });
+  }
+
+  async getInventory(): Promise<Map<number, number>> {
+    const raw = await this.fetchJson<Record<string, string>>("api.php", {
+      query: { what: "inventory", for: `${this.#username} bot` },
+    });
+    return new Map(Object.entries(raw).map(([id, qty]) => [Number(id), Number(qty)]));
   }
 
   async getMallPrice(itemId: number): Promise<MallPrice> {

@@ -1,4 +1,5 @@
 import type { Client } from "./Client.js";
+import { DisplayCase, type PublicDisplayCase } from "./domains/DisplayCase.js";
 import { generateAvatarSvg } from "./utils/avatar.js";
 import { parsePlayerDate } from "./utils/utils.js";
 
@@ -37,6 +38,10 @@ export class Player {
   async isOnline(): Promise<boolean> {
     const response = await this.#client.chat.macro(`/whois ${this.name}`);
     return response.output.includes("This player is currently online");
+  }
+
+  async getDisplayCase(): Promise<PublicDisplayCase | null> {
+    return new DisplayCase(this.#client).getPlayer(this.id);
   }
 
   matches(identifier: string | number): boolean {

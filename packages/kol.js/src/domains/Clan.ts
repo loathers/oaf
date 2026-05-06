@@ -1,6 +1,4 @@
-import type { Client } from "../Client.js";
-
-type Result = { success: true } | { success: false; reason: string };
+import type { Client, Result } from "../Client.js";
 
 export const Privilege = {
   Approve:                0b0000_0000_0000_0000_0001,
