@@ -1,3 +1,11 @@
+import {
+  Effect as DolEffect,
+  Familiar as DolFamiliar,
+  Item as DolItem,
+  Monster as DolMonster,
+  Skill as DolSkill,
+  createClient,
+} from "data-of-loathing";
 import { EmbedBuilder } from "discord.js";
 import { cleanString, toWikiLink } from "kol.js";
 
@@ -9,13 +17,14 @@ import {
   Skill,
   Thing,
 } from "../things/index.js";
-import { getQueryData } from "../things/query.js";
 import { clearMemoized, memoize } from "../utils/memoize.js";
 import { createEmbed } from "./discord.js";
 import { pizzaTree } from "./pizza.js";
 import { wikiClient } from "./wiki.js";
 
 export class DataOfLoathingClient {
+  #client = createClient();
+
   private itemByName: Map<string, Item> = new Map();
   private itemById: Map<number, Item> = new Map();
   private itemByDescId: Map<number, Item> = new Map();
@@ -34,11 +43,9 @@ export class DataOfLoathingClient {
   get lastItem() {
     return this.#lastItem;
   }
-
   get lastFamiliar() {
     return this.#lastFamiliar;
   }
-
   get lastSkills() {
     return this.#lastSkills;
   }
@@ -65,7 +72,6 @@ export class DataOfLoathingClient {
 
   findThingByName(name: string): Thing | null {
     const formattedName = cleanString(name.toLowerCase().trim());
-
     return (
       this.skillByName.get(formattedName) ||
       this.itemByName.get(formattedName) ||
@@ -77,13 +83,13 @@ export class DataOfLoathingClient {
   }
 
   findItemByName(name: string): Item | null {
-    const formattedName = cleanString(name.toLowerCase().trim());
-    return this.itemByName.get(formattedName) || null;
+    return this.itemByName.get(cleanString(name.toLowerCase().trim())) || null;
   }
 
   findMonsterByName(name: string): Monster | null {
-    const formattedName = cleanString(name.toLowerCase().trim());
-    return this.monsterByName.get(formattedName) || null;
+    return (
+      this.monsterByName.get(cleanString(name.toLowerCase().trim())) || null
+    );
   }
 
   register(thing: Thing): void {
@@ -94,38 +100,84 @@ export class DataOfLoathingClient {
       this.itemById.set(thing.id, thing);
       if (thing.descid != null) this.itemByDescId.set(thing.descid, thing);
     }
-
     if (thing instanceof Monster) {
       this.monsterById.set(thing.id, thing);
     }
   }
 
   async load() {
-    const data = await getQueryData();
+    await this.#client.load();
+    const em = this.#client.query;
 
-    for (const s of data.allSkills?.nodes ?? []) {
-      if (s === null) continue;
-      this.register(new Skill(s));
+    const skills = await em.find(DolSkill, {}, { populate: ["modifiers"] });
+    for (const s of skills) {
+      const skill = new Skill(s);
+      this.register(skill);
+      const block = skill.block();
+      if (!this.#lastSkills[block] || skill.id > this.#lastSkills[block]) {
+        this.#lastSkills[block] = skill.id;
+      }
     }
 
-    for (const e of data.allEffects?.nodes ?? []) {
-      if (e === null) continue;
+    const effects = await em.find(DolEffect, {}, { populate: ["modifiers"] });
+    for (const e of effects) {
       this.register(new Effect(e));
     }
 
-    for (const m of data.allMonsters?.nodes ?? []) {
-      if (m === null) continue;
+    const monsters = await em.find(
+      DolMonster,
+      {},
+      { populate: ["drops.item"] },
+    );
+    for (const m of monsters) {
       this.register(new Monster(m));
     }
 
-    for (const f of data.allFamiliars?.nodes ?? []) {
-      if (f === null) continue;
-      this.register(new Familiar(f));
+    const familiars = await em.find(
+      DolFamiliar,
+      {},
+      {
+        populate: [
+          "larva.modifiers",
+          "larva.consumable",
+          "larva.equipment",
+          "equipment.modifiers",
+          "equipment.consumable",
+          "equipment.equipment",
+          "modifiers",
+        ],
+      },
+    );
+    for (const f of familiars) {
+      const familiar = new Familiar(f);
+      this.register(familiar);
+      if (familiar.id > this.#lastFamiliar) this.#lastFamiliar = familiar.id;
     }
 
-    for (const i of data.allItems?.nodes ?? []) {
-      if (i === null) continue;
-      this.register(new Item(i));
+    const items = await em.find(
+      DolItem,
+      {},
+      {
+        populate: [
+          "foldGroups.items",
+          "zapGroups.items",
+          "modifiers",
+          "consumable",
+          "equipment",
+        ],
+      },
+    );
+    for (const i of items) {
+      const item = new Item(i);
+      this.register(item);
+      if (item.id > this.#lastItem) this.#lastItem = item.id;
+    }
+
+    // Wire up familiar hatchling/equipment descriptions
+    for (const familiar of this.familiars) {
+      if (familiar.hatchling) familiar.hatchling.addGrowingFamiliar(familiar);
+      if (familiar.familiarEquipment)
+        familiar.familiarEquipment.addEquppingFamiliar(familiar);
     }
 
     pizzaTree.build(this.effectByName);
@@ -170,11 +222,9 @@ export class DataOfLoathingClient {
   findMonsterById(id: number): Monster | undefined {
     return this.monsterById.get(id);
   }
-
   findItemById(id: number): Item | undefined {
     return this.itemById.get(id);
   }
-
   findItemByDescId(descid: number): Item | undefined {
     return this.itemByDescId.get(descid);
   }
@@ -188,15 +238,11 @@ export class DataOfLoathingClient {
     if (!foundName) return null;
 
     const thing = this.findThingByName(foundName.name);
-
-    // Title should be canonical name, else whatever the title of the wiki page is.
     const title = thing?.name ?? foundName.name;
-
     const embed = createEmbed().setTitle(title).setURL(foundName.url);
 
     if (thing) return await thing.addToEmbed(embed);
     if (foundName.image) return embed.setImage(foundName.image);
-
     return embed;
   }
 
@@ -207,7 +253,6 @@ export class DataOfLoathingClient {
       if (typeof wikiName !== "string") return null;
       return wikiName.slice(1, -1);
     }
-
     return thing.name.replace(/ /g, "_");
   }
 
@@ -215,7 +260,6 @@ export class DataOfLoathingClient {
   getWikiLink(thing: Thing) {
     const wikiName = this.getWikiName(thing);
     if (!wikiName) return null;
-
     return toWikiLink(wikiName);
   }
 }

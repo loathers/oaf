@@ -1,38 +1,36 @@
+import {
+  type Monster as DolMonster,
+  MonsterDropCategory,
+} from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
 import { toWikiLink } from "kol.js";
 
 import { inlineExpression } from "../discordUtils.js";
 import { memoize } from "../utils/memoize.js";
 import { Thing } from "./Thing.js";
-import { TData } from "./query.js";
-
-export type TMonster = NonNullable<
-  NonNullable<TData["allMonsters"]>["nodes"][number]
->;
 
 export class Monster extends Thing {
+  #monster: DolMonster;
+
   static is(thing?: Thing | null): thing is Monster {
     return !!thing && thing instanceof Monster;
   }
 
-  private monster: TMonster;
-
-  constructor(monster: TMonster) {
+  constructor(monster: DolMonster) {
     super(
       monster.id,
       monster.name,
       monster.image.filter((i) => i !== null)[0] || "nopic.gif",
     );
-    this.monster = monster;
+    this.#monster = monster;
   }
 
   get copyable() {
-    return !this.monster.nocopy;
+    return !this.#monster.nocopy;
   }
 
   getPhylumEmoji() {
-    const phylum = this.monster.phylum?.toLowerCase();
-    switch (phylum) {
+    switch (this.#monster.phylum?.toLowerCase()) {
       case "beast":
         return "🐺";
       case "bug":
@@ -82,8 +80,7 @@ export class Monster extends Thing {
   }
 
   getElementEmoji() {
-    const phylum = this.monster.element?.toLowerCase();
-    switch (phylum) {
+    switch (this.#monster.element?.toLowerCase()) {
       case "hot":
         return "🔥";
       case "cold":
@@ -100,7 +97,7 @@ export class Monster extends Thing {
 
   getModifiers(): Record<string, string> {
     const mods: Record<string, string> = {};
-    if (this.monster.wiki) mods["Wiki Name"] = `"${this.monster.wiki}"`;
+    if (this.#monster.wiki) mods["Wiki Name"] = `"${this.#monster.wiki}"`;
     return mods;
   }
 
@@ -110,9 +107,8 @@ export class Monster extends Thing {
   }
 
   private getDropsDescription() {
-    const meat = this.monster.meat;
-    const drops =
-      this.monster.monsterDropsByMonster?.nodes.filter((d) => d !== null) ?? [];
+    const meat = this.#monster.meat;
+    const drops = this.#monster.drops.getItems();
 
     if (!drops.length && !meat) return null;
 
@@ -125,25 +121,24 @@ export class Monster extends Thing {
     const dropDescriptions = new Map<string, number>();
 
     for (const drop of drops) {
-      const item = drop.itemByItem?.name;
-      if (!item) continue;
+      const itemName = drop.item?.name;
+      if (!itemName) continue;
       const dropDetails: string[] = [];
-      if (drop.category === "A") {
+      if (drop.category === MonsterDropCategory.Accordion) {
         dropDetails.push("Stealable accordion");
       } else {
         dropDetails.push(drop.rate > 0 ? `${drop.rate}%` : "Sometimes");
-        if (drop.category === "P") dropDetails.push("pickpocket only");
-        if (drop.category === "N") dropDetails.push("can't be stolen");
-        if (drop.category === "C") dropDetails.push("conditional");
-        if (drop.category === "F")
+        if (drop.category === MonsterDropCategory.PickpocketOnly)
+          dropDetails.push("pickpocket only");
+        if (drop.category === MonsterDropCategory.NoPickpocket)
+          dropDetails.push("can't be stolen");
+        if (drop.category === MonsterDropCategory.Conditional)
+          dropDetails.push("conditional");
+        if (drop.category === MonsterDropCategory.Fixed)
           dropDetails.push("unaffected by item drop modifiers");
       }
 
-      const dropDescription = `${hyperlink(
-        item,
-        toWikiLink(item),
-      )} (${dropDetails.join(", ")})`;
-
+      const dropDescription = `${hyperlink(itemName, toWikiLink(itemName))} (${dropDetails.join(", ")})`;
       dropDescriptions.set(
         dropDescription,
         (dropDescriptions.get(dropDescription) || 0) + 1,
@@ -167,10 +162,10 @@ export class Monster extends Thing {
   async getDescription(): Promise<string> {
     const description = [bold("Monster"), `(Monster ${this.id})`];
 
-    const atk = this.monster.attack;
-    const def = this.monster.defence;
-    const hp = this.monster.hp;
-    const scale = this.monster.scaling;
+    const atk = this.#monster.attack;
+    const def = this.#monster.defence;
+    const hp = this.#monster.hp;
+    const scale = this.#monster.scaling;
 
     if (atk && atk !== "0" && def && def !== "0" && hp && hp !== "0") {
       description.push(
@@ -178,7 +173,6 @@ export class Monster extends Thing {
       );
     } else if (scale !== "0") {
       const scaleDetails: string[] = [];
-
       const scaleNum = Number(scale);
 
       if (Number.isNaN(scaleNum)) {
@@ -192,47 +186,39 @@ export class Monster extends Thing {
       }
 
       const scaleBounds: string[] = [];
-
-      if (this.monster.scalingFloor !== "0")
-        scaleBounds.push(`min ${this.monster.scalingFloor}`);
-      if (this.monster.scalingCap !== "0")
-        scaleBounds.push(`max ${this.monster.scalingCap}`);
-
+      if (this.#monster.scalingFloor !== "0")
+        scaleBounds.push(`min ${this.#monster.scalingFloor}`);
+      if (this.#monster.scalingCap !== "0")
+        scaleBounds.push(`max ${this.#monster.scalingCap}`);
       if (scaleBounds.length > 0)
         scaleDetails.push(`(${scaleBounds.join(", ")})`);
 
       description.push(
-        `Scales to ${scaleDetails.join(" ")} | HP: ${
-          hp && hp !== "0" ? inlineExpression(hp) : "75% of defense"
-        }.`,
+        `Scales to ${scaleDetails.join(" ")} | HP: ${hp && hp !== "0" ? inlineExpression(hp) : "75% of defense"}.`,
       );
     } else {
       description.push("Scales unusually.");
     }
 
-    if (this.monster.phylum)
+    if (this.#monster.phylum)
       description.push(
-        `Phylum: ${this.monster.phylum} ${this.getPhylumEmoji()}`,
+        `Phylum: ${this.#monster.phylum} ${this.getPhylumEmoji()}`,
       );
-
-    if (this.monster.element)
+    if (this.#monster.element)
       description.push(
-        `Element: ${this.monster.element.toLowerCase()} ${this.getElementEmoji()}`,
+        `Element: ${this.#monster.element.toLowerCase()} ${this.getElementEmoji()}`,
       );
-
-    if (this.monster.initiative === "10000")
+    if (this.#monster.initiative === "10000")
       description.push("Always wins initiative.");
-    if (this.monster.initiative === "-10000")
+    if (this.#monster.initiative === "-10000")
       description.push("Always loses initiative.");
-    if (this.monster.free) description.push("Doesn't cost a turn to fight.");
-    if (this.monster.nocopy) description.push("Can't be copied.");
-    if (this.monster.boss) description.push("Instakill immune.");
-    if (this.monster.ultrarare) description.push("Ultra-rare encounter.");
+    if (this.#monster.free) description.push("Doesn't cost a turn to fight.");
+    if (this.#monster.nocopy) description.push("Can't be copied.");
+    if (this.#monster.boss) description.push("Instakill immune.");
+    if (this.#monster.ultrarare) description.push("Ultra-rare encounter.");
 
     const drops = this.getDropsDescription();
-    if (drops) {
-      description.push("", drops);
-    }
+    if (drops) description.push("", drops);
 
     return Promise.resolve(description.join("\n"));
   }

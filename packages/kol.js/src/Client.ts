@@ -324,6 +324,10 @@ export class Client extends Emittery<Events> {
     }
   }
 
+  async loadGameData(): Promise<void> {
+    await gameData.load();
+  }
+
   async fetchStatus(): Promise<ApiStatus> {
     return this.fetchJson<ApiStatus>("api.php", {
       query: { what: "status", for: `${this.#username} bot` },
@@ -335,7 +339,7 @@ export class Client extends Emittery<Events> {
       query: { what: "inventory", for: `${this.#username} bot` },
     });
     const ids = Object.keys(raw).map(Number);
-    const items = await gameData.query.find(Item, { id: { $in: ids } });
+    const items = await gameData.findItemsByIds(ids);
     return new Map(items.map((item) => [item, Number(raw[String(item.id)])]));
   }
 
