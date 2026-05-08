@@ -10,4 +10,7 @@ export {
   toWikiLink,
   parseKoLNumber,
   trim,
+  resolveEntityId,
 } from "./utils/utils.js";
+
+export { GameData, gameData } from "./GameData.js";

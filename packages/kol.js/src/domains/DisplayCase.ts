@@ -1,6 +1,7 @@
 import { decodeHTML } from "entities";
 
 import type { Client, Result } from "../Client.js";
+import { resolveEntityId } from "../utils/utils.js";
 
 function noDisplayCase(html: string): boolean {
   return html.includes("You don't have a collection.") || html.includes("You don't have a display case.");
@@ -77,7 +78,8 @@ export class DisplayCase {
     return !noDisplayCase(html);
   }
 
-  async deposit(itemId: number, quantity: number): Promise<Result> {
+  async deposit(item: { id: number } | number, quantity: number): Promise<Result> {
+    const itemId = resolveEntityId(item);
     const html = await this.#client.fetchText("managecollection.php", {
       method: "POST",
       form: { action: "put", whichitem: itemId, howmany: quantity, ajax: 1 },
@@ -87,7 +89,8 @@ export class DisplayCase {
     return { success: false, reason: "Unknown" };
   }
 
-  async withdraw(itemId: number, quantity: number): Promise<Result> {
+  async withdraw(item: { id: number } | number, quantity: number): Promise<Result> {
+    const itemId = resolveEntityId(item);
     const html = await this.#client.fetchText("managecollection.php", {
       method: "POST",
       form: { action: "take", whichitem: itemId, howmany: quantity, ajax: 1 },

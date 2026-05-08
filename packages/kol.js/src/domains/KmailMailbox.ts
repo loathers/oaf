@@ -3,10 +3,12 @@ import { type AnyNode, Element } from "domhandler";
 import { decodeHTML } from "entities";
 import { parseDocument } from "htmlparser2";
 
+import { Item } from "data-of-loathing";
+import { gameData } from "../GameData.js";
 import { Player } from "../Player.js";
 import { type Message, Mailbox } from "./Mailbox.js";
 
-export type KmailItem = {
+type RawKmailItem = {
   id: number;
   name: string;
   quantity: number;
@@ -28,12 +30,12 @@ export interface KmailMessage extends Message {
   id: number;
   kmailType: "normal" | "giftshop";
   valentine: string | null;
-  items: KmailItem[];
+  items: Map<Item, number>;
   meat: number;
   insideNote: string | null;
 }
 
-function extractItemsFromHtml(html: string): KmailItem[] {
+function extractItemsFromHtml(html: string): RawKmailItem[] {
   const doc = parseDocument(html);
   const tables = selectAll<AnyNode, Element>("table.item", doc);
 
@@ -69,7 +71,7 @@ export class KmailMailbox extends Mailbox<KmailMessage> {
     msg: string;
     kmailType: "normal" | "giftshop";
     valentine: string | null;
-    items: KmailItem[];
+    items: RawKmailItem[];
     meat: number;
     insideNote: string | null;
   } {
@@ -122,13 +124,26 @@ export class KmailMailbox extends Mailbox<KmailMessage> {
 
     if (!Array.isArray(kmails) || kmails.length === 0) return [];
 
-    return kmails.map((msg: RawKmail) => ({
-      id: Number(msg.id),
-      type: "kmail" as const,
-      who: new Player(this.client, Number(msg.fromid), msg.fromname),
-      time: new Date(Number(msg.azunixtime) * 1000),
-      ...KmailMailbox.parse(msg.message, msg.type),
-    }));
+    return Promise.all(
+      kmails.map(async (msg: RawKmail) => {
+        const parsed = KmailMailbox.parse(msg.message, msg.type);
+        const items = new Map<Item, number>();
+        for (const { id, descid, quantity } of parsed.items) {
+          const item =
+            (await gameData.findItemByDescId(Number(descid))) ??
+            (await gameData.findItemById(id));
+          if (item) items.set(item, quantity);
+        }
+        return {
+          id: Number(msg.id),
+          type: "kmail" as const,
+          who: new Player(this.client, Number(msg.fromid), msg.fromname),
+          time: new Date(Number(msg.azunixtime) * 1000),
+          ...parsed,
+          items,
+        };
+      }),
+    );
   }
 
   async delete(ids: number[]) {
@@ -153,18 +168,30 @@ export class KmailMailbox extends Mailbox<KmailMessage> {
     for (const m of kmails) await this.client.emit("kmail", m);
   }
 
-  async send(recipientId: number, message: string) {
-    await this.client.fetchText("sendmessage.php", {
-      query: {
-        action: "send",
-        j: 1,
-        towho: recipientId,
-        contact: 0,
-        message: message,
-        howmany1: 1,
-        whichitem1: 0,
-        sendmeat: 0,
-      },
-    });
+  async send(
+    recipientId: number,
+    message: string,
+    options?: {
+      items?: Map<Item, number>;
+      meat?: number;
+    },
+  ) {
+    const form: Record<string, string | number | boolean> = {
+      action: "send",
+      j: 1,
+      towho: recipientId,
+      contact: 0,
+      message,
+      sendmeat: options?.meat ?? 0,
+    };
+
+    let i = 1;
+    for (const [item, quantity] of options?.items ?? []) {
+      form[`whichitem${i}`] = item.id;
+      form[`howmany${i}`] = quantity;
+      i++;
+    }
+
+    await this.client.fetchText("sendmessage.php", { query: form });
   }
 }
