@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+import { ConsumableQuality, ItemUse } from "data-of-loathing";
 import { dedent } from "ts-dedent";
 import { describe, expect, test, vi } from "vitest";
 
@@ -23,31 +25,44 @@ vi.mock("kol.js", async (importOriginal) => {
   return koljs;
 });
 
+function makeItem(overrides: Record<string, unknown>) {
+  return {
+    quest: false,
+    tradeable: true,
+    discardable: true,
+    gift: false,
+    autosell: 0,
+    ambiguous: false,
+    uses: [],
+    foldGroups: { getItems: () => [] },
+    zapGroups: { getItems: () => [] },
+    ...overrides,
+  } as any;
+}
+
 describe("Food", () => {
   test("Can describe a food with a range of adventures", async () => {
-    const item = new Item({
-      id: 1365,
-      name: "tofurkey leg",
-      image: "turkeyleg.gif",
-      descid: 927393854,
-      uses: ["FOOD"],
-      quest: false,
-      tradeable: true,
-      discardable: true,
-      gift: false,
-      autosell: 50,
-      itemModifierByItem: null,
-      consumableById: {
-        adventureRange: "7-14",
-        adventures: 10.5,
-        stomach: 3,
-        liver: 0,
-        spleen: 0,
-        levelRequirement: 5,
-        quality: "AWESOME",
-      },
-      equipmentById: null,
-    });
+    const item = new Item(
+      makeItem({
+        id: 1365,
+        name: "tofurkey leg",
+        image: "turkeyleg.gif",
+        descid: 927393854,
+        uses: [ItemUse.Food],
+        tradeable: true,
+        discardable: true,
+        autosell: 50,
+        consumable: {
+          adventureRange: "7-14",
+          adventures: 10.5,
+          stomach: 3,
+          liver: 0,
+          spleen: 0,
+          levelRequirement: 5,
+          quality: ConsumableQuality.Awesome,
+        },
+      }),
+    );
 
     mallPrice.mockResolvedValueOnce({
       formattedMallPrice: "502",
@@ -69,33 +84,28 @@ describe("Food", () => {
   });
 
   test("Can describe a food with a set number of adventures", async () => {
-    const item = new Item({
-      id: 9423,
-      name: "alien meat",
-      image: "alienmeat.gif",
-      descid: 672000286,
-      uses: ["FOOD", "COOK"],
-      quest: false,
-      tradeable: true,
-      discardable: true,
-      gift: false,
-      autosell: 8,
-      itemModifierByItem: {
-        modifiers: {
-          "Last Available": '"2017-04"',
+    const item = new Item(
+      makeItem({
+        id: 9423,
+        name: "alien meat",
+        image: "alienmeat.gif",
+        descid: 672000286,
+        uses: [ItemUse.Food],
+        tradeable: true,
+        discardable: true,
+        autosell: 8,
+        modifiers: { modifiers: { "Last Available": '"2017-04"' } },
+        consumable: {
+          adventureRange: "3",
+          adventures: 3,
+          stomach: 1,
+          liver: 0,
+          spleen: 0,
+          levelRequirement: 1,
+          quality: ConsumableQuality.Good,
         },
-      },
-      consumableById: {
-        adventureRange: "3",
-        adventures: 3,
-        stomach: 1,
-        liver: 0,
-        spleen: 0,
-        levelRequirement: 1,
-        quality: "GOOD",
-      },
-      equipmentById: null,
-    });
+      }),
+    );
 
     blueText.mockReturnValueOnce({
       blueText: "Gives 5 Adventures of a random positive effect",
@@ -123,32 +133,32 @@ describe("Food", () => {
 
 describe("Equipment", () => {
   test("Can describe a shield", async () => {
-    const item = new Item({
-      id: 9327,
-      name: "LOV Elephant",
-      image: "pl_elephant.gif",
-      descid: 284967813,
-      uses: ["OFFHAND"],
-      quest: false,
-      tradeable: false,
-      discardable: true,
-      gift: true,
-      autosell: 5,
-      itemModifierByItem: {
+    const item = new Item(
+      makeItem({
+        id: 9327,
+        name: "LOV Elephant",
+        image: "pl_elephant.gif",
+        descid: 284967813,
+        uses: [ItemUse.Offhand],
+        tradeable: false,
+        discardable: true,
+        gift: true,
+        autosell: 5,
         modifiers: {
-          "Last Available": '"2017-02"',
-          "Damage Reduction": "16",
+          modifiers: {
+            "Last Available": '"2017-02"',
+            "Damage Reduction": "16",
+          },
         },
-      },
-      consumableById: null,
-      equipmentById: {
-        power: 100,
-        moxRequirement: 0,
-        mysRequirement: 0,
-        musRequirement: 25,
-        type: "shield",
-      },
-    });
+        equipment: {
+          power: 100,
+          moxRequirement: 0,
+          mysRequirement: 0,
+          musRequirement: 25,
+          type: "shield",
+        },
+      }),
+    );
 
     blueText.mockReturnValueOnce({ blueText: "Damage Reduction: 10" });
 
@@ -171,21 +181,18 @@ describe("Equipment", () => {
 
 describe("Other", () => {
   test("Can describe a potion that is multiple use and combat usable", async () => {
-    const item = new Item({
-      id: 518,
-      name: "magical mystery juice",
-      image: "potion4.gif",
-      descid: 400545756,
-      uses: ["MULTIPLE", "COMBAT"],
-      quest: false,
-      tradeable: false,
-      discardable: true,
-      gift: false,
-      autosell: 50,
-      itemModifierByItem: null,
-      consumableById: null,
-      equipmentById: null,
-    });
+    const item = new Item(
+      makeItem({
+        id: 518,
+        name: "magical mystery juice",
+        image: "potion4.gif",
+        descid: 400545756,
+        uses: [ItemUse.Multiple, ItemUse.Combat],
+        tradeable: false,
+        discardable: true,
+        autosell: 50,
+      }),
+    );
 
     blueText.mockReturnValueOnce({
       blueText: "Restores an amount of MP that increases as you level up",
@@ -208,76 +215,60 @@ describe("Other", () => {
 
 describe("Foldable", () => {
   test("Can describe a foldable", async () => {
-    const item = new Item({
-      id: 3915,
-      name: "turtle wax shield",
-      image: "waxshield.gif",
-      descid: 490908351,
-      uses: ["OFFHAND", "USABLE"],
-      quest: false,
-      tradeable: true,
-      discardable: true,
-      gift: false,
-      plural: null,
-      autosell: 7,
-      itemModifierByItem: {
+    const makeSubItem = (id: number, name: string, image: string) =>
+      makeItem({
+        id,
+        name,
+        image,
+        tradeable: true,
+        foldGroups: { getItems: () => [] },
+        zapGroups: { getItems: () => [] },
+      });
+
+    const item = new Item(
+      makeItem({
+        id: 3915,
+        name: "turtle wax shield",
+        image: "waxshield.gif",
+        descid: 490908351,
+        uses: [ItemUse.Offhand, ItemUse.Usable],
+        tradeable: true,
+        discardable: true,
+        autosell: 7,
         modifiers: {
-          "Maximum HP": "+10",
-          "Damage Reduction": "2",
+          modifiers: { "Maximum HP": "+10", "Damage Reduction": "2" },
         },
-      },
-      consumableById: null,
-      equipmentById: {
-        power: 40,
-        moxRequirement: 0,
-        mysRequirement: 0,
-        musRequirement: 5,
-        type: "shield",
-      },
-      foldablesByItem: {
-        nodes: [
-          {
-            foldGroupByFoldGroup: {
-              foldablesByFoldGroup: {
-                nodes: [
-                  {
-                    itemByItem: {
-                      id: 3915,
-                      image: "waxshield.gif",
-                      name: "turtle wax shield",
-                      tradeable: true,
-                    },
-                  },
-                  {
-                    itemByItem: {
-                      id: 3916,
-                      image: "waxhat.gif",
-                      name: "turtle wax helmet",
-                      tradeable: true,
-                    },
-                  },
-                  {
-                    itemByItem: {
-                      id: 3917,
-                      image: "waxgreaves.gif",
-                      name: "turtle wax greaves",
-                      tradeable: true,
-                    },
-                  },
+        equipment: {
+          power: 40,
+          moxRequirement: 0,
+          mysRequirement: 0,
+          musRequirement: 5,
+          type: "shield",
+        },
+        foldGroups: {
+          getItems: () => [
+            {
+              id: 1,
+              damage: 0,
+              items: {
+                getItems: () => [
+                  makeSubItem(3915, "turtle wax shield", "waxshield.gif"),
+                  makeSubItem(3916, "turtle wax helmet", "waxhat.gif"),
+                  makeSubItem(3917, "turtle wax greaves", "waxgreaves.gif"),
                 ],
               },
             },
-          },
-        ],
-      },
-    });
+          ],
+        },
+      }),
+    );
 
     blueText.mockReturnValueOnce({ blueText: "Maximum HP +10" });
     mallPrice.mockImplementation((itemId: number) => {
       const prices: Record<number, number> = {
-        3915: 500, // Shield
-        3916: 100, // Helmet (cheapest)
-        3917: 1000, // Greaves
+        3915: 500,
+        3916: 100,
+        3917: 1000,
       };
       const price = prices[itemId] ?? 1;
       return Promise.resolve({

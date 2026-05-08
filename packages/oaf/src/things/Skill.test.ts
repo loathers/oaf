@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
+import { SkillTag } from "data-of-loathing";
 import { dedent } from "ts-dedent";
 import { expect, test, vi } from "vitest";
 
@@ -10,22 +12,18 @@ vi.mock("kol.js", async (importOriginal) => {
   koljs.Client.prototype.getSkillDescription = blueText;
   return koljs;
 });
+
 test("Can describe a Skill with no bluetext", async () => {
   const skill = new Skill({
-    __typename: "Skill",
     id: 7017,
-    ambiguous: false,
-    guildLevel: null,
-    duration: 0,
     image: "littlefridge.gif",
     mpCost: 100,
-    maxLevel: null,
-    name: "Overload Discarded Refrigerator",
-    nodeId: "WyJza2lsbHMiLDcwMTdd",
+    duration: 0,
     permable: false,
-    tags: ["COMBAT"],
-    skillModifierBySkill: null,
-  });
+    ambiguous: false,
+    name: "Overload Discarded Refrigerator",
+    tags: [SkillTag.Combat],
+  } as any);
 
   blueText.mockReturnValueOnce({ blueText: "" });
 
@@ -42,20 +40,15 @@ test("Can describe a Skill with no bluetext", async () => {
 
 test("Can describe a Skill with bluetext", async () => {
   const skill = new Skill({
-    __typename: "Skill",
     id: 4015,
-    ambiguous: false,
-    guildLevel: 12,
-    duration: 0,
     image: "5alarm.gif",
     mpCost: 0,
-    maxLevel: null,
-    name: "Impetuous Sauciness",
-    nodeId: "WyJza2lsbHMiLDQwMTVd",
+    duration: 0,
     permable: true,
-    tags: ["PASSIVE"],
-    skillModifierBySkill: null,
-  });
+    ambiguous: false,
+    name: "Impetuous Sauciness",
+    tags: [SkillTag.Passive],
+  } as any);
 
   blueText.mockReturnValueOnce({ blueText: "Makes Sauce Potions last longer" });
 

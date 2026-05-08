@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-return, no-irregular-whitespace */
+import { FamiliarCategory } from "data-of-loathing";
 import { dedent } from "ts-dedent";
 import { expect, test, vi } from "vitest";
 
@@ -11,38 +13,48 @@ vi.mock("kol.js", async (importOriginal) => {
   return koljs;
 });
 
+function makeItem(overrides: Record<string, unknown>) {
+  return {
+    quest: false,
+    tradeable: false,
+    discardable: false,
+    gift: false,
+    autosell: 0,
+    ambiguous: false,
+    uses: [],
+    foldGroups: { getItems: () => [] },
+    zapGroups: { getItems: () => [] },
+    ...overrides,
+  } as any;
+}
+
 test("Can describe a Familiar", async () => {
   const familiar = new Familiar({
     id: 1,
     name: "Mosquito",
     image: "familiar1.gif",
-    itemByLarva: {
+    larva: makeItem({
       id: 275,
       name: "mosquito larva",
       image: "larva.gif",
-      itemModifierByItem: null,
       tradeable: false,
       quest: true,
       discardable: false,
       gift: false,
       descid: 187601582,
-    },
-    itemByEquipment: {
+    }),
+    equipment: makeItem({
       id: 848,
       name: "hypodermic needle",
       image: "syringe.gif",
-      itemModifierByItem: {
-        modifiers: {
-          "Familiar Weight": "+5",
-        },
-      },
+      modifiers: { modifiers: { "Familiar Weight": "+5" } },
       tradeable: true,
       quest: false,
       discardable: true,
       gift: false,
       descid: 10000001,
-    },
-    categories: ["COMBAT0", "HP0"],
+    }),
+    categories: [FamiliarCategory.Combat0, FamiliarCategory.Hp0],
     attributes: [
       "sentient",
       "organic",
@@ -54,8 +66,12 @@ test("Can describe a Familiar", async () => {
       "flies",
       "fast",
     ],
-    familiarModifierByFamiliar: null,
-  });
+    cageMatch: 0,
+    scavengerHunt: 0,
+    obstacleCourse: 0,
+    hideAndSeek: 0,
+    ambiguous: false,
+  } as any);
 
   // For the hatchling
   blueText.mockResolvedValueOnce({ blueText: "" });
@@ -76,7 +92,7 @@ test("Can describe a Familiar", async () => {
       Cannot be traded or discarded.
 
       Equipment: [hypodermic needle](https://wiki.kingdomofloathing.com/hypodermic_needle)
-      \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0+5 to Familiar Weight
+              +5 to Familiar Weight
     `,
   );
 });

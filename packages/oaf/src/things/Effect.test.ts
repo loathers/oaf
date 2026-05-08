@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
+import { EffectQuality } from "data-of-loathing";
 import { dedent } from "ts-dedent";
 import { describe, expect, test, vi } from "vitest";
 
@@ -20,9 +22,13 @@ describe("Effect descriptions", () => {
       name: "Pasta Oneness",
       descid: "583619abc0e4380d80629babe3677aed",
       nohookah: false,
-      quality: "GOOD",
-      effectModifierByEffect: null,
-    });
+      nopvp: false,
+      noremove: false,
+      song: false,
+      actions: [],
+      ambiguous: false,
+      quality: EffectQuality.Good,
+    } as any);
     effect.pizza = { letters: "PAST", options: 2 };
 
     blueText.mockResolvedValueOnce({ blueText: "Mysticality +2" });
@@ -47,13 +53,14 @@ describe("Effect descriptions", () => {
       name: "The Visible Adventurer",
       descid: "a38d91d52ace7992b899402e9704d86d",
       nohookah: false,
-      quality: "NEUTRAL",
-      effectModifierByEffect: {
-        modifiers: {
-          Avatar: '"skeleton"',
-        },
-      },
-    });
+      nopvp: false,
+      noremove: false,
+      song: false,
+      actions: [],
+      ambiguous: false,
+      quality: EffectQuality.Neutral,
+      modifiers: { modifiers: { Avatar: '"skeleton"' } },
+    } as any);
 
     blueText.mockResolvedValueOnce({
       blueText: "Makes you look like a skeleton",
@@ -81,11 +88,15 @@ describe("Hashcodes", () => {
       name: "Pasta Oneness",
       descid: "583619abc0e4380d80629babe3677aed",
       nohookah: false,
-      quality: "GOOD" as const,
-      effectModifierByEffect: null,
+      nopvp: false,
+      noremove: false,
+      song: false,
+      actions: [],
+      ambiguous: false,
+      quality: EffectQuality.Good,
     };
-    const a = new Effect(data);
-    const b = new Effect(data);
+    const a = new Effect(data as any);
+    const b = new Effect(data as any);
 
     expect(a.hashcode()).toBe("Effect:23");
     expect(a.hashcode()).toEqual(b.hashcode());
@@ -98,78 +109,60 @@ describe("Hashcodes", () => {
       name: "Pasta Oneness",
       descid: "583619abc0e4380d80629babe3677aed",
       nohookah: false,
-      quality: "GOOD",
-      effectModifierByEffect: null,
-    });
-    const b = new Monster({
+      nopvp: false,
+      noremove: false,
+      song: false,
+      actions: [],
       ambiguous: false,
-      article: "a",
-      boss: false,
-      attack: "3",
-      defence: "2",
-      elementalDefence: "COLD",
-      drippy: false,
-      element: "COLD",
-      elementalAttack: "COLD",
-      elementalResistance: "0",
-      experience: null,
-      free: false,
-      ghost: false,
-      groupSize: 1,
-      hp: "5",
-      id: 202,
-      image: ["bar.gif"],
-      initiative: "50",
-      itemBlockChance: 0,
-      lucky: false,
-      manuel: null,
-      meat: 15,
-      meatExpression: "15",
-      monsterDropsByMonster: {
-        nodes: [
-          {
-            category: null,
-            rate: 35,
-            itemByItem: {
-              name: "bar skin",
-              id: 70,
-            },
-          },
-          {
-            category: "A",
-            rate: 100,
-            itemByItem: {
-              name: "baritone accordion",
-              id: 6811,
-            },
-          },
-        ],
-      },
-      monsterLevelMultiplier: "1",
-      name: "bar",
-      nobanish: false,
-      nocopy: false,
-      nodeId: "WyJtb25zdGVycyIsMjAyXQ==",
-      nomanuel: false,
-      nowander: false,
-      nowish: false,
-      phylum: "beast",
-      physicalResistance: "0",
-      poison: null,
-      scaling: "0",
-      scalingCap: "0",
-      scalingFloor: "0",
-      snake: false,
-      skillBlockChance: 0,
-      spellBlockChance: 0,
-      sprinkles: ["0", "0"],
-      superlikely: false,
-      ultrarare: false,
-      wanderer: false,
-      wiki: null,
-      wish: false,
-    });
+      quality: EffectQuality.Good,
+    } as any);
+    const b = new Monster(
+      makeMonster({ id: 202, name: "bar", image: ["bar.gif"] }),
+    );
 
     expect(a.hashcode()).not.toEqual(b.hashcode());
   });
 });
+
+function makeMonster(overrides: Record<string, unknown>) {
+  return {
+    ambiguous: false,
+    article: "a",
+    boss: false,
+    attack: "3",
+    defence: "2",
+    drippy: false,
+    elementalResistance: "0",
+    free: false,
+    ghost: false,
+    groupSize: 1,
+    hp: "5",
+    initiative: "50",
+    itemBlockChance: 0,
+    lucky: false,
+    monsterLevelMultiplier: "1",
+    nobanish: false,
+    nocopy: false,
+    nomanuel: false,
+    nowander: false,
+    nowish: false,
+    phylum: "beast",
+    physicalResistance: "0",
+    scaling: "0",
+    scalingCap: "0",
+    scalingFloor: "0",
+    skeleton: false,
+    skillBlockChance: 0,
+    snake: false,
+    spellBlockChance: 0,
+    sprinkles: ["0", "0"] as [string, string],
+    superlikely: false,
+    ultrarare: false,
+    wanderer: false,
+    wish: false,
+    zombie: false,
+    drops: { getItems: () => [] },
+    nativeLocations: { getItems: () => [] },
+    ...overrides,
+  } as any;
+}
