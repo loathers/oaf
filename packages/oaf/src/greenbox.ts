@@ -37,7 +37,7 @@ async function update(
     await discordClient.alert(
       "Error processing greenbox submission",
       undefined,
-      `Failed to update greenbox for player ${playerId}: ${String(error)}`,
+      `Failed to update greenbox for player ${playerId}: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
     );
     await kolClient.kmail.send(
       playerId,
