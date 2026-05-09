@@ -1,42 +1,35 @@
+import { type Effect as DolEffect, EffectQuality } from "data-of-loathing";
 import { bold } from "discord.js";
 
 import { kolClient } from "../clients/kol.js";
 import { memoize } from "../utils/memoize.js";
 import { Thing } from "./Thing.js";
-import { TData } from "./query.js";
 
 export type PizzaData = {
   letters: string;
   options: number;
 };
 
-export type TEffect = NonNullable<
-  NonNullable<TData["allEffects"]>["nodes"][number]
->;
-
 export class Effect extends Thing {
+  #effect: DolEffect;
+  readonly hookah: boolean;
+  pizza?: PizzaData;
+
   static is(thing?: Thing | null): thing is Effect {
     return !!thing && thing instanceof Effect;
   }
 
-  private effect: TEffect;
-  readonly hookah: boolean;
-  pizza?: PizzaData;
-
-  constructor(effect: TEffect) {
+  constructor(effect: DolEffect) {
     super(effect.id, effect.name, effect.image);
-    this.effect = effect;
+    this.#effect = effect;
     this.hookah =
-      !("Avatar" in (effect.effectModifierByEffect?.modifiers ?? {})) &&
+      !("Avatar" in (effect.modifiers?.modifiers ?? {})) &&
       !effect.nohookah &&
-      effect.quality !== "BAD";
+      effect.quality !== EffectQuality.Bad;
   }
 
   getModifiers(): Record<string, string> {
-    return (this.effect.effectModifierByEffect?.modifiers ?? {}) as Record<
-      string,
-      string
-    >;
+    return this.#effect.modifiers?.modifiers ?? {};
   }
 
   describePizzaCompatibility() {
@@ -50,9 +43,9 @@ export class Effect extends Thing {
 
   @memoize()
   async getDescription() {
-    if (!this.effect.descid) return "This effect seems to have no description";
+    if (!this.#effect.descid) return "This effect seems to have no description";
     const { blueText } = await kolClient.getEffectDescription(
-      this.effect.descid,
+      this.#effect.descid,
     );
     return [
       bold("Effect"),

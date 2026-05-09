@@ -1,4 +1,7 @@
-import { type FamiliarCategory } from "data-of-loathing";
+import {
+  type Familiar as DolFamiliar,
+  FamiliarCategory,
+} from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
 import { cleanString, toWikiLink } from "kol.js";
 
@@ -7,7 +10,6 @@ import { indent } from "../utils.js";
 import { memoize } from "../utils/memoize.js";
 import { Item } from "./Item.js";
 import { Thing } from "./Thing.js";
-import { TData } from "./query.js";
 
 type FamiliarClassification = {
   combination: FamiliarCategory[];
@@ -16,175 +18,201 @@ type FamiliarClassification = {
 
 export const FAMILIAR_CLASSIFCATIONS: FamiliarClassification[] = [
   {
-    combination: ["COMBAT0", "MEAT1", "DELEVEL1", "HP0", "MP0"],
+    combination: [
+      FamiliarCategory.Combat0,
+      FamiliarCategory.Meat1,
+      FamiliarCategory.Delevel1,
+      FamiliarCategory.Hp0,
+      FamiliarCategory.Mp0,
+    ],
     description: "Cocoabo-like.",
   },
   {
-    combination: ["COMBAT0", "COMBAT1", "MP0", "HP0"],
+    combination: [
+      FamiliarCategory.Combat0,
+      FamiliarCategory.Combat1,
+      FamiliarCategory.Mp0,
+      FamiliarCategory.Hp0,
+    ],
     description:
       "Deals elemental and physical damage to restore your hp and mp in combat.",
   },
   {
-    combination: ["COMBAT0", "COMBAT1", "MP0"],
+    combination: [
+      FamiliarCategory.Combat0,
+      FamiliarCategory.Combat1,
+      FamiliarCategory.Mp0,
+    ],
     description:
       "Deals elemental and physical damage to restore your mp in combat.",
   },
   {
-    combination: ["COMBAT0", "COMBAT1", "HP0"],
+    combination: [
+      FamiliarCategory.Combat0,
+      FamiliarCategory.Combat1,
+      FamiliarCategory.Hp0,
+    ],
     description: "Deals elemental and physical damage to heal you in combat.",
   },
   {
-    combination: ["COMBAT0", "MP0", "HP0"],
+    combination: [
+      FamiliarCategory.Combat0,
+      FamiliarCategory.Mp0,
+      FamiliarCategory.Hp0,
+    ],
     description: "Deals physical damage to restore your hp and mp in combat.",
   },
   {
-    combination: ["COMBAT0", "MP0"],
+    combination: [FamiliarCategory.Combat0, FamiliarCategory.Mp0],
     description: "Deals physical damage to restore your mp in combat.",
   },
   {
-    combination: ["COMBAT0", "HP0"],
+    combination: [FamiliarCategory.Combat0, FamiliarCategory.Hp0],
     description: "Deals physical damage to heal you in combat.",
   },
   {
-    combination: ["COMBAT1", "MP0", "HP0"],
+    combination: [
+      FamiliarCategory.Combat1,
+      FamiliarCategory.Mp0,
+      FamiliarCategory.Hp0,
+    ],
     description: "Deals elemental damage to restore your hp and mp in combat.",
   },
   {
-    combination: ["COMBAT1", "MP0"],
+    combination: [FamiliarCategory.Combat1, FamiliarCategory.Mp0],
     description: "Deals elemental damage to restore your mp in combat.",
   },
   {
-    combination: ["COMBAT1", "HP0"],
+    combination: [FamiliarCategory.Combat1, FamiliarCategory.Hp0],
     description: "Deals elemental damage to heal you in combat.",
   },
   {
-    combination: ["COMBAT0", "COMBAT1"],
+    combination: [FamiliarCategory.Combat0, FamiliarCategory.Combat1],
     description: "Deals physical and elemental damage in combat.",
   },
   {
-    combination: ["COMBAT0"],
+    combination: [FamiliarCategory.Combat0],
     description: "Deals physical damage in combat.",
   },
   {
-    combination: ["COMBAT1"],
+    combination: [FamiliarCategory.Combat1],
     description: "Deals elemental damage in combat.",
   },
   {
-    combination: ["ITEM0", "MEAT0", "STAT0"],
+    combination: [
+      FamiliarCategory.Item0,
+      FamiliarCategory.Meat0,
+      FamiliarCategory.Stat0,
+    ],
     description:
       "Boosts item drops, meat drops and stat gains (volleyball-like).",
   },
   {
-    combination: ["MEAT0", "STAT0"],
+    combination: [FamiliarCategory.Meat0, FamiliarCategory.Stat0],
     description: "Boosts meat drops and stat gains (volleyball-like).",
   },
   {
-    combination: ["ITEM0", "STAT0"],
+    combination: [FamiliarCategory.Item0, FamiliarCategory.Stat0],
     description: "Boosts item drops and stat gains (volleyball-like).",
   },
   {
-    combination: ["ITEM0", "MEAT0", "STAT1"],
+    combination: [
+      FamiliarCategory.Item0,
+      FamiliarCategory.Meat0,
+      FamiliarCategory.Stat1,
+    ],
     description:
       "Boosts item drops, meat drops and stat gains (sombrero-like).",
   },
   {
-    combination: ["MEAT0", "STAT1"],
+    combination: [FamiliarCategory.Meat0, FamiliarCategory.Stat1],
     description: "Boosts meat drops and stat gains (sombrero-like).",
   },
   {
-    combination: ["ITEM0", "STAT1"],
+    combination: [FamiliarCategory.Item0, FamiliarCategory.Stat1],
     description: "Boosts item drops and stat gains (sombrero-like).",
   },
   {
-    combination: ["STAT0"],
+    combination: [FamiliarCategory.Stat0],
     description: "Boosts stat gains (volleyball-like).",
   },
   {
-    combination: ["STAT1"],
+    combination: [FamiliarCategory.Stat1],
     description: "Boosts stat gains (sombrero-like).",
   },
   {
-    combination: ["MEAT0", "ITEM0"],
+    combination: [FamiliarCategory.Meat0, FamiliarCategory.Item0],
     description: "Boosts item and meat drops.",
   },
+  { combination: [FamiliarCategory.Item0], description: "Boosts item drops." },
+  { combination: [FamiliarCategory.Meat0], description: "Boosts meat drops." },
   {
-    combination: ["ITEM0"],
-    description: "Boosts item drops.",
-  },
-  {
-    combination: ["MEAT0"],
-    description: "Boosts meat drops.",
-  },
-  {
-    combination: ["BLOCK"],
+    combination: [FamiliarCategory.Block],
     description: "Staggers enemies in combat.",
   },
   {
-    combination: ["DELEVEL0"],
+    combination: [FamiliarCategory.Delevel0],
     description: "Delevels enemies at the start of combat (barrrnacle-like).",
   },
   {
-    combination: ["DELEVEL1"],
+    combination: [FamiliarCategory.Delevel1],
     description: "Delevels enemies during combat (ghost pickle-like).",
   },
   {
-    combination: ["HP0", "MP0"],
+    combination: [FamiliarCategory.Hp0, FamiliarCategory.Mp0],
     description: "Restores your hp and mp during combat.",
   },
   {
-    combination: ["HP0"],
+    combination: [FamiliarCategory.Hp0],
     description: "Heals you during combat.",
   },
   {
-    combination: ["MP0"],
+    combination: [FamiliarCategory.Mp0],
     description: "Restores your mp during combat.",
   },
   {
-    combination: ["MEAT1"],
+    combination: [FamiliarCategory.Meat1],
     description: "Drops meat during combat.",
   },
   {
-    combination: ["STAT2"],
+    combination: [FamiliarCategory.Stat2],
     description: "Grants stats during combat.",
   },
   {
-    combination: ["OTHER0"],
+    combination: [FamiliarCategory.Other0],
     description: "Does something unusual during combat.",
   },
   {
-    combination: ["HP1", "MP1"],
+    combination: [FamiliarCategory.Hp1, FamiliarCategory.Mp1],
     description: "Restores your hp and mp after combat.",
   },
   {
-    combination: ["HP1"],
+    combination: [FamiliarCategory.Hp1],
     description: "Heals you after combat.",
   },
   {
-    combination: ["MP1"],
+    combination: [FamiliarCategory.Mp1],
     description: "Restores mp after combat.",
   },
   {
-    combination: ["STAT3"],
+    combination: [FamiliarCategory.Stat3],
     description: "Grants stats after combat.",
   },
   {
-    combination: ["OTHER1"],
+    combination: [FamiliarCategory.Other1],
     description: "Does something unusual after combat.",
   },
   {
-    combination: ["PASSIVE"],
+    combination: [FamiliarCategory.Passive],
     description: "Grants a passive benefit.",
   },
+  { combination: [FamiliarCategory.Drop], description: "Drops special items." },
   {
-    combination: ["DROP"],
-    description: "Drops special items.",
-  },
-  {
-    combination: ["VARIABLE"],
+    combination: [FamiliarCategory.Variable],
     description: "Has varying abilities.",
   },
   {
-    combination: ["UNDERWATER"],
+    combination: [FamiliarCategory.Underwater],
     description: "Can naturally breathe underwater.",
   },
 ];
@@ -224,7 +252,6 @@ export const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
   ["mutant cactus bud", "Boosts meat drops based on Grimace Darkness.\n"],
   ["mutant fire ant", "Boosts item drops based on Grimace Darkness.\n"],
   ["oily woim", "Increases your combat initiative.\n"],
-  ["peppermint rhino", "Boosts item drops, especially candy drops.\n"],
   ["purse rat", "Increases your monster level.\n"],
   [
     "red-nosed snapper",
@@ -254,29 +281,28 @@ export const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
   ["o.a.f.", "Is optimal.\nGenerally messes with you.\n"],
 ]);
 
-type TFamiliar = NonNullable<
-  NonNullable<TData["allFamiliars"]>["nodes"][number]
->;
-
 export class Familiar extends Thing {
-  private familiar: TFamiliar;
+  #familiar: DolFamiliar;
   hatchling: Item | undefined;
-  equipment: Item | undefined;
+  familiarEquipment: Item | undefined;
 
-  constructor(familiar: TFamiliar) {
+  static is(thing?: Thing | null): thing is Familiar {
+    return !!thing && thing instanceof Familiar;
+  }
+
+  constructor(familiar: DolFamiliar) {
     super(familiar.id, familiar.name, familiar.image);
-    this.familiar = familiar;
-    this.hatchling = familiar.itemByLarva
-      ? new Item(familiar.itemByLarva)
+    this.#familiar = familiar;
+    this.hatchling = familiar.larva
+      ? new Item(familiar.larva, true)
       : undefined;
-    this.equipment = familiar.itemByEquipment
-      ? new Item(familiar.itemByEquipment)
+    this.familiarEquipment = familiar.equipment
+      ? new Item(familiar.equipment, true)
       : undefined;
   }
 
   getModifiers(): Record<string, string> {
-    return (this.familiar.familiarModifierByFamiliar?.modifiers ??
-      {}) as Record<string, string>;
+    return this.#familiar.modifiers?.modifiers ?? {};
   }
 
   private classify(): string {
@@ -284,23 +310,17 @@ export class Familiar extends Thing {
     if (hardcoded) return hardcoded;
 
     const classifications: string[] = [];
-    let categoriesUnassigned = [
-      ...this.familiar.categories.filter((c) => c !== null),
-    ];
+    let categoriesUnassigned = [...this.#familiar.categories];
 
-    // For each classification...
     for (const classification of FAMILIAR_CLASSIFCATIONS) {
-      // ... if the set of types to consider wholly reflects this familiar classification...
       if (
         classification.combination.every((cat) =>
           categoriesUnassigned.includes(cat),
         )
       ) {
-        // ... remove the types that are reflected by this classification from future consideration...
         categoriesUnassigned = categoriesUnassigned.filter(
-          (cat) => !classification.combination.includes(cat!),
+          (cat) => !classification.combination.includes(cat),
         );
-        // ... and add this classification to the list we use to describe this familair.
         classifications.push(classification.description);
       }
     }
@@ -309,10 +329,10 @@ export class Familiar extends Thing {
   }
 
   async formatEquipmentDescription() {
-    if (!this.equipment?.descid) return "";
+    if (!this.familiarEquipment?.descid) return "";
 
     const { melting, singleEquip, blueText, effect } =
-      await kolClient.getItemDescription(this.equipment.descid);
+      await kolClient.getItemDescription(this.familiarEquipment.descid);
 
     const output: string[] = [];
 
@@ -324,12 +344,7 @@ export class Familiar extends Thing {
         effect.descid,
       );
       output.push(
-        `Gives ${effect.duration} adventures of ${bold(
-          hyperlink(
-            cleanString(effect.name),
-            toWikiLink(cleanString(effect.name)),
-          ),
-        )}`,
+        `Gives ${effect.duration} adventures of ${bold(hyperlink(cleanString(effect.name), toWikiLink(cleanString(effect.name))))}`,
         indent(effectBlueText),
       );
     }
@@ -343,20 +358,19 @@ export class Familiar extends Thing {
       bold("Familiar"),
       this.classify(),
       "",
-      `Attributes: ${this.familiar.attributes?.toSorted().join(", ") ?? "None"}`,
+      `Attributes: ${this.#familiar.attributes?.toSorted().join(", ") ?? "None"}`,
       "",
     ];
 
-    if (this.familiar.itemByLarva) {
+    if (this.#familiar.larva) {
       description.push(
-        `Hatchling: ${hyperlink(this.familiar.itemByLarva.name ?? "unknown larva", toWikiLink(this.familiar.itemByLarva.name || ""))}`,
+        `Hatchling: ${hyperlink(this.#familiar.larva.name ?? "unknown larva", toWikiLink(this.#familiar.larva.name || ""))}`,
       );
     }
 
     if (this.hatchling) {
       const hatchlingDescription = await this.hatchling.getDescription(false);
       description.push(
-        // Skip the first two lines and remove double spaces
         ...hatchlingDescription
           .split("\n")
           .slice(2)
@@ -366,13 +380,13 @@ export class Familiar extends Thing {
 
     description.push("");
 
-    if (this.familiar.itemByEquipment) {
+    if (this.#familiar.equipment) {
       description.push(
-        `Equipment: ${hyperlink(this.familiar.itemByEquipment.name, toWikiLink(this.familiar.itemByEquipment.name))}`,
+        `Equipment: ${hyperlink(this.#familiar.equipment.name, toWikiLink(this.#familiar.equipment.name))}`,
       );
     }
 
-    if (this.equipment) {
+    if (this.familiarEquipment) {
       description.push(indent(await this.formatEquipmentDescription()));
     }
 

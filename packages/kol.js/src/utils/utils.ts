@@ -79,3 +79,8 @@ export function parseKoLNumber(input?: string): number {
 export function trim(s: string): string {
   return s.replace(/(?:&nbsp;)+$/g, "").trim();
 }
+
+/** Accept an entity with an id or a raw number and return the numeric id. */
+export function resolveEntityId(entity: { id: number } | number): number {
+  return typeof entity === "number" ? entity : entity.id;
+}

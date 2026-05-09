@@ -1,6 +1,6 @@
 {
   "name": "kol.js",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
@@ -18,9 +18,13 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "data-of-loathing": "3.2",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "data-of-loathing": "3.2"
   },
   "dependencies": {
     "async-mutex": "^0.5.0",

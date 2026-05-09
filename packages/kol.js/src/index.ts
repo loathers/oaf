@@ -10,4 +10,6 @@ export {
   toWikiLink,
   parseKoLNumber,
   trim,
+  resolveEntityId,
 } from "./utils/utils.js";
+

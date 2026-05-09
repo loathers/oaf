@@ -1,6 +1,7 @@
-import { dedent } from "ts-dedent";
-import { expect, test, vi } from "vitest";
+import { Familiar as DolFamiliar } from "data-of-loathing";
+import { beforeAll, expect, test, vi } from "vitest";
 
+import { testDb } from "../__fixtures__/testDb.js";
 import { Familiar } from "./Familiar.js";
 
 const blueText = vi.hoisted(() => vi.fn().mockResolvedValue({ blueText: "" }));
@@ -11,72 +12,56 @@ vi.mock("kol.js", async (importOriginal) => {
   return koljs;
 });
 
-test("Can describe a Familiar", async () => {
-  const familiar = new Familiar({
-    id: 1,
-    name: "Mosquito",
-    image: "familiar1.gif",
-    itemByLarva: {
-      id: 275,
-      name: "mosquito larva",
-      image: "larva.gif",
-      itemModifierByItem: null,
-      tradeable: false,
-      quest: true,
-      discardable: false,
-      gift: false,
-      descid: 187601582,
-    },
-    itemByEquipment: {
-      id: 848,
-      name: "hypodermic needle",
-      image: "syringe.gif",
-      itemModifierByItem: {
-        modifiers: {
-          "Familiar Weight": "+5",
-        },
-      },
-      tradeable: true,
-      quest: false,
-      discardable: true,
-      gift: false,
-      descid: 10000001,
-    },
-    categories: ["COMBAT0", "HP0"],
-    attributes: [
-      "sentient",
-      "organic",
-      "insect",
-      "animal",
-      "haseyes",
-      "bite",
-      "haswings",
-      "flies",
-      "fast",
-    ],
-    familiarModifierByFamiliar: null,
-  });
+let mosquito: Familiar;
 
-  // For the hatchling
+beforeAll(async () => {
+  const client = await testDb;
+  const em = client.query;
+
+  const dolFamiliar = await em.findOne(
+    DolFamiliar,
+    { id: 1 },
+    { populate: ["larva", "equipment", "modifiers"] },
+  );
+
+  if (dolFamiliar?.larva) {
+    await em.populate(dolFamiliar.larva, [
+      "modifiers",
+      "consumable",
+      "equipment",
+    ]);
+  }
+  if (dolFamiliar?.equipment) {
+    await em.populate(dolFamiliar.equipment, [
+      "modifiers",
+      "consumable",
+      "equipment",
+    ]);
+  }
+
+  mosquito = new Familiar(dolFamiliar!);
+});
+
+test("Can describe a Familiar", async () => {
   blueText.mockResolvedValueOnce({ blueText: "" });
-  // For the equipment
   blueText.mockResolvedValueOnce({ blueText: "+5 to Familiar Weight" });
 
-  const description = await familiar.getDescription();
+  const description = await mosquito.getDescription();
+  const nbspx8 = " ".repeat(8);
 
   expect(description).toBe(
-    dedent`
-      **Familiar**
-      Deals physical damage to heal you in combat.
-
-      Attributes: animal, bite, fast, flies, haseyes, haswings, insect, organic, sentient
-
-      Hatchling: [mosquito larva](https://wiki.kingdomofloathing.com/mosquito_larva)
-      Quest Item
-      Cannot be traded or discarded.
-
-      Equipment: [hypodermic needle](https://wiki.kingdomofloathing.com/hypodermic_needle)
-      \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0+5 to Familiar Weight
-    `,
+    [
+      "**Familiar**",
+      "Deals physical damage to heal you in combat.",
+      "",
+      "Attributes: animal, bite, fast, flies, haseyes, haswings, insect, organic, sentient",
+      "",
+      "Hatchling: [mosquito larva](https://wiki.kingdomofloathing.com/mosquito_larva)",
+      "Quest Item",
+      "Cannot be traded or discarded.",
+      "",
+      "Equipment: [hypodermic needle](https://wiki.kingdomofloathing.com/hypodermic_needle)",
+      `${nbspx8}+5 to Familiar Weight`,
+    ].join("\n"),
   );
 });

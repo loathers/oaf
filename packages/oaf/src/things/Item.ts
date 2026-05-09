@@ -1,4 +1,8 @@
-import { ConsumableQuality } from "data-of-loathing";
+import {
+  ConsumableQuality,
+  type Item as DolItem,
+  ItemUse,
+} from "data-of-loathing";
 import { bold, hyperlink } from "discord.js";
 import { toWikiLink } from "kol.js";
 
@@ -8,7 +12,6 @@ import { memoizeExpiring } from "../utils/memoize.js";
 import { Familiar } from "./Familiar.js";
 import { Thing } from "./Thing.js";
 import packages from "./iotmPackages.json" with { type: "json" };
-import { TData } from "./query.js";
 
 const reversedPackages = new Map([
   ["grinning ghostling", "box o' ghosts"],
@@ -19,38 +22,34 @@ const reversedPackages = new Map([
   ),
 ]);
 
+const CONSUMABLE_USES = [ItemUse.Food, ItemUse.Drink, ItemUse.Spleen] as const;
+type ConsumableUse = (typeof CONSUMABLE_USES)[number];
+
+const EQUIPMENT_USES = [
+  ItemUse.Weapon,
+  ItemUse.Offhand,
+  ItemUse.Container,
+  ItemUse.Hat,
+  ItemUse.Shirt,
+  ItemUse.Pants,
+  ItemUse.Accessory,
+  ItemUse.Familiar,
+] as const;
+type EquipmentUse = (typeof EQUIPMENT_USES)[number];
+
 const OTHER_USES = [
-  "POTION",
-  "REUSABLE",
-  "USABLE",
-  "MULTIPLE",
-  "COMBAT",
-  "COMBAT_REUSABLE",
-  "GROW",
+  ItemUse.Potion,
+  ItemUse.Reusable,
+  ItemUse.Usable,
+  ItemUse.Multiple,
+  ItemUse.Combat,
+  ItemUse.CombatReusable,
+  ItemUse.Grow,
 ] as const;
 type OtherUse = (typeof OTHER_USES)[number];
 
-const CONSUMABLE_TYPES = ["FOOD", "DRINK", "SPLEEN"] as const;
-type ConsumableType = (typeof CONSUMABLE_TYPES)[number];
-
-const EQUIPMENT_TYPES = [
-  "WEAPON",
-  "OFFHAND",
-  "CONTAINER",
-  "HAT",
-  "SHIRT",
-  "PANTS",
-  "ACCESSORY",
-  "FAMILIAR",
-] as const;
-type EquipmentType = (typeof EQUIPMENT_TYPES)[number];
-
-export type TItem = Partial<
-  NonNullable<NonNullable<TData["allItems"]>["nodes"][number]>
-> & { id: number; name: string; image: string };
-
 export class Item extends Thing {
-  readonly item: TItem;
+  #item: DolItem;
 
   container?: string;
   contents?: string;
@@ -63,69 +62,62 @@ export class Item extends Thing {
     return !!thing && thing instanceof Item;
   }
 
-  constructor(item: TItem) {
+  constructor(item: DolItem, shallow = false) {
     super(item.id, item.name, item.image);
-    this.item = item;
+    this.#item = item;
 
     if (item.name in packages) {
       this.contents = packages[item.name as keyof typeof packages];
     }
-
     if (item.name in reversedPackages) {
       this.container = reversedPackages.get(item.name)!;
     }
 
-    this.foldGroup =
-      item.foldablesByItem?.nodes
-        .flatMap(
-          (f) =>
-            f?.foldGroupByFoldGroup?.foldablesByFoldGroup.nodes.map(
-              (g) => g?.itemByItem ?? null,
-            ) ?? [],
-        )
-        .filter((i) => i !== null)
-        .map((i) => new Item(i)) ?? [];
-    this.zapGroup =
-      item.zapGroupItemsByItem?.nodes
-        .flatMap(
-          (z) =>
-            z?.zapGroupByZapGroup?.zapGroupItemsByZapGroup.nodes.map(
-              (g) => g?.itemByItem ?? null,
-            ) ?? [],
-        )
-        .filter((i) => i !== null)
-        .map((i) => new Item(i)) ?? [];
+    if (shallow) {
+      this.foldGroup = [];
+      this.zapGroup = [];
+    } else {
+      this.foldGroup = item.foldGroups
+        .getItems()
+        .flatMap((fg) => fg.items.getItems().map((i) => new Item(i, true)))
+        .filter((i) => i.id !== item.id);
+      this.zapGroup = item.zapGroups
+        .getItems()
+        .flatMap((zg) => zg.items.getItems().map((i) => new Item(i, true)))
+        .filter((i) => i.id !== item.id);
+    }
   }
 
   getModifiers(): Record<string, string> {
-    return (this.item.itemModifierByItem?.modifiers ?? {}) as Record<
-      string,
-      string
-    >;
+    return this.#item.modifiers?.modifiers ?? {};
   }
 
   get descid() {
-    return this.item.descid;
+    return this.#item.descid;
   }
 
   get tradeable() {
-    return this.item.tradeable;
+    return this.#item.tradeable;
   }
 
   get gift() {
-    return this.item.gift;
+    return this.#item.gift;
   }
 
   get plural() {
-    return this.item.plural || `${this.name}s`;
+    return this.#item.plural || `${this.name}s`;
   }
 
   get autosell() {
-    return this.item.autosell || 0;
+    return this.#item.autosell ?? 0;
   }
 
-  mapQuality(rawQuality: ConsumableQuality | null): string {
-    if (!rawQuality || rawQuality === "CHANGING" || rawQuality === "NONE") {
+  mapQuality(rawQuality: ConsumableQuality | null | undefined): string {
+    if (
+      !rawQuality ||
+      rawQuality === ConsumableQuality.Changing ||
+      rawQuality === ConsumableQuality.None
+    ) {
       return "???";
     }
     const quality = rawQuality
@@ -148,13 +140,11 @@ export class Item extends Thing {
     if (adventureRange.includes("-")) {
       extra.push(`Average ${pluralize(average, "adventure")}`);
     }
-
     if (size > 1) {
       extra.push(
         `${Number((average / size).toFixed(2))} per ${consumableUnit}`,
       );
     }
-
     if (extra.length > 0) {
       description += ` (${extra.join(", ")})`;
     }
@@ -170,22 +160,22 @@ export class Item extends Thing {
   }
 
   getConsumableDescription() {
-    const consumableType = this.item.uses?.find((t): t is ConsumableType =>
-      CONSUMABLE_TYPES.includes(t as ConsumableType),
+    const consumableUse = this.#item.uses.find((u): u is ConsumableUse =>
+      CONSUMABLE_USES.includes(u as ConsumableUse),
     );
-    if (!consumableType) return null;
+    if (!consumableUse) return null;
 
-    const consumable = this.item.consumableById;
+    const consumable = this.#item.consumable;
     if (!consumable) return null;
 
     const description = [];
     const [consumableName, consumableUnit, organ] = (() => {
-      switch (consumableType) {
-        case "FOOD":
+      switch (consumableUse) {
+        case ItemUse.Food:
           return ["food", "fullness", "stomach"] as const;
-        case "DRINK":
+        case ItemUse.Drink:
           return ["booze", "inebriety", "liver"] as const;
-        case "SPLEEN":
+        case ItemUse.Spleen:
           return ["spleen item", "spleen", "spleen"] as const;
         default:
           return [null, null, null] as const;
@@ -199,15 +189,14 @@ export class Item extends Thing {
       consumable;
 
     const name = [];
-    if (consumableType !== "SPLEEN") name.push(this.mapQuality(quality));
+    if (consumableUse !== ItemUse.Spleen) name.push(this.mapQuality(quality));
     name.push(consumableName);
 
     const requirements = [`Size ${size}`];
     if (levelRequirement !== 1)
       requirements.push(`requires level ${levelRequirement}`);
 
-    const stats = `${bold(name.join(" "))} (${requirements.join(", ")})`;
-    description.push(stats);
+    description.push(`${bold(name.join(" "))} (${requirements.join(", ")})`);
 
     if (adventures !== 0) {
       description.push(
@@ -224,12 +213,12 @@ export class Item extends Thing {
   }
 
   getEquipmentDescription() {
-    const equipmentType = this.item.uses?.find((t): t is EquipmentType =>
-      EQUIPMENT_TYPES.includes(t as EquipmentType),
+    const equipmentUse = this.#item.uses.find((u): u is EquipmentUse =>
+      EQUIPMENT_USES.includes(u as EquipmentUse),
     );
-    if (!equipmentType) return null;
+    if (!equipmentUse) return null;
 
-    const equipment = this.item.equipmentById;
+    const equipment = this.#item.equipment;
     if (!equipment) return null;
 
     const description = [];
@@ -244,23 +233,20 @@ export class Item extends Thing {
     })();
 
     const equipInfo: string[] = [];
-
     if (requirement) equipInfo.push(requirement);
 
-    switch (equipmentType) {
-      case "WEAPON": {
+    switch (equipmentUse) {
+      case ItemUse.Weapon: {
         const damage = power / 10;
         description.push(bold(type!));
-
         equipInfo.unshift(
           `${Math.round(damage)}-${Math.round(damage * 2)} damage`,
         );
         break;
       }
-      case "OFFHAND": {
+      case ItemUse.Offhand: {
         const shield = type === "shield";
         description.push(bold(`Offhand ${shield ? "Shield" : "Item"}`));
-
         equipInfo.unshift(`${power} power`);
         if (shield)
           equipInfo.push(
@@ -268,50 +254,47 @@ export class Item extends Thing {
           );
         break;
       }
-      case "FAMILIAR": {
+      case ItemUse.Familiar: {
         description.push(bold("Familiar Equipment"));
         break;
       }
       default: {
         const equipmentName =
-          equipmentType === "CONTAINER"
+          equipmentUse === ItemUse.Container
             ? "Back Item"
-            : titleCase(equipmentType);
+            : titleCase(equipmentUse);
         description.push(bold(equipmentName));
-
         equipInfo.unshift(`${power} power`);
         break;
       }
     }
 
     description.push(equipInfo.join(", "));
-
     return description;
   }
 
   getOtherDescription() {
-    const otherUses = this.item.uses?.find((t): t is OtherUse =>
-      OTHER_USES.includes(t as OtherUse),
+    const otherUse = this.#item.uses.find((u): u is OtherUse =>
+      OTHER_USES.includes(u as OtherUse),
     );
+    if (!otherUse) return null;
 
-    if (!otherUses) return null;
-
-    const alsoCombat = this.item.uses?.includes("COMBAT");
+    const alsoCombat = this.#item.uses.includes(ItemUse.Combat);
 
     const title = (() => {
-      switch (otherUses) {
-        case "POTION":
+      switch (otherUse) {
+        case ItemUse.Potion:
           return "Potion";
-        case "REUSABLE":
+        case ItemUse.Reusable:
           return "Reusable item";
-        case "MULTIPLE":
-        case "USABLE":
+        case ItemUse.Multiple:
+        case ItemUse.Usable:
           return "Usable item";
-        case "COMBAT":
+        case ItemUse.Combat:
           return "Combat item";
-        case "COMBAT_REUSABLE":
+        case ItemUse.CombatReusable:
           return "Reusable combat item";
-        case "GROW":
+        case ItemUse.Grow:
           return "Familiar hatchling";
         default:
           return "Unknown type";
@@ -319,8 +302,7 @@ export class Item extends Thing {
     })();
 
     const typeDescription: string[] = [bold(title)];
-
-    if (!otherUses.startsWith("combat") && alsoCombat)
+    if (!otherUse.startsWith("combat") && alsoCombat)
       typeDescription.push("(also usable in combat)");
 
     return [typeDescription.join(" ")];
@@ -328,13 +310,12 @@ export class Item extends Thing {
 
   getShortDescription(): string {
     const itemRules: string[] = [];
-    if (this.item.quest) itemRules.push("Quest Item");
-    if (this.item.gift) itemRules.push("Gift Item");
+    if (this.#item.quest) itemRules.push("Quest Item");
+    if (this.#item.gift) itemRules.push("Gift Item");
 
     const tradeability: string[] = [];
-    if (!this.item.tradeable) tradeability.push("traded");
-    if (!this.item.discardable) tradeability.push("discarded");
-
+    if (!this.#item.tradeable) tradeability.push("traded");
+    if (!this.#item.discardable) tradeability.push("discarded");
     if (tradeability.length > 0)
       itemRules.push(`Cannot be ${tradeability.join(" or ")}.`);
 
@@ -350,25 +331,19 @@ export class Item extends Thing {
   }
 
   addGrowingFamiliar(familiar: Familiar): void {
-    this._addlDescription = `Grows into: ${bold(
-      hyperlink(familiar.name, toWikiLink(familiar.name)),
-    )}\n`;
+    this._addlDescription = `Grows into: ${bold(hyperlink(familiar.name, toWikiLink(familiar.name)))}\n`;
   }
 
   addEquppingFamiliar(familiar: Familiar): void {
-    this._addlDescription = `Familiar: ${hyperlink(
-      familiar.name,
-      toWikiLink(familiar.name),
-    )}\n`;
+    this._addlDescription = `Familiar: ${hyperlink(familiar.name, toWikiLink(familiar.name))}\n`;
   }
 
   getPriceLink(text: string): string {
-    const url = `https://pricegun.loathers.net/item/${this.id}`;
-    return hyperlink(text, url);
+    return hyperlink(text, `https://pricegun.loathers.net/item/${this.id}`);
   }
 
   async getMallPrice() {
-    if (!this.item.tradeable) return "";
+    if (!this.#item.tradeable) return "";
 
     const {
       mallPrice,
@@ -380,17 +355,13 @@ export class Item extends Thing {
     if (kolClient.isRollover()) {
       return `Mall Price: ${this.getPriceLink("Can't check, rollover")}`;
     } else if (mallPrice) {
-      let output = `Mall Price: ${this.getPriceLink(
-        `${formattedMallPrice} Meat`,
-      )}`;
+      let output = `Mall Price: ${this.getPriceLink(`${formattedMallPrice} Meat`)}`;
       if (limitedMallPrice && limitedMallPrice < mallPrice) {
         output += ` (or ${formattedLimitedMallPrice} Meat limited per day)`;
       }
       return output;
     } else if (limitedMallPrice) {
-      return `Mall Price: ${this.getPriceLink(
-        `${formattedLimitedMallPrice} Meat (only available limited per day)`,
-      )}`;
+      return `Mall Price: ${this.getPriceLink(`${formattedLimitedMallPrice} Meat (only available limited per day)`)}`;
     } else {
       return "Mall extinct.";
     }
@@ -400,26 +371,22 @@ export class Item extends Thing {
     if (group.length === 0) return null;
 
     const output: string[] = [];
-
     const turnsInto = group
       .filter((item) => item.name !== this.name)
       .slice(0, 7)
-      .map((item) => item.name)
-      .map((name) => hyperlink(name, toWikiLink(name)))
+      .map((item) => hyperlink(item.name, toWikiLink(item.name)))
       .join(", ");
 
     output.push(
-      `${titleCase(groupType)}s into: ${turnsInto}${
-        group.length > 8 ? " ...and more." : ""
-      }`,
+      `${titleCase(groupType)}s into: ${turnsInto}${group.length > 8 ? " ...and more." : ""}`,
     );
 
     const tradeables = (
       await Promise.all(
         group
-          .filter((item) => item.item.tradeable)
+          .filter((item) => item.tradeable)
           .map(async (item) => ({
-            item: item,
+            item,
             price: await getMallPrice(item.id),
           })),
       )
@@ -432,56 +399,43 @@ export class Item extends Thing {
         output.push(`(This item is the cheapest in its ${groupType} group)`);
       } else {
         const cheapest = tradeables[0].item;
-        const wikiLink = hyperlink(cheapest.name, toWikiLink(cheapest.name));
-        const mallHistoryLink = cheapest.getPriceLink(
-          `${tradeables[0].price.formattedMinPrice} Meat`,
+        output.push(
+          `(Cheapest: ${hyperlink(cheapest.name, toWikiLink(cheapest.name))} @ ${cheapest.getPriceLink(`${tradeables[0].price.formattedMinPrice} Meat`)})`,
         );
-
-        output.push(`(Cheapest: ${wikiLink} @ ${mallHistoryLink})`);
       }
     }
 
     return output.join("\n");
   }
 
-  @memoizeExpiring(15 * 60 * 1000) // Ensure that prices are accurate to the last 15 minutes
+  @memoizeExpiring(15 * 60 * 1000)
   async getDescription(withAddl = true): Promise<string> {
     const description: (string | null)[] = [this.getShortDescription()];
 
     if (withAddl) description.push(this._addlDescription);
 
-    const { blueText } = await kolClient.getItemDescription(this.item.descid!);
-
+    const { blueText } = await kolClient.getItemDescription(this.#item.descid!);
     if (blueText) description.push(blueText);
 
-    if (this.item.discardable && (this.item.autosell ?? 0) > 0) {
-      description.push(`Autosell value: ${this.item.autosell} Meat.`);
+    if (this.#item.discardable && (this.#item.autosell ?? 0) > 0) {
+      description.push(`Autosell value: ${this.#item.autosell} Meat.`);
     }
 
     const price = await this.getMallPrice();
-    if (price) {
-      description.push(price);
-    }
+    if (price) description.push(price);
 
     description.push(await this.formatGroup(this.zapGroup, "zap"));
     description.push(await this.formatGroup(this.foldGroup, "fold"));
 
     if (withAddl && this.container) {
       description.push(
-        `Enclosed in: ${bold(
-          hyperlink(this.container, toWikiLink(this.container)),
-        )}`,
-        // await this.container?.getDescription(false),
+        `Enclosed in: ${bold(hyperlink(this.container, toWikiLink(this.container)))}`,
       );
     }
-
     if (withAddl && this.contents) {
       description.push(
-        `Encloses: ${bold(
-          hyperlink(this.contents, toWikiLink(this.contents)),
-        )}`,
+        `Encloses: ${bold(hyperlink(this.contents, toWikiLink(this.contents)))}`,
       );
-      // description.push(await this.contents?.getDescription(false));
     }
 
     return description.filter((line) => line !== null).join("\n");

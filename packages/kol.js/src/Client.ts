@@ -23,6 +23,9 @@ export type MallPrice = {
 
 export type Result<T = void> = { success: true; data?: T } | { success: false; reason: string };
 
+import { Item } from "data-of-loathing";
+import { gameData } from "./GameData.js";
+import { resolveEntityId } from "./utils/utils.js";
 import { AuthError, JoinClanError, RolloverError } from "./errors.js";
 
 class LoginRedirectError extends Error {}
@@ -321,20 +324,27 @@ export class Client extends Emittery<Events> {
     }
   }
 
+  async loadGameData(): Promise<void> {
+    await gameData.load();
+  }
+
   async fetchStatus(): Promise<ApiStatus> {
     return this.fetchJson<ApiStatus>("api.php", {
       query: { what: "status", for: `${this.#username} bot` },
     });
   }
 
-  async getInventory(): Promise<Map<number, number>> {
+  async getInventory(): Promise<Map<Item, number>> {
     const raw = await this.fetchJson<Record<string, string>>("api.php", {
       query: { what: "inventory", for: `${this.#username} bot` },
     });
-    return new Map(Object.entries(raw).map(([id, qty]) => [Number(id), Number(qty)]));
+    const ids = Object.keys(raw).map(Number);
+    const items = await gameData.findItemsByIds(ids);
+    return new Map(items.map((item) => [item, Number(raw[String(item.id)])]));
   }
 
-  async getMallPrice(itemId: number): Promise<MallPrice> {
+  async getMallPrice(item: Item | number): Promise<MallPrice> {
+    const itemId = resolveEntityId(item);
     const prices = await this.fetchText("backoffice.php", {
       query: {
         action: "prices",
