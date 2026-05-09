@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
-import { ConsumableQuality, ItemUse } from "data-of-loathing";
-import { dedent } from "ts-dedent";
-import { describe, expect, test, vi } from "vitest";
+import { Item as DolItem } from "data-of-loathing";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 
+import { testDb } from "../__fixtures__/testDb.js";
 import { Item } from "./Item.js";
 
 const { mallPrice, blueText } = vi.hoisted(() => ({
@@ -25,88 +24,60 @@ vi.mock("kol.js", async (importOriginal) => {
   return koljs;
 });
 
-function makeItem(overrides: Record<string, unknown>) {
-  return {
-    quest: false,
-    tradeable: true,
-    discardable: true,
-    gift: false,
-    autosell: 0,
-    ambiguous: false,
-    uses: [],
-    foldGroups: { getItems: () => [] },
-    zapGroups: { getItems: () => [] },
-    ...overrides,
-  } as any;
+async function loadItem(id: number): Promise<Item> {
+  const client = await testDb;
+  const dolItem = await client.query.findOne(
+    DolItem,
+    { id },
+    {
+      populate: [
+        "consumable",
+        "equipment",
+        "modifiers",
+        "foldGroups.items",
+        "zapGroups.items",
+      ],
+    },
+  );
+  return new Item(dolItem!);
 }
+
+let tofurkeyLeg: Item;
+let alienMeat: Item;
+let lovElephant: Item;
+let mysteryJuice: Item;
+let turtleWaxShield: Item;
+
+beforeAll(async () => {
+  [tofurkeyLeg, alienMeat, lovElephant, mysteryJuice, turtleWaxShield] =
+    await Promise.all([
+      loadItem(1365),
+      loadItem(9423),
+      loadItem(9327),
+      loadItem(518),
+      loadItem(3915),
+    ]);
+});
 
 describe("Food", () => {
   test("Can describe a food with a range of adventures", async () => {
-    const item = new Item(
-      makeItem({
-        id: 1365,
-        name: "tofurkey leg",
-        image: "turkeyleg.gif",
-        descid: 927393854,
-        uses: [ItemUse.Food],
-        tradeable: true,
-        discardable: true,
-        autosell: 50,
-        consumable: {
-          adventureRange: "7-14",
-          adventures: 10.5,
-          stomach: 3,
-          liver: 0,
-          spleen: 0,
-          levelRequirement: 5,
-          quality: ConsumableQuality.Awesome,
-        },
-      }),
-    );
-
     mallPrice.mockResolvedValueOnce({
       formattedMallPrice: "502",
       mallPrice: 502,
     });
-
-    const description = await item.getDescription();
-
-    expect(description).toBe(
-      dedent`
-        (Item 1365)
-        **Awesome food** (Size 3, requires level 5)
-        7-14 adventures (Average 10.5 adventures, 3.5 per fullness)
-
-        Autosell value: 50 Meat.
-        Mall Price: [502 Meat](https://pricegun.loathers.net/item/1365)
-      `,
+    expect(await tofurkeyLeg.getDescription()).toBe(
+      [
+        "(Item 1365)",
+        "**Awesome food** (Size 3, requires level 5)",
+        "7-14 adventures (Average 10.5 adventures, 3.5 per fullness)",
+        "",
+        "Autosell value: 50 Meat.",
+        "Mall Price: [502 Meat](https://pricegun.loathers.net/item/1365)",
+      ].join("\n"),
     );
   });
 
   test("Can describe a food with a set number of adventures", async () => {
-    const item = new Item(
-      makeItem({
-        id: 9423,
-        name: "alien meat",
-        image: "alienmeat.gif",
-        descid: 672000286,
-        uses: [ItemUse.Food],
-        tradeable: true,
-        discardable: true,
-        autosell: 8,
-        modifiers: { modifiers: { "Last Available": '"2017-04"' } },
-        consumable: {
-          adventureRange: "3",
-          adventures: 3,
-          stomach: 1,
-          liver: 0,
-          spleen: 0,
-          levelRequirement: 1,
-          quality: ConsumableQuality.Good,
-        },
-      }),
-    );
-
     blueText.mockReturnValueOnce({
       blueText: "Gives 5 Adventures of a random positive effect",
     });
@@ -114,155 +85,58 @@ describe("Food", () => {
       formattedMallPrice: "1,995",
       mallPrice: 1995,
     });
-
-    const description = await item.getDescription();
-
-    expect(description).toBe(
-      dedent`
-        (Item 9423)
-        **Good food** (Size 1)
-        3 adventures
-
-        Gives 5 Adventures of a random positive effect
-        Autosell value: 8 Meat.
-        Mall Price: [1,995 Meat](https://pricegun.loathers.net/item/9423)
-      `,
+    expect(await alienMeat.getDescription()).toBe(
+      [
+        "(Item 9423)",
+        "**Good food** (Size 1)",
+        "3 adventures",
+        "",
+        "Gives 5 Adventures of a random positive effect",
+        "Autosell value: 8 Meat.",
+        "Mall Price: [1,995 Meat](https://pricegun.loathers.net/item/9423)",
+      ].join("\n"),
     );
   });
 });
 
 describe("Equipment", () => {
   test("Can describe a shield", async () => {
-    const item = new Item(
-      makeItem({
-        id: 9327,
-        name: "LOV Elephant",
-        image: "pl_elephant.gif",
-        descid: 284967813,
-        uses: [ItemUse.Offhand],
-        tradeable: false,
-        discardable: true,
-        gift: true,
-        autosell: 5,
-        modifiers: {
-          modifiers: {
-            "Last Available": '"2017-02"',
-            "Damage Reduction": "16",
-          },
-        },
-        equipment: {
-          power: 100,
-          moxRequirement: 0,
-          mysRequirement: 0,
-          musRequirement: 25,
-          type: "shield",
-        },
-      }),
-    );
-
     blueText.mockReturnValueOnce({ blueText: "Damage Reduction: 10" });
-
-    const description = await item.getDescription();
-
-    expect(description).toBe(
-      dedent`
-        (Item 9327)
-        **Offhand Shield**
-        100 power, requires 25 Muscle, Damage Reduction: 5.67
-        Gift Item
-        Cannot be traded.
-
-        Damage Reduction: 10
-        Autosell value: 5 Meat.
-      `,
+    expect(await lovElephant.getDescription()).toBe(
+      [
+        "(Item 9327)",
+        "**Offhand Shield**",
+        "100 power, requires 25 Muscle, Damage Reduction: 5.67",
+        "Gift Item",
+        "Cannot be traded.",
+        "",
+        "Damage Reduction: 10",
+        "Autosell value: 5 Meat.",
+      ].join("\n"),
     );
   });
 });
 
 describe("Other", () => {
   test("Can describe a potion that is multiple use and combat usable", async () => {
-    const item = new Item(
-      makeItem({
-        id: 518,
-        name: "magical mystery juice",
-        image: "potion4.gif",
-        descid: 400545756,
-        uses: [ItemUse.Multiple, ItemUse.Combat],
-        tradeable: false,
-        discardable: true,
-        autosell: 50,
-      }),
-    );
-
     blueText.mockReturnValueOnce({
       blueText: "Restores an amount of MP that increases as you level up",
     });
-
-    const description = await item.getDescription();
-
-    expect(description).toBe(
-      dedent`
-        (Item 518)
-        **Usable item** (also usable in combat)
-        Cannot be traded.
-
-        Restores an amount of MP that increases as you level up
-        Autosell value: 50 Meat.
-      `,
+    expect(await mysteryJuice.getDescription()).toBe(
+      [
+        "(Item 518)",
+        "**Usable item** (also usable in combat)",
+        "Cannot be traded.",
+        "",
+        "Restores an amount of MP that increases as you level up",
+        "Autosell value: 50 Meat.",
+      ].join("\n"),
     );
   });
 });
 
 describe("Foldable", () => {
   test("Can describe a foldable", async () => {
-    const makeSubItem = (id: number, name: string, image: string) =>
-      makeItem({
-        id,
-        name,
-        image,
-        tradeable: true,
-        foldGroups: { getItems: () => [] },
-        zapGroups: { getItems: () => [] },
-      });
-
-    const item = new Item(
-      makeItem({
-        id: 3915,
-        name: "turtle wax shield",
-        image: "waxshield.gif",
-        descid: 490908351,
-        uses: [ItemUse.Offhand, ItemUse.Usable],
-        tradeable: true,
-        discardable: true,
-        autosell: 7,
-        modifiers: {
-          modifiers: { "Maximum HP": "+10", "Damage Reduction": "2" },
-        },
-        equipment: {
-          power: 40,
-          moxRequirement: 0,
-          mysRequirement: 0,
-          musRequirement: 5,
-          type: "shield",
-        },
-        foldGroups: {
-          getItems: () => [
-            {
-              id: 1,
-              damage: 0,
-              items: {
-                getItems: () => [
-                  makeSubItem(3915, "turtle wax shield", "waxshield.gif"),
-                  makeSubItem(3916, "turtle wax helmet", "waxhat.gif"),
-                  makeSubItem(3917, "turtle wax greaves", "waxgreaves.gif"),
-                ],
-              },
-            },
-          ],
-        },
-      }),
-    );
-
     blueText.mockReturnValueOnce({ blueText: "Maximum HP +10" });
     mallPrice.mockImplementation((itemId: number) => {
       const prices: Record<number, number> = {
@@ -278,21 +152,18 @@ describe("Foldable", () => {
         formattedMinPrice: String(price),
       });
     });
-
-    const description = await item.getDescription();
-
-    expect(description).toBe(
-      dedent`
-        (Item 3915)
-        **Offhand Shield**
-        40 power, requires 5 Muscle, Damage Reduction: 1.67
-
-        Maximum HP +10
-        Autosell value: 7 Meat.
-        Mall Price: [500 Meat](https://pricegun.loathers.net/item/3915)
-        Folds into: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet), [turtle wax greaves](https://wiki.kingdomofloathing.com/turtle_wax_greaves)
-        (Cheapest: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet) @ [100 Meat](https://pricegun.loathers.net/item/3916))
-      `,
+    expect(await turtleWaxShield.getDescription()).toBe(
+      [
+        "(Item 3915)",
+        "**Offhand Shield**",
+        "40 power, requires 5 Muscle, Damage Reduction: 1.67",
+        "",
+        "Maximum HP +10",
+        "Autosell value: 7 Meat.",
+        "Mall Price: [500 Meat](https://pricegun.loathers.net/item/3915)",
+        "Folds into: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet), [turtle wax greaves](https://wiki.kingdomofloathing.com/turtle_wax_greaves)",
+        "(Cheapest: [turtle wax helmet](https://wiki.kingdomofloathing.com/turtle_wax_helmet) @ [100 Meat](https://pricegun.loathers.net/item/3916))",
+      ].join("\n"),
     );
   });
 });

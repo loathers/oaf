@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
-import { SkillTag } from "data-of-loathing";
-import { dedent } from "ts-dedent";
-import { expect, test, vi } from "vitest";
+import { Skill as DolSkill } from "data-of-loathing";
+import { beforeAll, expect, test, vi } from "vitest";
 
+import { testDb } from "../__fixtures__/testDb.js";
 import { Skill } from "./Skill.js";
 
 const blueText = vi.hoisted(() => vi.fn().mockResolvedValue({ blueText: "" }));
@@ -13,53 +12,37 @@ vi.mock("kol.js", async (importOriginal) => {
   return koljs;
 });
 
+let overloadSkill: Skill;
+let impetuousSkill: Skill;
+
+beforeAll(async () => {
+  const client = await testDb;
+  const em = client.query;
+  overloadSkill = new Skill(
+    (await em.findOne(DolSkill, { id: 7017 }, { populate: ["modifiers"] }))!,
+  );
+  impetuousSkill = new Skill(
+    (await em.findOne(DolSkill, { id: 4015 }, { populate: ["modifiers"] }))!,
+  );
+});
+
 test("Can describe a Skill with no bluetext", async () => {
-  const skill = new Skill({
-    id: 7017,
-    image: "littlefridge.gif",
-    mpCost: 100,
-    duration: 0,
-    permable: false,
-    ambiguous: false,
-    name: "Overload Discarded Refrigerator",
-    tags: [SkillTag.Combat],
-  } as any);
-
   blueText.mockReturnValueOnce({ blueText: "" });
-
-  const description = await skill.getDescription();
-
+  const description = await overloadSkill.getDescription();
   expect(description).toBe(
-    dedent`
-      **Combat Skill**
-      (Skill 7017)
-      Cost: 100mp
-    `,
+    ["**Combat Skill**", "(Skill 7017)", "Cost: 100mp"].join("\n"),
   );
 });
 
 test("Can describe a Skill with bluetext", async () => {
-  const skill = new Skill({
-    id: 4015,
-    image: "5alarm.gif",
-    mpCost: 0,
-    duration: 0,
-    permable: true,
-    ambiguous: false,
-    name: "Impetuous Sauciness",
-    tags: [SkillTag.Passive],
-  } as any);
-
   blueText.mockReturnValueOnce({ blueText: "Makes Sauce Potions last longer" });
-
-  const description = await skill.getDescription();
-
+  const description = await impetuousSkill.getDescription();
   expect(description).toBe(
-    dedent`
-      **Passive Skill**
-      (Skill 4015)
-
-      Makes Sauce Potions last longer
-    `,
+    [
+      "**Passive Skill**",
+      "(Skill 4015)",
+      "",
+      "Makes Sauce Potions last longer",
+    ].join("\n"),
   );
 });

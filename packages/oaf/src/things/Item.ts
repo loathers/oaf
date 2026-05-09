@@ -62,7 +62,7 @@ export class Item extends Thing {
     return !!thing && thing instanceof Item;
   }
 
-  constructor(item: DolItem) {
+  constructor(item: DolItem, shallow = false) {
     super(item.id, item.name, item.image);
     this.#item = item;
 
@@ -73,15 +73,19 @@ export class Item extends Thing {
       this.container = reversedPackages.get(item.name)!;
     }
 
-    this.foldGroup = item.foldGroups
-      .getItems()
-      .flatMap((fg) => fg.items.getItems().map((i) => new Item(i)))
-      .filter((i) => i.id !== item.id);
-
-    this.zapGroup = item.zapGroups
-      .getItems()
-      .flatMap((zg) => zg.items.getItems().map((i) => new Item(i)))
-      .filter((i) => i.id !== item.id);
+    if (shallow) {
+      this.foldGroup = [];
+      this.zapGroup = [];
+    } else {
+      this.foldGroup = item.foldGroups
+        .getItems()
+        .flatMap((fg) => fg.items.getItems().map((i) => new Item(i, true)))
+        .filter((i) => i.id !== item.id);
+      this.zapGroup = item.zapGroups
+        .getItems()
+        .flatMap((zg) => zg.items.getItems().map((i) => new Item(i, true)))
+        .filter((i) => i.id !== item.id);
+    }
   }
 
   getModifiers(): Record<string, string> {

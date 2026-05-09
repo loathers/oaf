@@ -293,9 +293,11 @@ export class Familiar extends Thing {
   constructor(familiar: DolFamiliar) {
     super(familiar.id, familiar.name, familiar.image);
     this.#familiar = familiar;
-    this.hatchling = familiar.larva ? new Item(familiar.larva) : undefined;
+    this.hatchling = familiar.larva
+      ? new Item(familiar.larva, true)
+      : undefined;
     this.familiarEquipment = familiar.equipment
-      ? new Item(familiar.equipment)
+      ? new Item(familiar.equipment, true)
       : undefined;
   }
 

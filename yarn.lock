@@ -3456,13 +3456,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"data-of-loathing@npm:3":
-  version: 3.1.2
-  resolution: "data-of-loathing@npm:3.1.2"
+"data-of-loathing@npm:3.2":
+  version: 3.2.0
+  resolution: "data-of-loathing@npm:3.2.0"
   dependencies:
     "@mikro-orm/core": "npm:^7.0.14"
     "@mikro-orm/sql": "npm:^7.0.14"
     "@sqlite.org/sqlite-wasm": "npm:~3.51.2-build9"
+    env-paths: "npm:^4.0.0"
     kysely: "npm:^0.28.17"
   peerDependencies:
     vite: ">=5.0.0"
@@ -3472,7 +3473,7 @@ __metadata:
       optional: true
     vite-plugin-node-polyfills:
       optional: true
-  checksum: 10c0/9b884c446a596d1a5866b75038114ade328df9a4723ffd25baf84fd0ab622a83eb19717f76e66b16487e2ddc6914439b35a36e800829b53e8848ba0f6a8d56f0
+  checksum: 10c0/89eb1bbcddb0c654bea1b6d4479533c498032be527be0d0d626b278691bcfedcd3e4f07460270021d14979875a0b0d1758801806257ff1556559a46b2058ba2c
   languageName: node
   linkType: hard
 
@@ -3815,6 +3816,15 @@ __metadata:
   version: 2.2.1
   resolution: "env-paths@npm:2.2.1"
   checksum: 10c0/285325677bf00e30845e330eec32894f5105529db97496ee3f598478e50f008c5352a41a30e5e72ec9de8a542b5a570b85699cd63bd2bc646dbcb9f311d83bc4
+  languageName: node
+  linkType: hard
+
+"env-paths@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "env-paths@npm:4.0.0"
+  dependencies:
+    is-safe-filename: "npm:^0.1.0"
+  checksum: 10c0/13ee7fa4047786ca28f1fbf2239606f8a53304bdf71bfc426e95f806e429060181205316f2c45b4ac560e81c854ded5a45fd9dc3105414c01d504b3469a1294b
   languageName: node
   linkType: hard
 
@@ -5124,6 +5134,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"is-safe-filename@npm:^0.1.0":
+  version: 0.1.1
+  resolution: "is-safe-filename@npm:0.1.1"
+  checksum: 10c0/45c35d2253b96348e2c26590e14feed51d1e6b72aaa567930ccb34e68c0eef00ebcf3b7e01b46bf45e578a27355cd8f5bc12f7d6d79a34d33dc93d4560c0f6b6
+  languageName: node
+  linkType: hard
+
 "isexe@npm:^2.0.0":
   version: 2.0.0
   resolution: "isexe@npm:2.0.0"
@@ -5374,7 +5391,7 @@ __metadata:
   dependencies:
     async-mutex: "npm:^0.5.0"
     css-select: "npm:^6.0.0"
-    data-of-loathing: "npm:3"
+    data-of-loathing: "npm:3.2"
     date-fns: "npm:^4.1.0"
     domhandler: "npm:^5.0.3"
     domutils: "npm:^3.2.2"
@@ -5391,7 +5408,7 @@ __metadata:
     typescript: "npm:^5.9.3"
     vitest: "npm:^4.0.18"
   peerDependencies:
-    data-of-loathing: 3
+    data-of-loathing: 3.2
   languageName: unknown
   linkType: soft
 
@@ -6050,7 +6067,7 @@ __metadata:
     convert-svg-to-png: "npm:^0.7.1"
     cookie-parser: "npm:^1.4.7"
     cors: "npm:^2.8.6"
-    data-of-loathing: "npm:3"
+    data-of-loathing: "npm:3.2"
     date-fns: "npm:^4.1.0"
     discord.js: "npm:^14.25.1"
     entities: "npm:^7.0.1"

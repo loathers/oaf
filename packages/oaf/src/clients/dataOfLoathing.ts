@@ -159,11 +159,11 @@ export class DataOfLoathingClient {
       {},
       {
         populate: [
-          "foldGroups.items",
-          "zapGroups.items",
           "modifiers",
           "consumable",
           "equipment",
+          "foldGroups.items",
+          "zapGroups.items",
         ],
       },
     );
