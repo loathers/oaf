@@ -112,7 +112,7 @@ export class Item extends Thing {
     return this.#item.autosell ?? 0;
   }
 
-  mapQuality(rawQuality: ConsumableQuality | null): string {
+  mapQuality(rawQuality: ConsumableQuality | null | undefined): string {
     if (
       !rawQuality ||
       rawQuality === ConsumableQuality.Changing ||

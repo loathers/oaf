@@ -129,20 +129,23 @@ async function main() {
       );
       if (message.msg.startsWith("GREENBOX:"))
         return await handleGreenboxKmail(message);
-      const gorfBag = message.items.find((i) => i.name === "bag of GORF");
-      if (gorfBag) {
+      const gorfEntry = [...message.items.entries()].find(
+        ([item]) => item.name === "bag of GORF",
+      );
+      if (gorfEntry) {
+        const [gorfBag, kmailQuantity] = gorfEntry;
         const inventory = await kolClient.getInventory();
-        const quantity = inventory.get(gorfBag.id) ?? gorfBag.quantity;
-        await displayCase.deposit(gorfBag.id, quantity);
+        const quantity = inventory.get(gorfBag) ?? kmailQuantity;
+        await displayCase.deposit(gorfBag, quantity);
       }
       const alert = [
         `Received ${message.valentine ? "valentine" : "kmail"} from ${inlineCode(`${message.who.name} (#${message.who.id})`)}`,
       ];
       if (message.msg) alert.push(blockQuote(message.msg));
       if (message.meat) alert.push(`${message.meat} Meat`);
-      if (message.items.length)
+      if (message.items.size)
         alert.push(
-          `${message.items.map((i) => `${i.name} x ${i.quantity}`).join(", ")}`,
+          `${[...message.items.entries()].map(([item, qty]) => `${item.name} x ${qty}`).join(", ")}`,
         );
       await discordClient.alert(alert.join("\n"));
     })();
