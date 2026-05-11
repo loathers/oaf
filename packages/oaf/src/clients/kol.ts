@@ -1,12 +1,16 @@
 import { Client, type MallPrice, RolloverError } from "kol.js";
 import { Clan } from "kol.js/domains/Clan";
+import { Closet } from "kol.js/domains/Closet";
 import { DisplayCase } from "kol.js/domains/DisplayCase";
+import { Storage } from "kol.js/domains/Storage";
 
 import { config } from "../config.js";
 
 export const kolClient = new Client(config.KOL_USER, config.KOL_PASS);
 export const clan = new Clan(kolClient);
+export const closet = new Closet(kolClient);
 export const displayCase = new DisplayCase(kolClient);
+export const storage = new Storage(kolClient);
 
 export function assertNotRollover(): void {
   if (kolClient.isRollover()) throw new RolloverError();
