@@ -27,8 +27,14 @@ export class Storage {
       form: { action: "pull", whichitem: itemId, howmany: quantity, ajax: 1 },
     });
     if (!html.includes("updateInv")) return { success: false, reason: "Unknown" };
-    if (html.includes("moved from storage to inventory")) return { success: true };
-    if (html.includes("You already pulled one of those today")) return { success: false, reason: "Daily pull limit reached" };
+    if (html.includes("moved from storage to inventory")) {
+      this.#markPulled(itemId);
+      return { success: true };
+    }
+    if (html.includes("You already pulled one of those today")) {
+      this.#markPulled(itemId);
+      return { success: false, reason: "Daily pull limit reached" };
+    }
     if (html.includes("You haven't got any of that item in your storage")) return { success: false, reason: "Item not in storage" };
     return { success: false, reason: "Unknown" };
   }
@@ -52,5 +58,17 @@ export class Storage {
     if (!html.includes("updateInv")) return { success: false, reason: "Unknown" };
     if (html.includes("moved from storage to inventory")) return { success: true };
     return { success: false, reason: "Unknown" };
+  }
+
+  async pulledToday(): Promise<Item[]> {
+    const ids = (this.#client.flags.daily.get("storage.pulls") as number[] | undefined) ?? [];
+    return gameData.findItemsByIds(ids);
+  }
+
+  #markPulled(itemId: number): void {
+    const pulls = (this.#client.flags.daily.get("storage.pulls") as number[] | undefined) ?? [];
+    if (!pulls.includes(itemId)) {
+      this.#client.flags.daily.set("storage.pulls", [...pulls, itemId]);
+    }
   }
 }

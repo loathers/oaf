@@ -1,6 +1,14 @@
 export { Player, type ProfileData } from "./Player.js";
 export { Client, type MallPrice } from "./Client.js";
 export { AuthError, JoinClanError, RolloverError } from "./errors.js";
+export {
+  Flags,
+  type FlagValue,
+  type FlagType,
+  type FlagsSnapshot,
+  type FlagsBackend,
+} from "./flags/Flags.js";
+export { SqliteFlagsBackend } from "./flags/SqliteFlagsBackend.js";
 export { LoathingDate } from "./LoathingDate.js";
 export { statsForLevel, levelForMainstat, levelForSubstat } from "./stats.js";
 

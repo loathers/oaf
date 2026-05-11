@@ -62,6 +62,48 @@ describe("pull", () => {
     vi.spyOn(client, "fetchText").mockResolvedValueOnce("<html><body></body></html>");
     expect(await storage.pull(1, 1)).toStrictEqual({ success: false, reason: "Unknown" });
   });
+
+  test("adds item id to storage.pulls flag on success", async () => {
+    client.flags.daily.delete("storage.pulls");
+    vi.spyOn(client, "fetchText").mockResolvedValueOnce(
+      ajaxResponse("<b>seal-clubbing club (1)</b> moved from storage to inventory"),
+    );
+    await storage.pull(1, 1);
+    expect(client.flags.daily.get("storage.pulls")).toStrictEqual([1]);
+  });
+
+  test("adds item id to storage.pulls flag on daily limit", async () => {
+    client.flags.daily.delete("storage.pulls");
+    vi.spyOn(client, "fetchText").mockResolvedValueOnce(
+      ajaxResponse("You already pulled one of those today"),
+    );
+    await storage.pull(1, 1);
+    expect(client.flags.daily.get("storage.pulls")).toStrictEqual([1]);
+  });
+
+  test("does not duplicate item id in storage.pulls", async () => {
+    client.flags.daily.set("storage.pulls", [1]);
+    vi.spyOn(client, "fetchText").mockResolvedValueOnce(
+      ajaxResponse("<b>seal-clubbing club (1)</b> moved from storage to inventory"),
+    );
+    await storage.pull(1, 1);
+    expect(client.flags.daily.get("storage.pulls")).toStrictEqual([1]);
+  });
+});
+
+describe("pulledToday", () => {
+  test("returns empty array when no pulls recorded", async () => {
+    client.flags.daily.delete("storage.pulls");
+    vi.spyOn(gameData, "findItemsByIds").mockResolvedValueOnce([]);
+    expect(await storage.pulledToday()).toStrictEqual([]);
+  });
+
+  test("returns Item instances for recorded pull ids", async () => {
+    const item1 = { id: 1 } as never;
+    client.flags.daily.set("storage.pulls", [1]);
+    vi.spyOn(gameData, "findItemsByIds").mockResolvedValueOnce([item1]);
+    expect(await storage.pulledToday()).toStrictEqual([item1]);
+  });
 });
 
 describe("pullMeat", () => {

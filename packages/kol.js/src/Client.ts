@@ -24,6 +24,7 @@ export type MallPrice = {
 export type Result<T = void> = { success: true; data?: T } | { success: false; reason: string };
 
 import { Item } from "data-of-loathing";
+import { Flags, type FlagsBackend } from "./flags/Flags.js";
 import { gameData } from "./GameData.js";
 import { resolveEntityId } from "./utils/utils.js";
 import { AuthError, JoinClanError, RolloverError } from "./errors.js";
@@ -121,6 +122,7 @@ export class Client extends Emittery<Events> {
   players = new Players(this);
   chat = new ChatMailbox(this);
   kmail = new KmailMailbox(this);
+  flags: Flags;
 
   #username: string;
   #password: string;
@@ -129,10 +131,15 @@ export class Client extends Emittery<Events> {
   #chatBotStarted = false;
   #pwd = "";
 
-  constructor(username: string, password: string) {
+  constructor(
+    username: string,
+    password: string,
+    options: { flagsBackend?: FlagsBackend } = {},
+  ) {
     super();
     this.#username = username;
     this.#password = password;
+    this.flags = new Flags(username, options.flagsBackend);
   }
 
   get username() {
@@ -244,11 +251,12 @@ export class Client extends Emittery<Events> {
 
   async checkLoggedIn(): Promise<boolean> {
     try {
-      const api = await this.session<{ pwd: string }>("api.php", {
+      const api = await this.session<ApiStatus>("api.php", {
         query: { what: "status", for: `${this.#username} bot` },
       });
       if (!api || typeof api !== "object" || !api.pwd) return false;
       this.#pwd = api.pwd;
+      this.flags.sync(Number(api.daynumber), Number(api.ascensions));
       return true;
     } catch {
       return false;
