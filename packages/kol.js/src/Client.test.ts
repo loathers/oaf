@@ -23,10 +23,10 @@ class TestClient extends Client {
     return this.agent.get(KOL);
   }
 
-  simulateLoggedIn() {
+  simulateLoggedIn({ daynumber = "1", ascensions = "0" } = {}) {
     this.mock()
       .intercept({ path: /\/api\.php/, method: "GET" })
-      .reply(200, JSON.stringify({ pwd: "abc123" }), {
+      .reply(200, JSON.stringify({ pwd: "abc123", daynumber, ascensions }), {
         headers: { "content-type": "application/json" },
       });
     return this;

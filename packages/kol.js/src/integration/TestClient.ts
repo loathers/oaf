@@ -163,7 +163,7 @@ export class TestClient extends Client {
         const what = url.searchParams.get("what");
         if (what === "status") {
           res.writeHead(200, { "content-type": "application/json" });
-          res.end(JSON.stringify({ pwd: session.pwd }));
+          res.end(JSON.stringify({ pwd: session.pwd, daynumber: "1", ascensions: "0" }));
           return;
         }
         if (what === "kmail") {
