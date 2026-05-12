@@ -2,6 +2,7 @@ import { Item } from "data-of-loathing";
 
 import type { Client, Result } from "../Client.js";
 import { gameData } from "../GameData.js";
+import { DailyFlag } from "../flags/registry.js";
 import { resolveEntityId } from "../utils/utils.js";
 
 export class Storage {
@@ -61,14 +62,13 @@ export class Storage {
   }
 
   async pulledToday(): Promise<Item[]> {
-    const ids = (this.#client.flags.daily.get("storage.pulls") as number[] | undefined) ?? [];
-    return gameData.findItemsByIds(ids);
+    return gameData.findItemsByIds(this.#client.flags.get(DailyFlag.storagePulls));
   }
 
   #markPulled(itemId: number): void {
-    const pulls = (this.#client.flags.daily.get("storage.pulls") as number[] | undefined) ?? [];
+    const pulls = this.#client.flags.get(DailyFlag.storagePulls);
     if (!pulls.includes(itemId)) {
-      this.#client.flags.daily.set("storage.pulls", [...pulls, itemId]);
+      this.#client.flags.set(DailyFlag.storagePulls, [...pulls, itemId]);
     }
   }
 }

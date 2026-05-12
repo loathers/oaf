@@ -9,6 +9,8 @@ export {
   type FlagsBackend,
 } from "./flags/Flags.js";
 export { SqliteFlagsBackend } from "./flags/SqliteFlagsBackend.js";
+export type { DailyFlags, AscensionFlags, PermanentFlags } from "./flags/registry.js";
+export { DailyFlag } from "./flags/registry.js";
 export { LoathingDate } from "./LoathingDate.js";
 export { statsForLevel, levelForMainstat, levelForSubstat } from "./stats.js";
 

@@ -1,5 +1,15 @@
 import { describe, expect, test, vi } from "vitest";
-import { Flags, type FlagsBackend, type FlagsSnapshot } from "./Flags.js";
+import { Flags, type FlagsBackend, type FlagValue, type FlagsSnapshot } from "./Flags.js";
+import type { FlagDescriptor } from "./registry.js";
+
+// Local registry for tests — keeps test flag names out of the production registry.
+type TestD = { foo: boolean; d: boolean; x: number; shared: boolean };
+type TestA = { bar: number; a: number };
+type TestP = { perm: string; p: string; key: string };
+
+function makeFlags(backend?: FlagsBackend) {
+  return new Flags<TestD, TestA, TestP>("user", backend);
+}
 
 function makeSnapshot(overrides: Partial<FlagsSnapshot> = {}): FlagsSnapshot {
   return {
@@ -22,14 +32,14 @@ function mockBackend(initial?: FlagsSnapshot): FlagsBackend {
 
 describe("sync", () => {
   test("clears daily flags when daynumber advances", () => {
-    const flags = new Flags("user");
+    const flags = makeFlags();
     flags.daily.set("foo", true);
     flags.sync(1, 0);
     expect(flags.daily.get("foo")).toBeUndefined();
   });
 
   test("preserves daily flags on the same day", () => {
-    const flags = new Flags("user");
+    const flags = makeFlags();
     flags.sync(5, 0);
     flags.daily.set("foo", true);
     flags.sync(5, 0);
@@ -37,14 +47,14 @@ describe("sync", () => {
   });
 
   test("clears ascension flags when ascension count advances", () => {
-    const flags = new Flags("user");
+    const flags = makeFlags();
     flags.ascension.set("bar", 42);
     flags.sync(0, 1);
     expect(flags.ascension.get("bar")).toBeUndefined();
   });
 
   test("preserves ascension flags on the same ascension count", () => {
-    const flags = new Flags("user");
+    const flags = makeFlags();
     flags.sync(0, 3);
     flags.ascension.set("bar", 42);
     flags.sync(0, 3);
@@ -52,7 +62,7 @@ describe("sync", () => {
   });
 
   test("never clears permanent flags", () => {
-    const flags = new Flags("user");
+    const flags = makeFlags();
     flags.permanent.set("perm", "hello");
     flags.sync(999, 999);
     expect(flags.permanent.get("perm")).toBe("hello");
@@ -60,7 +70,7 @@ describe("sync", () => {
 
   test("calls backend save after sync", () => {
     const backend = mockBackend();
-    const flags = new Flags("user", backend);
+    const flags = makeFlags(backend);
     vi.mocked(backend.save).mockClear();
     flags.sync(1, 0);
     expect(backend.save).toHaveBeenCalledOnce();
@@ -69,29 +79,29 @@ describe("sync", () => {
 
 describe("export / import", () => {
   test("round-trips all three stores and watermarks", () => {
-    const flags = new Flags("user");
+    const flags = makeFlags();
     flags.sync(7, 3);
     flags.daily.set("d", true);
     flags.ascension.set("a", 99);
     flags.permanent.set("p", "hello");
 
     const snapshot = flags.export();
-    const flags2 = new Flags("user");
+    const flags2 = makeFlags();
     flags2.import(snapshot);
 
     expect(flags2.export()).toStrictEqual(snapshot);
   });
 
   test("import followed by sync with advanced day clears daily", () => {
-    const flags = new Flags("user");
-    flags.import(makeSnapshot({ daynumber: 5, daily: { foo: true } }));
+    const flags = makeFlags();
+    flags.import(makeSnapshot({ daynumber: 5, daily: { foo: true } as Record<string, FlagValue> }));
     flags.sync(6, 5);
     expect(flags.daily.get("foo")).toBeUndefined();
   });
 
   test("import followed by sync on same day preserves daily", () => {
-    const flags = new Flags("user");
-    flags.import(makeSnapshot({ daynumber: 5, daily: { foo: true } }));
+    const flags = makeFlags();
+    flags.import(makeSnapshot({ daynumber: 5, daily: { foo: true } as Record<string, FlagValue> }));
     flags.sync(5, 5);
     expect(flags.daily.get("foo")).toBe(true);
   });
@@ -100,19 +110,19 @@ describe("export / import", () => {
 describe("backend", () => {
   test("loads snapshot from backend on construction", () => {
     const backend = mockBackend(makeSnapshot({ permanent: { key: "val" } }));
-    const flags = new Flags("user", backend);
+    const flags = makeFlags(backend);
     expect(backend.load).toHaveBeenCalledWith("user");
     expect(flags.permanent.get("key")).toBe("val");
   });
 
   test("no-ops when backend returns null", () => {
-    const flags = new Flags("user", mockBackend());
+    const flags = makeFlags(mockBackend());
     expect(flags.export().permanent).toStrictEqual({});
   });
 
   test("calls backend save when a flag is set", () => {
     const backend = mockBackend();
-    const flags = new Flags("user", backend);
+    const flags = makeFlags(backend);
     vi.mocked(backend.save).mockClear();
     flags.daily.set("x", 1);
     expect(backend.save).toHaveBeenCalledOnce();
@@ -120,7 +130,7 @@ describe("backend", () => {
 
   test("calls backend save when a flag is deleted", () => {
     const backend = mockBackend();
-    const flags = new Flags("user", backend);
+    const flags = makeFlags(backend);
     flags.daily.set("x", 1);
     vi.mocked(backend.save).mockClear();
     flags.daily.delete("x");
@@ -130,9 +140,40 @@ describe("backend", () => {
 
 describe("two clients are independent", () => {
   test("flags set on one instance do not appear on another", () => {
-    const a = new Flags("alice");
-    const b = new Flags("bob");
+    const a = makeFlags();
+    const b = makeFlags();
     a.daily.set("shared", true);
     expect(b.daily.get("shared")).toBeUndefined();
+  });
+});
+
+describe("get/set with descriptor", () => {
+  const descriptor: FlagDescriptor<"daily", "foo", boolean> = {
+    store: "daily",
+    key: "foo",
+    defaultValue: false,
+  };
+
+  test("get returns default when flag not set", () => {
+    const flags = makeFlags();
+    expect(flags.get(descriptor)).toBe(false);
+  });
+
+  test("get returns stored value when set", () => {
+    const flags = makeFlags();
+    flags.set(descriptor, true);
+    expect(flags.get(descriptor)).toBe(true);
+  });
+
+  test("set routes to the correct store", () => {
+    const flags = makeFlags();
+    flags.set(descriptor, true);
+    expect(flags.daily.get("foo")).toBe(true);
+  });
+
+  test("get routes to the correct store", () => {
+    const flags = makeFlags();
+    flags.daily.set("foo", true);
+    expect(flags.get(descriptor)).toBe(true);
   });
 });
