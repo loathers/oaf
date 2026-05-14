@@ -35,6 +35,11 @@ export class GameData {
     return this.#client.query.findOne(Skill, { name: name.trim() });
   }
 
+  async findSkillsByIds(ids: number[]): Promise<Skill[]> {
+    await this.load();
+    return this.#client.query.find(Skill, { id: { $in: ids } });
+  }
+
   async findEffectByName(name: string): Promise<Effect | null> {
     await this.load();
     return this.#client.query.findOne(Effect, { name: name.trim() });

@@ -5,6 +5,7 @@ import { ofetch } from "ofetch";
 import { CookieJar } from "tough-cookie";
 import type { Dispatcher } from "undici";
 
+import { CharSheet } from "./domains/CharSheet.js";
 import { ChatMailbox, type ChatMessage } from "./domains/ChatMailbox.js";
 import { KmailMailbox, type KmailMessage } from "./domains/KmailMailbox.js";
 import { Players } from "./domains/Players.js";
@@ -119,6 +120,7 @@ export class Client extends Emittery<Events> {
     },
     { fetch: makeFetchCookie(fetch, this.#cookieJar) },
   );
+  charSheet = new CharSheet(this);
   players = new Players(this);
   chat = new ChatMailbox(this);
   kmail = new KmailMailbox(this);
