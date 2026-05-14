@@ -2,7 +2,6 @@ import * as http from "node:http";
 
 import { runDecoratePipeline, runRequestPipeline, runResponsePipeline } from "./pipeline.js";
 import type { Client } from "../Client.js";
-import { DailyFlag } from "../flags/registry.js";
 import type { ProxyRequest, ProxyResponse } from "./types.js";
 
 const KOL_ORIGIN = "https://www.kingdomofloathing.com";
@@ -62,12 +61,7 @@ export class ProxyServer {
         return;
       }
 
-      if (proxyReq.path === "__debug/casts") {
-        const casts = this.#client.flags.get(DailyFlag.skillCasts);
-        outgoing.writeHead(200, { "content-type": "application/json" });
-        outgoing.end(JSON.stringify(casts, null, 2));
-        return;
-      }
+
 
       // KoL's root URL is its marketing portal — redirect straight to the game.
       if (proxyReq.path === "" || proxyReq.path === "index.php") {
