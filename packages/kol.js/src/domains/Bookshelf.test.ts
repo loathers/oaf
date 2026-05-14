@@ -3,7 +3,7 @@ import { Client } from "../Client.js";
 import { DailyFlag } from "../flags/registry.js";
 import { runResponsePipeline } from "../proxy/pipeline.js";
 import { loadFixture } from "../testUtils.js";
-import { Bookshelf, Libram, Tome, candyHeart, sugarSheets } from "./Bookshelf.js";
+import { Libram, Tome, candyHeart, sugarSheets } from "./Bookshelf.js";
 
 const client = new Client("", "");
 
@@ -53,37 +53,45 @@ describe("cast recording via interceptor", () => {
   });
 });
 
-describe("syncFromPage", () => {
+describe("Libram.syncFromPage", () => {
   test("syncs libram casts from MP cost on bookshelf page", async () => {
     client.flags.set(DailyFlag.skillCasts, { [candyHeart.skillId]: 2 });
     const html = await loadFixture(import.meta.dirname, "campground_summonsugarsheets_success_1.html");
-    Bookshelf.syncFromPage(client, html);
+    Libram.syncFromPage(client, html);
     expect(client.skills.castsToday(candyHeart.skillId)).toBe(0);
   });
 
   test("does not change libram count when already in sync", async () => {
     client.flags.set(DailyFlag.skillCasts, { [candyHeart.skillId]: 0 });
     const html = await loadFixture(import.meta.dirname, "campground_summonsugarsheets_success_1.html");
-    Bookshelf.syncFromPage(client, html);
+    Libram.syncFromPage(client, html);
     expect(client.skills.castsToday(candyHeart.skillId)).toBe(0);
   });
 
+  test("ignores pages with no libram buttons", async () => {
+    client.flags.set(DailyFlag.skillCasts, { [candyHeart.skillId]: 5 });
+    Libram.syncFromPage(client, "<html>some other campground page</html>");
+    expect(client.skills.castsToday(candyHeart.skillId)).toBe(5);
+  });
+});
+
+describe("Tome.syncFromPage", () => {
   test("sets tome pool to exhausted when page says so", async () => {
     const html = await loadFixture(import.meta.dirname, "campground_summonsugarsheets_fail.html");
-    Bookshelf.syncFromPage(client, html);
+    Tome.syncFromPage(client, html);
     expect(Tome.totalCastsToday(client)).toBe(3);
   });
 
   test("does not reduce tome pool if already at or above 3", async () => {
     client.flags.set(DailyFlag.skillCasts, { [sugarSheets.skillId]: 3 });
     const html = await loadFixture(import.meta.dirname, "campground_summonsugarsheets_fail.html");
-    Bookshelf.syncFromPage(client, html);
+    Tome.syncFromPage(client, html);
     expect(Tome.totalCastsToday(client)).toBe(3);
   });
 
-  test("ignores pages that are not bookshelf pages", async () => {
-    client.flags.set(DailyFlag.skillCasts, { [candyHeart.skillId]: 5 });
-    Bookshelf.syncFromPage(client, "<html>some other campground page</html>");
-    expect(client.skills.castsToday(candyHeart.skillId)).toBe(5);
+  test("ignores pages without the exhaustion message", async () => {
+    const html = await loadFixture(import.meta.dirname, "campground_summonsugarsheets_success_1.html");
+    Tome.syncFromPage(client, html);
+    expect(Tome.totalCastsToday(client)).toBe(0);
   });
 });

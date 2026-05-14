@@ -6,14 +6,11 @@ import { recordSkillCast, registerSkillBehavior } from "./Skills.js";
 const TOME_IDS = [7213, 7214, 7215, 7216, 7217, 7218] as const;
 
 export abstract class Bookshelf {
-  static #byPreaction = new Map<string, Bookshelf>();
-
   constructor(
     readonly skillId: number,
     readonly preaction: string,
   ) {
     registerSkillBehavior(skillId, this);
-    Bookshelf.#byPreaction.set(preaction, this);
     registerInterceptor({
       matches: (req) =>
         req.path === "campground.php" &&
@@ -34,42 +31,6 @@ export abstract class Bookshelf {
     if (html.includes("You acquire")) return { success: true };
     return { success: false, reason: "Cast failed" };
   }
-
-  /**
-   * Sync cast counts from any campground.php page that shows the bookshelf.
-   * Librams: MP cost encodes exact castsToday. Tomes: exhaustion message sets pool to 3.
-   */
-  static syncFromPage(client: Client, html: string): void {
-    // Librams: derive castsToday from next-cast MP cost shown on button.
-    // mpCost(n) = 1 + n*(n-1)/2  →  n = (1 + sqrt(1 + 8*(cost-1))) / 2
-    for (const [, preaction, mpStr] of html.matchAll(
-      /name=preaction value="([^"]+)"[^>]*>[^<]*<input[^>]+value="[^(]+\((\d+) MP\)"/g,
-    )) {
-      const instance = Bookshelf.#byPreaction.get(preaction);
-      if (!(instance instanceof Libram)) continue;
-      const mpCost = Number(mpStr);
-      const n = Math.round((1 + Math.sqrt(1 + 8 * (mpCost - 1))) / 2);
-      const castsToday = n - 1;
-      const casts = client.flags.get(DailyFlag.skillCasts);
-      if ((casts[instance.skillId] ?? 0) !== castsToday) {
-        console.log(`[skills] synced skill ${instance.skillId} casts to ${castsToday} from page`);
-        client.flags.set(DailyFlag.skillCasts, { ...casts, [instance.skillId]: castsToday });
-      }
-    }
-
-    // Tomes: if the shared pool is exhausted, ensure our total reflects that.
-    if (html.includes("You've already used up your Tome summons for the day")) {
-      const casts = client.flags.get(DailyFlag.skillCasts);
-      const total = TOME_IDS.reduce((n, id) => n + (casts[id] ?? 0), 0);
-      if (total < 3) {
-        console.log(`[skills] synced tome pool to exhausted from page`);
-        client.flags.set(DailyFlag.skillCasts, {
-          ...casts,
-          [TOME_IDS[0]]: (casts[TOME_IDS[0]] ?? 0) + (3 - total),
-        });
-      }
-    }
-  }
 }
 
 export class Tome extends Bookshelf {
@@ -86,12 +47,52 @@ export class Tome extends Bookshelf {
     const skillCasts = client.flags.get(DailyFlag.skillCasts);
     return TOME_IDS.reduce((n, id) => n + (skillCasts[id] ?? 0), 0);
   }
+
+  /** If the page shows the pool is exhausted, bring our total up to 3. */
+  static syncFromPage(client: Client, html: string): void {
+    if (!html.includes("You've already used up your Tome summons for the day")) return;
+    const casts = client.flags.get(DailyFlag.skillCasts);
+    const total = TOME_IDS.reduce((n, id) => n + (casts[id] ?? 0), 0);
+    if (total < 3) {
+      console.log(`[skills] synced tome pool to exhausted from page`);
+      client.flags.set(DailyFlag.skillCasts, {
+        ...casts,
+        [TOME_IDS[0]]: (casts[TOME_IDS[0]] ?? 0) + (3 - total),
+      });
+    }
+  }
 }
 
 export class Libram extends Bookshelf {
+  static #byPreaction = new Map<string, Libram>();
+
+  constructor(skillId: number, preaction: string) {
+    super(skillId, preaction);
+    Libram.#byPreaction.set(preaction, this);
+  }
+
   /** MP cost for the nth summon today (1-indexed). */
   mpCost(n: number): number {
     return 1 + (n * (n - 1)) / 2;
+  }
+
+  /** Derive castsToday from the next-cast MP cost shown on bookshelf buttons. */
+  static syncFromPage(client: Client, html: string): void {
+    // mpCost(n) = 1 + n*(n-1)/2  →  n = (1 + sqrt(1 + 8*(cost-1))) / 2
+    for (const [, preaction, mpStr] of html.matchAll(
+      /name=preaction value="([^"]+)"[^>]*>[^<]*<input[^>]+value="[^(]+\((\d+) MP\)"/g,
+    )) {
+      const instance = Libram.#byPreaction.get(preaction);
+      if (!instance) continue;
+      const mpCost = Number(mpStr);
+      const n = Math.round((1 + Math.sqrt(1 + 8 * (mpCost - 1))) / 2);
+      const castsToday = n - 1;
+      const casts = client.flags.get(DailyFlag.skillCasts);
+      if ((casts[instance.skillId] ?? 0) !== castsToday) {
+        console.log(`[skills] synced skill ${instance.skillId} casts to ${castsToday} from page`);
+        client.flags.set(DailyFlag.skillCasts, { ...casts, [instance.skillId]: castsToday });
+      }
+    }
   }
 }
 
@@ -120,12 +121,12 @@ export const alicesArmyCards = new Grimoire(7228, "summonaa");
 export const geekyGifts = new Grimoire(7229, "summonthinknerd");
 export const confiscatedThings = new Grimoire(7230, "summonconfiscators");
 
-// Sync cast state from any campground.php response that shows bookshelf info.
 registerInterceptor({
   path: "campground.php",
   onResponse(client, _req, res) {
     if (typeof res.body !== "string") return;
     if (!res.body.includes("Tomes:")) return;
-    Bookshelf.syncFromPage(client, res.body);
+    Libram.syncFromPage(client, res.body);
+    Tome.syncFromPage(client, res.body);
   },
 });
