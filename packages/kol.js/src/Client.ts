@@ -1,7 +1,7 @@
 import { Mutex } from "async-mutex";
 import Emittery from "emittery";
 import makeFetchCookie from "fetch-cookie";
-import { ofetch } from "ofetch";
+import { ofetch, type FetchOptions } from "ofetch";
 import { CookieJar } from "tough-cookie";
 import type { Dispatcher } from "undici";
 
@@ -17,6 +17,8 @@ import { Storage } from "./domains/Storage.js";
 import pkg from "../package.json" with { type: "json" };
 import { deduplicate } from "./utils/deduplicate.js";
 import { sanitiseBlueText, wait } from "./utils/utils.js";
+import { runRequestPipeline, runResponsePipeline } from "./proxy/pipeline.js";
+import { ProxyServer } from "./proxy/ProxyServer.js";
 
 export type MallPrice = {
   formattedMallPrice: string;
@@ -50,6 +52,21 @@ function formToBody(form: FormData): URLSearchParams {
   return new URLSearchParams(
     Object.entries(form).map(([k, v]) => [k, String(v)]),
   );
+}
+
+function buildProxyRequest(path: string, options: RequestOptions) {
+  const params = new URLSearchParams();
+  if (options.query) {
+    for (const [k, v] of Object.entries(options.query)) {
+      if (v !== undefined && v !== null) params.set(k, String(v));
+    }
+  }
+  if (options.form) {
+    for (const [k, v] of Object.entries(options.form)) {
+      params.set(k, String(v));
+    }
+  }
+  return { path, method: options.method ?? "POST", params };
 }
 
 type Events = {
@@ -204,8 +221,10 @@ export class Client extends Emittery<Events> {
   }
 
   async fetchText(path: string, options: RequestOptions = {}): Promise<string> {
+    const req = buildProxyRequest(path, options);
+    await runRequestPipeline(this, req);
     const { form, ...rest } = options;
-    return this.#withRecovery(() =>
+    const text = await this.#withRecovery(() =>
       this.session(path, {
         method: "POST",
         ...rest,
@@ -213,20 +232,57 @@ export class Client extends Emittery<Events> {
         responseType: "text",
       }),
     );
+    const res = { status: 200, contentType: "text/html", body: text };
+    await runResponsePipeline(this, req, res);
+    return res.body as string;
   }
 
   async fetchJson<Result>(
     path: string,
     options: RequestOptions = {},
   ): Promise<Result> {
+    const req = buildProxyRequest(path, options);
+    await runRequestPipeline(this, req);
     const { form, ...rest } = options;
-    return this.#withRecovery(() =>
+    const json = await this.#withRecovery(() =>
       this.session<Result>(path, {
         ...rest,
         body: form ? formToBody(form) : undefined,
         responseType: "json",
       }),
     );
+    const body = JSON.stringify(json);
+    const res = { status: 200, contentType: "application/json", body };
+    await runResponsePipeline(this, req, res);
+    return json;
+  }
+
+  // Proxy session: same cookie jar and user-agent as session, no pwd injection, no login-redirect throw.
+  #proxySession = ofetch.create(
+    {
+      retry: 0,
+      headers: { "user-agent": `kol.js/${pkg.version}` },
+      onRequest: ({ options }) => {
+        options.dispatcher = this.dispatcher;
+      },
+    },
+    { fetch: makeFetchCookie(fetch, this.#cookieJar) },
+  );
+
+  async proxyFetch(url: string, init: RequestInit): Promise<{ status: number; headers: Headers; url: string; body: Buffer }> {
+    const options: FetchOptions<"arrayBuffer"> = {
+      method: init.method,
+      headers: init.headers,
+      body: init.body,
+      redirect: init.redirect,
+      responseType: "arrayBuffer",
+    };
+    const res = await this.#proxySession.raw<any, "arrayBuffer">(url, options);
+    return { status: res.status, headers: res.headers, url: res.url, body: Buffer.from(res._data ?? new ArrayBuffer(0)) };
+  }
+
+  createProxyServer(): ProxyServer {
+    return new ProxyServer(this);
   }
 
   logout = deduplicate(async (): Promise<void> => {

@@ -2,6 +2,7 @@ import { Skill } from "data-of-loathing";
 
 import type { Client, Result } from "../Client.js";
 import { DailyFlag } from "../flags/registry.js";
+import { registerInterceptor } from "../proxy/registry.js";
 import type { CachedFn } from "../utils/cached.js";
 import type { SkillPerm } from "./CharSheet.js";
 import { resolveEntityId } from "../utils/utils.js";
@@ -28,9 +29,27 @@ export function registerSkillBehavior(id: number, behavior: SkillBehavior): void
   registry.set(id, behavior);
 }
 
-function defaultDetectSuccess(html: string): boolean {
+export function defaultDetectSuccess(html: string): boolean {
   return !html.includes("You don't have that skill");
 }
+
+export function recordSkillCast(client: Client, skillId: number): void {
+  const casts = client.flags.get(DailyFlag.skillCasts);
+  client.flags.set(DailyFlag.skillCasts, {
+    ...casts,
+    [skillId]: (casts[skillId] ?? 0) + 1,
+  });
+}
+
+registerInterceptor({
+  path: "runskillz.php",
+  onResponse(client, req, res) {
+    if (typeof res.body !== "string") return;
+    if (!defaultDetectSuccess(res.body)) return;
+    const skillId = Number(req.params.get("whichskill"));
+    if (skillId) recordSkillCast(client, skillId);
+  },
+});
 
 export class Skills {
   #client: Client;
@@ -46,22 +65,12 @@ export class Skills {
     return this.#client.flags.get(DailyFlag.skillCasts)[skillId] ?? 0;
   }
 
-  #recordCast(skillId: number): void {
-    const casts = this.#client.flags.get(DailyFlag.skillCasts);
-    this.#client.flags.set(DailyFlag.skillCasts, {
-      ...casts,
-      [skillId]: (casts[skillId] ?? 0) + 1,
-    });
-  }
-
   async cast(skill: Skill | number, options?: CastOptions): Promise<Result> {
     const skillId = resolveEntityId(skill);
     const behavior = registry.get(skillId);
 
     if (behavior?.cast) {
-      const result = await behavior.cast(this.#client, skillId, options);
-      if (result.success) this.#recordCast(skillId);
-      return result;
+      return behavior.cast(this.#client, skillId, options);
     }
 
     const form: Record<string, string | number | boolean> = {
@@ -82,7 +91,6 @@ export class Skills {
       : defaultDetectSuccess(html);
 
     if (!success) return { success: false, reason: "Cast failed" };
-    this.#recordCast(skillId);
     return { success: true };
   }
 }

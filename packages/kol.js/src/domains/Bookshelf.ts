@@ -1,6 +1,7 @@
 import type { Client, Result } from "../Client.js";
 import { DailyFlag } from "../flags/registry.js";
-import { registerSkillBehavior } from "./Skills.js";
+import { registerInterceptor } from "../proxy/registry.js";
+import { recordSkillCast, registerSkillBehavior } from "./Skills.js";
 
 const TOME_IDS = [7213, 7214, 7215, 7216, 7217, 7218] as const;
 
@@ -10,6 +11,16 @@ abstract class Bookshelf {
     readonly preaction: string,
   ) {
     registerSkillBehavior(skillId, this);
+    registerInterceptor({
+      matches: (req) =>
+        req.path === "campground.php" &&
+        req.params.get("preaction") === preaction,
+      onResponse(client, _req, res) {
+        if (typeof res.body !== "string") return;
+        if (!res.body.includes("You acquire")) return;
+        recordSkillCast(client, skillId);
+      },
+    });
   }
 
   async cast(client: Client): Promise<Result> {
