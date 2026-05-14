@@ -6,6 +6,8 @@ import { CookieJar } from "tough-cookie";
 import type { Dispatcher } from "undici";
 
 import { CharSheet } from "./domains/CharSheet.js";
+import "./domains/Bookshelf.js";
+import { Skills } from "./domains/Skills.js";
 import { ChatMailbox, type ChatMessage } from "./domains/ChatMailbox.js";
 import { Closet } from "./domains/Closet.js";
 import { Inventory } from "./domains/Inventory.js";
@@ -75,6 +77,10 @@ type ApiStatus = {
   level: string;
   /** session password */
   pwd: string;
+  /** "1" if in hardcore */
+  hardcore: string;
+  /** ronin turns remaining */
+  roninleft: string;
 };
 
 export class Client extends Emittery<Events> {
@@ -124,6 +130,7 @@ export class Client extends Emittery<Events> {
     { fetch: makeFetchCookie(fetch, this.#cookieJar) },
   );
   charSheet = new CharSheet(this);
+  skills = new Skills(this);
   closet = new Closet(this);
   inventory = new Inventory(this);
   players = new Players(this);
@@ -135,6 +142,8 @@ export class Client extends Emittery<Events> {
   #username: string;
   #password: string;
   #isRollover = false;
+  #hardcore = false;
+  #roninLeft = 0;
   #disposed = false;
   #chatBotStarted = false;
   #pwd = "";
@@ -257,6 +266,22 @@ export class Client extends Emittery<Events> {
     return this.#isRollover;
   }
 
+  isHardcore() {
+    return this.#hardcore;
+  }
+
+  roninLeft() {
+    return this.#roninLeft;
+  }
+
+  inRonin() {
+    return this.#roninLeft > 0;
+  }
+
+  isRestricted() {
+    return this.#hardcore || this.inRonin();
+  }
+
   async checkLoggedIn(): Promise<boolean> {
     try {
       const api = await this.session<ApiStatus>("api.php", {
@@ -264,6 +289,8 @@ export class Client extends Emittery<Events> {
       });
       if (!api || typeof api !== "object" || !api.pwd) return false;
       this.#pwd = api.pwd;
+      this.#hardcore = api.hardcore === "1";
+      this.#roninLeft = Number(api.roninleft);
       const prevDay = this.flags.daynumber;
       this.flags.sync(Number(api.daynumber), Number(api.ascensions));
       if (Number(api.daynumber) > prevDay && prevDay > 0) {
