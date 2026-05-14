@@ -35,10 +35,9 @@ export function defaultDetectSuccess(html: string): boolean {
 
 export function recordSkillCast(client: Client, skillId: number): void {
   const casts = client.flags.get(DailyFlag.skillCasts);
-  client.flags.set(DailyFlag.skillCasts, {
-    ...casts,
-    [skillId]: (casts[skillId] ?? 0) + 1,
-  });
+  const newCount = (casts[skillId] ?? 0) + 1;
+  client.flags.set(DailyFlag.skillCasts, { ...casts, [skillId]: newCount });
+  console.log(`[skills] recorded cast of skill ${skillId} (total today: ${newCount})`);
 }
 
 registerInterceptor({
