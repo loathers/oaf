@@ -2,6 +2,7 @@ import { Skill } from "data-of-loathing";
 
 import type { Client } from "../Client.js";
 import { gameData } from "../GameData.js";
+import { cached } from "../utils/cached.js";
 
 export type SkillPerm = "none" | "softcore" | "hardcore";
 
@@ -24,7 +25,7 @@ export class CharSheet {
     this.#client = client;
   }
 
-  async getSkills(): Promise<Map<Skill, SkillPerm>> {
+  getSkills = cached(async (): Promise<Map<Skill, SkillPerm>> => {
     const html = await this.#client.fetchText("charsheet.php");
     const parsed = CharSheet.parseSkills(html);
     const skills = await gameData.findSkillsByIds(parsed.map((s) => s.id));
@@ -35,7 +36,7 @@ export class CharSheet {
         return skill ? [[skill, perm]] : [];
       }),
     );
-  }
+  });
 
   static parseSkills(html: string): CharSheetSkill[] {
     return [

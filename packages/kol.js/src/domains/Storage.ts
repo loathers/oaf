@@ -3,6 +3,7 @@ import { Item } from "data-of-loathing";
 import type { Client, Result } from "../Client.js";
 import { gameData } from "../GameData.js";
 import { DailyFlag } from "../flags/registry.js";
+import { cached } from "../utils/cached.js";
 import { resolveEntityId } from "../utils/utils.js";
 
 export class Storage {
@@ -12,14 +13,14 @@ export class Storage {
     this.#client = client;
   }
 
-  async get(): Promise<Map<Item, number>> {
+  get = cached(async (): Promise<Map<Item, number>> => {
     const raw = await this.#client.fetchJson<Record<string, string>>("api.php", {
       query: { what: "storage", for: `${this.#client.username} bot` },
     });
     const ids = Object.keys(raw).map(Number);
     const items = await gameData.findItemsByIds(ids);
     return new Map(items.map((item) => [item, Number(raw[String(item.id)])]));
-  }
+  });
 
   async pull(item: Item | number, quantity: number): Promise<Result> {
     const itemId = resolveEntityId(item);
@@ -30,6 +31,8 @@ export class Storage {
     if (!html.includes("updateInv")) return { success: false, reason: "Unknown" };
     if (html.includes("moved from storage to inventory")) {
       this.#markPulled(itemId);
+      this.get.invalidate();
+      this.#client.inventory.get.invalidate();
       return { success: true };
     }
     if (html.includes("You already pulled one of those today")) {
@@ -46,7 +49,10 @@ export class Storage {
       form: { action: "pullmeat", howmuch: amount, ajax: 1 },
     });
     if (!html.includes("updateInv")) return { success: false, reason: "Unknown" };
-    if (html.includes("moved from storage to inventory")) return { success: true };
+    if (html.includes("moved from storage to inventory")) {
+      this.#client.inventory.get.invalidate();
+      return { success: true };
+    }
     if (html.includes("You haven't got any of that item in your storage")) return { success: false, reason: "Insufficient meat in storage" };
     return { success: false, reason: "Unknown" };
   }
@@ -57,7 +63,11 @@ export class Storage {
       signal: AbortSignal.timeout(45000),
     });
     if (!html.includes("updateInv")) return { success: false, reason: "Unknown" };
-    if (html.includes("moved from storage to inventory")) return { success: true };
+    if (html.includes("moved from storage to inventory")) {
+      this.get.invalidate();
+      this.#client.inventory.get.invalidate();
+      return { success: true };
+    }
     return { success: false, reason: "Unknown" };
   }
 

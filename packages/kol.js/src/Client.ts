@@ -7,8 +7,11 @@ import type { Dispatcher } from "undici";
 
 import { CharSheet } from "./domains/CharSheet.js";
 import { ChatMailbox, type ChatMessage } from "./domains/ChatMailbox.js";
+import { Closet } from "./domains/Closet.js";
+import { Inventory } from "./domains/Inventory.js";
 import { KmailMailbox, type KmailMessage } from "./domains/KmailMailbox.js";
 import { Players } from "./domains/Players.js";
+import { Storage } from "./domains/Storage.js";
 import pkg from "../package.json" with { type: "json" };
 import { deduplicate } from "./utils/deduplicate.js";
 import { sanitiseBlueText, wait } from "./utils/utils.js";
@@ -121,7 +124,10 @@ export class Client extends Emittery<Events> {
     { fetch: makeFetchCookie(fetch, this.#cookieJar) },
   );
   charSheet = new CharSheet(this);
+  closet = new Closet(this);
+  inventory = new Inventory(this);
   players = new Players(this);
+  storage = new Storage(this);
   chat = new ChatMailbox(this);
   kmail = new KmailMailbox(this);
   flags: Flags;
@@ -258,11 +264,22 @@ export class Client extends Emittery<Events> {
       });
       if (!api || typeof api !== "object" || !api.pwd) return false;
       this.#pwd = api.pwd;
+      const prevDay = this.flags.daynumber;
       this.flags.sync(Number(api.daynumber), Number(api.ascensions));
+      if (Number(api.daynumber) > prevDay && prevDay > 0) {
+        this.#invalidateDailyCaches();
+      }
       return true;
     } catch {
       return false;
     }
+  }
+
+  #invalidateDailyCaches(): void {
+    this.charSheet.getSkills.invalidate();
+    this.inventory.get.invalidate();
+    this.closet.get.invalidate();
+    this.storage.get.invalidate();
   }
 
   waitForRolloverEnd = deduplicate(async (): Promise<void> => {
@@ -342,15 +359,6 @@ export class Client extends Emittery<Events> {
     return this.fetchJson<ApiStatus>("api.php", {
       query: { what: "status", for: `${this.#username} bot` },
     });
-  }
-
-  async getInventory(): Promise<Map<Item, number>> {
-    const raw = await this.fetchJson<Record<string, string>>("api.php", {
-      query: { what: "inventory", for: `${this.#username} bot` },
-    });
-    const ids = Object.keys(raw).map(Number);
-    const items = await gameData.findItemsByIds(ids);
-    return new Map(items.map((item) => [item, Number(raw[String(item.id)])]));
   }
 
   async getMallPrice(item: Item | number): Promise<MallPrice> {

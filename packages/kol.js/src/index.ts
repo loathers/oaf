@@ -1,5 +1,7 @@
 export { Player, type ProfileData } from "./Player.js";
 export { Client, type MallPrice } from "./Client.js";
+export { cached, type CachedFn } from "./utils/cached.js";
+export { Inventory } from "./domains/Inventory.js";
 export { AuthError, JoinClanError, RolloverError } from "./errors.js";
 export {
   Flags,
