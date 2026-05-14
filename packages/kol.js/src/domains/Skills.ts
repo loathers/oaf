@@ -1,4 +1,5 @@
 import { Skill } from "data-of-loathing";
+import createDebug from "debug";
 
 import type { Client, Result } from "../Client.js";
 import { DailyFlag } from "../flags/registry.js";
@@ -29,6 +30,8 @@ export function registerSkillBehavior(id: number, behavior: SkillBehavior): void
   registry.set(id, behavior);
 }
 
+const debug = createDebug("kol.js:skills");
+
 export function defaultDetectSuccess(html: string): boolean {
   return !html.includes("You don't have that skill");
 }
@@ -37,7 +40,7 @@ export function recordSkillCast(client: Client, skillId: number): void {
   const casts = client.flags.get(DailyFlag.skillCasts);
   const newCount = (casts[skillId] ?? 0) + 1;
   client.flags.set(DailyFlag.skillCasts, { ...casts, [skillId]: newCount });
-  console.log(`[skills] recorded cast of skill ${skillId} (total today: ${newCount})`);
+  debug("recorded cast of skill %d (total today: %d)", skillId, newCount);
 }
 
 registerInterceptor({

@@ -1,8 +1,12 @@
 import * as http from "node:http";
 
+import createDebug from "debug";
+
 import { runDecoratePipeline, runRequestPipeline, runResponsePipeline } from "./pipeline.js";
 import type { Client } from "../Client.js";
 import type { ProxyRequest, ProxyResponse } from "./types.js";
+
+const debug = createDebug("kol.js:proxy");
 
 const KOL_ORIGIN = "https://www.kingdomofloathing.com";
 const STATIC_HOSTS = new Set(["images.kingdomofloathing.com"]);
@@ -62,8 +66,6 @@ export class ProxyServer {
       }
 
 
-
-      // KoL's root URL is its marketing portal — redirect straight to the game.
       if (proxyReq.path === "" || proxyReq.path === "index.php") {
         outgoing.writeHead(302, { location: `http://localhost:${this.#port}/game.php` });
         outgoing.end();
@@ -143,7 +145,7 @@ export class ProxyServer {
     this.#port = port;
     return new Promise((resolve) => {
       this.#server.listen(port, () => {
-        console.log(`[ProxyServer] listening on http://localhost:${port}`);
+        debug("listening on http://localhost:%d", port);
         resolve();
       });
     });

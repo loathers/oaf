@@ -1,7 +1,11 @@
+import createDebug from "debug";
+
 import type { Client, Result } from "../Client.js";
 import { DailyFlag } from "../flags/registry.js";
 import { registerInterceptor } from "../proxy/registry.js";
 import { recordSkillCast, registerSkillBehavior } from "./Skills.js";
+
+const debug = createDebug("kol.js:skills");
 
 const TOME_IDS = [7213, 7214, 7215, 7216, 7217, 7218] as const;
 
@@ -54,7 +58,7 @@ export class Tome extends Bookshelf {
     const casts = client.flags.get(DailyFlag.skillCasts);
     const total = TOME_IDS.reduce((n, id) => n + (casts[id] ?? 0), 0);
     if (total < 3) {
-      console.log(`[skills] synced tome pool to exhausted from page`);
+      debug("synced tome pool to exhausted from page");
       client.flags.set(DailyFlag.skillCasts, {
         ...casts,
         [TOME_IDS[0]]: (casts[TOME_IDS[0]] ?? 0) + (3 - total),
@@ -89,7 +93,7 @@ export class Libram extends Bookshelf {
       const castsToday = n - 1;
       const casts = client.flags.get(DailyFlag.skillCasts);
       if ((casts[instance.skillId] ?? 0) !== castsToday) {
-        console.log(`[skills] synced skill ${instance.skillId} casts to ${castsToday} from page`);
+        debug("synced skill %d casts to %d from page", instance.skillId, castsToday);
         client.flags.set(DailyFlag.skillCasts, { ...casts, [instance.skillId]: castsToday });
       }
     }

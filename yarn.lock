@@ -1886,6 +1886,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/debug@npm:^4.1.13":
+  version: 4.1.13
+  resolution: "@types/debug@npm:4.1.13"
+  dependencies:
+    "@types/ms": "npm:*"
+  checksum: 10c0/e5e124021bbdb23a82727eee0a726ae0fc8a3ae1f57253cbcc47497f259afb357de7f6941375e773e1abbfa1604c1555b901a409d762ec2bb4c1612131d4afb7
+  languageName: node
+  linkType: hard
+
 "@types/deep-eql@npm:*":
   version: 4.0.2
   resolution: "@types/deep-eql@npm:4.0.2"
@@ -5389,10 +5398,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "kol.js@workspace:packages/kol.js"
   dependencies:
+    "@types/debug": "npm:^4.1.13"
     async-mutex: "npm:^0.5.0"
     css-select: "npm:^6.0.0"
     data-of-loathing: "npm:3.2"
     date-fns: "npm:^4.1.0"
+    debug: "npm:^4.4.3"
     domhandler: "npm:^5.0.3"
     domutils: "npm:^3.2.2"
     emittery: "npm:^1.1.0"
