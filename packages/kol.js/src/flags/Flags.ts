@@ -76,6 +76,8 @@ export class Flags<
     if (snapshot) this.#restore(snapshot);
   }
 
+  get daynumber(): number { return this.#daynumber; }
+
   sync(daynumber: number, ascensions: number): void {
     if (daynumber > this.#daynumber) {
       this.daily.clear();

@@ -18,6 +18,7 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "@types/debug": "^4.1.13",
     "data-of-loathing": "3.2",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
@@ -30,6 +31,7 @@
     "async-mutex": "^0.5.0",
     "css-select": "^6.0.0",
     "date-fns": "^4.1.0",
+    "debug": "^4.4.3",
     "domhandler": "^5.0.3",
     "domutils": "^3.2.2",
     "emittery": "^1.1.0",

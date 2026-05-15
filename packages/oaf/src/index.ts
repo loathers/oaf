@@ -134,7 +134,7 @@ async function main() {
       );
       if (gorfEntry) {
         const [gorfBag, kmailQuantity] = gorfEntry;
-        const inventory = await kolClient.getInventory();
+        const inventory = await kolClient.inventory.get();
         const quantity = inventory.get(gorfBag) ?? kmailQuantity;
         await displayCase.deposit(gorfBag, quantity);
       }

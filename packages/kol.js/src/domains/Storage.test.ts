@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { Client } from "../Client.js";
 import { gameData } from "../GameData.js";
 import { loadFixture } from "../testUtils.js";
@@ -6,6 +6,8 @@ import { Storage } from "./Storage.js";
 
 const client = new Client("", "");
 const storage = new Storage(client);
+
+beforeEach(() => { storage.get.invalidate(); });
 
 const ajaxPrefix = '<script type="text/javascript">if (window.updateInv) updateInv([])</script>';
 

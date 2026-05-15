@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { Client } from "../Client.js";
 import { gameData } from "../GameData.js";
 import { loadFixture } from "../testUtils.js";
@@ -6,6 +6,8 @@ import { Closet } from "./Closet.js";
 
 const client = new Client("", "");
 const closet = new Closet(client);
+
+beforeEach(() => { closet.get.invalidate(); });
 
 describe("get", () => {
   test("returns empty map when closet is empty", async () => {

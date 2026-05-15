@@ -2,6 +2,7 @@ import { Item } from "data-of-loathing";
 
 import type { Client, Result } from "../Client.js";
 import { gameData } from "../GameData.js";
+import { cached } from "../utils/cached.js";
 import { resolveEntityId } from "../utils/utils.js";
 
 export class Closet {
@@ -11,14 +12,14 @@ export class Closet {
     this.#client = client;
   }
 
-  async get(): Promise<Map<Item, number>> {
+  get = cached(async (): Promise<Map<Item, number>> => {
     const raw = await this.#client.fetchJson<Record<string, string>>("api.php", {
       query: { what: "closet", for: `${this.#client.username} bot` },
     });
     const ids = Object.keys(raw).map(Number);
     const items = await gameData.findItemsByIds(ids);
     return new Map(items.map((item) => [item, Number(raw[String(item.id)])]));
-  }
+  });
 
   async deposit(item: Item | number, quantity: number): Promise<Result> {
     const itemId = resolveEntityId(item);
@@ -26,7 +27,11 @@ export class Closet {
       method: "POST",
       form: { action: "put", whichitem: itemId, howmany: quantity, ajax: 1 },
     });
-    if (html.includes("updateInv")) return { success: true };
+    if (html.includes("updateInv")) {
+      this.get.invalidate();
+      this.#client.inventory.get.invalidate();
+      return { success: true };
+    }
     return { success: false, reason: "Item not in inventory" };
   }
 
@@ -36,7 +41,11 @@ export class Closet {
       method: "POST",
       form: { action: "take", whichitem: itemId, howmany: quantity, ajax: 1 },
     });
-    if (html.includes("updateInv")) return { success: true };
+    if (html.includes("updateInv")) {
+      this.get.invalidate();
+      this.#client.inventory.get.invalidate();
+      return { success: true };
+    }
     return { success: false, reason: "Item not in closet" };
   }
 
@@ -45,7 +54,10 @@ export class Closet {
       method: "POST",
       form: { action: "putmeat", howmuch: amount, ajax: 1 },
     });
-    if (html.includes("updateInv")) return { success: true };
+    if (html.includes("updateInv")) {
+      this.#client.inventory.get.invalidate();
+      return { success: true };
+    }
     return { success: false, reason: "Unknown" };
   }
 
@@ -54,7 +66,10 @@ export class Closet {
       method: "POST",
       form: { action: "takemeat", howmuch: amount, ajax: 1 },
     });
-    if (html.includes("updateInv")) return { success: true };
+    if (html.includes("updateInv")) {
+      this.#client.inventory.get.invalidate();
+      return { success: true };
+    }
     return { success: false, reason: "Unknown" };
   }
 }

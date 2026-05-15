@@ -30,6 +30,8 @@ type RegistryFromKeys<T extends Record<string, FlagDescriptor<FlagType, string, 
 export const DailyFlag = {
   /** Item IDs pulled from Hagnk's storage today. One pull per item allowed per day in ronin/hardcore. */
   storagePulls: daily<number[]>("storage.pulls", []),
+  /** Map of skill ID → cast count for all skills cast today. */
+  skillCasts: daily<Record<string, number>>("skills.casts", {}),
 } as const;
 
 export const AscensionFlag = {} as const;

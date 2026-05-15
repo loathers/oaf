@@ -1,5 +1,9 @@
 export { Player, type ProfileData } from "./Player.js";
 export { Client, type MallPrice } from "./Client.js";
+export { ProxyServer } from "./proxy/ProxyServer.js";
+export { registerInterceptor } from "./proxy/registry.js";
+export type { Interceptor, ProxyRequest, ProxyResponse } from "./proxy/types.js";
+export { cached, type CachedFn } from "./utils/cached.js";
 export { AuthError, JoinClanError, RolloverError } from "./errors.js";
 export {
   Flags,
