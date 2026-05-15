@@ -22,6 +22,7 @@ export async function googleSearch(context: string, query: string) {
       results: [],
       error: {
         statusText: response.statusText,
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         status: response.status as StatusCodes,
       },
     };

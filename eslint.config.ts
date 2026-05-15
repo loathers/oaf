@@ -10,17 +10,16 @@ export default defineConfig(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: [
-            "eslint.config.ts",
-            "vitest.config.ts",
-            "vite.*.config.ts",
-          ],
+          allowDefaultProject: ["eslint.config.ts", "vitest.config.ts"],
         },
         tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
-      "@typescript-eslint/no-unused-vars": ["error", { caughtErrors: "none" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { caughtErrors: "none", argsIgnorePattern: "^_" },
+      ],
     },
   },
 );

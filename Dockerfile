@@ -18,8 +18,6 @@ RUN corepack enable
 
 # Copy package manifests first for better layer caching
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY packages/oaf/package.json packages/oaf/
-COPY packages/kol.js/package.json packages/kol.js/
 
 # Install dependencies (skip husky prepare and Puppeteer download)
 RUN YARN_ENABLE_SCRIPTS=false yarn install --immutable
@@ -28,8 +26,6 @@ RUN YARN_ENABLE_SCRIPTS=false yarn install --immutable
 COPY . .
 
 # Build
-RUN yarn workspace oaf build
+RUN yarn build
 
-# Run migrations then start
-WORKDIR /app/packages/oaf
 CMD npm run migrate && node --import tsx ./src/index.ts
