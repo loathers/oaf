@@ -19,39 +19,32 @@ const TAG_LABELS: Record<SkillTag, string> = {
   [SkillTag.Walk]: "Walk",
 };
 
-export class Skill extends Thing {
-  #skill: DolSkill;
-
+export class Skill extends Thing<DolSkill> {
   static is(thing?: Thing | null): thing is Skill {
     return !!thing && thing instanceof Skill;
   }
 
   constructor(skill: DolSkill) {
-    super(skill.id, skill.name, skill.image);
-    this.#skill = skill;
+    super(skill, skill.image);
   }
 
   block(): number {
-    return Math.floor(this.#skill.id / 1000);
-  }
-
-  getModifiers(): Record<string, string> {
-    return this.#skill.modifiers?.modifiers ?? {};
+    return Math.floor(this.dol.id / 1000);
   }
 
   @memoize()
   async getDescription(): Promise<string> {
     const description: string[] = [];
 
-    const tags = this.#skill.tags
+    const tags = this.dol.tags
       .map((tag) => TAG_LABELS[tag])
       .filter(Boolean)
       .join(", ");
     description.push(bold(tags));
 
     description.push(`(Skill ${this.id})`);
-    if (!this.#skill.tags.includes(SkillTag.Passive)) {
-      description.push(`Cost: ${this.#skill.mpCost}mp`);
+    if (!this.dol.tags.includes(SkillTag.Passive)) {
+      description.push(`Cost: ${this.dol.mpCost}mp`);
     }
 
     const { blueText } = await kolClient.getSkillDescription(this.id);

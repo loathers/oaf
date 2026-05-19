@@ -1,4 +1,8 @@
-import { type Effect as DolEffect, EffectQuality } from "data-of-loathing";
+import {
+  type Effect as DolEffect,
+  EffectQuality,
+  getModifier,
+} from "data-of-loathing";
 import { bold } from "discord.js";
 
 import { kolClient } from "../clients/kol.js";
@@ -10,8 +14,7 @@ export type PizzaData = {
   options: number;
 };
 
-export class Effect extends Thing {
-  #effect: DolEffect;
+export class Effect extends Thing<DolEffect> {
   readonly hookah: boolean;
   pizza?: PizzaData;
 
@@ -20,16 +23,11 @@ export class Effect extends Thing {
   }
 
   constructor(effect: DolEffect) {
-    super(effect.id, effect.name, effect.image);
-    this.#effect = effect;
+    super(effect, effect.image);
     this.hookah =
-      !("Avatar" in (effect.modifiers?.modifiers ?? {})) &&
+      !getModifier(effect, "Avatar") &&
       !effect.nohookah &&
       effect.quality !== EffectQuality.Bad;
-  }
-
-  getModifiers(): Record<string, string> {
-    return this.#effect.modifiers?.modifiers ?? {};
   }
 
   describePizzaCompatibility() {
@@ -43,10 +41,8 @@ export class Effect extends Thing {
 
   @memoize()
   async getDescription() {
-    if (!this.#effect.descid) return "This effect seems to have no description";
-    const { blueText } = await kolClient.getEffectDescription(
-      this.#effect.descid,
-    );
+    if (!this.dol.descid) return "This effect seems to have no description";
+    const { blueText } = await kolClient.getEffectDescription(this.dol.descid);
     return [
       bold("Effect"),
       `(Effect ${this.id})`,

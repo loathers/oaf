@@ -44,10 +44,10 @@ describe("Monster description", () => {
         "",
         "Drops:",
         "40 (±8) meat",
-        "2x [rat whisker](https://wiki.kingdomofloathing.com/rat_whisker) (100%)",
-        "2x [rat whisker](https://wiki.kingdomofloathing.com/rat_whisker) (Sometimes)",
-        "3x [rat appendix](https://wiki.kingdomofloathing.com/rat_appendix) (20%)",
-        "[tangle of rat tails](https://wiki.kingdomofloathing.com/tangle_of_rat_tails) (100%)",
+        "2x [rat whisker](https://wiki.kingdomofloathing.com/Item:197) (100%)",
+        "2x [rat whisker](https://wiki.kingdomofloathing.com/Item:197) (Sometimes)",
+        "3x [rat appendix](https://wiki.kingdomofloathing.com/Item:198) (20%)",
+        "[tangle of rat tails](https://wiki.kingdomofloathing.com/Item:4736) (100%)",
       ].join("\n"),
     );
   });
@@ -63,8 +63,8 @@ describe("Monster description", () => {
         "Always loses initiative.",
         "",
         "Drops:",
-        "[turtle voicebox](https://wiki.kingdomofloathing.com/turtle_voicebox) (15%)",
-        "[fake washboard](https://wiki.kingdomofloathing.com/fake_washboard) (0.1%, unaffected by item drop modifiers)",
+        "[turtle voicebox](https://wiki.kingdomofloathing.com/Item:8230) (15%)",
+        "[fake washboard](https://wiki.kingdomofloathing.com/Item:8231) (0.1%, unaffected by item drop modifiers)",
       ].join("\n"),
     );
   });
@@ -95,13 +95,13 @@ describe("Monster description", () => {
         "Can't be copied.",
         "",
         "Drops:",
-        "[Thunkula's drinking cap](https://wiki.kingdomofloathing.com/Thunkula's_drinking_cap) (100%, conditional)",
-        "[Drunkula's cape](https://wiki.kingdomofloathing.com/Drunkula's_cape) (100%, conditional)",
-        "[Drunkula's silky pants](https://wiki.kingdomofloathing.com/Drunkula's_silky_pants) (100%, conditional)",
-        "[Drunkula's ring of haze](https://wiki.kingdomofloathing.com/Drunkula's_ring_of_haze) (100%, conditional)",
-        "[Drunkula's wineglass](https://wiki.kingdomofloathing.com/Drunkula's_wineglass) (100%, conditional)",
-        "[Drunkula's bell](https://wiki.kingdomofloathing.com/Drunkula's_bell) (100%, conditional)",
-        "[skull capacitor](https://wiki.kingdomofloathing.com/skull_capacitor) (100%)",
+        "[Thunkula's drinking cap](https://wiki.kingdomofloathing.com/Item:6469) (100%, conditional)",
+        "[Drunkula's cape](https://wiki.kingdomofloathing.com/Item:6470) (100%, conditional)",
+        "[Drunkula's silky pants](https://wiki.kingdomofloathing.com/Item:6471) (100%, conditional)",
+        "[Drunkula's ring of haze](https://wiki.kingdomofloathing.com/Item:6473) (100%, conditional)",
+        "[Drunkula's wineglass](https://wiki.kingdomofloathing.com/Item:6474) (100%, conditional)",
+        "[Drunkula's bell](https://wiki.kingdomofloathing.com/Item:6472) (100%, conditional)",
+        "[skull capacitor](https://wiki.kingdomofloathing.com/Item:6512) (100%)",
       ].join("\n"),
     );
   });
@@ -116,8 +116,8 @@ describe("Monster description", () => {
         "",
         "Drops:",
         "15 (±3) meat",
-        "[bar skin](https://wiki.kingdomofloathing.com/bar_skin) (35%)",
-        "[baritone accordion](https://wiki.kingdomofloathing.com/baritone_accordion) (Stealable accordion)",
+        "[bar skin](https://wiki.kingdomofloathing.com/Item:70) (35%)",
+        "[baritone accordion](https://wiki.kingdomofloathing.com/Item:6811) (Stealable accordion)",
       ].join("\n"),
     );
   });

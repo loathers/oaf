@@ -246,21 +246,9 @@ export class DataOfLoathingClient {
     return embed;
   }
 
-  getWikiName(thing: Thing) {
-    const modifiers = thing.getModifiers();
-    if (modifiers && "Wiki Name" in modifiers) {
-      const wikiName = modifiers["Wiki Name"];
-      if (typeof wikiName !== "string") return null;
-      return wikiName.slice(1, -1);
-    }
-    return thing.name.replace(/ /g, "_");
-  }
-
   @memoize({ tags: ["things"] })
   getWikiLink(thing: Thing) {
-    const wikiName = this.getWikiName(thing);
-    if (!wikiName) return null;
-    return toWikiLink(wikiName);
+    return toWikiLink(thing.wiki);
   }
 }
 

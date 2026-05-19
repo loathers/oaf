@@ -14,7 +14,8 @@
     "build": "vite build --config vite.oaf.config.ts && vite build --config vite.calendar.config.ts && vite build --config vite.tulips.config.ts",
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "typecheck": "tsc --noEmit"
   },
   "author": "",
   "license": "ISC",
@@ -31,7 +32,7 @@
     "convert-svg-to-png": "^0.7.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
-    "data-of-loathing": "3.2",
+    "data-of-loathing": "4.1.0",
     "date-fns": "^4.1.0",
     "discord.js": "^14.25.1",
     "entities": "^7.0.1",

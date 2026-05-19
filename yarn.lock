@@ -881,25 +881,25 @@ __metadata:
   linkType: hard
 
 "@mikro-orm/core@npm:^7.0.14":
-  version: 7.0.16
-  resolution: "@mikro-orm/core@npm:7.0.16"
+  version: 7.0.17
+  resolution: "@mikro-orm/core@npm:7.0.17"
   peerDependencies:
     dataloader: 2.2.3
   peerDependenciesMeta:
     dataloader:
       optional: true
-  checksum: 10c0/5e47139fc3c80fc24157f6d4957f0eb6fc120252dee2d3b9803d77ba25bfe268088c401193d3c7d5060b3d10b809760f713a7af992717a9ee9124b913e3bef7d
+  checksum: 10c0/19147ac18250bec358100e347fb56c77ed2e0984ebf0f78b9b4954d88bde7bca761a0883986324de84cd87a88b6803d49c52ed3e5fc6c794ef98b935b3dd3cab
   languageName: node
   linkType: hard
 
 "@mikro-orm/sql@npm:^7.0.14":
-  version: 7.0.16
-  resolution: "@mikro-orm/sql@npm:7.0.16"
+  version: 7.0.17
+  resolution: "@mikro-orm/sql@npm:7.0.17"
   dependencies:
-    kysely: "npm:0.29.0"
+    kysely: "npm:0.29.2"
   peerDependencies:
-    "@mikro-orm/core": 7.0.16
-  checksum: 10c0/91031a1330c5ca0e6695833e3e20d4c6f7927f428f4354380d5fefaf3ecd2ad8ae503a8410397baae03fac5bdf0bac9b191eba18cb437521afa9a99219fa4d9b
+    "@mikro-orm/core": 7.0.17
+  checksum: 10c0/501a517e2bd5c02d6e4c8907c6053b290a97ad61e45aea9d781402c812e07cb70921e8f21ba41a508c32e40c3c4b7772e3a25cacc03dea8981a1764822003fca
   languageName: node
   linkType: hard
 
@@ -3145,9 +3145,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"data-of-loathing@npm:3.2":
-  version: 3.2.2
-  resolution: "data-of-loathing@npm:3.2.2"
+"data-of-loathing@npm:4.1.0":
+  version: 4.1.0
+  resolution: "data-of-loathing@npm:4.1.0"
   dependencies:
     "@mikro-orm/core": "npm:^7.0.14"
     "@mikro-orm/sql": "npm:^7.0.14"
@@ -3162,7 +3162,7 @@ __metadata:
       optional: true
     vite-plugin-node-polyfills:
       optional: true
-  checksum: 10c0/c2238b96ef4be0e8c3384ca205ba80cb9b54e2c8e92d09c6d85f5fba0de316bfff642e899fbac874869ff32f50cac0b74bccbfeaec0d542f740f4c16384c832e
+  checksum: 10c0/a57315c26b1bf9e41c1ba3962d781425170473d71bef4968355a7bbbb546856cdac4453933e6a626bb2a67d855659fa34182ee61ce2ead71231ac522c5501d7f
   languageName: node
   linkType: hard
 
@@ -4807,10 +4807,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kysely@npm:0.29.0":
-  version: 0.29.0
-  resolution: "kysely@npm:0.29.0"
-  checksum: 10c0/26765fbe6c80d75e7a2a2701b0f9a2a6e753a6258258a5c5bd3bccc395b9158688df271d9253d71a90c58032e9c31fc717124b5b96729a9c226af119d29cc1a5
+"kysely@npm:0.29.2":
+  version: 0.29.2
+  resolution: "kysely@npm:0.29.2"
+  checksum: 10c0/ed2c4b438fc685def6ce15f1cc8a35192903fa0dd74ee84d959cbd61b3bc8c13e24618aeaf0495298f99f84024181e91d4506b74bec38b7ec325a733dff01dad
   languageName: node
   linkType: hard
 
@@ -5428,7 +5428,7 @@ __metadata:
     convert-svg-to-png: "npm:^0.7.1"
     cookie-parser: "npm:^1.4.7"
     cors: "npm:^2.8.6"
-    data-of-loathing: "npm:3.2"
+    data-of-loathing: "npm:4.1.0"
     date-fns: "npm:^4.1.0"
     discord.js: "npm:^14.25.1"
     entities: "npm:^7.0.1"

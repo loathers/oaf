@@ -281,8 +281,7 @@ export const HARD_CODED_FAMILIARS: Map<string, string> = new Map([
   ["o.a.f.", "Is optimal.\nGenerally messes with you.\n"],
 ]);
 
-export class Familiar extends Thing {
-  #familiar: DolFamiliar;
+export class Familiar extends Thing<DolFamiliar> {
   hatchling: Item | undefined;
   familiarEquipment: Item | undefined;
 
@@ -291,8 +290,7 @@ export class Familiar extends Thing {
   }
 
   constructor(familiar: DolFamiliar) {
-    super(familiar.id, familiar.name, familiar.image);
-    this.#familiar = familiar;
+    super(familiar, familiar.image);
     this.hatchling = familiar.larva
       ? new Item(familiar.larva, true)
       : undefined;
@@ -301,16 +299,12 @@ export class Familiar extends Thing {
       : undefined;
   }
 
-  getModifiers(): Record<string, string> {
-    return this.#familiar.modifiers?.modifiers ?? {};
-  }
-
   private classify(): string {
     const hardcoded = HARD_CODED_FAMILIARS.get(this.name.toLowerCase());
     if (hardcoded) return hardcoded;
 
     const classifications: string[] = [];
-    let categoriesUnassigned = [...this.#familiar.categories];
+    let categoriesUnassigned = [...this.dol.categories];
 
     for (const classification of FAMILIAR_CLASSIFCATIONS) {
       if (
@@ -358,13 +352,13 @@ export class Familiar extends Thing {
       bold("Familiar"),
       this.classify(),
       "",
-      `Attributes: ${this.#familiar.attributes?.toSorted().join(", ") ?? "None"}`,
+      `Attributes: ${this.dol.attributes?.toSorted().join(", ") ?? "None"}`,
       "",
     ];
 
-    if (this.#familiar.larva) {
+    if (this.dol.larva) {
       description.push(
-        `Hatchling: ${hyperlink(this.#familiar.larva.name ?? "unknown larva", toWikiLink(this.#familiar.larva.name || ""))}`,
+        `Hatchling: ${hyperlink(this.dol.larva.name ?? "unknown larva", toWikiLink(this.dol.larva.name || ""))}`,
       );
     }
 
@@ -380,9 +374,9 @@ export class Familiar extends Thing {
 
     description.push("");
 
-    if (this.#familiar.equipment) {
+    if (this.dol.equipment) {
       description.push(
-        `Equipment: ${hyperlink(this.#familiar.equipment.name, toWikiLink(this.#familiar.equipment.name))}`,
+        `Equipment: ${hyperlink(this.dol.equipment.name, toWikiLink(this.dol.equipment.name))}`,
       );
     }
 
