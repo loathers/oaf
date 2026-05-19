@@ -125,7 +125,7 @@ export class Monster extends Thing<DolMonster> {
           dropDetails.push("unaffected by item drop modifiers");
       }
 
-      const dropDescription = `${hyperlink(itemName, toWikiLink(itemName))} (${dropDetails.join(", ")})`;
+      const dropDescription = `${hyperlink(itemName, toWikiLink(`Item:${drop.item.id}`))} (${dropDetails.join(", ")})`;
       dropDescriptions.set(
         dropDescription,
         (dropDescriptions.get(dropDescription) || 0) + 1,
