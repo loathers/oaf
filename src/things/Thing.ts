@@ -2,17 +2,25 @@ import { EmbedBuilder } from "discord.js";
 import { decodeHTML } from "entities";
 import { resolveKoLImage } from "kol.js";
 
-export class Thing {
-  readonly id: number;
-  readonly name: string;
+export abstract class Thing<
+  T extends { id: number; name: string } = { id: number; name: string },
+> {
+  protected readonly dol: T;
   readonly imageUrl: string;
   readonly wiki: string;
 
-  constructor(id: number, name: string, image: string) {
-    this.id = id;
-    this.name = decodeHTML(name);
+  constructor(dol: T, image: string) {
+    this.dol = dol;
     this.imageUrl = image;
-    this.wiki = `${this.constructor.name.replace(/^_*/, "")}:${this.id}`;
+    this.wiki = `${this.constructor.name.replace(/^_*/, "")}:${dol.id}`;
+  }
+
+  get id() {
+    return this.dol.id;
+  }
+
+  get name() {
+    return decodeHTML(this.dol.name);
   }
 
   hashcode() {

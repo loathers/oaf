@@ -9,28 +9,21 @@ import { inlineExpression } from "../discordUtils.js";
 import { memoize } from "../utils/memoize.js";
 import { Thing } from "./Thing.js";
 
-export class Monster extends Thing {
-  #monster: DolMonster;
-
+export class Monster extends Thing<DolMonster> {
   static is(thing?: Thing | null): thing is Monster {
     return !!thing && thing instanceof Monster;
   }
 
   constructor(monster: DolMonster) {
-    super(
-      monster.id,
-      monster.name,
-      monster.image.filter((i) => i !== null)[0] || "nopic.gif",
-    );
-    this.#monster = monster;
+    super(monster, monster.image.filter((i) => i !== null)[0] || "nopic.gif");
   }
 
   get copyable() {
-    return !this.#monster.nocopy;
+    return !this.dol.nocopy;
   }
 
   getPhylumEmoji() {
-    switch (this.#monster.phylum?.toLowerCase()) {
+    switch (this.dol.phylum?.toLowerCase()) {
       case "beast":
         return "🐺";
       case "bug":
@@ -80,7 +73,7 @@ export class Monster extends Thing {
   }
 
   getElementEmoji() {
-    switch (this.#monster.element?.toLowerCase()) {
+    switch (this.dol.element?.toLowerCase()) {
       case "hot":
         return "🔥";
       case "cold":
@@ -97,7 +90,7 @@ export class Monster extends Thing {
 
   getModifiers(): Record<string, string> {
     const mods: Record<string, string> = {};
-    if (this.#monster.wiki) mods["Wiki Name"] = `"${this.#monster.wiki}"`;
+    if (this.dol.wiki) mods["Wiki Name"] = `"${this.dol.wiki}"`;
     return mods;
   }
 
@@ -107,8 +100,8 @@ export class Monster extends Thing {
   }
 
   private getDropsDescription() {
-    const meat = this.#monster.meat;
-    const drops = this.#monster.drops.getItems();
+    const meat = this.dol.meat;
+    const drops = this.dol.drops.getItems();
 
     if (!drops.length && !meat) return null;
 
@@ -162,10 +155,10 @@ export class Monster extends Thing {
   async getDescription(): Promise<string> {
     const description = [bold("Monster"), `(Monster ${this.id})`];
 
-    const atk = this.#monster.attack;
-    const def = this.#monster.defence;
-    const hp = this.#monster.hp;
-    const scale = this.#monster.scaling;
+    const atk = this.dol.attack;
+    const def = this.dol.defence;
+    const hp = this.dol.hp;
+    const scale = this.dol.scaling;
 
     if (atk && atk !== "0" && def && def !== "0" && hp && hp !== "0") {
       description.push(
@@ -186,10 +179,10 @@ export class Monster extends Thing {
       }
 
       const scaleBounds: string[] = [];
-      if (this.#monster.scalingFloor !== "0")
-        scaleBounds.push(`min ${this.#monster.scalingFloor}`);
-      if (this.#monster.scalingCap !== "0")
-        scaleBounds.push(`max ${this.#monster.scalingCap}`);
+      if (this.dol.scalingFloor !== "0")
+        scaleBounds.push(`min ${this.dol.scalingFloor}`);
+      if (this.dol.scalingCap !== "0")
+        scaleBounds.push(`max ${this.dol.scalingCap}`);
       if (scaleBounds.length > 0)
         scaleDetails.push(`(${scaleBounds.join(", ")})`);
 
@@ -200,22 +193,20 @@ export class Monster extends Thing {
       description.push("Scales unusually.");
     }
 
-    if (this.#monster.phylum)
+    if (this.dol.phylum)
+      description.push(`Phylum: ${this.dol.phylum} ${this.getPhylumEmoji()}`);
+    if (this.dol.element)
       description.push(
-        `Phylum: ${this.#monster.phylum} ${this.getPhylumEmoji()}`,
+        `Element: ${this.dol.element.toLowerCase()} ${this.getElementEmoji()}`,
       );
-    if (this.#monster.element)
-      description.push(
-        `Element: ${this.#monster.element.toLowerCase()} ${this.getElementEmoji()}`,
-      );
-    if (this.#monster.initiative === "10000")
+    if (this.dol.initiative === "10000")
       description.push("Always wins initiative.");
-    if (this.#monster.initiative === "-10000")
+    if (this.dol.initiative === "-10000")
       description.push("Always loses initiative.");
-    if (this.#monster.free) description.push("Doesn't cost a turn to fight.");
-    if (this.#monster.nocopy) description.push("Can't be copied.");
-    if (this.#monster.boss) description.push("Instakill immune.");
-    if (this.#monster.ultrarare) description.push("Ultra-rare encounter.");
+    if (this.dol.free) description.push("Doesn't cost a turn to fight.");
+    if (this.dol.nocopy) description.push("Can't be copied.");
+    if (this.dol.boss) description.push("Instakill immune.");
+    if (this.dol.ultrarare) description.push("Ultra-rare encounter.");
 
     const drops = this.getDropsDescription();
     if (drops) description.push("", drops);

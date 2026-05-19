@@ -48,9 +48,7 @@ const OTHER_USES = [
 ] as const;
 type OtherUse = (typeof OTHER_USES)[number];
 
-export class Item extends Thing {
-  #item: DolItem;
-
+export class Item extends Thing<DolItem> {
   container?: string;
   contents?: string;
   zapGroup: Item[];
@@ -63,8 +61,7 @@ export class Item extends Thing {
   }
 
   constructor(item: DolItem, shallow = false) {
-    super(item.id, item.name, item.image);
-    this.#item = item;
+    super(item, item.image);
 
     if (item.name in packages) {
       this.contents = packages[item.name as keyof typeof packages];
@@ -89,23 +86,23 @@ export class Item extends Thing {
   }
 
   get descid() {
-    return this.#item.descid;
+    return this.dol.descid;
   }
 
   get tradeable() {
-    return this.#item.tradeable;
+    return this.dol.tradeable;
   }
 
   get gift() {
-    return this.#item.gift;
+    return this.dol.gift;
   }
 
   get plural() {
-    return this.#item.plural || `${this.name}s`;
+    return this.dol.plural || `${this.name}s`;
   }
 
   get autosell() {
-    return this.#item.autosell ?? 0;
+    return this.dol.autosell ?? 0;
   }
 
   mapQuality(rawQuality: ConsumableQuality | null | undefined): string {
@@ -156,12 +153,12 @@ export class Item extends Thing {
   }
 
   getConsumableDescription() {
-    const consumableUse = this.#item.uses.find((u): u is ConsumableUse =>
+    const consumableUse = this.dol.uses.find((u): u is ConsumableUse =>
       CONSUMABLE_USES.includes(u as ConsumableUse),
     );
     if (!consumableUse) return null;
 
-    const consumable = this.#item.consumable;
+    const consumable = this.dol.consumable;
     if (!consumable) return null;
 
     const description = [];
@@ -209,12 +206,12 @@ export class Item extends Thing {
   }
 
   getEquipmentDescription() {
-    const equipmentUse = this.#item.uses.find((u): u is EquipmentUse =>
+    const equipmentUse = this.dol.uses.find((u): u is EquipmentUse =>
       EQUIPMENT_USES.includes(u as EquipmentUse),
     );
     if (!equipmentUse) return null;
 
-    const equipment = this.#item.equipment;
+    const equipment = this.dol.equipment;
     if (!equipment) return null;
 
     const description = [];
@@ -270,12 +267,12 @@ export class Item extends Thing {
   }
 
   getOtherDescription() {
-    const otherUse = this.#item.uses.find((u): u is OtherUse =>
+    const otherUse = this.dol.uses.find((u): u is OtherUse =>
       OTHER_USES.includes(u as OtherUse),
     );
     if (!otherUse) return null;
 
-    const alsoCombat = this.#item.uses.includes(ItemUse.Combat);
+    const alsoCombat = this.dol.uses.includes(ItemUse.Combat);
 
     const title = (() => {
       switch (otherUse) {
@@ -306,12 +303,12 @@ export class Item extends Thing {
 
   getShortDescription(): string {
     const itemRules: string[] = [];
-    if (this.#item.quest) itemRules.push("Quest Item");
-    if (this.#item.gift) itemRules.push("Gift Item");
+    if (this.dol.quest) itemRules.push("Quest Item");
+    if (this.dol.gift) itemRules.push("Gift Item");
 
     const tradeability: string[] = [];
-    if (!this.#item.tradeable) tradeability.push("traded");
-    if (!this.#item.discardable) tradeability.push("discarded");
+    if (!this.dol.tradeable) tradeability.push("traded");
+    if (!this.dol.discardable) tradeability.push("discarded");
     if (tradeability.length > 0)
       itemRules.push(`Cannot be ${tradeability.join(" or ")}.`);
 
@@ -339,7 +336,7 @@ export class Item extends Thing {
   }
 
   async getMallPrice() {
-    if (!this.#item.tradeable) return "";
+    if (!this.dol.tradeable) return "";
 
     const {
       mallPrice,
@@ -410,11 +407,11 @@ export class Item extends Thing {
 
     if (withAddl) description.push(this._addlDescription);
 
-    const { blueText } = await kolClient.getItemDescription(this.#item.descid!);
+    const { blueText } = await kolClient.getItemDescription(this.dol.descid!);
     if (blueText) description.push(blueText);
 
-    if (this.#item.discardable && (this.#item.autosell ?? 0) > 0) {
-      description.push(`Autosell value: ${this.#item.autosell} Meat.`);
+    if (this.dol.discardable && (this.dol.autosell ?? 0) > 0) {
+      description.push(`Autosell value: ${this.dol.autosell} Meat.`);
     }
 
     const price = await this.getMallPrice();
