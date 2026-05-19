@@ -88,12 +88,6 @@ export class Monster extends Thing<DolMonster> {
     return "⁉️";
   }
 
-  getModifiers(): Record<string, string> {
-    const mods: Record<string, string> = {};
-    if (this.dol.wiki) mods["Wiki Name"] = `"${this.dol.wiki}"`;
-    return mods;
-  }
-
   getImagePath() {
     if (this.imageUrl.includes("/")) return `/${this.imageUrl}`;
     return `/adventureimages/${this.imageUrl}`;

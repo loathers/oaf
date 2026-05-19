@@ -25,7 +25,7 @@ export class Effect extends Thing<DolEffect> {
   constructor(effect: DolEffect) {
     super(effect, effect.image);
     this.hookah =
-      !getModifier(effect.modifiers?.modifiers ?? [], "Avatar") &&
+      !getModifier(effect, "Avatar") &&
       !effect.nohookah &&
       effect.quality !== EffectQuality.Bad;
   }
