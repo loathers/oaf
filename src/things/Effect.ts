@@ -1,4 +1,8 @@
-import { type Effect as DolEffect, EffectQuality } from "data-of-loathing";
+import {
+  type Effect as DolEffect,
+  EffectQuality,
+  getModifier,
+} from "data-of-loathing";
 import { bold } from "discord.js";
 
 import { kolClient } from "../clients/kol.js";
@@ -23,7 +27,7 @@ export class Effect extends Thing {
     super(effect.id, effect.name, effect.image);
     this.#effect = effect;
     this.hookah =
-      !("Avatar" in (effect.modifiers?.modifiers ?? {})) &&
+      !getModifier(effect.modifiers?.modifiers ?? [], "Avatar") &&
       !effect.nohookah &&
       effect.quality !== EffectQuality.Bad;
   }
