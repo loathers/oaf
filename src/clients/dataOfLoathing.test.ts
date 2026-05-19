@@ -20,8 +20,6 @@ beforeAll(async () => {
 describe("Wiki link", () => {
   test("Hermit", () => {
     const link = dataOfLoathingClient.getWikiLink(hermit);
-    expect(link).toBe(
-      "https://wiki.kingdomofloathing.com/Hermit_%28monster%29",
-    );
+    expect(link).toBe("https://wiki.kingdomofloathing.com/Monster:1781");
   });
 });
