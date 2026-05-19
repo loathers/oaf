@@ -6,15 +6,17 @@ export class Thing {
   readonly id: number;
   readonly name: string;
   readonly imageUrl: string;
+  readonly wiki: string;
 
   constructor(id: number, name: string, image: string) {
     this.id = id;
     this.name = decodeHTML(name);
     this.imageUrl = image;
+    this.wiki = `${this.constructor.name.replace(/^_*/, "")}:${this.id}`;
   }
 
   hashcode() {
-    return `${this.constructor.name.replace(/^_*/, "")}:${this.id}`;
+    return this.wiki;
   }
 
   getDescription(): Promise<string> {
@@ -34,9 +36,5 @@ export class Thing {
     return this.addImageToEmbed(embed).setDescription(
       await this.getDescription(),
     );
-  }
-
-  getModifiers(): Record<string, string> | null {
-    throw new Error("Implement me");
   }
 }

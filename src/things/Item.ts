@@ -88,10 +88,6 @@ export class Item extends Thing {
     }
   }
 
-  getModifiers(): Record<string, string> {
-    return this.#item.modifiers?.modifiers ?? {};
-  }
-
   get descid() {
     return this.#item.descid;
   }

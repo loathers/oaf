@@ -301,10 +301,6 @@ export class Familiar extends Thing {
       : undefined;
   }
 
-  getModifiers(): Record<string, string> {
-    return this.#familiar.modifiers?.modifiers ?? {};
-  }
-
   private classify(): string {
     const hardcoded = HARD_CODED_FAMILIARS.get(this.name.toLowerCase());
     if (hardcoded) return hardcoded;

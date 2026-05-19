@@ -28,10 +28,6 @@ export class Effect extends Thing {
       effect.quality !== EffectQuality.Bad;
   }
 
-  getModifiers(): Record<string, string> {
-    return this.#effect.modifiers?.modifiers ?? {};
-  }
-
   describePizzaCompatibility() {
     if (!this.hookah) return "Ineligible for pizza, wishes, or hookahs.";
     if (!this.pizza) return "Pizza: Something is broken.";
