@@ -164,7 +164,7 @@ async function main() {
   process.on("SIGINT", () => void shutdown("SIGINT"));
 
   process.on("uncaughtException", (err) => {
-    // Transient database connection drops — the pool replaces dead connections
+    // Transient database connection drops - the pool replaces dead connections
     if (
       err instanceof Error &&
       err.message === "Connection terminated unexpectedly"

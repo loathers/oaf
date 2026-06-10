@@ -318,7 +318,7 @@ function LoathingSystem({
         />
       </mesh>
 
-      {/* Grimace — with comet impact chunk subtracted */}
+      {/* Grimace - with comet impact chunk subtracted */}
       <GrimaceMoon ref={grimaceRef} />
 
       {/* Hamburglar */}
@@ -522,7 +522,7 @@ function PhaseOverlay({
 
     const light = hambLight();
 
-    // Grimace phases — frac tweens the x position smoothly across each phase.
+    // Grimace phases - frac tweens the x position smoothly across each phase.
     // The full visible journey across Grimace is:
     //   phase 4 (appearing): slides in from left edge
     //   phase 0 (left side): slides from left toward center
@@ -538,7 +538,7 @@ function PhaseOverlay({
       gH = frac < 0.7 ? { x: 1.0 + frac * 0.6, y: 0, light } : null;
     }
 
-    // Ronald phases — same pattern:
+    // Ronald phases - same pattern:
     //   phase 7 (returning): slides in from right edge
     //   phase 8 (left side): slides from left toward center
     //   phase 9 (right side): slides from center toward right
@@ -637,7 +637,7 @@ export default function MoonOrbits({ onClose }: { onClose: () => void }) {
         }}
       >
         <span style={{ fontSize: "12px", opacity: 0.5, maxWidth: "60%" }}>
-          Work in progress — not accurate or lore-accurate. Drag to rotate,
+          Work in progress - not accurate or lore-accurate. Drag to rotate,
           scroll to zoom.
         </span>
         <button
