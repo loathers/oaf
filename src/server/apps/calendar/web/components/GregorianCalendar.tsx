@@ -1,8 +1,9 @@
 import { LoathingDate } from "kol.js";
 
+import type { IotmEvent } from "../types/calendar.js";
 import { BouncingEmoji } from "./BouncingEmoji.js";
 import CalendarNav from "./CalendarNav.js";
-import { HOLIDAY_EMOJI } from "./holidayEmoji.js";
+import { getDayEvents } from "./eventEmoji.js";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -28,6 +29,7 @@ type Props = {
   onJump: (year: number, month: number) => void;
   onJumpToToday: () => void;
   moonlightMode: boolean;
+  iotmEvents: Record<number, IotmEvent[]>;
 };
 
 function getGridDates(year: number, month: number) {
@@ -63,6 +65,7 @@ export default function GregorianCalendar({
   onJump,
   onJumpToToday,
   moonlightMode,
+  iotmEvents,
 }: Props) {
   const dates = getGridDates(year, month);
 
@@ -94,13 +97,11 @@ export default function GregorianCalendar({
             const statDay = ld?.getStatDay() ?? null;
             const eventImage = preEpoch ? null : EVENT_IMAGES.get(gameday);
             const holidays =
-              ld
-                ?.getHolidays()
-                .filter(
-                  (h) =>
-                    !h.includes("Day") ||
-                    !["Muscle Day", "Mysticality Day", "Moxie Day"].includes(h),
-                ) ?? [];
+              ld?.getHolidays().filter((h) => h !== statDay) ?? [];
+            const events = getDayEvents(
+              holidays,
+              preEpoch ? undefined : iotmEvents[gameday],
+            );
 
             const classes = [
               "calendar-cell",
@@ -138,9 +139,12 @@ export default function GregorianCalendar({
                     alt={ld.getMoonDescription()}
                   />
                 )}
-                {holidays.length > 0 && (
-                  <span className="cell-holiday" title={holidays.join(", ")}>
-                    {holidays.map((h) => HOLIDAY_EMOJI[h] ?? "🎉").join("")}
+                {events.length > 0 && (
+                  <span
+                    className="cell-events"
+                    title={events.map((e) => e.label).join(", ")}
+                  >
+                    {events.map((e) => e.emoji).join("")}
                   </span>
                 )}
                 {holidays.includes("April Fools Day") && <BouncingEmoji />}

@@ -203,6 +203,7 @@ export default function CalendarPage() {
           onJump={jumpGregorian}
           onJumpToToday={jumpToToday}
           moonlightMode={moonlightMode}
+          iotmEvents={data.iotmEvents}
         />
       ) : (
         <KolCalendar
@@ -214,6 +215,7 @@ export default function CalendarPage() {
           onJump={jumpKol}
           onJumpToToday={jumpToToday}
           moonlightMode={moonlightMode}
+          iotmEvents={data.iotmEvents}
         />
       )}
 
