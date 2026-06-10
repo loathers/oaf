@@ -324,7 +324,7 @@ code {
   }
 }
 
-.cell-holiday {
+.cell-events {
   position: absolute;
   top: 0.25rem;
   right: 0.375rem;
@@ -621,7 +621,7 @@ body.moonlight-mode .today-dot {
   background: #64ffda;
 }
 
-body.moonlight-mode .cell-holiday {
+body.moonlight-mode .cell-events {
   color: #ffd700;
 }
 
