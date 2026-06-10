@@ -227,7 +227,7 @@ describe("handleSubmission", () => {
   });
 
   test("uses provided time for gameday, not current time", async () => {
-    // Before rollover — should resolve to the previous gameday
+    // Before rollover - should resolve to the previous gameday
     const whisperTime = new Date("2026-03-22T03:00:00Z");
     gameDayFromRealDate.mockImplementation((d: Date) =>
       d.getTime() === whisperTime.getTime() ? 99 : 100,

@@ -89,7 +89,7 @@ describeIfDb("upsertIotmByName (integration)", () => {
       addedToStore: entry,
     });
 
-    // Still in store on a later rollover — entry must be preserved.
+    // Still in store on a later rollover - entry must be preserved.
     await upsertIotmByName({
       itemName: NAME,
       month: MONTH,
@@ -104,7 +104,7 @@ describeIfDb("upsertIotmByName (integration)", () => {
       .executeTakeFirstOrThrow();
     expect(row.addedToStore?.toISOString()).toBe(entry.toISOString());
 
-    // Item leaves, then re-enters later — entry should now update.
+    // Item leaves, then re-enters later - entry should now update.
     await setIotmRemovedFromStore(NAME, new Date("2099-02-15T03:30:00Z"));
     const reentry = new Date("2099-03-01T03:30:00Z");
     await upsertIotmByName({

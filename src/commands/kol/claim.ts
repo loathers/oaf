@@ -195,7 +195,7 @@ async function onMessage(message: Message) {
 
   const deleteStatus = deleted
     ? "I've deleted it"
-    : `I tried to delete it but couldn't — you should ${hyperlink("delete it yourself", message.url)}`;
+    : `I tried to delete it but couldn't - you should ${hyperlink("delete it yourself", message.url)}`;
 
   await dm.send(
     `Looks like you accidentally sent your claim token as a plain message. ${deleteStatus}. I'll do my best with what you've given me.`,

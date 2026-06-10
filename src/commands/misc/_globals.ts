@@ -180,7 +180,7 @@ export async function updateGlobalsMessage() {
     const content = await buildGlobalsContent(gameday);
     await message.edit({ content, allowedMentions: { users: [] } });
   } catch {
-    // Message may have been deleted — silently ignore
+    // Message may have been deleted - silently ignore
   }
 }
 
@@ -189,7 +189,7 @@ export async function buildGlobals(gameday: number): Promise<string> {
     const socpData = await fetchSocpData();
     await upsertDaily("socp", gameday, socpData, true);
   } catch {
-    // SOCP fetch failed — placeholder will show
+    // SOCP fetch failed - placeholder will show
   }
 
   return await buildGlobalsContent(gameday);

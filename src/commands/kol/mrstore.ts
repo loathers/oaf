@@ -30,14 +30,14 @@ export async function checkStore() {
 
   try {
     void discordClient.alert(
-      `checkStore: fetched ${items.length} item(s) — ${items.map((i) => `${i.name} (urgency=${i.urgency})`).join(", ") || "none"}`,
+      `checkStore: fetched ${items.length} item(s) - ${items.map((i) => `${i.name} (urgency=${i.urgency})`).join(", ") || "none"}`,
     );
 
     // An empty fetch is treated as untrustworthy (the API returns {} during
-    // rollover) — skip rather than mark every tracked item as removed.
+    // rollover) - skip rather than mark every tracked item as removed.
     if (items.length === 0) {
       void discordClient.alert(
-        "checkStore: store fetch was empty — skipping (possible rollover quirk)",
+        "checkStore: store fetch was empty - skipping (possible rollover quirk)",
       );
       return;
     }

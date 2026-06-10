@@ -72,7 +72,7 @@ beforeEach(() => {
 describe("checkStore", () => {
   // Regression: a single item that fails to upsert must NOT abort the whole run.
   // Previously checkStore had no per-item try/catch, so one throw skipped the
-  // removal-detection loop entirely — which is why a departed item (e.g. the May
+  // removal-detection loop entirely - which is why a departed item (e.g. the May
   // IotM "pasta wand loot box") was never marked as removed.
   test("a failing item does not skip removal detection for other items", async () => {
     getCurrentItems.mockResolvedValue([item("first"), item("second")]);
@@ -123,7 +123,7 @@ describe("checkStore", () => {
     expect(getIotmsInStore).not.toHaveBeenCalled();
     expect(setIotmRemovedFromStore).not.toHaveBeenCalled();
     expect(alert).toHaveBeenCalledWith(
-      "checkStore: store fetch was empty — skipping (possible rollover quirk)",
+      "checkStore: store fetch was empty - skipping (possible rollover quirk)",
     );
   });
 });

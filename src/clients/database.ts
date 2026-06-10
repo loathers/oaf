@@ -24,7 +24,7 @@ const pool = new pg.Pool({
   connectionString: getConnectionString(),
 });
 
-// Handle idle client errors gracefully — the pool replaces dead connections automatically
+// Handle idle client errors gracefully - the pool replaces dead connections automatically
 pool.on("error", (err) => {
   console.error("Database pool error (connection will be replaced):", err);
 });
@@ -1071,7 +1071,7 @@ export async function upsertIotmByName(data: {
           itemImage: data.itemImage ?? null,
           ...(data.mraCost !== undefined && { mraCost: data.mraCost }),
           // Preserve the original entry; only (re)set addedToStore when the item
-          // is genuinely (re-)entering — previously removed, or never recorded.
+          // is genuinely (re-)entering - previously removed, or never recorded.
           addedToStore: sql`CASE WHEN ${eb.ref("Iotm.removedFromStore")} IS NOT NULL OR ${eb.ref("Iotm.addedToStore")} IS NULL THEN ${eb.ref("excluded.addedToStore")} ELSE ${eb.ref("Iotm.addedToStore")} END`,
         })),
     )
