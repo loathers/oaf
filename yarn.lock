@@ -223,6 +223,46 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@chevrotain/cst-dts-gen@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/cst-dts-gen@npm:12.0.0"
+  dependencies:
+    "@chevrotain/gast": "npm:12.0.0"
+    "@chevrotain/types": "npm:12.0.0"
+  checksum: 10c0/bc79319baafbbf77b5d58539d1456e57ede160266a47d4a7bb75716d288dfef7fe2646224f4e2fb296afc0ca1cd57d28e469f82738e9f08e022c292aff2047db
+  languageName: node
+  linkType: hard
+
+"@chevrotain/gast@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/gast@npm:12.0.0"
+  dependencies:
+    "@chevrotain/types": "npm:12.0.0"
+  checksum: 10c0/699f8757b910ee577b9cd955f2bde794ffae1c1faad57ac8040a06c5d1c42b56109f43d32f0b69eb1b56b9c189a32fa3b2b1da5d86ed4fa7c76dc9717a7f3a6b
+  languageName: node
+  linkType: hard
+
+"@chevrotain/regexp-to-ast@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/regexp-to-ast@npm:12.0.0"
+  checksum: 10c0/5cfc68b0cb63cb88281b40660f618555d70feb52b61af1e492862468fa1a0e80c61e84e3ba459431126c889e53f99a8aba4044297e7490a579a67bbe66d5d45e
+  languageName: node
+  linkType: hard
+
+"@chevrotain/types@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/types@npm:12.0.0"
+  checksum: 10c0/8f62dbc49117f6347f35f6fb5dcd5a94ce974b3c8503d4e90c1af7b24523992da1e82afb3a4ab0f450b22adfebbd39c7621c26a3734a639daaf15f0e661f43dc
+  languageName: node
+  linkType: hard
+
+"@chevrotain/utils@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/utils@npm:12.0.0"
+  checksum: 10c0/7bbbbe5256411bbea374a9b2aabe4fb1a69303bcdcfa613aba205d309c24967eb1f567a41a7a6a772ea23e9f1f10dbb533aad6de6218b7f7c14d8395a8ec1473
+  languageName: node
+  linkType: hard
+
 "@dimforge/rapier3d-compat@npm:~0.12.0":
   version: 0.12.0
   resolution: "@dimforge/rapier3d-compat@npm:0.12.0"
@@ -2736,6 +2776,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"chevrotain@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "chevrotain@npm:12.0.0"
+  dependencies:
+    "@chevrotain/cst-dts-gen": "npm:12.0.0"
+    "@chevrotain/gast": "npm:12.0.0"
+    "@chevrotain/regexp-to-ast": "npm:12.0.0"
+    "@chevrotain/types": "npm:12.0.0"
+    "@chevrotain/utils": "npm:12.0.0"
+  checksum: 10c0/c7bf530f59baae21cc7535406addfbb9ea373d89bb4ea1b874d89e7debd232c9bdf60aa5af236fcc0e12a68ea8f88a6638ffbccaadb829a7b300f98d1429c38d
+  languageName: node
+  linkType: hard
+
 "chokidar@npm:^5.0.0":
   version: 5.0.0
   resolution: "chokidar@npm:5.0.0"
@@ -3145,9 +3198,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"data-of-loathing@npm:4.1.0":
-  version: 4.1.0
-  resolution: "data-of-loathing@npm:4.1.0"
+"data-of-loathing@npm:4.3.0":
+  version: 4.3.0
+  resolution: "data-of-loathing@npm:4.3.0"
   dependencies:
     "@mikro-orm/core": "npm:^7.0.14"
     "@mikro-orm/sql": "npm:^7.0.14"
@@ -3162,7 +3215,7 @@ __metadata:
       optional: true
     vite-plugin-node-polyfills:
       optional: true
-  checksum: 10c0/a57315c26b1bf9e41c1ba3962d781425170473d71bef4968355a7bbbb546856cdac4453933e6a626bb2a67d855659fa34182ee61ce2ead71231ac522c5501d7f
+  checksum: 10c0/759be048afcb4c24dae23243e3601796853f1f37ec6337222b4dfe673c7ec3e16ce6fa6a38aef427c771f77d320266db44f1e957e5ada79145a1950f9ae64d98
   languageName: node
   linkType: hard
 
@@ -4749,11 +4802,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kol.js@npm:^0.9.2":
-  version: 0.9.2
-  resolution: "kol.js@npm:0.9.2"
+"kol.js@npm:^0.10.1":
+  version: 0.10.1
+  resolution: "kol.js@npm:0.10.1"
   dependencies:
     async-mutex: "npm:^0.5.0"
+    chevrotain: "npm:^12.0.0"
     css-select: "npm:^6.0.0"
     date-fns: "npm:^4.1.0"
     debug: "npm:^4.4.3"
@@ -4768,9 +4822,10 @@ __metadata:
     ofetch: "npm:^1.5.1"
     tough-cookie: "npm:^6.0.0"
     ts-dedent: "npm:^2.2.0"
+    zod: "npm:^4.4.3"
   peerDependencies:
-    data-of-loathing: 3.2
-  checksum: 10c0/73e3939c2e199ca10487713641a55a4c92c0c8ab197986d832d958fdb7b74a39b9533cc5e0a26ea134036a8a31113047a2d56f738b9f8a137f9d8727761459f0
+    data-of-loathing: ">=4.3.0"
+  checksum: 10c0/ffa6cffc14d62b7e1a144263685b5fa0406e1b790370c78397740b5c125e7ce845eab8d1f416df85ab50583f73c4a0b36dbf393ba2e03e1d5e9ade456e358f62
   languageName: node
   linkType: hard
 
@@ -5428,7 +5483,7 @@ __metadata:
     convert-svg-to-png: "npm:^0.7.1"
     cookie-parser: "npm:^1.4.7"
     cors: "npm:^2.8.6"
-    data-of-loathing: "npm:4.1.0"
+    data-of-loathing: "npm:4.3.0"
     date-fns: "npm:^4.1.0"
     discord.js: "npm:^14.25.1"
     entities: "npm:^7.0.1"
@@ -5440,7 +5495,7 @@ __metadata:
     jiti: "npm:^2.6.1"
     js-sha256: "npm:^0.11.1"
     jsonwebtoken: "npm:^9.0.3"
-    kol.js: "npm:^0.9.2"
+    kol.js: "npm:^0.10.1"
     kysely: "npm:^0.28.11"
     kysely-ctl: "npm:^0.20.0"
     lightstreamer-client-node: "npm:^9.2.2"
@@ -7666,7 +7721,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^4.3.6":
+"zod@npm:^4.3.6, zod@npm:^4.4.3":
   version: 4.4.3
   resolution: "zod@npm:4.4.3"
   checksum: 10c0/7ea31b558e88f9faf44f31dd185e2e1cbf51fed3081787fb96cc2534749b50c0acfc6da7f0922a7353ed092dd358c7d50c28ea96c94d04af64191bd33152eca3
