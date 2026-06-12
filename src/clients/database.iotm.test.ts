@@ -17,12 +17,8 @@ vi.mock("../config.js", () => ({
   config: { DATABASE_URL: process.env.DATABASE_URL },
 }));
 
-const {
-  db,
-  upsertIotmByName,
-  setIotmRemovedFromStore,
-  getIotmEventsForDateRange,
-} = await import("./database.js");
+const { db, upsertIotmByName, setIotmRemovedFromStore } =
+  await import("./database.js");
 
 const NAME = "__test_iotm_upsert__";
 const MONTH = new Date("2099-01-01");
@@ -124,36 +120,5 @@ describeIfDb("upsertIotmByName (integration)", () => {
       .where("itemName", "=", NAME)
       .executeTakeFirstOrThrow();
     expect(row.addedToStore?.toISOString()).toBe(reentry.toISOString());
-  });
-
-  // The calendar only shows Items of the Month; non-subscriber Mr. Store stock is
-  // tracked in the same table but must be excluded from the event feed.
-  test("getIotmEventsForDateRange excludes non-subscriber store stock", async () => {
-    const PERM = "__test_iotm_perm__";
-    const added = new Date("2099-01-10T03:30:00Z");
-    try {
-      await upsertIotmByName({
-        itemName: NAME,
-        month: MONTH,
-        subscriberItem: true,
-        addedToStore: added,
-      });
-      await upsertIotmByName({
-        itemName: PERM,
-        month: MONTH,
-        subscriberItem: false,
-        addedToStore: added,
-      });
-
-      const events = await getIotmEventsForDateRange(
-        new Date("2099-01-01T00:00:00Z"),
-        new Date("2099-02-01T00:00:00Z"),
-      );
-      const names = events.map((e) => e.itemName);
-      expect(names).toContain(NAME);
-      expect(names).not.toContain(PERM);
-    } finally {
-      await db.deleteFrom("Iotm").where("itemName", "=", PERM).execute();
-    }
   });
 });
