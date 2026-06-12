@@ -112,6 +112,7 @@ export interface IotmTable {
   itemImage: string | null;
   month: ColumnType<Date, Date | string, Date | string>;
   mraCost: Generated<number>;
+  currency: Generated<"mr_accessory" | "uncle_buck">;
   subscriberItem: Generated<boolean>;
   addedToStore: ColumnType<
     Date | null,

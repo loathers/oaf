@@ -36,6 +36,7 @@ describeIfDb("upsertIotmByName (integration)", () => {
         "itemImage" TEXT,
         "month" DATE NOT NULL,
         "mraCost" INTEGER NOT NULL DEFAULT 1,
+        "currency" TEXT NOT NULL DEFAULT 'mr_accessory',
         "subscriberItem" BOOLEAN NOT NULL DEFAULT false,
         "addedToStore" TIMESTAMPTZ,
         "removedFromStore" TIMESTAMPTZ,

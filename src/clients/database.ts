@@ -1022,6 +1022,7 @@ export async function upsertIotmByName(data: {
   itemImage?: string | null;
   month: Date;
   mraCost?: number;
+  currency?: "mr_accessory" | "uncle_buck";
   subscriberItem?: boolean;
   addedToStore?: Date | null;
 }) {
@@ -1042,6 +1043,7 @@ export async function upsertIotmByName(data: {
         itemDescid: data.itemDescid ?? null,
         itemImage: data.itemImage ?? null,
         mraCost: data.mraCost,
+        currency: data.currency,
         addedToStore: data.addedToStore ?? null,
       })
       .where("id", "=", existing.id)
@@ -1057,6 +1059,7 @@ export async function upsertIotmByName(data: {
       itemImage: data.itemImage ?? null,
       month: data.month,
       ...(data.mraCost !== undefined && { mraCost: data.mraCost }),
+      currency: data.currency,
       subscriberItem: data.subscriberItem ?? false,
       addedToStore: data.addedToStore ?? null,
     })
@@ -1070,6 +1073,7 @@ export async function upsertIotmByName(data: {
           itemDescid: data.itemDescid ?? null,
           itemImage: data.itemImage ?? null,
           ...(data.mraCost !== undefined && { mraCost: data.mraCost }),
+          currency: data.currency,
           // Preserve the original entry; only (re)set addedToStore when the item
           // is genuinely (re-)entering - previously removed, or never recorded.
           addedToStore: sql`CASE WHEN ${eb.ref("Iotm.removedFromStore")} IS NOT NULL OR ${eb.ref("Iotm.addedToStore")} IS NULL THEN ${eb.ref("excluded.addedToStore")} ELSE ${eb.ref("Iotm.addedToStore")} END`,

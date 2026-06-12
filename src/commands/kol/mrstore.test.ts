@@ -76,8 +76,9 @@ describe("checkStore", () => {
   // IotM "pasta wand loot box") was never marked as removed.
   test("a failing item does not skip removal detection for other items", async () => {
     getCurrentItems.mockResolvedValue([item("first"), item("second")]);
-    upsertIotmByName.mockImplementation(async ({ itemName }) => {
+    upsertIotmByName.mockImplementation(({ itemName }) => {
       if (itemName === "first") throw new Error("boom");
+      return Promise.resolve();
     });
     // "departed" was tracked previously but is no longer in the store.
     getIotmsInStore.mockResolvedValue([{ itemName: "departed" }]);
@@ -124,6 +125,22 @@ describe("checkStore", () => {
     expect(setIotmRemovedFromStore).not.toHaveBeenCalled();
     expect(alert).toHaveBeenCalledWith(
       "checkStore: store fetch was empty - skipping (possible rollover quirk)",
+    );
+  });
+
+  test("passes the item currency through to the database", async () => {
+    getCurrentItems.mockResolvedValue([
+      { ...item("uncle buck thing"), currency: "uncle_buck" },
+    ]);
+    upsertIotmByName.mockResolvedValue(undefined);
+
+    await checkStore();
+
+    expect(upsertIotmByName).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemName: "uncle buck thing",
+        currency: "uncle_buck",
+      }),
     );
   });
 });
