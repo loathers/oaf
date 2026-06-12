@@ -127,4 +127,20 @@ describe("checkStore", () => {
       "checkStore: store fetch was empty - skipping (possible rollover quirk)",
     );
   });
+
+  test("passes the item currency through to the database", async () => {
+    getCurrentItems.mockResolvedValue([
+      { ...item("uncle buck thing"), currency: "uncle_buck" },
+    ]);
+    upsertIotmByName.mockResolvedValue(undefined);
+
+    await checkStore();
+
+    expect(upsertIotmByName).toHaveBeenCalledWith(
+      expect.objectContaining({
+        itemName: "uncle buck thing",
+        currency: "uncle_buck",
+      }),
+    );
+  });
 });

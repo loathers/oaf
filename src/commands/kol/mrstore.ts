@@ -57,6 +57,7 @@ export async function checkStore() {
           itemImage: item.image,
           month,
           mraCost: item.cost,
+          currency: item.currency,
           subscriberItem,
           addedToStore: now,
         });
