@@ -48,23 +48,20 @@ export async function checkStore() {
     const currentNames = new Set<string>();
 
     for (const item of items) {
-      // Mr. Store lists the current IotM alongside permanent stock (Mr. Accessories,
-      // name-change form, etc.). Only the actual Item of the Month - whose category
-      // is e.g. "June's Item-of-the-Month" - should be tracked.
-      if (!IOTM_CATEGORY_PATTERN.test(item.category)) continue;
-
       currentNames.add(item.name);
 
       // Isolate each item so one failure can't abort the whole run (and,
       // crucially, can't skip the removal-detection loop below).
       try {
+        const subscriberItem = IOTM_CATEGORY_PATTERN.test(item.category);
+
         await upsertIotmByName({
           itemName: item.name,
           itemDescid: item.descid,
           itemImage: item.image,
           month,
           mraCost: item.cost,
-          subscriberItem: true,
+          subscriberItem,
           addedToStore: now,
         });
 
@@ -86,16 +83,6 @@ export async function checkStore() {
           error instanceof Error ? error : undefined,
         );
       }
-    }
-
-    // If a non-empty fetch yielded no IotM, KoL has likely changed the category
-    // format. Treat it as untrustworthy (like an empty fetch) rather than running
-    // removal-detection, which would wrongly mark the live IotM as removed.
-    if (currentNames.size === 0) {
-      void discordClient.alert(
-        `checkStore: fetched ${items.length} item(s) but none matched the IotM category - store format may have changed; skipping`,
-      );
-      return;
     }
 
     // Mark any previously-tracked items no longer in the store as removed

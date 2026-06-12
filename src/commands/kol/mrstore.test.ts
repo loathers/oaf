@@ -52,25 +52,16 @@ vi.mock("kol.js/domains/MrStore", () => ({
 
 const { checkStore } = await import("./mrstore.js");
 
-function item(
-  name: string,
-  urgency = 0,
-  category = "June's Item-of-the-Month",
-): MrStoreItem {
+function item(name: string, urgency = 0): MrStoreItem {
   return {
     name,
     descid: 1,
     image: `${name}.gif`,
     cost: 1,
     currency: "mr_accessory",
-    category,
+    category: "Stuff",
     urgency: urgency as MrStoreItem["urgency"],
   };
-}
-
-// Permanent Mr. Store stock (Mr. Accessories, name-change form, etc.) - not an IotM.
-function permanent(name: string): MrStoreItem {
-  return item(name, 0, "Mr. Accessory Store");
 }
 
 beforeEach(() => {
@@ -120,55 +111,6 @@ describe("checkStore", () => {
     expect(setIotmRemovedFromStore).toHaveBeenCalledWith(
       "leaving",
       new Date("2026-06-11T03:30:00Z"),
-    );
-  });
-
-  // Mr. Store lists the current IotM alongside permanent stock (Mr. Accessories,
-  // name-change form, etc.). Only the actual Item of the Month should be tracked.
-  test("only Item-of-the-Month items are upserted; permanent stock is skipped", async () => {
-    getCurrentItems.mockResolvedValue([
-      permanent("Golden Mr. Accessory"),
-      item("scabbarded Sword of S Words"),
-      permanent("name change form"),
-      permanent("Monster Manuel"),
-    ]);
-    upsertIotmByName.mockResolvedValue(undefined);
-
-    await checkStore();
-
-    expect(upsertIotmByName).toHaveBeenCalledTimes(1);
-    expect(upsertIotmByName).toHaveBeenCalledWith(
-      expect.objectContaining({
-        itemName: "scabbarded Sword of S Words",
-        subscriberItem: true,
-      }),
-    );
-    for (const name of [
-      "Golden Mr. Accessory",
-      "name change form",
-      "Monster Manuel",
-    ]) {
-      expect(upsertIotmByName).not.toHaveBeenCalledWith(
-        expect.objectContaining({ itemName: name }),
-      );
-    }
-  });
-
-  // If KoL changes the category format so nothing matches, a non-empty fetch must be
-  // treated as untrustworthy - alerting rather than marking the live IotM as removed.
-  test("a non-empty fetch with no IotM-category items is skipped without touching the database", async () => {
-    getCurrentItems.mockResolvedValue([
-      permanent("Golden Mr. Accessory"),
-      permanent("name change form"),
-    ]);
-
-    await checkStore();
-
-    expect(upsertIotmByName).not.toHaveBeenCalled();
-    expect(getIotmsInStore).not.toHaveBeenCalled();
-    expect(setIotmRemovedFromStore).not.toHaveBeenCalled();
-    expect(alert).toHaveBeenCalledWith(
-      expect.stringContaining("none matched the IotM category"),
     );
   });
 

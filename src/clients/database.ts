@@ -1139,6 +1139,7 @@ export async function getIotmEventsForDateRange(from: Date, to: Date) {
   return await db
     .selectFrom("Iotm")
     .selectAll()
+    .where("subscriberItem", "=", true)
     .where((eb) =>
       eb.or([
         eb.and([eb("addedToStore", ">=", from), eb("addedToStore", "<=", to)]),
