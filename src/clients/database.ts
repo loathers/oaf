@@ -1014,50 +1014,55 @@ export async function getLatestDailies() {
   return results.rows;
 }
 
-// ── Iotm ──
+// ── MrStoreItem ──
 
-export async function upsertIotmByName(data: {
+export async function upsertMrStoreItemByName(data: {
   itemName: string;
   itemDescid?: number | null;
   itemImage?: string | null;
-  month: Date;
+  category: "iotm" | "ioty" | "other";
+  month?: Date | null;
   mraCost?: number;
   currency?: "mr_accessory" | "uncle_buck";
   subscriberItem?: boolean;
   addedToStore?: Date | null;
 }) {
-  // Check if there's an existing nameless subscriber row for this month we should claim
-  const existing = await db
-    .selectFrom("Iotm")
-    .selectAll()
-    .where("month", "=", data.month)
-    .where("subscriberItem", "=", data.subscriberItem ?? false)
-    .where("itemName", "is", null)
-    .executeTakeFirst();
+  // Subscriber items may have a nameless row pre-created for this month by the
+  // subs-rolling webhook (upsertSubsRoll); claim it rather than inserting a dupe.
+  if (data.subscriberItem && data.month) {
+    const existing = await db
+      .selectFrom("MrStoreItem")
+      .selectAll()
+      .where("month", "=", data.month)
+      .where("subscriberItem", "=", true)
+      .where("itemName", "is", null)
+      .executeTakeFirst();
 
-  if (existing) {
-    await db
-      .updateTable("Iotm")
-      .set({
-        itemName: data.itemName,
-        itemDescid: data.itemDescid ?? null,
-        itemImage: data.itemImage ?? null,
-        mraCost: data.mraCost,
-        currency: data.currency,
-        addedToStore: data.addedToStore ?? null,
-      })
-      .where("id", "=", existing.id)
-      .execute();
-    return;
+    if (existing) {
+      await db
+        .updateTable("MrStoreItem")
+        .set({
+          itemName: data.itemName,
+          itemDescid: data.itemDescid ?? null,
+          itemImage: data.itemImage ?? null,
+          mraCost: data.mraCost,
+          currency: data.currency,
+          addedToStore: data.addedToStore ?? null,
+        })
+        .where("id", "=", existing.id)
+        .execute();
+      return;
+    }
   }
 
   await db
-    .insertInto("Iotm")
+    .insertInto("MrStoreItem")
     .values({
       itemName: data.itemName,
       itemDescid: data.itemDescid ?? null,
       itemImage: data.itemImage ?? null,
-      month: data.month,
+      category: data.category,
+      month: data.month ?? null,
       ...(data.mraCost !== undefined && { mraCost: data.mraCost }),
       currency: data.currency,
       subscriberItem: data.subscriberItem ?? false,
@@ -1076,7 +1081,7 @@ export async function upsertIotmByName(data: {
           currency: data.currency,
           // Preserve the original entry; only (re)set addedToStore when the item
           // is genuinely (re-)entering - previously removed, or never recorded.
-          addedToStore: sql`CASE WHEN ${eb.ref("Iotm.removedFromStore")} IS NOT NULL OR ${eb.ref("Iotm.addedToStore")} IS NULL THEN ${eb.ref("excluded.addedToStore")} ELSE ${eb.ref("Iotm.addedToStore")} END`,
+          addedToStore: sql`CASE WHEN ${eb.ref("MrStoreItem.removedFromStore")} IS NOT NULL OR ${eb.ref("MrStoreItem.addedToStore")} IS NULL THEN ${eb.ref("excluded.addedToStore")} ELSE ${eb.ref("MrStoreItem.addedToStore")} END`,
         })),
     )
     .execute();
@@ -1084,7 +1089,7 @@ export async function upsertIotmByName(data: {
 
 export async function upsertSubsRoll(month: Date, distributedAt: Date) {
   const existing = await db
-    .selectFrom("Iotm")
+    .selectFrom("MrStoreItem")
     .selectAll()
     .where("month", "=", month)
     .where("subscriberItem", "=", true)
@@ -1092,7 +1097,7 @@ export async function upsertSubsRoll(month: Date, distributedAt: Date) {
 
   if (existing) {
     await db
-      .updateTable("Iotm")
+      .updateTable("MrStoreItem")
       .set({ distributedToSubscribers: distributedAt })
       .where("id", "=", existing.id)
       .execute();
@@ -1100,38 +1105,39 @@ export async function upsertSubsRoll(month: Date, distributedAt: Date) {
   }
 
   await db
-    .insertInto("Iotm")
+    .insertInto("MrStoreItem")
     .values({
       month,
+      category: "iotm",
       subscriberItem: true,
       distributedToSubscribers: distributedAt,
     })
     .execute();
 }
 
-export async function setIotmRemovedFromStore(
+export async function setMrStoreItemRemovedFromStore(
   itemName: string,
   removedAt: Date,
 ) {
   await db
-    .updateTable("Iotm")
+    .updateTable("MrStoreItem")
     .set({ removedFromStore: removedAt })
     .where("itemName", "=", itemName)
     .where("removedFromStore", "is", null)
     .execute();
 }
 
-export async function clearIotmRemovedFromStore(itemName: string) {
+export async function clearMrStoreItemRemovedFromStore(itemName: string) {
   await db
-    .updateTable("Iotm")
+    .updateTable("MrStoreItem")
     .set({ removedFromStore: null })
     .where("itemName", "=", itemName)
     .execute();
 }
 
-export async function getIotmsInStore() {
+export async function getMrStoreItemsInStore() {
   return await db
-    .selectFrom("Iotm")
+    .selectFrom("MrStoreItem")
     .selectAll()
     .where("addedToStore", "is not", null)
     .where("removedFromStore", "is", null)
@@ -1139,9 +1145,9 @@ export async function getIotmsInStore() {
     .execute();
 }
 
-export async function getIotmEventsForDateRange(from: Date, to: Date) {
+export async function getMrStoreItemEventsForDateRange(from: Date, to: Date) {
   return await db
-    .selectFrom("Iotm")
+    .selectFrom("MrStoreItem")
     .selectAll()
     .where((eb) =>
       eb.or([
@@ -1159,9 +1165,9 @@ export async function getIotmEventsForDateRange(from: Date, to: Date) {
     .execute();
 }
 
-export async function getIotmsForDateRange(from: Date, to: Date) {
+export async function getMrStoreItemsForDateRange(from: Date, to: Date) {
   return await db
-    .selectFrom("Iotm")
+    .selectFrom("MrStoreItem")
     .selectAll()
     .where((eb) =>
       eb.or([

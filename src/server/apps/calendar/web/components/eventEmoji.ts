@@ -1,4 +1,4 @@
-import type { IotmEvent } from "../types/calendar.js";
+import type { MrStoreItemEvent } from "../types/calendar.js";
 
 export const HOLIDAY_EMOJI: Record<string, string> = {
   "Festival of Jarlsberg": "🪄",
@@ -22,13 +22,13 @@ export const HOLIDAY_EMOJI: Record<string, string> = {
   "The Comet": "☄️",
 };
 
-const IOTM_EVENT_EMOJI: Record<IotmEvent["type"], string> = {
+const MR_STORE_EVENT_EMOJI: Record<MrStoreItemEvent["type"], string> = {
   distributed: "📬",
   added: "🙂",
   removed: "🙁",
 };
 
-const IOTM_EVENT_VERB: Record<IotmEvent["type"], string> = {
+const MR_STORE_EVENT_VERB: Record<MrStoreItemEvent["type"], string> = {
   distributed: "distributed to subscribers",
   added: "entered Mr. Store",
   removed: "left Mr. Store",
@@ -38,13 +38,13 @@ export type DayEvent = { emoji: string; label: string };
 
 export function getDayEvents(
   holidays: string[],
-  iotmEvents: IotmEvent[] = [],
+  mrStoreItemEvents: MrStoreItemEvent[] = [],
 ): DayEvent[] {
   return [
     ...holidays.map((h) => ({ emoji: HOLIDAY_EMOJI[h] ?? "🎉", label: h })),
-    ...iotmEvents.map((e) => ({
-      emoji: IOTM_EVENT_EMOJI[e.type],
-      label: `${e.itemName ?? "Unknown item"} ${IOTM_EVENT_VERB[e.type]}`,
+    ...mrStoreItemEvents.map((e) => ({
+      emoji: MR_STORE_EVENT_EMOJI[e.type],
+      label: `${e.itemName ?? "Unknown item"} ${MR_STORE_EVENT_VERB[e.type]}`,
     })),
   ];
 }

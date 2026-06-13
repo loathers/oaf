@@ -1,7 +1,7 @@
 import { LoathingDate } from "kol.js";
 import React from "react";
 
-import type { IotmEvent } from "../types/calendar.js";
+import type { MrStoreItemEvent } from "../types/calendar.js";
 import { BouncingEmoji } from "./BouncingEmoji.js";
 import CalendarNav from "./CalendarNav.js";
 import { getDayEvents } from "./eventEmoji.js";
@@ -36,7 +36,7 @@ type Props = {
   onJump: (kolYear: number) => void;
   onJumpToToday: () => void;
   moonlightMode: boolean;
-  iotmEvents: Record<number, IotmEvent[]>;
+  mrStoreItemEvents: Record<number, MrStoreItemEvent[]>;
 };
 
 export default function KolCalendar({
@@ -48,7 +48,7 @@ export default function KolCalendar({
   onJump,
   onJumpToToday,
   moonlightMode,
-  iotmEvents,
+  mrStoreItemEvents,
 }: Props) {
   return (
     <div>
@@ -83,7 +83,7 @@ export default function KolCalendar({
                 const holidays = ld
                   .getHolidays()
                   .filter((h) => h !== statDay);
-                const events = getDayEvents(holidays, iotmEvents[gameday]);
+                const events = getDayEvents(holidays, mrStoreItemEvents[gameday]);
 
                 const classes = [
                   "calendar-cell",

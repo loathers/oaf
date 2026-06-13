@@ -1,13 +1,13 @@
 import { LoathingDate } from "kol.js";
 import { toWikiLink } from "kol.js";
 
-import type { CalendarData, IotmEvent } from "../types/calendar.js";
+import type { CalendarData, MrStoreItemEvent } from "../types/calendar.js";
 import WardrobeSection from "./WardrobeSection.js";
 
 const MOON_ICONS = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
 
-function iotmEventSuffix(
-  event: IotmEvent,
+function mrStoreItemEventSuffix(
+  event: MrStoreItemEvent,
   timeFormat: Intl.DateTimeFormat,
 ): string {
   switch (event.type) {
@@ -53,7 +53,7 @@ export default function DayDetail({
   );
   const rolloverTime = localTimeFormat.format(rollover);
 
-  const iotmEvents = data.iotmEvents[gameday];
+  const mrStoreItemEvents = data.mrStoreItemEvents[gameday];
 
   const DAILIES_START_GAMEDAY = 8432; // Started collecting dailies on March 13, 2026
   const isFuture = gameday > todayGameday;
@@ -116,11 +116,11 @@ export default function DayDetail({
         </div>
       )}
 
-      {iotmEvents && iotmEvents.length > 0 && (
+      {mrStoreItemEvents && mrStoreItemEvents.length > 0 && (
         <div className="day-detail-section">
           <h3>Mr. Store</h3>
           <ul>
-            {iotmEvents.map((e, i) => (
+            {mrStoreItemEvents.map((e, i) => (
               <li key={i}>
                 {e.itemName ? (
                   <a
@@ -133,7 +133,7 @@ export default function DayDetail({
                 ) : (
                   "Unknown item"
                 )}
-                {iotmEventSuffix(e, localTimeFormat)}
+                {mrStoreItemEventSuffix(e, localTimeFormat)}
               </li>
             ))}
           </ul>

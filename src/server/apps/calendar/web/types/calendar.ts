@@ -19,7 +19,7 @@ export type RaffleInfo = {
   }[];
 };
 
-export type IotmEvent = {
+export type MrStoreItemEvent = {
   itemName: string | null;
   itemImage: string | null;
   type: "added" | "removed" | "distributed";
@@ -29,5 +29,5 @@ export type IotmEvent = {
 export type CalendarData = {
   dailies: Record<number, DailyInfo[]>;
   raffles: Record<number, RaffleInfo>;
-  iotmEvents: Record<number, IotmEvent[]>;
+  mrStoreItemEvents: Record<number, MrStoreItemEvent[]>;
 };
