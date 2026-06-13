@@ -86,7 +86,7 @@ export default function CalendarPage() {
     return () => document.body.classList.remove("moonlight-mode");
   }, [moonlightMode]);
 
-  const [data, setData] = useState<CalendarData>({ dailies: {}, raffles: {}, iotmEvents: {} });
+  const [data, setData] = useState<CalendarData>({ dailies: {}, raffles: {}, mrStoreItemEvents: {} });
   const [loading, setLoading] = useState(false);
 
   const range = useMemo(
@@ -102,7 +102,7 @@ export default function CalendarPage() {
     fetch(`/api/calendar?from=${range.from}&to=${range.to}`)
       .then((r) => r.json() as Promise<CalendarData>)
       .then(setData)
-      .catch(() => setData({ dailies: {}, raffles: {}, iotmEvents: {} }))
+      .catch(() => setData({ dailies: {}, raffles: {}, mrStoreItemEvents: {} }))
       .finally(() => setLoading(false));
   }, [range.from, range.to]);
 
@@ -203,7 +203,7 @@ export default function CalendarPage() {
           onJump={jumpGregorian}
           onJumpToToday={jumpToToday}
           moonlightMode={moonlightMode}
-          iotmEvents={data.iotmEvents}
+          mrStoreItemEvents={data.mrStoreItemEvents}
         />
       ) : (
         <KolCalendar
@@ -215,7 +215,7 @@ export default function CalendarPage() {
           onJump={jumpKol}
           onJumpToToday={jumpToToday}
           moonlightMode={moonlightMode}
-          iotmEvents={data.iotmEvents}
+          mrStoreItemEvents={data.mrStoreItemEvents}
         />
       )}
 

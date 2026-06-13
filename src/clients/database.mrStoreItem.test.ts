@@ -9,34 +9,35 @@ import {
   vi,
 } from "vitest";
 
-// This is a real-database integration test for upsertIotmByName. It only runs when
-// a DATABASE_URL is provided (skipped otherwise, e.g. local `yarn test` without a
-// DB); CI supplies a throwaway Postgres service. We inject the URL into `config`
-// because src/config.ts deliberately returns `{}` under Vitest.
+// This is a real-database integration test for upsertMrStoreItemByName. It only
+// runs when a DATABASE_URL is provided (skipped otherwise, e.g. local `yarn test`
+// without a DB); CI supplies a throwaway Postgres service. We inject the URL into
+// `config` because src/config.ts deliberately returns `{}` under Vitest.
 vi.mock("../config.js", () => ({
   config: { DATABASE_URL: process.env.DATABASE_URL },
 }));
 
-const { db, upsertIotmByName, setIotmRemovedFromStore } =
+const { db, upsertMrStoreItemByName, setMrStoreItemRemovedFromStore } =
   await import("./database.js");
 
-const NAME = "__test_iotm_upsert__";
+const NAME = "__test_mrstoreitem_upsert__";
 const MONTH = new Date("2099-01-01");
 
 const describeIfDb = process.env.DATABASE_URL ? describe : describe.skip;
 
-describeIfDb("upsertIotmByName (integration)", () => {
+describeIfDb("upsertMrStoreItemByName (integration)", () => {
   beforeAll(async () => {
     // Mirror the real schema so ON CONFLICT hits the same *partial* unique index.
     await sql`
-      CREATE TABLE IF NOT EXISTS "Iotm" (
+      CREATE TABLE IF NOT EXISTS "MrStoreItem" (
         "id" SERIAL PRIMARY KEY,
         "itemName" TEXT,
         "itemDescid" INTEGER,
         "itemImage" TEXT,
-        "month" DATE NOT NULL,
+        "month" DATE,
         "mraCost" INTEGER NOT NULL DEFAULT 1,
         "currency" TEXT NOT NULL DEFAULT 'mr_accessory',
+        "category" TEXT NOT NULL CHECK ("category" IN ('iotm', 'ioty', 'other')),
         "subscriberItem" BOOLEAN NOT NULL DEFAULT false,
         "addedToStore" TIMESTAMPTZ,
         "removedFromStore" TIMESTAMPTZ,
@@ -44,17 +45,17 @@ describeIfDb("upsertIotmByName (integration)", () => {
       )
     `.execute(db);
     await sql`
-      CREATE UNIQUE INDEX IF NOT EXISTS "Iotm_itemName_key"
-      ON "Iotm" ("itemName") WHERE "itemName" IS NOT NULL
+      CREATE UNIQUE INDEX IF NOT EXISTS "MrStoreItem_itemName_key"
+      ON "MrStoreItem" ("itemName") WHERE "itemName" IS NOT NULL
     `.execute(db);
   });
 
   beforeEach(async () => {
-    await db.deleteFrom("Iotm").where("itemName", "=", NAME).execute();
+    await db.deleteFrom("MrStoreItem").where("itemName", "=", NAME).execute();
   });
 
   afterAll(async () => {
-    await db.deleteFrom("Iotm").where("itemName", "=", NAME).execute();
+    await db.deleteFrom("MrStoreItem").where("itemName", "=", NAME).execute();
     await db.destroy();
   });
 
@@ -62,16 +63,18 @@ describeIfDb("upsertIotmByName (integration)", () => {
   // NULL). Without repeating that predicate in the ON CONFLICT target, Postgres
   // raises 42P10 on every upsert, which silently aborted checkStore.
   test("a conflicting upsert does not throw", async () => {
-    await upsertIotmByName({
+    await upsertMrStoreItemByName({
       itemName: NAME,
+      category: "iotm",
       month: MONTH,
       subscriberItem: false,
       addedToStore: new Date("2099-01-01T03:30:00Z"),
     });
 
     await expect(
-      upsertIotmByName({
+      upsertMrStoreItemByName({
         itemName: NAME,
+        category: "iotm",
         month: MONTH,
         subscriberItem: false,
         addedToStore: new Date("2099-02-01T03:30:00Z"),
@@ -83,40 +86,46 @@ describeIfDb("upsertIotmByName (integration)", () => {
   // rollover the item stays in the store.
   test("addedToStore is preserved while the item stays in store, and reset on re-entry", async () => {
     const entry = new Date("2099-01-01T03:30:00Z");
-    await upsertIotmByName({
+    await upsertMrStoreItemByName({
       itemName: NAME,
+      category: "iotm",
       month: MONTH,
       subscriberItem: false,
       addedToStore: entry,
     });
 
     // Still in store on a later rollover - entry must be preserved.
-    await upsertIotmByName({
+    await upsertMrStoreItemByName({
       itemName: NAME,
+      category: "iotm",
       month: MONTH,
       subscriberItem: false,
       addedToStore: new Date("2099-02-01T03:30:00Z"),
     });
 
     let row = await db
-      .selectFrom("Iotm")
+      .selectFrom("MrStoreItem")
       .select("addedToStore")
       .where("itemName", "=", NAME)
       .executeTakeFirstOrThrow();
     expect(row.addedToStore?.toISOString()).toBe(entry.toISOString());
 
     // Item leaves, then re-enters later - entry should now update.
-    await setIotmRemovedFromStore(NAME, new Date("2099-02-15T03:30:00Z"));
+    await setMrStoreItemRemovedFromStore(
+      NAME,
+      new Date("2099-02-15T03:30:00Z"),
+    );
     const reentry = new Date("2099-03-01T03:30:00Z");
-    await upsertIotmByName({
+    await upsertMrStoreItemByName({
       itemName: NAME,
+      category: "iotm",
       month: MONTH,
       subscriberItem: false,
       addedToStore: reentry,
     });
 
     row = await db
-      .selectFrom("Iotm")
+      .selectFrom("MrStoreItem")
       .select("addedToStore")
       .where("itemName", "=", NAME)
       .executeTakeFirstOrThrow();

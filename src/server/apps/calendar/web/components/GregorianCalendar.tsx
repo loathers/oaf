@@ -1,6 +1,6 @@
 import { LoathingDate } from "kol.js";
 
-import type { IotmEvent } from "../types/calendar.js";
+import type { MrStoreItemEvent } from "../types/calendar.js";
 import { BouncingEmoji } from "./BouncingEmoji.js";
 import CalendarNav from "./CalendarNav.js";
 import { getDayEvents } from "./eventEmoji.js";
@@ -29,7 +29,7 @@ type Props = {
   onJump: (year: number, month: number) => void;
   onJumpToToday: () => void;
   moonlightMode: boolean;
-  iotmEvents: Record<number, IotmEvent[]>;
+  mrStoreItemEvents: Record<number, MrStoreItemEvent[]>;
 };
 
 function getGridDates(year: number, month: number) {
@@ -65,7 +65,7 @@ export default function GregorianCalendar({
   onJump,
   onJumpToToday,
   moonlightMode,
-  iotmEvents,
+  mrStoreItemEvents,
 }: Props) {
   const dates = getGridDates(year, month);
 
@@ -100,7 +100,7 @@ export default function GregorianCalendar({
               ld?.getHolidays().filter((h) => h !== statDay) ?? [];
             const events = getDayEvents(
               holidays,
-              preEpoch ? undefined : iotmEvents[gameday],
+              preEpoch ? undefined : mrStoreItemEvents[gameday],
             );
 
             const classes = [
