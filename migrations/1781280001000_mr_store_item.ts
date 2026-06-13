@@ -2,9 +2,8 @@ import { type Kysely, sql } from "kysely";
 
 // Renames the "Iotm" table to "MrStoreItem" (it now tracks every Mr. Store item,
 // not just items-of-the-month), adds a "category" column (iotm | ioty | other) and
-// makes "month" nullable (NULL for permanent "other" items). The category backfill
-// here is generic (subscriberItem -> iotm/other); the IoTY reclassification and the
-// missing Oct 2024 non-subscriber IotM are applied separately via prod ssh.
+// makes "month" nullable (NULL for permanent "other" items). The missing Oct 2024
+// non-subscriber IotM ("photo booth sized crate") is inserted separately via prod ssh.
 
 export async function up(db: Kysely<never>): Promise<void> {
   // Rename the table and its dependent objects (Postgres does not auto-rename these)
@@ -27,6 +26,20 @@ export async function up(db: Kysely<never>): Promise<void> {
   await sql`
     UPDATE "MrStoreItem"
     SET "category" = CASE WHEN "subscriberItem" THEN 'iotm' ELSE 'other' END
+  `.execute(db);
+
+  // Reclassify the Items-of-the-Year (Jan 2023 onward). These rows only exist in
+  // prod (they were inserted at runtime, not seeded), so this no-ops on a fresh DB.
+  // Must run before the month-nulling below so they keep their January months.
+  await sql`
+    UPDATE "MrStoreItem"
+    SET "category" = 'ioty'
+    WHERE "itemName" IN (
+      'unoccupied sheep suit',
+      'Black and White Apron Enrollment Form',
+      'CyberRealm keycode',
+      'discreetly-wrapped Eternity Codpiece'
+    )
   `.execute(db);
 
   // Now enforce NOT NULL + the allowed values
