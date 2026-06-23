@@ -98,7 +98,14 @@ async function main() {
 
   console.log("Downloading data of loathing");
   await dataOfLoathingClient.load();
-  console.log("All data of loathing downloaded.");
+  if (dataOfLoathingClient.loaded) {
+    console.log("All data of loathing downloaded.");
+  } else {
+    console.warn("data-of-loathing unavailable, starting in degraded mode.");
+    await discordClient.alert(
+      "Started in degraded mode: data-of-loathing unavailable. Item/monster lookups will not work until the next successful reload.",
+    );
+  }
 
   console.log("Loading commands and syncing relevant data");
   await loadSlashCommands();

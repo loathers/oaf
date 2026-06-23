@@ -1,9 +1,17 @@
-import { Monster as DolMonster } from "data-of-loathing";
-import { beforeAll, describe, expect, test } from "vitest";
+import { Monster as DolMonster, createClient } from "data-of-loathing";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 
 import { testDb } from "../__fixtures__/testDb.js";
 import { Monster } from "../things/Monster.js";
-import { dataOfLoathingClient } from "./dataOfLoathing.js";
+import {
+  DataOfLoathingClient,
+  dataOfLoathingClient,
+} from "./dataOfLoathing.js";
+
+vi.mock("data-of-loathing", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("data-of-loathing")>();
+  return { ...actual, createClient: vi.fn(actual.createClient) };
+});
 
 let hermit: Monster;
 
@@ -21,5 +29,52 @@ describe("Wiki link", () => {
   test("Hermit", () => {
     const link = dataOfLoathingClient.getWikiLink(hermit);
     expect(link).toBe("https://wiki.kingdomofloathing.com/Monster:1781");
+  });
+});
+
+describe("Degraded mode", () => {
+  test("load() does not throw when data source is unavailable", async () => {
+    vi.mocked(createClient).mockReturnValueOnce({
+      load: vi.fn().mockRejectedValue(new Error("network error")),
+    } as ReturnType<typeof createClient>);
+
+    const client = new DataOfLoathingClient();
+    await expect(client.load()).resolves.toBeUndefined();
+  });
+
+  test("loaded is false after a failed load", async () => {
+    vi.mocked(createClient).mockReturnValueOnce({
+      load: vi.fn().mockRejectedValue(new Error("network error")),
+    } as ReturnType<typeof createClient>);
+
+    const client = new DataOfLoathingClient();
+    await client.load();
+    expect(client.loaded).toBe(false);
+  });
+
+  test("loaded is true after a successful load", async () => {
+    vi.mocked(createClient).mockReturnValueOnce({
+      load: vi.fn().mockResolvedValue(undefined),
+      get query() {
+        return { find: vi.fn().mockResolvedValue([]) };
+      },
+    } as ReturnType<typeof createClient>);
+
+    const client = new DataOfLoathingClient();
+    await client.load();
+    expect(client.loaded).toBe(true);
+  });
+
+  test("reload() does not retry within an hour after a failed load", async () => {
+    const mockLoad = vi.fn().mockRejectedValue(new Error("network error"));
+    vi.mocked(createClient).mockReturnValueOnce({
+      load: mockLoad,
+    } as ReturnType<typeof createClient>);
+
+    const client = new DataOfLoathingClient();
+    await client.load();
+    const result = await client.reload();
+    expect(result).toBe(false);
+    expect(mockLoad).toHaveBeenCalledTimes(1);
   });
 });

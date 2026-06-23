@@ -24,6 +24,11 @@ import { wikiClient } from "./wiki.js";
 
 export class DataOfLoathingClient {
   #client = createClient();
+  #loaded = false;
+
+  get loaded() {
+    return this.#loaded;
+  }
 
   private itemByName: Map<string, Item> = new Map();
   private itemById: Map<number, Item> = new Map();
@@ -106,81 +111,90 @@ export class DataOfLoathingClient {
   }
 
   async load() {
-    await this.#client.load();
-    const em = this.#client.query;
+    try {
+      await this.#client.load();
+      const em = this.#client.query;
 
-    const skills = await em.find(DolSkill, {}, { populate: ["modifiers"] });
-    for (const s of skills) {
-      const skill = new Skill(s);
-      this.register(skill);
-      const block = skill.block();
-      if (!this.#lastSkills[block] || skill.id > this.#lastSkills[block]) {
-        this.#lastSkills[block] = skill.id;
+      const skills = await em.find(DolSkill, {}, { populate: ["modifiers"] });
+      for (const s of skills) {
+        const skill = new Skill(s);
+        this.register(skill);
+        const block = skill.block();
+        if (!this.#lastSkills[block] || skill.id > this.#lastSkills[block]) {
+          this.#lastSkills[block] = skill.id;
+        }
       }
+
+      const effects = await em.find(DolEffect, {}, { populate: ["modifiers"] });
+      for (const e of effects) {
+        this.register(new Effect(e));
+      }
+
+      const monsters = await em.find(
+        DolMonster,
+        {},
+        { populate: ["drops.item"] },
+      );
+      for (const m of monsters) {
+        this.register(new Monster(m));
+      }
+
+      const familiars = await em.find(
+        DolFamiliar,
+        {},
+        {
+          populate: [
+            "larva.modifiers",
+            "larva.consumable",
+            "larva.equipment",
+            "equipment.modifiers",
+            "equipment.consumable",
+            "equipment.equipment",
+            "modifiers",
+          ],
+        },
+      );
+      for (const f of familiars) {
+        const familiar = new Familiar(f);
+        this.register(familiar);
+        if (familiar.id > this.#lastFamiliar) this.#lastFamiliar = familiar.id;
+      }
+
+      const items = await em.find(
+        DolItem,
+        {},
+        {
+          populate: [
+            "modifiers",
+            "consumable",
+            "equipment",
+            "foldGroups.items",
+            "zapGroups.items",
+          ],
+        },
+      );
+      for (const i of items) {
+        const item = new Item(i);
+        this.register(item);
+        if (item.id > this.#lastItem) this.#lastItem = item.id;
+      }
+
+      // Wire up familiar hatchling/equipment descriptions
+      for (const familiar of this.familiars) {
+        if (familiar.hatchling) familiar.hatchling.addGrowingFamiliar(familiar);
+        if (familiar.familiarEquipment)
+          familiar.familiarEquipment.addEquppingFamiliar(familiar);
+      }
+
+      pizzaTree.build(this.effectByName);
+      this.#loaded = true;
+    } catch (e) {
+      console.warn(
+        "data-of-loathing unavailable, running in degraded mode:",
+        e,
+      );
     }
 
-    const effects = await em.find(DolEffect, {}, { populate: ["modifiers"] });
-    for (const e of effects) {
-      this.register(new Effect(e));
-    }
-
-    const monsters = await em.find(
-      DolMonster,
-      {},
-      { populate: ["drops.item"] },
-    );
-    for (const m of monsters) {
-      this.register(new Monster(m));
-    }
-
-    const familiars = await em.find(
-      DolFamiliar,
-      {},
-      {
-        populate: [
-          "larva.modifiers",
-          "larva.consumable",
-          "larva.equipment",
-          "equipment.modifiers",
-          "equipment.consumable",
-          "equipment.equipment",
-          "modifiers",
-        ],
-      },
-    );
-    for (const f of familiars) {
-      const familiar = new Familiar(f);
-      this.register(familiar);
-      if (familiar.id > this.#lastFamiliar) this.#lastFamiliar = familiar.id;
-    }
-
-    const items = await em.find(
-      DolItem,
-      {},
-      {
-        populate: [
-          "modifiers",
-          "consumable",
-          "equipment",
-          "foldGroups.items",
-          "zapGroups.items",
-        ],
-      },
-    );
-    for (const i of items) {
-      const item = new Item(i);
-      this.register(item);
-      if (item.id > this.#lastItem) this.#lastItem = item.id;
-    }
-
-    // Wire up familiar hatchling/equipment descriptions
-    for (const familiar of this.familiars) {
-      if (familiar.hatchling) familiar.hatchling.addGrowingFamiliar(familiar);
-      if (familiar.familiarEquipment)
-        familiar.familiarEquipment.addEquppingFamiliar(familiar);
-    }
-
-    pizzaTree.build(this.effectByName);
     this.lastDownloadTime = Date.now();
   }
 
@@ -188,6 +202,7 @@ export class DataOfLoathingClient {
     if (this.lastDownloadTime < Date.now() - 3600000) {
       this.clearMaps();
       clearMemoized(["things"]);
+      this.#loaded = false;
       await this.load();
       return true;
     }
