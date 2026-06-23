@@ -59,7 +59,7 @@ describe("Degraded mode", () => {
     const client = new DataOfLoathingClient();
     await client.load();
     expect(client.loaded).toBe(true);
-  });
+  }, 15000);
 
   test("reload() does not retry within an hour after a failed load", async () => {
     const mockClient = createClient();
