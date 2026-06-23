@@ -36,7 +36,7 @@ describe("Degraded mode", () => {
   test("load() does not throw when data source is unavailable", async () => {
     vi.mocked(createClient).mockReturnValueOnce({
       load: vi.fn().mockRejectedValue(new Error("network error")),
-    } as ReturnType<typeof createClient>);
+    } as unknown as ReturnType<typeof createClient>);
 
     const client = new DataOfLoathingClient();
     await expect(client.load()).resolves.toBeUndefined();
@@ -45,7 +45,7 @@ describe("Degraded mode", () => {
   test("loaded is false after a failed load", async () => {
     vi.mocked(createClient).mockReturnValueOnce({
       load: vi.fn().mockRejectedValue(new Error("network error")),
-    } as ReturnType<typeof createClient>);
+    } as unknown as ReturnType<typeof createClient>);
 
     const client = new DataOfLoathingClient();
     await client.load();
@@ -58,7 +58,7 @@ describe("Degraded mode", () => {
       get query() {
         return { find: vi.fn().mockResolvedValue([]) };
       },
-    } as ReturnType<typeof createClient>);
+    } as unknown as ReturnType<typeof createClient>);
 
     const client = new DataOfLoathingClient();
     await client.load();
@@ -69,7 +69,7 @@ describe("Degraded mode", () => {
     const mockLoad = vi.fn().mockRejectedValue(new Error("network error"));
     vi.mocked(createClient).mockReturnValueOnce({
       load: mockLoad,
-    } as ReturnType<typeof createClient>);
+    } as unknown as ReturnType<typeof createClient>);
 
     const client = new DataOfLoathingClient();
     await client.load();
