@@ -34,18 +34,18 @@ describe("Wiki link", () => {
 
 describe("Degraded mode", () => {
   test("load() does not throw when data source is unavailable", async () => {
-    vi.mocked(createClient).mockReturnValueOnce({
-      load: vi.fn().mockRejectedValue(new Error("network error")),
-    } as unknown as ReturnType<typeof createClient>);
+    const mockClient = createClient();
+    vi.spyOn(mockClient, "load").mockRejectedValue(new Error("network error"));
+    vi.mocked(createClient).mockReturnValueOnce(mockClient);
 
     const client = new DataOfLoathingClient();
     await expect(client.load()).resolves.toBeUndefined();
   });
 
   test("loaded is false after a failed load", async () => {
-    vi.mocked(createClient).mockReturnValueOnce({
-      load: vi.fn().mockRejectedValue(new Error("network error")),
-    } as unknown as ReturnType<typeof createClient>);
+    const mockClient = createClient();
+    vi.spyOn(mockClient, "load").mockRejectedValue(new Error("network error"));
+    vi.mocked(createClient).mockReturnValueOnce(mockClient);
 
     const client = new DataOfLoathingClient();
     await client.load();
@@ -53,12 +53,8 @@ describe("Degraded mode", () => {
   });
 
   test("loaded is true after a successful load", async () => {
-    vi.mocked(createClient).mockReturnValueOnce({
-      load: vi.fn().mockResolvedValue(undefined),
-      get query() {
-        return { find: vi.fn().mockResolvedValue([]) };
-      },
-    } as unknown as ReturnType<typeof createClient>);
+    const realClient = await testDb;
+    vi.mocked(createClient).mockReturnValueOnce(realClient);
 
     const client = new DataOfLoathingClient();
     await client.load();
@@ -66,10 +62,11 @@ describe("Degraded mode", () => {
   });
 
   test("reload() does not retry within an hour after a failed load", async () => {
-    const mockLoad = vi.fn().mockRejectedValue(new Error("network error"));
-    vi.mocked(createClient).mockReturnValueOnce({
-      load: mockLoad,
-    } as unknown as ReturnType<typeof createClient>);
+    const mockClient = createClient();
+    const mockLoad = vi
+      .spyOn(mockClient, "load")
+      .mockRejectedValue(new Error("network error"));
+    vi.mocked(createClient).mockReturnValueOnce(mockClient);
 
     const client = new DataOfLoathingClient();
     await client.load();
