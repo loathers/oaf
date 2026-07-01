@@ -85,7 +85,7 @@ async function buildTitleMessage(adjective: string): Promise<Message> {
 
   const files: AttachmentBuilder[] = [];
   try {
-    const png = await renderSvg(date.getMoonsAsSvg("Noto Color Emoji"));
+    const png = await renderSvg(date.getMoonsAsSvg());
     if (png) files.push(new AttachmentBuilder(png, { name: "moons.png" }));
   } catch {
     // Moon rendering is non-critical
