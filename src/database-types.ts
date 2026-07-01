@@ -135,7 +135,7 @@ export interface MrStoreItemTable {
 export interface PvpSeasonTable {
   seasonNumber: number;
   seasonName: string;
-  startDate: ColumnType<Date, Date | string, Date | string>;
+  startDate: ColumnType<Date, Date | string, Date | string>; // TIMESTAMPTZ, always at rollover time (03:30 UTC)
 }
 
 export interface DB {
