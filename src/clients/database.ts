@@ -1186,3 +1186,42 @@ export async function getMrStoreItemsForDateRange(from: Date, to: Date) {
     .orderBy("month", "asc")
     .execute();
 }
+
+export async function getLatestPvpSeason() {
+  return await db
+    .selectFrom("PvpSeason")
+    .selectAll()
+    .orderBy("startDate", "desc")
+    .limit(1)
+    .executeTakeFirst();
+}
+
+export async function getPvpSeasonsForDateRange(from: Date, to: Date) {
+  // Fetch seasons that start within or just before the range (up to ~90 days
+  // before `from`) so the caller can always determine the active season.
+  const lookback = new Date(from.getTime() - 90 * 24 * 60 * 60 * 1000);
+  return await db
+    .selectFrom("PvpSeason")
+    .selectAll()
+    .where("startDate", ">=", lookback)
+    .where("startDate", "<=", to)
+    .orderBy("startDate", "asc")
+    .execute();
+}
+
+export async function upsertPvpSeason(data: {
+  seasonNumber: number;
+  seasonName: string;
+  startDate: Date;
+}) {
+  await db
+    .insertInto("PvpSeason")
+    .values(data)
+    .onConflict((oc) =>
+      oc.column("seasonNumber").doUpdateSet({
+        seasonName: data.seasonName,
+        startDate: data.startDate,
+      }),
+    )
+    .execute();
+}

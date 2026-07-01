@@ -1,4 +1,4 @@
-import type { MrStoreItemEvent } from "../types/calendar.js";
+import type { MrStoreItemEvent, PvpSeasonInfo } from "../types/calendar.js";
 
 export const HOLIDAY_EMOJI: Record<string, string> = {
   "Festival of Jarlsberg": "🪄",
@@ -39,6 +39,7 @@ export type DayEvent = { emoji: string; label: string };
 export function getDayEvents(
   holidays: string[],
   mrStoreItemEvents: MrStoreItemEvent[] = [],
+  pvpSeason?: PvpSeasonInfo,
 ): DayEvent[] {
   return [
     ...holidays.map((h) => ({ emoji: HOLIDAY_EMOJI[h] ?? "🎉", label: h })),
@@ -46,5 +47,13 @@ export function getDayEvents(
       emoji: MR_STORE_EVENT_EMOJI[e.type],
       label: `${e.itemName ?? "Unknown item"} ${MR_STORE_EVENT_VERB[e.type]}`,
     })),
+    ...(pvpSeason
+      ? [
+          {
+            emoji: "⚔️",
+            label: `Season ${pvpSeason.seasonNumber}: ${pvpSeason.seasonName} started`,
+          },
+        ]
+      : []),
   ];
 }

@@ -1,7 +1,7 @@
 import { LoathingDate } from "kol.js";
 import React from "react";
 
-import type { MrStoreItemEvent } from "../types/calendar.js";
+import type { MrStoreItemEvent, PvpSeasonInfo } from "../types/calendar.js";
 import { BouncingEmoji } from "./BouncingEmoji.js";
 import CalendarNav from "./CalendarNav.js";
 import { getDayEvents } from "./eventEmoji.js";
@@ -37,6 +37,7 @@ type Props = {
   onJumpToToday: () => void;
   moonlightMode: boolean;
   mrStoreItemEvents: Record<number, MrStoreItemEvent[]>;
+  pvpSeasons: Record<number, PvpSeasonInfo>;
 };
 
 export default function KolCalendar({
@@ -49,6 +50,7 @@ export default function KolCalendar({
   onJumpToToday,
   moonlightMode,
   mrStoreItemEvents,
+  pvpSeasons,
 }: Props) {
   return (
     <div>
@@ -83,7 +85,7 @@ export default function KolCalendar({
                 const holidays = ld
                   .getHolidays()
                   .filter((h) => h !== statDay);
-                const events = getDayEvents(holidays, mrStoreItemEvents[gameday]);
+                const events = getDayEvents(holidays, mrStoreItemEvents[gameday], pvpSeasons[gameday]);
 
                 const classes = [
                   "calendar-cell",

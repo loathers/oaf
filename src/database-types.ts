@@ -132,6 +132,12 @@ export interface MrStoreItemTable {
   >;
 }
 
+export interface PvpSeasonTable {
+  seasonNumber: number;
+  seasonName: string;
+  startDate: ColumnType<Date, Date | string, Date | string>;
+}
+
 export interface DB {
   Player: PlayerTable;
   StandingOffer: StandingOfferTable;
@@ -147,6 +153,7 @@ export interface DB {
   Daily: DailyTable;
   DailySubmission: DailySubmissionTable;
   MrStoreItem: MrStoreItemTable;
+  PvpSeason: PvpSeasonTable;
 }
 
 export type Player = Selectable<PlayerTable>;
@@ -163,3 +170,4 @@ export type FlowerPriceAlert = Selectable<FlowerPriceAlertTable>;
 export type Daily = Selectable<DailyTable>;
 export type DailySubmission = Selectable<DailySubmissionTable>;
 export type MrStoreItem = Selectable<MrStoreItemTable>;
+export type PvpSeason = Selectable<PvpSeasonTable>;
