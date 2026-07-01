@@ -29,10 +29,7 @@ export function init() {
 
         const pvp = new Pvp(kolClient);
         const { seasonNumber, seasonName } = await pvp.getCurrentSeason();
-        const startDate = new Date(
-          Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
-        );
-        await upsertPvpSeason({ seasonNumber, seasonName, startDate });
+        await upsertPvpSeason({ seasonNumber, seasonName, startDate: now });
       } catch (error) {
         await discordClient.alert(
           "Failed to sync PvP season",
