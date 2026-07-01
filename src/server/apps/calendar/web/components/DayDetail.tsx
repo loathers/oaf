@@ -1,7 +1,7 @@
 import { LoathingDate } from "kol.js";
 import { toWikiLink } from "kol.js";
 
-import type { CalendarData, MrStoreItemEvent } from "../types/calendar.js";
+import type { CalendarData, MrStoreItemEvent, PvpSeasonInfo } from "../types/calendar.js";
 import WardrobeSection from "./WardrobeSection.js";
 
 const MOON_ICONS = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
@@ -54,6 +54,11 @@ export default function DayDetail({
   const rolloverTime = localTimeFormat.format(rollover);
 
   const mrStoreItemEvents = data.mrStoreItemEvents[gameday];
+
+  const activePvpSeason = Object.entries(data.pvpSeasons)
+    .map(([k, v]): [number, PvpSeasonInfo] => [Number(k), v])
+    .filter(([startGameday]) => startGameday <= gameday)
+    .sort(([a], [b]) => b - a)[0]?.[1];
 
   const DAILIES_START_GAMEDAY = 8432; // Started collecting dailies on March 13, 2026
   const isFuture = gameday > todayGameday;
@@ -137,6 +142,21 @@ export default function DayDetail({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {activePvpSeason && (
+        <div className="day-detail-section">
+          <h3>PvP Season</h3>
+          <p>
+            <a
+              href="https://www.kingdomofloathing.com/peevpee.php?place=rules"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Season {activePvpSeason.seasonNumber}: {activePvpSeason.seasonName}
+            </a>
+          </p>
         </div>
       )}
 

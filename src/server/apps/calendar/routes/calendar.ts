@@ -5,12 +5,14 @@ import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
 import {
   getDailiesForGamedayRange,
   getMrStoreItemEventsForDateRange,
+  getPvpSeasonsForDateRange,
   getRafflesForGamedayRange,
 } from "../../../../clients/database.js";
 import { DAILY_GLOBALS } from "../../../../commands/misc/_globals.js";
 import type {
   CalendarData,
   MrStoreItemEvent,
+  PvpSeasonInfo,
   TextSegment,
 } from "../web/types/calendar.js";
 
@@ -110,10 +112,11 @@ calendarRouter.get("/", async (req, res) => {
   const fromDate = new Date(epochMs + from * DAY_MS);
   const toDate = new Date(epochMs + (to + 1) * DAY_MS);
 
-  const [dailies, raffles, mrStoreItems] = await Promise.all([
+  const [dailies, raffles, mrStoreItems, pvpSeasonRows] = await Promise.all([
     getDailiesForGamedayRange(from, to),
     getRafflesForGamedayRange(from, to),
     getMrStoreItemEventsForDateRange(fromDate, toDate),
+    getPvpSeasonsForDateRange(fromDate, toDate),
   ]);
 
   const dailyDisplayNames = new Map(
@@ -162,6 +165,13 @@ calendarRouter.get("/", async (req, res) => {
     events.sort((a, b) => eventOrder[a.type] - eventOrder[b.type]);
   }
 
+  const pvpSeasons: Record<number, PvpSeasonInfo> = Object.fromEntries(
+    pvpSeasonRows.map((s) => [
+      dateToGameday(s.startDate),
+      { seasonNumber: s.seasonNumber, seasonName: s.seasonName },
+    ]),
+  );
+
   const result: CalendarData = {
     dailies: Object.fromEntries(
       [...dailiesByGameday.entries()].map(([gameday, entries]) => [
@@ -198,6 +208,7 @@ calendarRouter.get("/", async (req, res) => {
       }),
     ),
     mrStoreItemEvents,
+    pvpSeasons,
   };
 
   res.json(result);

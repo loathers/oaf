@@ -26,8 +26,14 @@ export type MrStoreItemEvent = {
   time: string;
 };
 
+export type PvpSeasonInfo = {
+  seasonNumber: number;
+  seasonName: string;
+};
+
 export type CalendarData = {
   dailies: Record<number, DailyInfo[]>;
   raffles: Record<number, RaffleInfo>;
   mrStoreItemEvents: Record<number, MrStoreItemEvent[]>;
+  pvpSeasons: Record<number, PvpSeasonInfo>;
 };
