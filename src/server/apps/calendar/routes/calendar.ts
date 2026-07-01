@@ -91,6 +91,11 @@ function renderDaily(key: string, value: string): TextSegment[] {
   }
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const EPOCH_MS = LoathingDate.EPOCH.getTime();
+const dateToGameday = (d: Date) =>
+  Math.floor((d.getTime() - EPOCH_MS) / DAY_MS);
+
 export const calendarRouter = Router();
 
 calendarRouter.get("/", async (req, res) => {
@@ -107,10 +112,8 @@ calendarRouter.get("/", async (req, res) => {
     return;
   }
 
-  const DAY_MS = 24 * 60 * 60 * 1000;
-  const epochMs = LoathingDate.EPOCH.getTime();
-  const fromDate = new Date(epochMs + from * DAY_MS);
-  const toDate = new Date(epochMs + (to + 1) * DAY_MS);
+  const fromDate = new Date(EPOCH_MS + from * DAY_MS);
+  const toDate = new Date(EPOCH_MS + (to + 1) * DAY_MS);
 
   const [dailies, raffles, mrStoreItems, pvpSeasonRows] = await Promise.all([
     getDailiesForGamedayRange(from, to),
@@ -124,9 +127,6 @@ calendarRouter.get("/", async (req, res) => {
   );
 
   const dailiesByGameday = Map.groupBy(dailies, (d) => d.gameday);
-
-  const dateToGameday = (d: Date) =>
-    Math.floor((d.getTime() - epochMs) / DAY_MS);
 
   const mrStoreItemEvents: Record<number, MrStoreItemEvent[]> = {};
   const pushEvent = (gameday: number, event: MrStoreItemEvent) => {
