@@ -1135,6 +1135,14 @@ export async function clearMrStoreItemRemovedFromStore(itemName: string) {
     .execute();
 }
 
+export async function getMrStoreItemByName(itemName: string) {
+  return await db
+    .selectFrom("MrStoreItem")
+    .selectAll()
+    .where("itemName", "=", itemName)
+    .executeTakeFirst();
+}
+
 export async function getMrStoreItemsInStore() {
   return await db
     .selectFrom("MrStoreItem")

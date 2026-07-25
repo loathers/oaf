@@ -13,7 +13,11 @@ import {
 import { LoathingDate, toWikiLink } from "kol.js";
 import { MrStore, MrStoreUrgency } from "kol.js/domains/MrStore";
 
-import { getBirthdays, setGlobalsMessage } from "../../clients/database.js";
+import {
+  getBirthdays,
+  getMrStoreItemByName,
+  setGlobalsMessage,
+} from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
@@ -75,6 +79,31 @@ const ADJECTIVES = [
 
 const mrStore = new MrStore(kolClient);
 
+async function timeTwitchingTowerLine(): Promise<string | null> {
+  const items = await mrStore.getCurrentItems();
+  // An empty fetch is untrustworthy (the API returns {} during rollover)
+  if (items.length === 0) return null;
+
+  const towerLink = hyperlink(
+    "Time-Twitching Tower",
+    toWikiLink("Time-Twitching Tower"),
+  );
+
+  if (items.some((i) => i.name === TIME_TWITCHING_TOOLBELT)) {
+    return `The ${towerLink} is open \u{23F3}`;
+  }
+
+  // The toot races checkStore at rollover, so the removal may not be recorded
+  // yet: a row still marked in-store, or removed at this rollover, means the
+  // tower closed just now
+  const toolbelt = await getMrStoreItemByName(TIME_TWITCHING_TOOLBELT);
+  const inStoreUntilNow =
+    toolbelt?.addedToStore != null &&
+    (toolbelt.removedFromStore === null ||
+      toolbelt.removedFromStore >= LoathingDate.getRollover());
+  return inStoreUntilNow ? `The ${towerLink} has closed \u{231B}` : null;
+}
+
 async function buildTitleMessage(adjective: string): Promise<Message> {
   const date = new LoathingDate();
 
@@ -90,12 +119,8 @@ async function buildTitleMessage(adjective: string): Promise<Message> {
   ];
 
   try {
-    const items = await mrStore.getCurrentItems();
-    if (items.some((i) => i.name === TIME_TWITCHING_TOOLBELT)) {
-      lines.push(
-        `The ${hyperlink("Time-Twitching Tower", toWikiLink("Time-Twitching Tower"))} is open \u{231B}`,
-      );
-    }
+    const towerLine = await timeTwitchingTowerLine();
+    if (towerLine) lines.push(towerLine);
   } catch {
     // Mr. Store fetch is non-critical here
   }
