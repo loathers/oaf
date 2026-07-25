@@ -97,11 +97,15 @@ async function timeTwitchingTowerLine(): Promise<string | null> {
   // yet: a row still marked in-store, or removed at this rollover, means the
   // tower closed just now
   const toolbelt = await getMrStoreItemByName(TIME_TWITCHING_TOOLBELT);
-  const inStoreUntilNow =
-    toolbelt?.addedToStore != null &&
-    (toolbelt.removedFromStore === null ||
-      toolbelt.removedFromStore >= LoathingDate.getRollover());
-  return inStoreUntilNow ? `The ${towerLink} has closed \u{231B}` : null;
+  if (!toolbelt?.addedToStore) return null;
+  if (
+    toolbelt.removedFromStore !== null &&
+    toolbelt.removedFromStore < LoathingDate.getRollover()
+  ) {
+    return null;
+  }
+
+  return `The ${towerLink} has closed \u{231B}`;
 }
 
 async function buildTitleMessage(adjective: string): Promise<Message> {
