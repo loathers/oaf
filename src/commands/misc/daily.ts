@@ -89,18 +89,25 @@ async function timeTwitchingTowerLine(): Promise<string | null> {
     toWikiLink("Time-Twitching Tower"),
   );
 
+  // The toot races checkStore at rollover, so today's change may not be
+  // recorded on the row yet - treat any unrecorded state as "changed just now"
+  const rollover = LoathingDate.getRollover();
+  const toolbelt = await getMrStoreItemByName(TIME_TWITCHING_TOOLBELT);
+
   if (items.some((i) => i.name === TIME_TWITCHING_TOOLBELT)) {
-    return `The ${towerLink} is open \u{23F3}`;
+    const wasAlreadyInStore =
+      toolbelt?.addedToStore != null &&
+      toolbelt.removedFromStore === null &&
+      toolbelt.addedToStore < rollover;
+    return wasAlreadyInStore
+      ? `The ${towerLink} is open \u{23F3}`
+      : `The ${towerLink} has opened \u{23F3}`;
   }
 
-  // The toot races checkStore at rollover, so the removal may not be recorded
-  // yet: a row still marked in-store, or removed at this rollover, means the
-  // tower closed just now
-  const toolbelt = await getMrStoreItemByName(TIME_TWITCHING_TOOLBELT);
   if (!toolbelt?.addedToStore) return null;
   if (
     toolbelt.removedFromStore !== null &&
-    toolbelt.removedFromStore < LoathingDate.getRollover()
+    toolbelt.removedFromStore < rollover
   ) {
     return null;
   }
