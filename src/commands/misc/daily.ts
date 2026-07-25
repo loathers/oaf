@@ -20,7 +20,11 @@ import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { formatPlayer } from "../../discordUtils.js";
 import { renderSvg } from "../../svgConverter.js";
-import { englishJoin, getRandom } from "../../utils.js";
+import {
+  TIME_TWITCHING_TOOLBELT,
+  englishJoin,
+  getRandom,
+} from "../../utils.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
 import { buildGlobals } from "./_globals.js";
 
@@ -69,6 +73,8 @@ const ADJECTIVES = [
   "toothsome",
 ];
 
+const mrStore = new MrStore(kolClient);
+
 async function buildTitleMessage(adjective: string): Promise<Message> {
   const date = new LoathingDate();
 
@@ -82,6 +88,17 @@ async function buildTitleMessage(adjective: string): Promise<Message> {
     dateStr,
     date.getMoonDescription(),
   ];
+
+  try {
+    const items = await mrStore.getCurrentItems();
+    if (items.some((i) => i.name === TIME_TWITCHING_TOOLBELT)) {
+      lines.push(
+        `The ${hyperlink("Time-Twitching Tower", toWikiLink("Time-Twitching Tower"))} is open \u{231B}`,
+      );
+    }
+  } catch {
+    // Mr. Store fetch is non-critical here
+  }
 
   const files: AttachmentBuilder[] = [];
   try {
@@ -120,8 +137,6 @@ async function birthdaySection(): Promise<string | null> {
 
   return `${heading("In-Game Birthdays \u{1F382}", 2)}\n\n${content}`;
 }
-
-const mrStore = new MrStore(kolClient);
 
 async function mrStoreSection(): Promise<string | null> {
   const items = await mrStore.getCurrentItems();
