@@ -119,7 +119,3 @@ export async function checkStore() {
     );
   }
 }
-
-export function init() {
-  kolClient.on("rollover", () => void checkStore());
-}

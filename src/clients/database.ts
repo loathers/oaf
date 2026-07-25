@@ -1135,6 +1135,14 @@ export async function clearMrStoreItemRemovedFromStore(itemName: string) {
     .execute();
 }
 
+export async function getMrStoreItemByName(itemName: string) {
+  return await db
+    .selectFrom("MrStoreItem")
+    .selectAll()
+    .where("itemName", "=", itemName)
+    .executeTakeFirst();
+}
+
 export async function getMrStoreItemsInStore() {
   return await db
     .selectFrom("MrStoreItem")
@@ -1165,8 +1173,12 @@ export async function getMrStoreItemEventsForDateRange(from: Date, to: Date) {
     .execute();
 }
 
-export async function getMrStoreItemsForDateRange(from: Date, to: Date) {
-  return await db
+export async function getMrStoreItemsForDateRange(
+  from: Date,
+  to: Date,
+  itemName?: string,
+) {
+  let query = db
     .selectFrom("MrStoreItem")
     .selectAll()
     .where((eb) =>
@@ -1183,8 +1195,9 @@ export async function getMrStoreItemsForDateRange(from: Date, to: Date) {
         ]),
       ]),
     )
-    .orderBy("month", "asc")
-    .execute();
+    .orderBy("month", "asc");
+  if (itemName !== undefined) query = query.where("itemName", "=", itemName);
+  return await query.execute();
 }
 
 export async function getLatestPvpSeason() {

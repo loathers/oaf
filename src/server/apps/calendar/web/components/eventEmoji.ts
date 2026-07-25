@@ -1,3 +1,4 @@
+import { TIME_TWITCHING_TOWER } from "../../../../../timeTwitchingTower.js";
 import type { MrStoreItemEvent, PvpSeasonInfo } from "../types/calendar.js";
 
 export const HOLIDAY_EMOJI: Record<string, string> = {
@@ -40,9 +41,13 @@ export function getDayEvents(
   holidays: string[],
   mrStoreItemEvents: MrStoreItemEvent[] = [],
   pvpSeason?: PvpSeasonInfo,
+  towerOpen = false,
 ): DayEvent[] {
   return [
     ...holidays.map((h) => ({ emoji: HOLIDAY_EMOJI[h] ?? "🎉", label: h })),
+    ...(towerOpen
+      ? [{ emoji: "⏳", label: `${TIME_TWITCHING_TOWER} is open` }]
+      : []),
     ...mrStoreItemEvents.map((e) => ({
       emoji: MR_STORE_EVENT_EMOJI[e.type],
       label: `${e.itemName ?? "Unknown item"} ${MR_STORE_EVENT_VERB[e.type]}`,

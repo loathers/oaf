@@ -37,6 +37,7 @@ type Props = {
   onJumpToToday: () => void;
   moonlightMode: boolean;
   mrStoreItemEvents: Record<number, MrStoreItemEvent[]>;
+  towerOpenDays: number[];
   pvpSeasons: Record<number, PvpSeasonInfo>;
 };
 
@@ -50,6 +51,7 @@ export default function KolCalendar({
   onJumpToToday,
   moonlightMode,
   mrStoreItemEvents,
+  towerOpenDays,
   pvpSeasons,
 }: Props) {
   return (
@@ -85,7 +87,7 @@ export default function KolCalendar({
                 const holidays = ld
                   .getHolidays()
                   .filter((h) => h !== statDay);
-                const events = getDayEvents(holidays, mrStoreItemEvents[gameday], pvpSeasons[gameday]);
+                const events = getDayEvents(holidays, mrStoreItemEvents[gameday], pvpSeasons[gameday], towerOpenDays.includes(gameday));
 
                 const classes = [
                   "calendar-cell",

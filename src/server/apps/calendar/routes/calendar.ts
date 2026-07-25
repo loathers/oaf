@@ -5,10 +5,15 @@ import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
 import {
   getDailiesForGamedayRange,
   getMrStoreItemEventsForDateRange,
+  getMrStoreItemsForDateRange,
   getPvpSeasonsForDateRange,
   getRafflesForGamedayRange,
 } from "../../../../clients/database.js";
 import { DAILY_GLOBALS } from "../../../../commands/misc/_globals.js";
+import {
+  TIME_TWITCHING_TOOLBELT,
+  getTowerOpenGamedays,
+} from "../../../../timeTwitchingTower.js";
 import type {
   CalendarData,
   MrStoreItemEvent,
@@ -115,12 +120,14 @@ calendarRouter.get("/", async (req, res) => {
   const fromDate = new Date(EPOCH_MS + from * DAY_MS);
   const toDate = new Date(EPOCH_MS + (to + 1) * DAY_MS);
 
-  const [dailies, raffles, mrStoreItems, pvpSeasonRows] = await Promise.all([
-    getDailiesForGamedayRange(from, to),
-    getRafflesForGamedayRange(from, to),
-    getMrStoreItemEventsForDateRange(fromDate, toDate),
-    getPvpSeasonsForDateRange(fromDate, toDate),
-  ]);
+  const [dailies, raffles, mrStoreItems, toolbeltSpans, pvpSeasonRows] =
+    await Promise.all([
+      getDailiesForGamedayRange(from, to),
+      getRafflesForGamedayRange(from, to),
+      getMrStoreItemEventsForDateRange(fromDate, toDate),
+      getMrStoreItemsForDateRange(fromDate, toDate, TIME_TWITCHING_TOOLBELT),
+      getPvpSeasonsForDateRange(fromDate, toDate),
+    ]);
 
   const dailyDisplayNames = new Map(
     DAILY_GLOBALS.map((g) => [g.key, g.displayName]),
@@ -134,6 +141,9 @@ calendarRouter.get("/", async (req, res) => {
   };
 
   for (const item of mrStoreItems) {
+    // The toolbelt is represented as a "Time-Twitching Tower is open" span
+    // instead of added/removed point events
+    if (item.itemName === TIME_TWITCHING_TOOLBELT) continue;
     if (item.addedToStore) {
       pushEvent(dateToGameday(item.addedToStore), {
         itemName: item.itemName,
@@ -164,6 +174,13 @@ calendarRouter.get("/", async (req, res) => {
   for (const events of Object.values(mrStoreItemEvents)) {
     events.sort((a, b) => eventOrder[a.type] - eventOrder[b.type]);
   }
+
+  const towerOpenDays = getTowerOpenGamedays(
+    toolbeltSpans,
+    from,
+    to,
+    LoathingDate.gameDayFromRealDate(new Date()),
+  );
 
   const pvpSeasons: Record<number, PvpSeasonInfo> = Object.fromEntries(
     pvpSeasonRows.map((s) => [
@@ -208,6 +225,7 @@ calendarRouter.get("/", async (req, res) => {
       }),
     ),
     mrStoreItemEvents,
+    towerOpenDays,
     pvpSeasons,
   };
 

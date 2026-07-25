@@ -35,5 +35,6 @@ export type CalendarData = {
   dailies: Record<number, DailyInfo[]>;
   raffles: Record<number, RaffleInfo>;
   mrStoreItemEvents: Record<number, MrStoreItemEvent[]>;
+  towerOpenDays: number[];
   pvpSeasons: Record<number, PvpSeasonInfo>;
 };

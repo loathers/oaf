@@ -13,14 +13,24 @@ import {
 import { LoathingDate, toWikiLink } from "kol.js";
 import { MrStore, MrStoreUrgency } from "kol.js/domains/MrStore";
 
-import { getBirthdays, setGlobalsMessage } from "../../clients/database.js";
+import {
+  getBirthdays,
+  getMrStoreItemByName,
+  setGlobalsMessage,
+} from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import type { Player } from "../../database-types.js";
 import { formatPlayer } from "../../discordUtils.js";
 import { renderSvg } from "../../svgConverter.js";
+import {
+  TIME_TWITCHING_TOOLBELT,
+  TIME_TWITCHING_TOWER,
+  getTowerStatus,
+} from "../../timeTwitchingTower.js";
 import { englishJoin, getRandom } from "../../utils.js";
+import { checkStore } from "../kol/_mrstore.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
 import { buildGlobals } from "./_globals.js";
 
@@ -69,6 +79,26 @@ const ADJECTIVES = [
   "toothsome",
 ];
 
+// Relies on checkStore having just synced the MrStoreItem table
+async function timeTwitchingTowerLine(): Promise<string | null> {
+  const toolbelt = await getMrStoreItemByName(TIME_TWITCHING_TOOLBELT);
+  const status = getTowerStatus(toolbelt, LoathingDate.getRollover());
+  if (!status) return null;
+
+  const towerLink = hyperlink(
+    TIME_TWITCHING_TOWER,
+    toWikiLink(TIME_TWITCHING_TOWER),
+  );
+  switch (status) {
+    case "opened":
+      return `The ${towerLink} has opened \u{23F3}`;
+    case "open":
+      return `The ${towerLink} is open \u{23F3}`;
+    case "closed":
+      return `The ${towerLink} has closed \u{231B}`;
+  }
+}
+
 async function buildTitleMessage(adjective: string): Promise<Message> {
   const date = new LoathingDate();
 
@@ -82,6 +112,13 @@ async function buildTitleMessage(adjective: string): Promise<Message> {
     dateStr,
     date.getMoonDescription(),
   ];
+
+  try {
+    const towerLine = await timeTwitchingTowerLine();
+    if (towerLine) lines.push(towerLine);
+  } catch {
+    // The tower line is non-critical
+  }
 
   const files: AttachmentBuilder[] = [];
   try {
@@ -235,6 +272,7 @@ export function init() {
   kolClient.on("rollover", () => {
     void (async () => {
       try {
+        await checkStore();
         await onRollover();
       } catch (error) {
         await discordClient.alert(

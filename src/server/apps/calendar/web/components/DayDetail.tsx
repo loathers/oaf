@@ -1,6 +1,7 @@
 import { LoathingDate } from "kol.js";
 import { toWikiLink } from "kol.js";
 
+import { TIME_TWITCHING_TOWER } from "../../../../../timeTwitchingTower.js";
 import type { CalendarData, MrStoreItemEvent, PvpSeasonInfo } from "../types/calendar.js";
 import WardrobeSection from "./WardrobeSection.js";
 
@@ -54,6 +55,7 @@ export default function DayDetail({
   const rolloverTime = localTimeFormat.format(rollover);
 
   const mrStoreItemEvents = data.mrStoreItemEvents[gameday];
+  const towerOpen = data.towerOpenDays.includes(gameday);
 
   const activePvpSeason = Object.entries(data.pvpSeasons)
     .map(([k, v]): [number, PvpSeasonInfo] => [Number(k), v])
@@ -118,6 +120,23 @@ export default function DayDetail({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {towerOpen && (
+        <div className="day-detail-section">
+          <h3>{TIME_TWITCHING_TOWER}</h3>
+          <p>
+            ⏳ The{" "}
+            <a
+              href={toWikiLink(TIME_TWITCHING_TOWER)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {TIME_TWITCHING_TOWER}
+            </a>{" "}
+            is open
+          </p>
         </div>
       )}
 
