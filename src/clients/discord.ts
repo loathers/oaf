@@ -117,6 +117,8 @@ export class DiscordClient extends Client {
     this.clientId = clientId;
     this.token = token;
 
+    this.setMaxListeners(20);
+
     this.on(Events.InteractionCreate, (interaction) => {
       void this.handleInteraction(interaction);
     });
