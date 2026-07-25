@@ -87,6 +87,12 @@ export const schema = {
 
   // Newsletter
   NEWSLETTER_CHANNEL_ID: SNOWFLAKE_PATTERN,
+
+  // Jousting (Time-Twitching Tower)
+  JOUST_CHANNEL_ID: {
+    type: SNOWFLAKE_PATTERN,
+    optional: true,
+  },
 };
 
 export type Env = EnvType<typeof schema>;

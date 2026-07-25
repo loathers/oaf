@@ -1001,6 +1001,30 @@ export async function setGlobalsMessage(
     .execute();
 }
 
+export type JoustState = {
+  lastSeenJoustTime: string | null;
+  // The lastSeenJoustTime at which we last announced odds, not when odds posted
+  oddsAnnouncedFor: string | null;
+};
+
+export async function getJoustState() {
+  const row = await db
+    .selectFrom("Setting")
+    .selectAll()
+    .where("key", "=", "joust_state")
+    .executeTakeFirst();
+  if (!row) return null;
+  return row.value as JoustState;
+}
+
+export async function setJoustState(value: JoustState) {
+  await db
+    .insertInto("Setting")
+    .values({ key: "joust_state", value })
+    .onConflict((oc) => oc.column("key").doUpdateSet({ value }))
+    .execute();
+}
+
 export async function getLatestDailies() {
   const results = await sql<{
     key: string;
