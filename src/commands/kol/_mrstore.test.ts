@@ -50,7 +50,7 @@ vi.mock("kol.js/domains/MrStore", () => ({
   MrStoreUrgency: { None: 0, Soon: 1, Today: 2 } as const,
 }));
 
-const { checkStore } = await import("./mrstore.js");
+const { checkStore } = await import("./_mrstore.js");
 
 function item(name: string, urgency = 0): MrStoreItem {
   return {

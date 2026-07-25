@@ -29,6 +29,7 @@ import {
   englishJoin,
   getRandom,
 } from "../../utils.js";
+import { checkStore } from "../kol/_mrstore.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
 import { buildGlobals } from "./_globals.js";
 
@@ -79,40 +80,27 @@ const ADJECTIVES = [
 
 const mrStore = new MrStore(kolClient);
 
+// Relies on checkStore having just synced the MrStoreItem table
 async function timeTwitchingTowerLine(): Promise<string | null> {
-  const items = await mrStore.getCurrentItems();
-  // An empty fetch is untrustworthy (the API returns {} during rollover)
-  if (items.length === 0) return null;
+  const toolbelt = await getMrStoreItemByName(TIME_TWITCHING_TOOLBELT);
+  if (!toolbelt?.addedToStore) return null;
+
+  const rollover = LoathingDate.getRollover().getTime();
+  const removed = toolbelt.removedFromStore?.getTime() ?? null;
 
   const towerLink = hyperlink(
     "Time-Twitching Tower",
     toWikiLink("Time-Twitching Tower"),
   );
 
-  // The toot races checkStore at rollover, so today's change may not be
-  // recorded on the row yet - treat any unrecorded state as "changed just now"
-  const rollover = LoathingDate.getRollover();
-  const toolbelt = await getMrStoreItemByName(TIME_TWITCHING_TOOLBELT);
+  if (removed !== null && removed < rollover) return null;
+  if (removed === rollover) return `The ${towerLink} has closed \u{231B}`;
 
-  if (items.some((i) => i.name === TIME_TWITCHING_TOOLBELT)) {
-    const wasAlreadyInStore =
-      toolbelt?.addedToStore != null &&
-      toolbelt.removedFromStore === null &&
-      toolbelt.addedToStore < rollover;
-    return wasAlreadyInStore
-      ? `The ${towerLink} is open \u{23F3}`
-      : `The ${towerLink} has opened \u{23F3}`;
-  }
-
-  if (!toolbelt?.addedToStore) return null;
-  if (
-    toolbelt.removedFromStore !== null &&
-    toolbelt.removedFromStore < rollover
-  ) {
-    return null;
-  }
-
-  return `The ${towerLink} has closed \u{231B}`;
+  // Still in store (a removal in the future is checkStore's prediction that
+  // it leaves at the next rollover)
+  return toolbelt.addedToStore.getTime() >= rollover
+    ? `The ${towerLink} has opened \u{23F3}`
+    : `The ${towerLink} is open \u{23F3}`;
 }
 
 async function buildTitleMessage(adjective: string): Promise<Message> {
@@ -286,6 +274,7 @@ export function init() {
   kolClient.on("rollover", () => {
     void (async () => {
       try {
+        await checkStore();
         await onRollover();
       } catch (error) {
         await discordClient.alert(
