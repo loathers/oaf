@@ -40,9 +40,13 @@ export function getDayEvents(
   holidays: string[],
   mrStoreItemEvents: MrStoreItemEvent[] = [],
   pvpSeason?: PvpSeasonInfo,
+  towerOpen = false,
 ): DayEvent[] {
   return [
     ...holidays.map((h) => ({ emoji: HOLIDAY_EMOJI[h] ?? "🎉", label: h })),
+    ...(towerOpen
+      ? [{ emoji: "⏳", label: "Time-Twitching Tower is open" }]
+      : []),
     ...mrStoreItemEvents.map((e) => ({
       emoji: MR_STORE_EVENT_EMOJI[e.type],
       label: `${e.itemName ?? "Unknown item"} ${MR_STORE_EVENT_VERB[e.type]}`,

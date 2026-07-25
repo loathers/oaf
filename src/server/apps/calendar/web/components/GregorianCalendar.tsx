@@ -30,6 +30,7 @@ type Props = {
   onJumpToToday: () => void;
   moonlightMode: boolean;
   mrStoreItemEvents: Record<number, MrStoreItemEvent[]>;
+  towerOpenDays: number[];
   pvpSeasons: Record<number, PvpSeasonInfo>;
 };
 
@@ -67,9 +68,11 @@ export default function GregorianCalendar({
   onJumpToToday,
   moonlightMode,
   mrStoreItemEvents,
+  towerOpenDays,
   pvpSeasons,
 }: Props) {
   const dates = getGridDates(year, month);
+  const towerOpen = new Set(towerOpenDays);
 
   return (
     <div>
@@ -104,6 +107,7 @@ export default function GregorianCalendar({
               holidays,
               preEpoch ? undefined : mrStoreItemEvents[gameday],
               preEpoch ? undefined : pvpSeasons[gameday],
+              !preEpoch && towerOpen.has(gameday),
             );
 
             const classes = [

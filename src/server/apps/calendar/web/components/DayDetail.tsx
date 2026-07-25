@@ -54,6 +54,7 @@ export default function DayDetail({
   const rolloverTime = localTimeFormat.format(rollover);
 
   const mrStoreItemEvents = data.mrStoreItemEvents[gameday];
+  const towerOpen = data.towerOpenDays.includes(gameday);
 
   const activePvpSeason = Object.entries(data.pvpSeasons)
     .map(([k, v]): [number, PvpSeasonInfo] => [Number(k), v])
@@ -118,6 +119,23 @@ export default function DayDetail({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {towerOpen && (
+        <div className="day-detail-section">
+          <h3>Time-Twitching Tower</h3>
+          <p>
+            ⏳ The{" "}
+            <a
+              href={toWikiLink("Time-Twitching Tower")}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Time-Twitching Tower
+            </a>{" "}
+            is open
+          </p>
         </div>
       )}
 
