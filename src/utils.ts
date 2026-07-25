@@ -1,6 +1,3 @@
-// While this item is in Mr. Store, the Time-Twitching Tower is open
-export const TIME_TWITCHING_TOOLBELT = "time-twitching toolbelt";
-
 export function indent(textToIndent: string): string {
   return textToIndent
     .split("\n")

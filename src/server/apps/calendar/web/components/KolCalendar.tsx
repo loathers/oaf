@@ -54,7 +54,6 @@ export default function KolCalendar({
   towerOpenDays,
   pvpSeasons,
 }: Props) {
-  const towerOpen = new Set(towerOpenDays);
   return (
     <div>
       <CalendarNav
@@ -88,7 +87,7 @@ export default function KolCalendar({
                 const holidays = ld
                   .getHolidays()
                   .filter((h) => h !== statDay);
-                const events = getDayEvents(holidays, mrStoreItemEvents[gameday], pvpSeasons[gameday], towerOpen.has(gameday));
+                const events = getDayEvents(holidays, mrStoreItemEvents[gameday], pvpSeasons[gameday], towerOpenDays.includes(gameday));
 
                 const classes = [
                   "calendar-cell",

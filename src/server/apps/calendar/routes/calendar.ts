@@ -10,14 +10,16 @@ import {
   getRafflesForGamedayRange,
 } from "../../../../clients/database.js";
 import { DAILY_GLOBALS } from "../../../../commands/misc/_globals.js";
-import { TIME_TWITCHING_TOOLBELT } from "../../../../utils.js";
+import {
+  TIME_TWITCHING_TOOLBELT,
+  getTowerOpenGamedays,
+} from "../../../../timeTwitchingTower.js";
 import type {
   CalendarData,
   MrStoreItemEvent,
   PvpSeasonInfo,
   TextSegment,
 } from "../web/types/calendar.js";
-import { getTowerOpenGamedays } from "./towerOpen.js";
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -118,12 +120,12 @@ calendarRouter.get("/", async (req, res) => {
   const fromDate = new Date(EPOCH_MS + from * DAY_MS);
   const toDate = new Date(EPOCH_MS + (to + 1) * DAY_MS);
 
-  const [dailies, raffles, mrStoreItems, mrStoreSpans, pvpSeasonRows] =
+  const [dailies, raffles, mrStoreItems, toolbeltSpans, pvpSeasonRows] =
     await Promise.all([
       getDailiesForGamedayRange(from, to),
       getRafflesForGamedayRange(from, to),
       getMrStoreItemEventsForDateRange(fromDate, toDate),
-      getMrStoreItemsForDateRange(fromDate, toDate),
+      getMrStoreItemsForDateRange(fromDate, toDate, TIME_TWITCHING_TOOLBELT),
       getPvpSeasonsForDateRange(fromDate, toDate),
     ]);
 
@@ -174,7 +176,7 @@ calendarRouter.get("/", async (req, res) => {
   }
 
   const towerOpenDays = getTowerOpenGamedays(
-    mrStoreSpans.filter((i) => i.itemName === TIME_TWITCHING_TOOLBELT),
+    toolbeltSpans,
     from,
     to,
     LoathingDate.gameDayFromRealDate(new Date()),

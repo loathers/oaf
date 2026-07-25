@@ -1,6 +1,7 @@
 import { LoathingDate } from "kol.js";
 import { toWikiLink } from "kol.js";
 
+import { TIME_TWITCHING_TOWER } from "../../../../../timeTwitchingTower.js";
 import type { CalendarData, MrStoreItemEvent, PvpSeasonInfo } from "../types/calendar.js";
 import WardrobeSection from "./WardrobeSection.js";
 
@@ -124,15 +125,15 @@ export default function DayDetail({
 
       {towerOpen && (
         <div className="day-detail-section">
-          <h3>Time-Twitching Tower</h3>
+          <h3>{TIME_TWITCHING_TOWER}</h3>
           <p>
             ⏳ The{" "}
             <a
-              href={toWikiLink("Time-Twitching Tower")}
+              href={toWikiLink(TIME_TWITCHING_TOWER)}
               target="_blank"
               rel="noreferrer"
             >
-              Time-Twitching Tower
+              {TIME_TWITCHING_TOWER}
             </a>{" "}
             is open
           </p>

@@ -72,7 +72,6 @@ export default function GregorianCalendar({
   pvpSeasons,
 }: Props) {
   const dates = getGridDates(year, month);
-  const towerOpen = new Set(towerOpenDays);
 
   return (
     <div>
@@ -107,7 +106,7 @@ export default function GregorianCalendar({
               holidays,
               preEpoch ? undefined : mrStoreItemEvents[gameday],
               preEpoch ? undefined : pvpSeasons[gameday],
-              !preEpoch && towerOpen.has(gameday),
+              !preEpoch && towerOpenDays.includes(gameday),
             );
 
             const classes = [

@@ -26,9 +26,10 @@ import { formatPlayer } from "../../discordUtils.js";
 import { renderSvg } from "../../svgConverter.js";
 import {
   TIME_TWITCHING_TOOLBELT,
-  englishJoin,
-  getRandom,
-} from "../../utils.js";
+  TIME_TWITCHING_TOWER,
+  getTowerStatus,
+} from "../../timeTwitchingTower.js";
+import { englishJoin, getRandom } from "../../utils.js";
 import { checkStore } from "../kol/_mrstore.js";
 import { postRaffleOnRollover } from "../kol/raffle.js";
 import { buildGlobals } from "./_globals.js";
@@ -78,29 +79,24 @@ const ADJECTIVES = [
   "toothsome",
 ];
 
-const mrStore = new MrStore(kolClient);
-
 // Relies on checkStore having just synced the MrStoreItem table
 async function timeTwitchingTowerLine(): Promise<string | null> {
   const toolbelt = await getMrStoreItemByName(TIME_TWITCHING_TOOLBELT);
-  if (!toolbelt?.addedToStore) return null;
-
-  const rollover = LoathingDate.getRollover().getTime();
-  const removed = toolbelt.removedFromStore?.getTime() ?? null;
+  const status = getTowerStatus(toolbelt, LoathingDate.getRollover());
+  if (!status) return null;
 
   const towerLink = hyperlink(
-    "Time-Twitching Tower",
-    toWikiLink("Time-Twitching Tower"),
+    TIME_TWITCHING_TOWER,
+    toWikiLink(TIME_TWITCHING_TOWER),
   );
-
-  if (removed !== null && removed < rollover) return null;
-  if (removed === rollover) return `The ${towerLink} has closed \u{231B}`;
-
-  // Still in store (a removal in the future is checkStore's prediction that
-  // it leaves at the next rollover)
-  return toolbelt.addedToStore.getTime() >= rollover
-    ? `The ${towerLink} has opened \u{23F3}`
-    : `The ${towerLink} is open \u{23F3}`;
+  switch (status) {
+    case "opened":
+      return `The ${towerLink} has opened \u{23F3}`;
+    case "open":
+      return `The ${towerLink} is open \u{23F3}`;
+    case "closed":
+      return `The ${towerLink} has closed \u{231B}`;
+  }
 }
 
 async function buildTitleMessage(adjective: string): Promise<Message> {
@@ -121,7 +117,7 @@ async function buildTitleMessage(adjective: string): Promise<Message> {
     const towerLine = await timeTwitchingTowerLine();
     if (towerLine) lines.push(towerLine);
   } catch {
-    // Mr. Store fetch is non-critical here
+    // The tower line is non-critical
   }
 
   const files: AttachmentBuilder[] = [];
@@ -161,6 +157,8 @@ async function birthdaySection(): Promise<string | null> {
 
   return `${heading("In-Game Birthdays \u{1F382}", 2)}\n\n${content}`;
 }
+
+const mrStore = new MrStore(kolClient);
 
 async function mrStoreSection(): Promise<string | null> {
   const items = await mrStore.getCurrentItems();

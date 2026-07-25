@@ -1,7 +1,7 @@
 import { LoathingDate } from "kol.js";
 import { describe, expect, it } from "vitest";
 
-import { getTowerOpenGamedays } from "./towerOpen.js";
+import { getTowerOpenGamedays, getTowerStatus } from "./timeTwitchingTower.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const rollover = (gameday: number) =>
@@ -69,5 +69,57 @@ describe("getTowerOpenGamedays", () => {
       200,
     );
     expect(days).toEqual([100, 101, 102, 103, 104]);
+  });
+});
+
+describe("getTowerStatus", () => {
+  it("reports opened on the day the toolbelt enters the store", () => {
+    const status = getTowerStatus(
+      { addedToStore: rollover(100), removedFromStore: null },
+      rollover(100),
+    );
+    expect(status).toBe("opened");
+  });
+
+  it("reports open on subsequent in-store days", () => {
+    const status = getTowerStatus(
+      { addedToStore: rollover(100), removedFromStore: null },
+      rollover(101),
+    );
+    expect(status).toBe("open");
+  });
+
+  it("treats a predicted future removal as still open", () => {
+    const status = getTowerStatus(
+      { addedToStore: rollover(100), removedFromStore: rollover(102) },
+      rollover(101),
+    );
+    expect(status).toBe("open");
+  });
+
+  it("reports closed on the day of removal", () => {
+    const status = getTowerStatus(
+      { addedToStore: rollover(100), removedFromStore: rollover(103) },
+      rollover(103),
+    );
+    expect(status).toBe("closed");
+  });
+
+  it("reports nothing after the day of removal", () => {
+    const status = getTowerStatus(
+      { addedToStore: rollover(100), removedFromStore: rollover(103) },
+      rollover(104),
+    );
+    expect(status).toBeNull();
+  });
+
+  it("reports nothing when the toolbelt was never tracked", () => {
+    expect(getTowerStatus(undefined, rollover(100))).toBeNull();
+    expect(
+      getTowerStatus(
+        { addedToStore: null, removedFromStore: null },
+        rollover(100),
+      ),
+    ).toBeNull();
   });
 });
