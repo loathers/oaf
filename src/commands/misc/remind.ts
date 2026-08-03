@@ -108,7 +108,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     guildId: interaction.guildId,
     channelId: interaction.channelId,
     userId: interaction.user.id,
-    interactionReplyId: reply.interaction.id,
+    interactionReplyId: reply.resource?.message?.id ?? null,
     messageContents: reminderText,
     reminderDate,
   });
