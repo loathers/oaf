@@ -37,8 +37,6 @@ const rolloverHandler = on.mock.calls.find(
 
 const DAY = 24 * 60 * 60 * 1000;
 
-// Rollover finishes a couple of minutes after the nominal 03:30, which is what
-// pushes the day-60 comparison over the line.
 const JITTER = 2 * 60 * 1000;
 
 type Season = {
@@ -48,8 +46,6 @@ type Season = {
   nextStart: string;
 };
 
-// Real boundaries, from the seed in migrations. Season lengths vary between 59
-// and 62 days depending on which months they span.
 const SEASONS: Season[] = [
   {
     number: 83,
@@ -91,7 +87,6 @@ function stored(season: Season) {
   };
 }
 
-/** Every rollover after a season begins but before the next one does. */
 function* rolloversDuring(season: Season) {
   const end = new Date(season.nextStart).getTime();
   for (let t = new Date(season.start).getTime() + DAY; t < end; t += DAY) {
@@ -102,13 +97,12 @@ function* rolloversDuring(season: Season) {
 async function rollover(at: Date) {
   vi.setSystemTime(at);
   rolloverHandler();
-  // The handler fires and forgets, so let its promise chain drain.
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  // Only fake Date, so the real setTimeout above still resolves.
+  // Date only, so the real setTimeout that drains the handler still fires.
   vi.useFakeTimers({ toFake: ["Date"] });
 });
 
@@ -182,8 +176,6 @@ describe("PvP season sync", () => {
   });
 
   test("keeps retrying while a season is still unrecorded", async () => {
-    // Season 86 was re-stamped to 2026-08-30, so the 60-day net is disarmed
-    // just when season 87 goes missing.
     getLatestPvpSeason.mockResolvedValue({
       seasonNumber: 86,
       seasonName: "Optimal Season",

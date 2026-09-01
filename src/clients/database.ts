@@ -1255,10 +1255,7 @@ export async function upsertPvpSeason(data: {
     .insertInto("PvpSeason")
     .values(data)
     .onConflict((oc) =>
-      oc.column("seasonNumber").doUpdateSet({
-        seasonName: data.seasonName,
-        startDate: data.startDate,
-      }),
+      oc.column("seasonNumber").doUpdateSet({ seasonName: data.seasonName }),
     )
     .execute();
 }
