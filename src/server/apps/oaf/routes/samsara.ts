@@ -1,4 +1,4 @@
-import { bold } from "discord.js";
+import { bold, hyperlink } from "discord.js";
 import { Router } from "express";
 import { StatusCodes } from "http-status-codes";
 import * as z from "zod";
@@ -6,6 +6,11 @@ import * as z from "zod";
 import { discordClient } from "../../../../clients/discord.js";
 import { config } from "../../../../config.js";
 import { titleCase } from "../../../../utils.js";
+
+const boardSchema = z.object({
+  value: z.string(),
+  label: z.string(),
+});
 
 const bodySchema = z.object({
   player: z.object({
@@ -16,7 +21,25 @@ const bodySchema = z.object({
   turns: z.number(),
   lifestyle: z.string(),
   pathName: z.string(),
+  board: boardSchema.nullish(),
+  url: z.url().optional(),
 });
+
+export function formatRecord({
+  lifestyle,
+  pathName,
+  board,
+  url,
+}: Pick<
+  z.infer<typeof bodySchema>,
+  "lifestyle" | "pathName" | "board" | "url"
+>) {
+  const path = pathName === "None" ? "No Path" : pathName;
+  const record = bold(
+    `${titleCase(lifestyle)} ${board ? `${path} (${board.label})` : path}`,
+  );
+  return url ? hyperlink(record, url) : record;
+}
 
 export const samsaraRouter = Router();
 
@@ -41,7 +64,7 @@ samsaraRouter.post("/", async (req, res) => {
   }
 
   try {
-    const { player, lifestyle, pathName, turns, days } = body.data;
+    const { player, turns, days } = body.data;
     const guild = await discordClient.guilds.fetch(config.GUILD_ID);
     const unrestrictedChannel = guild?.channels.cache.get(
       config.UNRESTRICTED_CHANNEL_ID,
@@ -57,10 +80,8 @@ samsaraRouter.post("/", async (req, res) => {
     const goldStarEmoji =
       guild.emojis.cache.find((e) => e.name === "goldstar")?.toString() ?? "";
 
-    const path = pathName === "None" ? "No Path" : pathName;
-
     await unrestrictedChannel.send({
-      content: `🚨${goldStarEmoji} ${player.name} (#${player.id}) has achieved the best ${bold(`${titleCase(lifestyle)} ${path}`)} with ${days}/${turns}.`,
+      content: `🚨${goldStarEmoji} ${player.name} (#${player.id}) has achieved the best ${formatRecord(body.data)} with ${days}/${turns}.`,
     });
 
     return void res.status(StatusCodes.OK).json({ success: "true" });
