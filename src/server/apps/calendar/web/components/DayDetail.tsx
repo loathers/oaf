@@ -169,7 +169,7 @@ export default function DayDetail({
           <h3>PvP Season</h3>
           <p>
             <a
-              href="https://www.kingdomofloathing.com/peevpee.php?place=rules"
+              href={`https://wiki.kingdomofloathing.com/PvP_Season_History#Season_${activePvpSeason.seasonNumber}`}
               target="_blank"
               rel="noreferrer"
             >
