@@ -2,12 +2,20 @@ import { useEffect, useRef, useState } from "react";
 
 type Channel = { name: string; id: string };
 type Emoji = { name: string | null; id: string; url: string };
+type Result = { success: boolean; warning?: string };
+
+function describeResult(result: Result) {
+  if (!result.success)
+    return { style: "alert-error", text: "Something went wrong" };
+  if (result.warning) return { style: "alert-warning", text: result.warning };
+  return { style: "alert-success", text: "Message sent successfully" };
+}
 
 export default function Pilot() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [emoji, setEmoji] = useState<Emoji[]>([]);
   const [showEmoji, setShowEmoji] = useState(false);
-  const [result, setResult] = useState<boolean | null>(null);
+  const [result, setResult] = useState<Result | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const messageInput = useRef<HTMLTextAreaElement>(null);
@@ -45,6 +53,7 @@ export default function Pilot() {
       channelId: form.get("channelId") as string,
       content: form.get("content") as string,
       reply: form.get("reply") as string,
+      moderatorNotice: form.has("moderatorNotice"),
     };
 
     try {
@@ -53,13 +62,13 @@ export default function Pilot() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = (await r.json()) as { success: boolean };
-      setResult(data.success);
+      const data = (await r.json()) as Result;
+      setResult(data);
       if (data.success && messageInput.current) {
         messageInput.current.value = "";
       }
     } catch {
-      setResult(false);
+      setResult({ success: false });
     } finally {
       setSubmitting(false);
     }
@@ -67,13 +76,11 @@ export default function Pilot() {
 
   if (loading) return <p>Loading...</p>;
 
+  const alert = result && describeResult(result);
+
   return (
     <div className="form-stack">
-      {result !== null && (
-        <div className={`alert ${result ? "alert-success" : "alert-error"}`}>
-          {result ? "Message sent successfully" : "Something went wrong"}
-        </div>
-      )}
+      {alert && <div className={`alert ${alert.style}`}>{alert.text}</div>}
       <form className="form-stack" onSubmit={(e) => void handleSubmit(e)}>
         <div>
           <label htmlFor="channelId">Channel</label>
@@ -121,6 +128,10 @@ export default function Pilot() {
               )}
             </div>
           </div>
+        </div>
+        <div className="checkbox-row">
+          <input type="checkbox" name="moderatorNotice" id="moderatorNotice" />
+          <label htmlFor="moderatorNotice">Moderator Notice</label>
         </div>
         <button type="submit" disabled={submitting}>
           {submitting ? "Sending..." : "Send"}
