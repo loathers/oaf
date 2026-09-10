@@ -93,6 +93,12 @@ export const schema = {
     type: SNOWFLAKE_PATTERN,
     optional: true,
   },
+
+  // Piloted moderator notices
+  MODERATOR_NOTICES_CHANNEL_ID: {
+    type: SNOWFLAKE_PATTERN,
+    optional: true,
+  },
 };
 
 export type Env = EnvType<typeof schema>;
