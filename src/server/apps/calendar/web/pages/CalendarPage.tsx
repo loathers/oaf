@@ -1,19 +1,10 @@
 import { LoathingDate } from "kol.js";
-import {
-  Suspense,
-  lazy,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import DayDetail from "../components/DayDetail.js";
 import GregorianCalendar from "../components/GregorianCalendar.js";
 import KolCalendar from "../components/KolCalendar.js";
 import type { CalendarData } from "../types/calendar.js";
-
-const MoonOrbits = lazy(() => import("../components/MoonOrbits.js"));
 
 type View = "gregorian" | "kol";
 
@@ -66,7 +57,6 @@ export default function CalendarPage() {
   const [kolYear, setKolYear] = useState(initialLd.getYear());
   const [selectedDay, setSelectedDay] = useState<number | null>(initialDay);
   const [moonlightMode, setMoonlightMode] = useState(false);
-  const [show3D, setShow3D] = useState(false);
 
   useEffect(() => {
     if (selectedDay !== null) {
@@ -198,9 +188,6 @@ export default function CalendarPage() {
           />
           Moonlight
         </label>
-        <button onClick={() => setShow3D(true)} title="Orrery">
-          🔭
-        </button>
       </div>
 
       {view === "gregorian" ? (
@@ -243,12 +230,6 @@ export default function CalendarPage() {
           visible={selectedDay >= range.from && selectedDay <= range.to}
           onNavigateToDay={() => navigateTo(new LoathingDate(selectedDay))}
         />
-      )}
-
-      {show3D && (
-        <Suspense fallback={null}>
-          <MoonOrbits onClose={() => setShow3D(false)} />
-        </Suspense>
       )}
     </div>
   );
