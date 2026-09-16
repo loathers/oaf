@@ -142,7 +142,8 @@ async function birthdaySection(): Promise<string | null> {
   const byAge = birthdays.reduce<Record<number, Player[]>>((acc, p) => {
     if (!p.accountCreationDate) return acc;
     const age = currentYear - p.accountCreationDate.getFullYear();
-    (acc[age] ??= []).push(p);
+    acc[age] ??= [];
+    acc[age].push(p);
     return acc;
   }, {});
 

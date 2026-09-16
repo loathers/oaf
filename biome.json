@@ -34,15 +34,13 @@
     "rules": {
       "preset": "recommended",
       "style": {
-        "noNonNullAssertion": "off",
-        "noDescendingSpecificity": "off"
+        "noNonNullAssertion": "off"
       },
       "correctness": {
         "useExhaustiveDependencies": "off"
       },
       "suspicious": {
-        "noArrayIndexKey": "off",
-        "noAssignInExpressions": "off"
+        "noArrayIndexKey": "off"
       },
       "nursery": {
         "noFloatingPromises": "error",

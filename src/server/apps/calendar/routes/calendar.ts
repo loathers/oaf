@@ -158,7 +158,8 @@ calendarRouter.get("/", async (req, res) => {
 
   const mrStoreItemEvents: Record<number, MrStoreItemEvent[]> = {};
   const pushEvent = (gameday: number, event: MrStoreItemEvent) => {
-    (mrStoreItemEvents[gameday] ??= []).push(event);
+    mrStoreItemEvents[gameday] ??= [];
+    mrStoreItemEvents[gameday].push(event);
   };
 
   for (const item of mrStoreItems) {

@@ -77,7 +77,8 @@ export default function Dailies() {
   const consensusValue = dailies.find((d) => d.key === selectedKey)?.value;
 
   const grouped = submissions.reduce<Record<string, Submission[]>>((acc, s) => {
-    (acc[s.value] ??= []).push(s);
+    acc[s.value] ??= [];
+    acc[s.value].push(s);
     return acc;
   }, {});
 
