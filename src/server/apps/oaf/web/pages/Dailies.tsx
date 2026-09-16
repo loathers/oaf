@@ -205,13 +205,19 @@ export default function Dailies() {
                           </td>
                           <td>
                             {s.crowdsourcingIgnored ? (
-                              <button onClick={() => void unignore(s.playerId)}>
+                              <button
+                                type="button"
+                                onClick={() => void unignore(s.playerId)}
+                              >
                                 Unignore
                               </button>
                             ) : (
                               consensusValue &&
                               value !== consensusValue && (
-                                <button onClick={() => void ignore(s.playerId)}>
+                                <button
+                                  type="button"
+                                  onClick={() => void ignore(s.playerId)}
+                                >
                                   Ignore
                                 </button>
                               )

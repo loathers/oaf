@@ -217,6 +217,13 @@ code {
   flex-direction: column;
   gap: 0.125rem;
   transition: background-color 0.1s;
+  /* Selectable cells are buttons, so undo the UA button styling */
+  border: none;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  appearance: none;
 }
 
 .calendar-cell:hover {

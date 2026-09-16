@@ -120,20 +120,15 @@ export default function GregorianCalendar({
               .filter(Boolean)
               .join(" ");
 
-            return (
-              <div
-                key={date.toISOString()}
-                className={classes}
-                style={{
-                  ...(moonlightMode && ld
-                    ? { "--moonlight": ld.getMoonlight() }
-                    : {}),
-                  ...(eventImage
-                    ? { backgroundImage: `url(${eventImage})` }
-                    : {}),
-                }}
-                onClick={preEpoch ? undefined : () => onSelectDay(gameday)}
-              >
+            const style = {
+              ...(moonlightMode && ld
+                ? { "--moonlight": ld.getMoonlight() }
+                : {}),
+              ...(eventImage ? { backgroundImage: `url(${eventImage})` } : {}),
+            };
+
+            const contents = (
+              <>
                 <span className="cell-day">{date.getUTCDate()}</span>
                 {preEpoch && <span className="cell-yore">Days of Yore</span>}
                 {ld && (
@@ -152,7 +147,24 @@ export default function GregorianCalendar({
                   </span>
                 )}
                 {holidays.includes("April Fools Day") && <BouncingEmoji />}
+              </>
+            );
+
+            // Days before the epoch are not selectable, so they stay inert
+            return preEpoch ? (
+              <div key={date.toISOString()} className={classes} style={style}>
+                {contents}
               </div>
+            ) : (
+              <button
+                type="button"
+                key={date.toISOString()}
+                className={classes}
+                style={style}
+                onClick={() => onSelectDay(gameday)}
+              >
+                {contents}
+              </button>
             );
           })}
         </div>

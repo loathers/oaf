@@ -103,7 +103,8 @@ export default function KolCalendar({
                   .join(" ");
 
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={`${monthIndex}-${dayIndex}`}
                     className={classes}
                     style={
@@ -130,7 +131,7 @@ export default function KolCalendar({
                       </span>
                     )}
                     {holidays.includes("April Fools Day") && <BouncingEmoji />}
-                  </div>
+                  </button>
                 );
               })}
             </React.Fragment>

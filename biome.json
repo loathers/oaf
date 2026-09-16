@@ -33,9 +33,6 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
-      "a11y": {
-        "preset": "none"
-      },
       "style": {
         "noNonNullAssertion": "off",
         "noDescendingSpecificity": "off"

@@ -121,7 +121,12 @@ export default function Pilot() {
                       type="button"
                       onClick={() => addEmoji(e)}
                     >
-                      <img width="30" title={e.name ?? ""} src={e.url} />
+                      <img
+                        width="30"
+                        alt={e.name ?? ""}
+                        title={e.name ?? ""}
+                        src={e.url}
+                      />
                     </button>
                   ))}
                 </div>
