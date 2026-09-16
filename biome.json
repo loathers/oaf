@@ -36,9 +36,6 @@
       "style": {
         "noNonNullAssertion": "off"
       },
-      "correctness": {
-        "useExhaustiveDependencies": "off"
-      },
       "nursery": {
         "noFloatingPromises": "error",
         "noMisusedPromises": "error",

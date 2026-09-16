@@ -47,20 +47,17 @@ export default function CalendarNav(props: Props) {
     if (open) yearInputRef.current?.focus();
   }, [open]);
 
+  // Hoisted out of the effect so the dependency list is plain values, which
+  // is what the hook rules require
+  const mode = props.mode;
+  const year = props.mode === "gregorian" ? props.year : props.kolYear;
+  const month = props.mode === "gregorian" ? props.month : 0;
+
   useEffect(() => {
     if (!open) return;
-    if (props.mode === "gregorian") {
-      setInputYear(String(props.year));
-      setInputMonth(props.month);
-    } else {
-      setInputYear(String(props.kolYear));
-    }
-  }, [
-    open,
-    props.mode,
-    props.mode === "gregorian" ? props.year : props.kolYear,
-    props.mode === "gregorian" ? props.month : 0,
-  ]);
+    setInputYear(String(year));
+    if (mode === "gregorian") setInputMonth(month);
+  }, [open, mode, year, month]);
 
   useEffect(() => {
     if (!open) return;
