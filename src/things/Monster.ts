@@ -146,7 +146,7 @@ export class Monster extends Thing<DolMonster> {
   }
 
   @memoize()
-  async getDescription(): Promise<string> {
+  getDescription(): Promise<string> {
     const description = [bold("Monster"), `(Monster ${this.id})`];
 
     const atk = this.dol.attack;

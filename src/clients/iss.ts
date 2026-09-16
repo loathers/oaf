@@ -6,7 +6,7 @@ const client = new LightstreamerClient(
 );
 client.connectionOptions.setSlowingEnabled(false);
 
-export async function getPissLevel() {
+export function getPissLevel() {
   return new Promise<string>((resolve, reject) => {
     const sub = new Subscription("MERGE", ["NODE3000005"], ["Value"]);
     sub.setRequestedSnapshot("yes");

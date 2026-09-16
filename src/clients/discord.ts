@@ -289,7 +289,7 @@ export class DiscordClient extends Client {
       return;
     }
 
-    return this.alertsChannel.send(alert);
+    return await this.alertsChannel.send(alert);
   }
 
   start(): void {

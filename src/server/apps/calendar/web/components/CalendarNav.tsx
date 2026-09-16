@@ -122,7 +122,7 @@ export default function CalendarNav(props: Props) {
                 onChange={(e) => setInputMonth(Number(e.target.value))}
               >
                 {MONTH_OPTIONS.map((m, i) => (
-                  <option key={i} value={i}>
+                  <option key={m} value={i}>
                     {m}
                   </option>
                 ))}

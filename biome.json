@@ -39,9 +39,6 @@
       "correctness": {
         "useExhaustiveDependencies": "off"
       },
-      "suspicious": {
-        "noArrayIndexKey": "off"
-      },
       "nursery": {
         "noFloatingPromises": "error",
         "noMisusedPromises": "error",

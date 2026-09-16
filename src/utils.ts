@@ -75,7 +75,7 @@ export function lowercaseLeadingLetter(str: string): string {
 
 const pendingRetries = new Set<Promise<Response>>();
 
-export async function fetchWithRetry(
+export function fetchWithRetry(
   url: string,
   init: RequestInit,
   retries = 3,
