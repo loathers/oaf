@@ -1,31 +1,14 @@
-import { LoathingDate } from "kol.js";
-import { toWikiLink } from "kol.js";
-
-import { TIME_TWITCHING_TOWER } from "../../../../../timeTwitchingTower.js";
-import type {
-  CalendarData,
-  MrStoreItemEvent,
-  PvpSeasonInfo,
-} from "../types/calendar.js";
+import type { CalendarData } from "../types/calendar.js";
+import DailiesSection from "./DailiesSection.js";
+import DateSection from "./DateSection.js";
+import HolidaysSection from "./HolidaysSection.js";
+import MoonsSection from "./MoonsSection.js";
+import MrStoreSection from "./MrStoreSection.js";
+import PvpSeasonSection from "./PvpSeasonSection.js";
+import RaffleSection from "./RaffleSection.js";
+import TowerSection from "./TowerSection.js";
 import WardrobeSection from "./WardrobeSection.js";
-
-const MOON_ICONS = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
-
-function mrStoreItemEventSuffix(
-  event: MrStoreItemEvent,
-  timeFormat: Intl.DateTimeFormat,
-): string {
-  switch (event.type) {
-    case "added":
-      return " entered Mr. Store";
-    case "removed":
-      return " left Mr. Store";
-    case "distributed": {
-      const time = timeFormat.format(new Date(event.time));
-      return ` distributed to subscribers (${time})`;
-    }
-  }
-}
+import YamBatterySection from "./YamBatterySection.js";
 
 type Props = {
   gameday: number;
@@ -44,36 +27,7 @@ export default function DayDetail({
   visible = true,
   onNavigateToDay,
 }: Props) {
-  const ld = new LoathingDate(gameday);
-  const realDate = ld.toRealDate();
-
-  const localTimeFormat = new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
-
-  const rollover = new Date(
-    LoathingDate.EPOCH.getTime() + gameday * 24 * 60 * 60 * 1000,
-  );
-  const rolloverTime = localTimeFormat.format(rollover);
-
-  const mrStoreItemEvents = data.mrStoreItemEvents[gameday];
-  const towerOpen = data.towerOpenDays.includes(gameday);
-  const yamBattery = data.yamBattery[gameday];
-
-  const activePvpSeason = Object.entries(data.pvpSeasons)
-    .map(([k, v]): [number, PvpSeasonInfo] => [Number(k), v])
-    .filter(([startGameday]) => startGameday <= gameday)
-    .sort(([a], [b]) => b - a)[0]?.[1];
-
-  const DAILIES_START_GAMEDAY = 8432; // Started collecting dailies on March 13, 2026
   const isFuture = gameday > todayGameday;
-  const isToday = gameday === todayGameday;
-  const hasDailies = gameday >= DAILIES_START_GAMEDAY;
-  const holidays = ld.getHolidays();
-  const dailies = isFuture || !hasDailies ? undefined : data.dailies[gameday];
-  const raffle = isFuture ? undefined : data.raffles[gameday];
 
   return (
     <div className={`day-detail${loading ? " day-detail-loading" : ""}`}>
@@ -82,216 +36,23 @@ export default function DayDetail({
           Show in calendar
         </button>
       )}
-      <div className="day-detail-section">
-        <h3 title={`Day ${gameday}`}>Date</h3>
-        <p>
-          {realDate.toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            timeZone: "UTC",
-          })}
-        </p>
-        <p>{ld.toString()}</p>
-        <p title="Rollover time">🌅 {rolloverTime}</p>
-      </div>
-
-      <div className="day-detail-section">
-        <h3>Moons</h3>
-        <p>
-          {MOON_ICONS[ld.getRonaldPhase()]} Ronald:{" "}
-          {ld.getRonaldPhaseDescription()}
-        </p>
-        <p>
-          {MOON_ICONS[ld.getGrimacePhase()]} Grimace:{" "}
-          {ld.getGrimacePhaseDescription()}
-        </p>
-        {ld.getHamburglarPhase() !== null && (
-          <p>Hamburglar: {ld.getHamburglarPhaseDescription()}</p>
-        )}
-        <p>Total moonlight: {ld.getMoonlight()}</p>
-      </div>
-
-      {holidays.length > 0 && (
-        <div className="day-detail-section">
-          <h3>Holidays</h3>
-          <ul>
-            {holidays.map((h) => (
-              <li key={h}>
-                <a href={toWikiLink(h)} target="_blank" rel="noreferrer">
-                  {h}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {towerOpen && (
-        <div className="day-detail-section">
-          <h3>{TIME_TWITCHING_TOWER}</h3>
-          <p>
-            ⏳ The{" "}
-            <a
-              href={toWikiLink(TIME_TWITCHING_TOWER)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {TIME_TWITCHING_TOWER}
-            </a>{" "}
-            is open
-          </p>
-        </div>
-      )}
-
-      {mrStoreItemEvents && mrStoreItemEvents.length > 0 && (
-        <div className="day-detail-section">
-          <h3>Mr. Store</h3>
-          <ul>
-            {mrStoreItemEvents.map((e, i) => (
-              <li key={i}>
-                {e.itemName ? (
-                  <a
-                    href={toWikiLink(e.itemName)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {e.itemName}
-                  </a>
-                ) : (
-                  "Unknown item"
-                )}
-                {mrStoreItemEventSuffix(e, localTimeFormat)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {activePvpSeason && (
-        <div className="day-detail-section">
-          <h3>PvP Season</h3>
-          <p>
-            <a
-              href={`https://wiki.kingdomofloathing.com/PvP_Season_History#Season_${activePvpSeason.seasonNumber}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Season {activePvpSeason.seasonNumber}:{" "}
-              {activePvpSeason.seasonName}
-            </a>
-          </p>
-        </div>
-      )}
-
-      {!isFuture && hasDailies && (
-        <div className="day-detail-section">
-          <h3>Dailies</h3>
-          {dailies && dailies.length > 0 ? (
-            <ul>
-              {dailies.map((d) => (
-                <li key={d.key}>
-                  <strong>{d.displayName}</strong>:{" "}
-                  {d.rendered.map((seg, i) =>
-                    seg.href ? (
-                      <a
-                        key={i}
-                        href={seg.href}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {seg.text}
-                      </a>
-                    ) : (
-                      <span key={i}>{seg.text}</span>
-                    ),
-                  )}
-                  {!d.thresholdReached && " (unconfirmed)"}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="no-data">No data</p>
-          )}
-        </div>
-      )}
-
-      {!isFuture && (
-        <div className="day-detail-section">
-          <h3>Raffle</h3>
-          {raffle ? (
-            <>
-              {([1, 2] as const).map((place) => {
-                const prize =
-                  place === 1 ? raffle.firstPrize : raffle.secondPrize;
-                const winners = isToday
-                  ? []
-                  : raffle.winners.filter((w) => w.place === place);
-                return (
-                  <p key={place}>
-                    {place === 1 ? "🥇" : "🥈"}{" "}
-                    <a
-                      href={toWikiLink(prize.name)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {prize.name}
-                    </a>
-                    {winners.length > 0 && (
-                      <>
-                        {" - "}
-                        {winners
-                          .map(
-                            (w) =>
-                              `${w.playerName} (#${w.playerId}) ${w.tickets.toLocaleString()} tickets`,
-                          )
-                          .join(", ")}
-                      </>
-                    )}
-                  </p>
-                );
-              })}
-            </>
-          ) : (
-            <p className="no-data">No data</p>
-          )}
-        </div>
-      )}
-
-      {yamBattery && (
-        <div className="day-detail-section">
-          <h3>
-            <a
-              href={toWikiLink("yam battery")}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Yam Battery
-            </a>
-          </h3>
-          <ul>
-            {yamBattery.map((effect) => (
-              <li key={effect.duration}>
-                <strong>{effect.duration} turns</strong>:{" "}
-                {effect.wikiLink ? (
-                  <a href={effect.wikiLink} target="_blank" rel="noreferrer">
-                    {effect.name}
-                  </a>
-                ) : (
-                  effect.name
-                )}
-                {effect.modifiers.length > 0 && (
-                  <div className="yam-battery-modifiers">
-                    {effect.modifiers.join(", ")}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
+      <DateSection gameday={gameday} />
+      <MoonsSection gameday={gameday} />
+      <HolidaysSection gameday={gameday} />
+      <TowerSection gameday={gameday} towerOpenDays={data.towerOpenDays} />
+      <MrStoreSection events={data.mrStoreItemEvents[gameday]} />
+      <PvpSeasonSection gameday={gameday} pvpSeasons={data.pvpSeasons} />
+      <DailiesSection
+        gameday={gameday}
+        todayGameday={todayGameday}
+        dailies={isFuture ? undefined : data.dailies[gameday]}
+      />
+      <RaffleSection
+        gameday={gameday}
+        todayGameday={todayGameday}
+        raffle={isFuture ? undefined : data.raffles[gameday]}
+      />
+      <YamBatterySection effects={data.yamBattery[gameday]} />
       <WardrobeSection gameday={gameday} />
     </div>
   );
