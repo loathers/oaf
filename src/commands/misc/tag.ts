@@ -1,10 +1,10 @@
 import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
+  type AutocompleteInteraction,
   bold,
+  type ChatInputCommandInteraction,
   hyperlink,
   messageLink,
+  SlashCommandBuilder,
 } from "discord.js";
 
 import { findTagByName, getAllTagNames } from "../../clients/database.js";

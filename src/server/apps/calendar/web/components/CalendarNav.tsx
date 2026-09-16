@@ -37,24 +37,27 @@ type Props = GregorianProps | KolProps;
 export default function CalendarNav(props: Props) {
   const [open, setOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
+  const yearInputRef = useRef<HTMLInputElement>(null);
 
   const [inputYear, setInputYear] = useState("");
   const [inputMonth, setInputMonth] = useState(0);
 
+  // Focus on open, rather than autoFocus, which fires on page load too
+  useEffect(() => {
+    if (open) yearInputRef.current?.focus();
+  }, [open]);
+
+  // Hoisted out of the effect so the dependency list is plain values, which
+  // is what the hook rules require
+  const mode = props.mode;
+  const year = props.mode === "gregorian" ? props.year : props.kolYear;
+  const month = props.mode === "gregorian" ? props.month : 0;
+
   useEffect(() => {
     if (!open) return;
-    if (props.mode === "gregorian") {
-      setInputYear(String(props.year));
-      setInputMonth(props.month);
-    } else {
-      setInputYear(String(props.kolYear));
-    }
-  }, [
-    open,
-    props.mode,
-    props.mode === "gregorian" ? props.year : props.kolYear,
-    props.mode === "gregorian" ? props.month : 0,
-  ]);
+    setInputYear(String(year));
+    if (mode === "gregorian") setInputMonth(month);
+  }, [open, mode, year, month]);
 
   useEffect(() => {
     if (!open) return;
@@ -70,7 +73,7 @@ export default function CalendarNav(props: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const year = parseInt(inputYear, 10);
-    if (isNaN(year)) return;
+    if (Number.isNaN(year)) return;
     if (props.mode === "gregorian") {
       if (year < 2003 || (year === 2003 && inputMonth < 1)) return;
       props.onJump(year, inputMonth);
@@ -93,11 +96,16 @@ export default function CalendarNav(props: Props) {
 
   return (
     <div className="calendar-nav">
-      <button disabled={atStart} onClick={() => props.onNavigate(-1)}>
+      <button
+        type="button"
+        disabled={atStart}
+        onClick={() => props.onNavigate(-1)}
+      >
         &larr;
       </button>
       <div className="calendar-nav-label-wrapper" ref={popupRef}>
         <button
+          type="button"
           className="calendar-nav-label"
           onClick={() => setOpen((o) => !o)}
         >
@@ -111,19 +119,19 @@ export default function CalendarNav(props: Props) {
                 onChange={(e) => setInputMonth(Number(e.target.value))}
               >
                 {MONTH_OPTIONS.map((m, i) => (
-                  <option key={i} value={i}>
+                  <option key={m} value={i}>
                     {m}
                   </option>
                 ))}
               </select>
             )}
             <input
+              ref={yearInputRef}
               type="number"
               value={inputYear}
               onChange={(e) => setInputYear(e.target.value)}
               min={props.mode === "gregorian" ? 2003 : 1}
               step={1}
-              autoFocus
             />
             <div className="calendar-jump-actions">
               <button type="submit">Go</button>
@@ -140,7 +148,9 @@ export default function CalendarNav(props: Props) {
           </form>
         )}
       </div>
-      <button onClick={() => props.onNavigate(1)}>&rarr;</button>
+      <button type="button" onClick={() => props.onNavigate(1)}>
+        &rarr;
+      </button>
     </div>
   );
 }

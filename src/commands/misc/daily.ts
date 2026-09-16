@@ -1,13 +1,13 @@
 import {
   AttachmentBuilder,
-  ChatInputCommandInteraction,
-  MessageFlags,
-  SlashCommandBuilder,
   bold,
+  type ChatInputCommandInteraction,
   heading,
   hyperlink,
   italic,
+  MessageFlags,
   messageLink,
+  SlashCommandBuilder,
   unorderedList,
 } from "discord.js";
 import { LoathingDate, toWikiLink } from "kol.js";
@@ -25,9 +25,9 @@ import type { Player } from "../../database-types.js";
 import { formatPlayer } from "../../discordUtils.js";
 import { renderSvg } from "../../svgConverter.js";
 import {
+  getTowerStatus,
   TIME_TWITCHING_TOOLBELT,
   TIME_TWITCHING_TOWER,
-  getTowerStatus,
 } from "../../timeTwitchingTower.js";
 import { englishJoin, getRandom } from "../../utils.js";
 import { checkStore } from "../kol/_mrstore.js";
@@ -142,7 +142,9 @@ async function birthdaySection(): Promise<string | null> {
   const byAge = birthdays.reduce<Record<number, Player[]>>((acc, p) => {
     if (!p.accountCreationDate) return acc;
     const age = currentYear - p.accountCreationDate.getFullYear();
-    return { ...acc, [age]: [...(acc[age] || []), p] };
+    acc[age] ??= [];
+    acc[age].push(p);
+    return acc;
   }, {});
 
   const content = Object.entries(byAge)

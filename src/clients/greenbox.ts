@@ -1,4 +1,4 @@
-import { type Player } from "kol.js";
+import type { Player } from "kol.js";
 
 import { fetchWithRetry } from "../utils.js";
 

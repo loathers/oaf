@@ -1,13 +1,12 @@
 import { bold, heading, hideLinkEmbed, hyperlink, italic } from "discord.js";
 import { LoathingDate } from "kol.js";
 import { SkeletonOfCrimboPast } from "kol.js/domains/SkeletonOfCrimboPast";
-
-import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import {
   getDailiesForGameday,
   getGlobalsMessage,
   upsertDaily,
 } from "../../clients/database.js";
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { discordClient } from "../../clients/discord.js";
 import { getMallPrice, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";

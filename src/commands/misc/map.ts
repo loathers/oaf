@@ -1,12 +1,12 @@
-import {
-  AttachmentBuilder,
-  ChatInputCommandInteraction,
-  MessageFlags,
-  SlashCommandBuilder,
-} from "discord.js";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  AttachmentBuilder,
+  type ChatInputCommandInteraction,
+  MessageFlags,
+  SlashCommandBuilder,
+} from "discord.js";
 import proj4 from "proj4";
 import { dedent } from "ts-dedent";
 

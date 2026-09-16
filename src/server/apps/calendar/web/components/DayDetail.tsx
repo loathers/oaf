@@ -32,7 +32,11 @@ export default function DayDetail({
   return (
     <div className={`day-detail${loading ? " day-detail-loading" : ""}`}>
       {!visible && onNavigateToDay && (
-        <button className="day-detail-goto" onClick={onNavigateToDay}>
+        <button
+          type="button"
+          className="day-detail-goto"
+          onClick={onNavigateToDay}
+        >
           Show in calendar
         </button>
       )}

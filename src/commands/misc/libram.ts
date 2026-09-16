@@ -1,14 +1,14 @@
 import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
+  type AutocompleteInteraction,
+  type ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from "discord.js";
 
 import { createEmbed } from "../../clients/discord.js";
 import {
-  type LibramTopic,
   fetchTopics,
   formatTopicEmbed,
+  type LibramTopic,
   resolveReference,
 } from "../../clients/libram.js";
 

@@ -24,13 +24,18 @@ export default function DailiesSection({
           {dailies.map((d) => (
             <li key={d.key}>
               <strong>{d.displayName}</strong>:{" "}
-              {d.rendered.map((seg, i) =>
+              {d.rendered.map((seg) =>
                 seg.href ? (
-                  <a key={i} href={seg.href} target="_blank" rel="noreferrer">
+                  <a
+                    key={`${seg.text}-${seg.href}`}
+                    href={seg.href}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
                     {seg.text}
                   </a>
                 ) : (
-                  <span key={i}>{seg.text}</span>
+                  <span key={seg.text}>{seg.text}</span>
                 ),
               )}
               {!d.thresholdReached && " (unconfirmed)"}

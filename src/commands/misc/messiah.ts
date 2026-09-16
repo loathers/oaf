@@ -1,6 +1,6 @@
 import {
   AttachmentBuilder,
-  ChatInputCommandInteraction,
+  type ChatInputCommandInteraction,
   SlashCommandBuilder,
 } from "discord.js";
 import { dedent } from "ts-dedent";

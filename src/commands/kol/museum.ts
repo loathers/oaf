@@ -1,8 +1,8 @@
 import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
+  type AutocompleteInteraction,
+  type ChatInputCommandInteraction,
   hyperlink,
+  SlashCommandBuilder,
 } from "discord.js";
 import { resolveKoLImage } from "kol.js";
 

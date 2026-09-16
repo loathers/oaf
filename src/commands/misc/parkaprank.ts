@@ -1,5 +1,5 @@
 import { type Duration, differenceInMinutes, milliseconds } from "date-fns";
-import { Events, ThreadAutoArchiveDuration, blockQuote } from "discord.js";
+import { blockQuote, Events, ThreadAutoArchiveDuration } from "discord.js";
 import { dedent } from "ts-dedent";
 
 import { discordClient } from "../../clients/discord.js";

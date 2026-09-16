@@ -1,22 +1,20 @@
-import { Events, blockQuote, codeBlock, inlineCode } from "discord.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
 import { inspect } from "node:util";
+import { blockQuote, codeBlock, Events, inlineCode } from "discord.js";
 
 import { dataOfLoathingClient } from "./clients/dataOfLoathing.js";
 import {
-  CommandHandler,
-  InteractionHandler,
-  ModalHandler,
+  type CommandHandler,
   discordClient,
+  type InteractionHandler,
+  type ModalHandler,
 } from "./clients/discord.js";
 import { displayCase, kolClient } from "./clients/kol.js";
 import { handleGreenboxKmail } from "./greenbox.js";
 import { startApiServer } from "./server/index.js";
 import { waitForPendingRetries } from "./utils.js";
-
-export {};
 
 async function* walk(dir: string): AsyncGenerator<string> {
   for await (const d of await fs.opendir(dir)) {

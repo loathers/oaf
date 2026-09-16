@@ -1,6 +1,6 @@
-import type { RequestHandler } from "express";
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { RequestHandler } from "express";
 import type { ViteDevServer } from "vite";
 
 export function spaFallback(

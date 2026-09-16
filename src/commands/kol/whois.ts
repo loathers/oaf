@@ -1,11 +1,11 @@
 import {
-  APIEmbedField,
+  type APIEmbedField,
   AttachmentBuilder,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
   bold,
+  type ChatInputCommandInteraction,
   hyperlink,
   italic,
+  SlashCommandBuilder,
   time,
 } from "discord.js";
 
@@ -118,7 +118,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .filter(([, info]) => info !== null)
       .map(
         ([name, info]) =>
-          hyperlink(name, info!.link) + ` (updated ${time(info!.date, "R")})`,
+          `${hyperlink(name, info!.link)} (updated ${time(info!.date, "R")})`,
       );
 
     fields.push({

@@ -1,21 +1,21 @@
-import { ApplicationCommandType } from "discord-api-types/v10";
 import {
   ActionRowBuilder,
-  ContextMenuCommandBuilder,
-  ContextMenuCommandInteraction,
-  DiscordjsError,
-  DiscordjsErrorCodes,
-  Message,
-  MessageFlags,
-  ModalBuilder,
-  ModalSubmitInteraction,
-  TextInputBuilder,
-  TextInputStyle,
   blockQuote,
   bold,
+  ContextMenuCommandBuilder,
+  type ContextMenuCommandInteraction,
+  DiscordjsError,
+  DiscordjsErrorCodes,
   hyperlink,
   inlineCode,
+  type Message,
+  MessageFlags,
+  ModalBuilder,
+  type ModalSubmitInteraction,
+  TextInputBuilder,
+  TextInputStyle,
 } from "discord.js";
+import { ApplicationCommandType } from "discord-api-types/v10";
 
 import {
   deleteTag,

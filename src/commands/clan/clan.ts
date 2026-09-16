@@ -1,10 +1,10 @@
 import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
+  type AutocompleteInteraction,
+  bold,
+  type ChatInputCommandInteraction,
+  italic,
   MessageFlags,
   SlashCommandBuilder,
-  bold,
-  italic,
   strikethrough,
   underline,
 } from "discord.js";

@@ -15,8 +15,8 @@ import { createEmbed, discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
 import {
-  TIME_TWITCHING_TOOLBELT,
   getTowerStatus,
+  TIME_TWITCHING_TOOLBELT,
 } from "../../timeTwitchingTower.js";
 
 const renaissanceTimes = new RenaissanceTimes(kolClient);

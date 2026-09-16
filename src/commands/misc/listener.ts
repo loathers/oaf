@@ -1,4 +1,4 @@
-import { Client, Events, GuildMember } from "discord.js";
+import { type Client, Events, type GuildMember } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 import { config } from "../../config.js";

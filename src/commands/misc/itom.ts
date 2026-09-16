@@ -1,7 +1,7 @@
 import {
   DiscordAPIError,
   Events,
-  Message,
+  type Message,
   RESTJSONErrorCodes,
 } from "discord.js";
 import unidecode from "unidecode";
@@ -51,7 +51,7 @@ async function onMessage(message: Message) {
     if (content.includes("you can buy a salad glove")) {
       replies.push("You can buy an iPod.");
     } else {
-      replies.push("You can buy a salad glove" + getRandom(["!", "?"]));
+      replies.push(`You can buy a salad glove${getRandom(["!", "?"])}`);
     }
   }
 

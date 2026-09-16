@@ -1,4 +1,7 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 import { JoinClanError } from "kol.js";
 import { RaidLogMissingError } from "kol.js/domains/ClanDungeon";
 import {

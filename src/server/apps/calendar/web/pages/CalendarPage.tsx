@@ -163,6 +163,7 @@ export default function CalendarPage() {
       <h1>KoL Calendar</h1>
       <div className="calendar-view-toggle">
         <button
+          type="button"
           className={view === "gregorian" ? "active" : ""}
           onClick={() => {
             if (selectedDay !== null) navigateTo(new LoathingDate(selectedDay));
@@ -172,6 +173,7 @@ export default function CalendarPage() {
           Gregorian
         </button>
         <button
+          type="button"
           className={view === "kol" ? "active" : ""}
           onClick={() => {
             if (selectedDay !== null) navigateTo(new LoathingDate(selectedDay));

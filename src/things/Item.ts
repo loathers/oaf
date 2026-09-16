@@ -7,11 +7,11 @@ import { bold, hyperlink } from "discord.js";
 import { toWikiLink } from "kol.js";
 
 import { getMallPrice, kolClient } from "../clients/kol.js";
-import { pluralize, titleCase } from "../utils.js";
 import { memoizeExpiring } from "../utils/memoize.js";
-import { Familiar } from "./Familiar.js";
-import { Thing } from "./Thing.js";
+import { pluralize, titleCase } from "../utils.js";
+import type { Familiar } from "./Familiar.js";
 import packages from "./iotmPackages.json" with { type: "json" };
+import { Thing } from "./Thing.js";
 
 const reversedPackages = new Map([
   ["grinning ghostling", "box o' ghosts"],
@@ -148,8 +148,8 @@ export class Item extends Thing<DolItem> {
   getAverageFromRange(adventures: string) {
     const advRange = adventures.split("-");
     return advRange.length > 1
-      ? (parseInt(advRange[0]) + parseInt(advRange[1])) / 2
-      : parseInt(adventures);
+      ? (parseInt(advRange[0], 10) + parseInt(advRange[1], 10)) / 2
+      : parseInt(adventures, 10);
   }
 
   getConsumableDescription() {

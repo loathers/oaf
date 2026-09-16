@@ -13,7 +13,7 @@ export const dailiesRouter = Router();
 
 dailiesRouter.post("/ignore/:playerId", async (req, res) => {
   const playerId = parseInt(req.params.playerId, 10);
-  if (isNaN(playerId)) {
+  if (Number.isNaN(playerId)) {
     res.status(400).json({ error: "Invalid player ID" });
     return;
   }
@@ -23,7 +23,7 @@ dailiesRouter.post("/ignore/:playerId", async (req, res) => {
 
 dailiesRouter.delete("/ignore/:playerId", async (req, res) => {
   const playerId = parseInt(req.params.playerId, 10);
-  if (isNaN(playerId)) {
+  if (Number.isNaN(playerId)) {
     res.status(400).json({ error: "Invalid player ID" });
     return;
   }

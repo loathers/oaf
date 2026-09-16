@@ -1,4 +1,4 @@
-import { Monster as DolMonster, createClient } from "data-of-loathing";
+import { createClient, Monster as DolMonster } from "data-of-loathing";
 import { beforeAll, describe, expect, test, vi } from "vitest";
 
 import { testDb } from "../__fixtures__/testDb.js";

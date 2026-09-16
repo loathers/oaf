@@ -1,6 +1,6 @@
 import { milliseconds } from "date-fns";
 import {
-  ChatInputCommandInteraction,
+  type ChatInputCommandInteraction,
   Events,
   MessageFlags,
   SlashCommandBuilder,

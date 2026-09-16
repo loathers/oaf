@@ -1,29 +1,29 @@
 import {
-  APIEmbed,
-  AutocompleteInteraction,
+  type APIEmbed,
+  type AutocompleteInteraction,
   Client,
   Collection,
-  CommandInteraction,
+  type CommandInteraction,
+  channelLink,
+  codeBlock,
   DiscordAPIError,
   EmbedBuilder,
   Events,
   GatewayIntentBits,
-  Guild,
-  GuildMember,
-  Interaction,
-  JSONEncodable,
-  MessageCreateOptions,
+  type Guild,
+  type GuildMember,
+  type Interaction,
+  type JSONEncodable,
+  type MessageCreateOptions,
   MessageFlags,
-  ModalSubmitInteraction,
+  type ModalSubmitInteraction,
   Partials,
   REST,
   RESTJSONErrorCodes,
-  RESTPostAPIApplicationCommandsJSONBody,
+  type RESTPostAPIApplicationCommandsJSONBody,
   Routes,
-  SendableChannels,
-  SlashCommandBuilder,
-  channelLink,
-  codeBlock,
+  type SendableChannels,
+  type SlashCommandBuilder,
   userMention,
 } from "discord.js";
 import { AuthError, RolloverError, resolveKoLImage } from "kol.js";
@@ -289,7 +289,7 @@ export class DiscordClient extends Client {
       return;
     }
 
-    return this.alertsChannel.send(alert);
+    return await this.alertsChannel.send(alert);
   }
 
   start(): void {

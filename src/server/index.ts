@@ -38,9 +38,8 @@ function lazyApp(
         throw e;
       }
     })();
-    await (
-      await inner
-    )(req, res, next);
+    // Calling the express app returns void, so only the app itself is awaited
+    (await inner)(req, res, next);
   });
   return wrapper;
 }

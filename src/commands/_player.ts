@@ -1,4 +1,4 @@
-import { Player } from "kol.js";
+import type { Player } from "kol.js";
 
 import { findPlayerWithRaffleWins } from "../clients/database.js";
 import { kolClient } from "../clients/kol.js";

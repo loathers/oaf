@@ -31,7 +31,7 @@ export const lf = new Intl.ListFormat("en");
 export const pluralize = (count: number, singular: string, plural?: string) =>
   count.toLocaleString() +
   " " +
-  (count === 1 ? singular : plural || singular + "s");
+  (count === 1 ? singular : plural || `${singular}s`);
 
 export function groupToMap<K, V>(
   array: V[],
@@ -75,7 +75,7 @@ export function lowercaseLeadingLetter(str: string): string {
 
 const pendingRetries = new Set<Promise<Response>>();
 
-export async function fetchWithRetry(
+export function fetchWithRetry(
   url: string,
   init: RequestInit,
   retries = 3,

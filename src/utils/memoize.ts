@@ -69,19 +69,19 @@ export function memoize(options?: { tags?: string[] }) {
     };
   }
 
-  return function <This extends WeakKey, Value>(
+  return <This extends WeakKey, Value>(
     target: (this: This, ...args: never) => Value,
     context: ClassMethodDecoratorContext | ClassGetterDecoratorContext,
-  ) {
+  ) => {
     if (context.kind === "getter") return forGetter(target);
     return forMethod(target);
   };
 }
 
 export function memoizeExpiring(ms: number) {
-  return function <This extends WeakKey, Args extends unknown[], Return>(
+  return <This extends WeakKey, Args extends unknown[], Return>(
     target: (this: This, ...args: Args) => Return,
-  ) {
+  ) => {
     const instances = new WeakMap<
       This,
       Map<string, { value: Return; expires: number }>

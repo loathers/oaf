@@ -1,5 +1,5 @@
 import { parse } from "date-fns";
-import { type Player } from "kol.js";
+import type { Player } from "kol.js";
 
 export class SnapshotClient {
   static toLink(input: string) {

@@ -34,6 +34,7 @@ export default function WardrobeSection({ gameday }: Props) {
         <div className="wardrobe-level-selector">
           {LEVEL_TIERS.map((t, i) => (
             <button
+              type="button"
               key={t.label}
               className={`wardrobe-level-btn${i === tierIndex ? " active" : ""}`}
               onClick={() => setTierIndex(i)}

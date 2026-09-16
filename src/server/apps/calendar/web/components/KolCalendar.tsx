@@ -6,6 +6,8 @@ import { BouncingEmoji } from "./BouncingEmoji.js";
 import CalendarNav from "./CalendarNav.js";
 import { getDayEvents } from "./eventEmoji.js";
 
+const KOL_MONTH_DAYS = [1, 2, 3, 4, 5, 6, 7, 8];
+
 const MONTH_NAMES = [
   "Jarlsuary",
   "Frankuary",
@@ -66,13 +68,13 @@ export default function KolCalendar({
       <div className="calendar-grid-wrapper">
         <div className="calendar-grid kol-grid">
           <div className="calendar-header" />
-          {Array.from({ length: 8 }, (_, i) => (
-            <div key={i} className="calendar-header">
-              {i + 1}
+          {KOL_MONTH_DAYS.map((day) => (
+            <div key={day} className="calendar-header">
+              {day}
             </div>
           ))}
           {MONTH_NAMES.map((monthName, monthIndex) => (
-            <React.Fragment key={monthIndex}>
+            <React.Fragment key={monthName}>
               <div className="kol-month-label">{monthName}</div>
               {Array.from({ length: 8 }, (_, dayIndex) => {
                 const gameday = LoathingDate.getDaysSinceEpoch(
@@ -84,10 +86,13 @@ export default function KolCalendar({
                 const isToday = gameday === todayGameday;
                 const isSelected = gameday === selectedDay;
                 const statDay = ld.getStatDay();
-                const holidays = ld
-                  .getHolidays()
-                  .filter((h) => h !== statDay);
-                const events = getDayEvents(holidays, mrStoreItemEvents[gameday], pvpSeasons[gameday], towerOpenDays.includes(gameday));
+                const holidays = ld.getHolidays().filter((h) => h !== statDay);
+                const events = getDayEvents(
+                  holidays,
+                  mrStoreItemEvents[gameday],
+                  pvpSeasons[gameday],
+                  towerOpenDays.includes(gameday),
+                );
 
                 const classes = [
                   "calendar-cell",
@@ -100,8 +105,9 @@ export default function KolCalendar({
                   .join(" ");
 
                 return (
-                  <div
-                    key={`${monthIndex}-${dayIndex}`}
+                  <button
+                    type="button"
+                    key={gameday}
                     className={classes}
                     style={
                       moonlightMode
@@ -127,7 +133,7 @@ export default function KolCalendar({
                       </span>
                     )}
                     {holidays.includes("April Fools Day") && <BouncingEmoji />}
-                  </div>
+                  </button>
                 );
               })}
             </React.Fragment>

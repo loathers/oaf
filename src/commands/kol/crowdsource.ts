@@ -1,7 +1,7 @@
 import {
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonInteraction,
+  type ButtonInteraction,
   ButtonStyle,
   Events,
   MessageFlags,
@@ -10,13 +10,13 @@ import {
 import { LoathingDate } from "kol.js";
 
 import {
-  type SubmissionSummary,
   clearDailySubmissions,
   deleteDaily,
   getDaily,
   getDissentersForKey,
   getSubmissionSummaryForKey,
   isPlayerIgnoredForCrowdsourcing,
+  type SubmissionSummary,
   setCrowdsourcingIgnored,
   upsertDaily,
   upsertDailySubmission,

@@ -1,7 +1,7 @@
 import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
+  type ChatInputCommandInteraction,
   hyperlink,
+  SlashCommandBuilder,
 } from "discord.js";
 
 import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";

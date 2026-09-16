@@ -1,4 +1,4 @@
-import { StatusCodes } from "http-status-codes";
+import type { StatusCodes } from "http-status-codes";
 
 import { config } from "../config.js";
 

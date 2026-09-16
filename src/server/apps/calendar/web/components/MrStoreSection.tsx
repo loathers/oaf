@@ -27,8 +27,8 @@ export default function MrStoreSection({ events }: Props) {
     <div className="day-detail-section">
       <h3>Mr. Store</h3>
       <ul>
-        {events.map((e, i) => (
-          <li key={i}>
+        {events.map((e) => (
+          <li key={`${e.time}-${e.type}-${e.itemName}`}>
             {e.itemName ? (
               <a href={toWikiLink(e.itemName)} target="_blank" rel="noreferrer">
                 {e.itemName}

@@ -77,7 +77,8 @@ export default function Dailies() {
   const consensusValue = dailies.find((d) => d.key === selectedKey)?.value;
 
   const grouped = submissions.reduce<Record<string, Submission[]>>((acc, s) => {
-    (acc[s.value] ??= []).push(s);
+    acc[s.value] ??= [];
+    acc[s.value].push(s);
     return acc;
   }, {});
 
@@ -205,13 +206,19 @@ export default function Dailies() {
                           </td>
                           <td>
                             {s.crowdsourcingIgnored ? (
-                              <button onClick={() => void unignore(s.playerId)}>
+                              <button
+                                type="button"
+                                onClick={() => void unignore(s.playerId)}
+                              >
                                 Unignore
                               </button>
                             ) : (
                               consensusValue &&
                               value !== consensusValue && (
-                                <button onClick={() => void ignore(s.playerId)}>
+                                <button
+                                  type="button"
+                                  onClick={() => void ignore(s.playerId)}
+                                >
                                   Ignore
                                 </button>
                               )

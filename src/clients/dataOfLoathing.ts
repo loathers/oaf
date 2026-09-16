@@ -1,12 +1,12 @@
 import {
+  createClient,
   Effect as DolEffect,
   Familiar as DolFamiliar,
   Item as DolItem,
   Monster as DolMonster,
   Skill as DolSkill,
-  createClient,
 } from "data-of-loathing";
-import { EmbedBuilder } from "discord.js";
+import type { EmbedBuilder } from "discord.js";
 import { cleanString, toWikiLink } from "kol.js";
 
 import {
@@ -15,7 +15,7 @@ import {
   Item,
   Monster,
   Skill,
-  Thing,
+  type Thing,
 } from "../things/index.js";
 import { clearMemoized, memoize } from "../utils/memoize.js";
 import { createEmbed } from "./discord.js";

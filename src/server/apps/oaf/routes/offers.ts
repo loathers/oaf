@@ -1,7 +1,6 @@
 import { Router } from "express";
-
-import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
 import { getAllOffersWithBuyers } from "../../../../clients/database.js";
+import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
 
 export const offersRouter = Router();
 

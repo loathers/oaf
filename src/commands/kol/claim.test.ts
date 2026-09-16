@@ -9,8 +9,9 @@ vi.mock("../../config.js", () => ({
   },
 }));
 
-const { checkPlayer, generatePlayer, intDiv, playerSecret } =
-  await import("./claim.js");
+const { checkPlayer, generatePlayer, intDiv, playerSecret } = await import(
+  "./claim.js"
+);
 
 beforeEach(() => {
   vi.useFakeTimers();

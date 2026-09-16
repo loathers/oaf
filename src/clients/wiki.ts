@@ -1,6 +1,5 @@
-import { config } from "../config.js";
-import { resolveWikiLink } from "../utils.js";
 import { memoize, memoizeExpiring } from "../utils/memoize.js";
+import { resolveWikiLink } from "../utils.js";
 
 type FoundName = {
   name: string;
@@ -35,12 +34,6 @@ export class WikiSearchError extends Error {
  * Client for interacting with and searching the KoL Wiki
  */
 export class WikiClient {
-  private googleCustomSearch?: string;
-
-  constructor(googleCustomSearch?: string) {
-    this.googleCustomSearch = googleCustomSearch;
-  }
-
   /**
    * @param url api.php?action=parse...
    */
@@ -126,8 +119,8 @@ export class WikiClient {
     const titleMatch = String(data).match(
       /<h1 id="firstHeading" class="firstHeading mw-first-heading">.*?<span class="mw-page-title-main">(?<pageTitle>.+)<\/span><\/h1>/,
     );
-    let result;
-    if (titleMatch?.groups && titleMatch.groups.pageTitle) {
+    let result: string;
+    if (titleMatch?.groups?.pageTitle) {
       result = titleMatch.groups.pageTitle;
     } else
       result = decodeURIComponent(url.split("/index.php/")[1]).replace(
@@ -212,4 +205,4 @@ export class WikiClient {
   }
 }
 
-export const wikiClient = new WikiClient(config.CUSTOM_SEARCH);
+export const wikiClient = new WikiClient();

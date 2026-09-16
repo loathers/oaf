@@ -1,5 +1,5 @@
-import { add } from "date-fns";
 import { afterEach, beforeEach } from "node:test";
+import { add } from "date-fns";
 import { describe, expect, test, vi } from "vitest";
 
 import { parseDuration } from "./remind.js";

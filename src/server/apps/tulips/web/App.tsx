@@ -86,6 +86,7 @@ export default function App() {
       <div className="range-bar">
         {RANGE_KEYS.map((r) => (
           <button
+            type="button"
             key={r}
             className={`range-btn ${r === range ? "active" : ""}`}
             onClick={() => setRange(r)}

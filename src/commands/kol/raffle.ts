@@ -1,21 +1,20 @@
 import {
-  ChatInputCommandInteraction,
-  MessageFlags,
-  SlashCommandBuilder,
   bold,
+  type ChatInputCommandInteraction,
   heading,
+  MessageFlags,
   messageLink,
+  SlashCommandBuilder,
 } from "discord.js";
-import { Player as KoLPlayer } from "kol.js";
+import type { Player as KoLPlayer } from "kol.js";
 import { Raffle, type RaffleResult } from "kol.js/domains/Raffle";
-
-import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import {
   createRaffle,
   createRaffleWin,
   findRaffle,
   getPlayersByIdsWithDiscord,
 } from "../../clients/database.js";
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed, discordClient } from "../../clients/discord.js";
 import { assertNotRollover, kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";

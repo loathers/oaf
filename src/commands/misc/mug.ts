@@ -1,13 +1,13 @@
+import { readFileSync } from "node:fs";
+import * as path from "node:path";
+import * as url from "node:url";
 import {
   AttachmentBuilder,
-  ChatInputCommandInteraction,
+  type ChatInputCommandInteraction,
   MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { resolveKoLImage } from "kol.js";
-import { readFileSync } from "node:fs";
-import * as path from "node:path";
-import * as url from "node:url";
 import { dedent } from "ts-dedent";
 
 import { renderSvg } from "../../svgConverter.js";

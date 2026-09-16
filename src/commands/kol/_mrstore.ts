@@ -30,7 +30,7 @@ function getMonthForCategory(category: "iotm" | "ioty" | "other"): Date | null {
 const mrStore = new MrStore(kolClient);
 
 export async function checkStore() {
-  let items;
+  let items: Awaited<ReturnType<typeof mrStore.getCurrentItems>>;
   try {
     items = await mrStore.getCurrentItems();
   } catch (error) {

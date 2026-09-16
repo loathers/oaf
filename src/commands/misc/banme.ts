@@ -1,4 +1,4 @@
-import { Events, GuildMember, Message, blockQuote } from "discord.js";
+import { blockQuote, Events, type GuildMember, type Message } from "discord.js";
 
 import { discordClient } from "../../clients/discord.js";
 import { config } from "../../config.js";
