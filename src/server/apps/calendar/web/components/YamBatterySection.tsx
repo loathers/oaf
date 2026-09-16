@@ -19,14 +19,14 @@ export default function YamBatterySection({ effects }: Props) {
       <ul>
         {effects.map((effect) => (
           <li key={effect.duration}>
-            <strong>{effect.duration} turns</strong>:{" "}
             {effect.wikiLink ? (
               <a href={effect.wikiLink} target="_blank" rel="noreferrer">
                 {effect.name}
               </a>
             ) : (
               effect.name
-            )}
+            )}{" "}
+            (duration: {effect.duration} Adventures)
             {effect.modifiers.length > 0 && (
               <div className="yam-battery-modifiers">
                 {effect.modifiers.join(", ")}
