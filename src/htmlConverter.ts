@@ -8,7 +8,9 @@ export async function renderHtml(
   const page = await browser.newPage();
 
   await page.setViewport({ width, height, deviceScaleFactor: 2 });
-  await page.setContent(html, { waitUntil: "networkidle0" });
+  // setContent no longer accepts networkidle0; load still covers images and
+  // stylesheets, just not fetches kicked off by script
+  await page.setContent(html, { waitUntil: "load" });
 
   const buffer = await page.screenshot({ type: "png" });
   //const trimmed = await sharp(buffer).trim().toBuffer();
