@@ -2688,15 +2688,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"citty@npm:^0.1.6":
-  version: 0.1.6
-  resolution: "citty@npm:0.1.6"
-  dependencies:
-    consola: "npm:^3.2.3"
-  checksum: 10c0/d26ad82a9a4a8858c7e149d90b878a3eceecd4cfd3e2ed3cd5f9a06212e451fb4f8cbe0fa39a3acb1b3e8f18e22db8ee5def5829384bad50e823d4b301609b48
-  languageName: node
-  linkType: hard
-
 "citty@npm:^0.2.2":
   version: 0.2.2
   resolution: "citty@npm:0.2.2"
@@ -2738,14 +2729,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"confbox@npm:^0.2.2, confbox@npm:^0.2.4":
+"confbox@npm:^0.2.4":
   version: 0.2.4
   resolution: "confbox@npm:0.2.4"
   checksum: 10c0/4c36af33d9df7034300c452f7b289179264493bd0671fa81b995a0d70dc897b1d37f1af10d3ffb187f178d17ba1ed2ba167ed0f599ba3a139c271205dd553f73
   languageName: node
   linkType: hard
 
-"consola@npm:^3.2.3, consola@npm:^3.4.2":
+"confbox@npm:^0.3.1":
+  version: 0.3.1
+  resolution: "confbox@npm:0.3.1"
+  checksum: 10c0/f81496a1b40cb3bf25d74c31b2ea7bf7e622b0aff1e10b7d0aebb36e8fb1d550c13c6f872ae37c9235d5a28988f71970496172a282a5123f7fd0b0812c6967cf
+  languageName: node
+  linkType: hard
+
+"consola@npm:^3.4.2":
   version: 3.4.2
   resolution: "consola@npm:3.4.2"
   checksum: 10c0/7cebe57ecf646ba74b300bcce23bff43034ed6fbec9f7e39c27cee1dc00df8a21cd336b466ad32e304ea70fba04ec9e890c200270de9a526ce021ba8a7e4c11a
@@ -3838,6 +3836,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"exsolve@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "exsolve@npm:1.1.1"
+  checksum: 10c0/0b157a7600408bd356ff78cff5ad9c8c0dd7ca5e7f246216c3c9b66196e76277d3130021122b9c5078a3462751fd7aa988fe3dc1e3b80c79cb873c1623f628e1
+  languageName: node
+  linkType: hard
+
 "extract-zip@npm:^2.0.1":
   version: 2.0.1
   resolution: "extract-zip@npm:2.0.1"
@@ -4636,23 +4641,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kysely-ctl@npm:^0.20.0":
-  version: 0.20.0
-  resolution: "kysely-ctl@npm:0.20.0"
+"kysely-ctl@npm:^0.21.0":
+  version: 0.21.0
+  resolution: "kysely-ctl@npm:0.21.0"
   dependencies:
     c12: "npm:^3.3.3"
-    citty: "npm:^0.1.6"
-    confbox: "npm:^0.2.2"
+    citty: "npm:^0.2.2"
+    confbox: "npm:^0.2.4"
     consola: "npm:^3.4.2"
-    jiti: "npm:^2.6.1"
-    nypm: "npm:^0.6.2"
+    jiti: "npm:^2.7.0"
+    nypm: "npm:^0.6.6"
     ofetch: "npm:^1.5.1"
     pathe: "npm:^2.0.3"
-    pkg-types: "npm:^2.3.0"
-    std-env: "npm:^3.10.0"
-    tsconfck: "npm:^3.1.6"
+    pkg-types: "npm:^2.3.1"
+    std-env: "npm:^4.1.0"
   peerDependencies:
-    kysely: ">=0.18.1 <0.29.0"
+    kysely: ">=0.18.1 <0.30.0"
     kysely-neon: ^2
     kysely-postgres-js: ^2 || ^3
     kysely-prisma-postgres: ^0.1
@@ -4665,7 +4669,7 @@ __metadata:
       optional: true
   bin:
     kysely: dist/bin.mjs
-  checksum: 10c0/7588a1663c90e8c7b5943b19a7c91e78e4e83d7d1ab9f314af44e2734172cbb5e772a1807d8599f3ae29ca2172db5c4c38d9ef4d5a67280db6c7cceefdd2e7cc
+  checksum: 10c0/13f181ff6e01f5fadaf385c2c23cde0272fe72d4246e680be2f42ecbe18413a0088cf00c6ce87ed5aa85c7750b0afd40dd41694fe7ea712362bfe74db3e54b44
   languageName: node
   linkType: hard
 
@@ -4676,10 +4680,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kysely@npm:^0.28.11, kysely@npm:^0.28.17":
+"kysely@npm:^0.28.17":
   version: 0.28.17
   resolution: "kysely@npm:0.28.17"
   checksum: 10c0/70573292d8d60a1e29be9b432c1b25fe21d4806ecd5e9859b5ba8d2af799769878f4b3d91731ffe3e03744c7291476fe843640d31741f3637e20c3c49afea3c5
+  languageName: node
+  linkType: hard
+
+"kysely@npm:^0.29.6":
+  version: 0.29.6
+  resolution: "kysely@npm:0.29.6"
+  checksum: 10c0/262a2111944cc82dcb10e840fef4e374467abe0d6aa9c1272df2ca6199155c59bb0f3ca17f856c20b719cbdd5d2e641d3464faeab409680098dc35b514119798
   languageName: node
   linkType: hard
 
@@ -5085,16 +5096,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nypm@npm:^0.6.2":
-  version: 0.6.6
-  resolution: "nypm@npm:0.6.6"
+"nypm@npm:^0.6.6":
+  version: 0.6.10
+  resolution: "nypm@npm:0.6.10"
   dependencies:
     citty: "npm:^0.2.2"
     pathe: "npm:^2.0.3"
-    tinyexec: "npm:^1.1.1"
+    tinyexec: "npm:^1.3.1"
   bin:
-    nypm: dist/cli.mjs
-  checksum: 10c0/74918579bef694a9ae1cadbace9e316e323e4ec753c8ef03f47600ad08247a8744472c8ed86e4f5667cb5a1e4e5f871f225f27a5d2ceee619ef50c4deab818d7
+    nypm: ./dist/cli.mjs
+  checksum: 10c0/2276e4d43231e2ec4cc511c7ce8e6fe3439d4f090a1ee4ba875053bcd4fc67841be250fdee297645cf1250dabf33271d171375e4b68eb607009c6a1fba2a91dd
   languageName: node
   linkType: hard
 
@@ -5143,8 +5154,8 @@ __metadata:
     js-sha256: "npm:^1.0.0"
     jsonwebtoken: "npm:^9.0.3"
     kol.js: "npm:^0.14.2"
-    kysely: "npm:^0.28.11"
-    kysely-ctl: "npm:^0.20.0"
+    kysely: "npm:^0.29.6"
+    kysely-ctl: "npm:^0.21.0"
     lightstreamer-client-node: "npm:^9.2.2"
     lint-staged: "npm:^17.5.1"
     pg: "npm:^8.23.0"
@@ -5526,6 +5537,17 @@ __metadata:
     exsolve: "npm:^1.0.8"
     pathe: "npm:^2.0.3"
   checksum: 10c0/dd9b20682426abaddcac9dc786aa22542e12df15a03dea2afa7bf54da0933358c6c7f545c0c3c1c7b24a2904ab4a451bf4e34a50c6837e458359eea30c257ed4
+  languageName: node
+  linkType: hard
+
+"pkg-types@npm:^2.3.1":
+  version: 2.3.3
+  resolution: "pkg-types@npm:2.3.3"
+  dependencies:
+    confbox: "npm:^0.3.1"
+    exsolve: "npm:^1.1.1"
+    pathe: "npm:^2.0.3"
+  checksum: 10c0/37d08d561428ab3dc09eebddd8860d9ab7851bbceeaa99d3b7fb246bdc4638d22be2cc1f8e8e38b440c5c7b30df7c20f2cbd8f0d74bb343d26a836cd9accd931
   languageName: node
   linkType: hard
 
@@ -6314,14 +6336,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"std-env@npm:^3.10.0":
-  version: 3.10.0
-  resolution: "std-env@npm:3.10.0"
-  checksum: 10c0/1814927a45004d36dde6707eaf17552a546769bc79a6421be2c16ce77d238158dfe5de30910b78ec30d95135cc1c59ea73ee22d2ca170f8b9753f84da34c427f
-  languageName: node
-  linkType: hard
-
-"std-env@npm:^4.2.0":
+"std-env@npm:^4.1.0, std-env@npm:^4.2.0":
   version: 4.2.0
   resolution: "std-env@npm:4.2.0"
   checksum: 10c0/40ac525ce7b7c556abc332a7376f14356eeb1a7f17f6ff9a003eb9f52326ff1f3745d3e1b43452675b1ec6fcc319f1b1d6f3b0d386cf3f91058479ad883cff69
@@ -6521,13 +6536,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyexec@npm:^1.1.1":
-  version: 1.1.2
-  resolution: "tinyexec@npm:1.1.2"
-  checksum: 10c0/9e0ef6c001ce54688cf16833a02f70a339276219ca947b88930b124267de2cffc764ff44e87e7369384b1d75ab63491465412cbbdf06f2437956b9ab66ab4491
-  languageName: node
-  linkType: hard
-
 "tinyexec@npm:^1.3.1":
   version: 1.3.1
   resolution: "tinyexec@npm:1.3.1"
@@ -6667,20 +6675,6 @@ __metadata:
   version: 6.0.4
   resolution: "ts-mixer@npm:6.0.4"
   checksum: 10c0/4c442fc99cdffd4a3f0ce55c624fb703f4ded5cab6912f97705489565c4a74d3e4213f10c33499ec5150900a628d38537a9a6a9e35b5045b65129a84b4db21ae
-  languageName: node
-  linkType: hard
-
-"tsconfck@npm:^3.1.6":
-  version: 3.1.6
-  resolution: "tsconfck@npm:3.1.6"
-  peerDependencies:
-    typescript: ^5.0.0
-  peerDependenciesMeta:
-    typescript:
-      optional: true
-  bin:
-    tsconfck: bin/tsconfck.js
-  checksum: 10c0/269c3c513540be44844117bb9b9258fe6f8aeab026d32aeebf458d5299125f330711429dbb556dbf125a0bc25f4a81e6c24ac96de2740badd295c3fb400f66c4
   languageName: node
   linkType: hard
 
