@@ -124,16 +124,14 @@ export default function GregorianCalendar({
               <div
                 key={date.toISOString()}
                 className={classes}
-                style={
-                  {
-                    ...(moonlightMode && ld
-                      ? { "--moonlight": ld.getMoonlight() }
-                      : {}),
-                    ...(eventImage
-                      ? { backgroundImage: `url(${eventImage})` }
-                      : {}),
-                  } as React.CSSProperties
-                }
+                style={{
+                  ...(moonlightMode && ld
+                    ? { "--moonlight": ld.getMoonlight() }
+                    : {}),
+                  ...(eventImage
+                    ? { backgroundImage: `url(${eventImage})` }
+                    : {}),
+                }}
                 onClick={preEpoch ? undefined : () => onSelectDay(gameday)}
               >
                 <span className="cell-day">{date.getUTCDate()}</span>

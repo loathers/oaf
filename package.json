@@ -15,7 +15,8 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "prepare": "husky install",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",

@@ -56,11 +56,6 @@ export default function CalendarPage() {
     () => LoathingDate.gameDayFromRealDate(now),
     [now],
   );
-  const todayKolYear = useMemo(
-    () => new LoathingDate(todayGameday).getYear(),
-    [todayGameday],
-  );
-
   const initialDay = getGamedayFromHash() ?? todayGameday;
   const initialLd = new LoathingDate(initialDay);
   const initialRd = initialLd.toRealDate();

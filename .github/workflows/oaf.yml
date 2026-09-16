@@ -30,4 +30,6 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
       - name: Run type check
-        run: yarn tsc
+        run: yarn typecheck
+      - name: Run lint
+        run: yarn lint
