@@ -26,6 +26,13 @@ export type MrStoreItemEvent = {
   time: string;
 };
 
+export type YamBatteryEffect = {
+  duration: number;
+  name: string;
+  wikiLink: string | null;
+  modifiers: string[];
+};
+
 export type PvpSeasonInfo = {
   seasonNumber: number;
   seasonName: string;
@@ -37,4 +44,5 @@ export type CalendarData = {
   mrStoreItemEvents: Record<number, MrStoreItemEvent[]>;
   towerOpenDays: number[];
   pvpSeasons: Record<number, PvpSeasonInfo>;
+  yamBattery: Record<number, YamBatteryEffect[]>;
 };

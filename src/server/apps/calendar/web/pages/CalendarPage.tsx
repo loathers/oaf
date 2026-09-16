@@ -86,7 +86,14 @@ export default function CalendarPage() {
     return () => document.body.classList.remove("moonlight-mode");
   }, [moonlightMode]);
 
-  const [data, setData] = useState<CalendarData>({ dailies: {}, raffles: {}, mrStoreItemEvents: {}, towerOpenDays: [], pvpSeasons: {} });
+  const [data, setData] = useState<CalendarData>({
+    dailies: {},
+    raffles: {},
+    mrStoreItemEvents: {},
+    towerOpenDays: [],
+    pvpSeasons: {},
+    yamBattery: {},
+  });
   const [loading, setLoading] = useState(false);
 
   const range = useMemo(
@@ -102,7 +109,16 @@ export default function CalendarPage() {
     fetch(`/api/calendar?from=${range.from}&to=${range.to}`)
       .then((r) => r.json() as Promise<CalendarData>)
       .then(setData)
-      .catch(() => setData({ dailies: {}, raffles: {}, mrStoreItemEvents: {}, towerOpenDays: [], pvpSeasons: {} }))
+      .catch(() =>
+        setData({
+          dailies: {},
+          raffles: {},
+          mrStoreItemEvents: {},
+          towerOpenDays: [],
+          pvpSeasons: {},
+          yamBattery: {},
+        }),
+      )
       .finally(() => setLoading(false));
   }, [range.from, range.to]);
 

@@ -3205,9 +3205,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"data-of-loathing@npm:4.3.1":
-  version: 4.3.1
-  resolution: "data-of-loathing@npm:4.3.1"
+"data-of-loathing@npm:4.3.2":
+  version: 4.3.2
+  resolution: "data-of-loathing@npm:4.3.2"
   dependencies:
     "@mikro-orm/core": "npm:^7.0.14"
     "@mikro-orm/sql": "npm:^7.0.14"
@@ -3222,7 +3222,7 @@ __metadata:
       optional: true
     vite-plugin-node-polyfills:
       optional: true
-  checksum: 10c0/c94c81eadf69547987a715002980f72f0a774f57618d0b0db649b4d3981826339ead7084e905872d1a3b595d126b82587176d64f4da088473c36a60fa281661e
+  checksum: 10c0/f8297ecc987bf1657d8a455e5a856a20489260a32561e6eab053f2a11e797f0ed1677296469404cc62e06e96563edec2ce6f58d9c5838d24db72ab15a89f615f
   languageName: node
   linkType: hard
 
@@ -4809,9 +4809,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kol.js@npm:^0.14.1":
-  version: 0.14.1
-  resolution: "kol.js@npm:0.14.1"
+"kol.js@npm:^0.14.2":
+  version: 0.14.2
+  resolution: "kol.js@npm:0.14.2"
   dependencies:
     "@date-fns/tz": "npm:^1.5.0"
     async-mutex: "npm:^0.5.0"
@@ -4832,8 +4832,8 @@ __metadata:
     ts-dedent: "npm:^2.2.0"
     zod: "npm:^4.4.3"
   peerDependencies:
-    data-of-loathing: ">=4.3.0"
-  checksum: 10c0/e6a40efb4e777bd50c7777fd3fd6ff1f1cf5de7526f8decc9b18fb47a62c3a6ad4df2595864ed3c3a0b1cfcb572e5abf8a614a45534539ab1ed712f52b60947c
+    data-of-loathing: ">=4.3.2"
+  checksum: 10c0/14f063c0f58cff8cbd92c00299699dc289d76f48493adf2261386dfade505b5498e398cb5cfe2b05ab6913192c41e2c2792e80846a436e59d1c7d4a9f6c2f5ec
   languageName: node
   linkType: hard
 
@@ -5491,7 +5491,7 @@ __metadata:
     convert-svg-to-png: "npm:^0.7.1"
     cookie-parser: "npm:^1.4.7"
     cors: "npm:^2.8.6"
-    data-of-loathing: "npm:4.3.1"
+    data-of-loathing: "npm:4.3.2"
     date-fns: "npm:^4.1.0"
     discord.js: "npm:^14.25.1"
     entities: "npm:^7.0.1"
@@ -5503,7 +5503,7 @@ __metadata:
     jiti: "npm:^2.6.1"
     js-sha256: "npm:^0.11.1"
     jsonwebtoken: "npm:^9.0.3"
-    kol.js: "npm:^0.14.1"
+    kol.js: "npm:^0.14.2"
     kysely: "npm:^0.28.11"
     kysely-ctl: "npm:^0.20.0"
     lightstreamer-client-node: "npm:^9.2.2"

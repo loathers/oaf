@@ -35,6 +35,7 @@ export class DataOfLoathingClient {
   private itemByDescId: Map<number, Item> = new Map();
   private skillByName: Map<string, Skill> = new Map();
   private effectByName: Map<string, Effect> = new Map();
+  private effectById: Map<number, Effect> = new Map();
   private familiarByName: Map<string, Familiar> = new Map();
   private monsterByName: Map<string, Monster> = new Map();
   private monsterById: Map<number, Monster> = new Map();
@@ -61,6 +62,7 @@ export class DataOfLoathingClient {
     this.itemByDescId.clear();
     this.skillByName.clear();
     this.effectByName.clear();
+    this.effectById.clear();
     this.familiarByName.clear();
     this.monsterByName.clear();
     this.monsterById.clear();
@@ -104,6 +106,9 @@ export class DataOfLoathingClient {
     if (thing instanceof Item) {
       this.itemById.set(thing.id, thing);
       if (thing.descid != null) this.itemByDescId.set(thing.descid, thing);
+    }
+    if (thing instanceof Effect) {
+      this.effectById.set(thing.id, thing);
     }
     if (thing instanceof Monster) {
       this.monsterById.set(thing.id, thing);
@@ -234,6 +239,9 @@ export class DataOfLoathingClient {
     return [...this.effectByName.values()];
   }
 
+  findEffectById(id: number): Effect | undefined {
+    return this.effectById.get(id);
+  }
   findMonsterById(id: number): Monster | undefined {
     return this.monsterById.get(id);
   }

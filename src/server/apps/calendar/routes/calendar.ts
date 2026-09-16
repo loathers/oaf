@@ -1,5 +1,9 @@
 import { Router } from "express";
 import { LoathingDate, toWikiLink } from "kol.js";
+import {
+  MAYAM_CALENDAR_START_GAMEDAY,
+  MayamCalendar,
+} from "kol.js/domains/MayamCalendar";
 
 import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
 import {
@@ -19,6 +23,7 @@ import type {
   MrStoreItemEvent,
   PvpSeasonInfo,
   TextSegment,
+  YamBatteryEffect,
 } from "../web/types/calendar.js";
 
 const numberFormat = new Intl.NumberFormat();
@@ -94,6 +99,23 @@ function renderDaily(key: string, value: string): TextSegment[] {
   } catch {
     return [{ text: value }];
   }
+}
+
+async function getYamBattery(gameday: number): Promise<YamBatteryEffect[]> {
+  const rolls = await MayamCalendar.getYamBatteryEffects(gameday);
+  return rolls.map(({ duration, effect: rolled }) => {
+    // Re-look-up through our own client for the wiki link and modifiers
+    const effect = dataOfLoathingClient.findEffectById(rolled.id);
+    return {
+      duration,
+      name: effect?.name ?? rolled.name,
+      wikiLink: effect ? dataOfLoathingClient.getWikiLink(effect) : null,
+      // Modifiers that vary by player are stored as an unevaluated expression
+      modifiers: (effect?.modifiers ?? []).map(
+        (m) => `${m.name}: ${m.value.replace(/\[.+?]/g, "??")}`,
+      ),
+    };
+  });
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -189,6 +211,22 @@ calendarRouter.get("/", async (req, res) => {
     ]),
   );
 
+  const yamBatteryDays: number[] = [];
+  for (
+    let gameday = Math.max(from, MAYAM_CALENDAR_START_GAMEDAY);
+    gameday <= to;
+    gameday++
+  ) {
+    yamBatteryDays.push(gameday);
+  }
+  const yamBattery = Object.fromEntries(
+    await Promise.all(
+      yamBatteryDays.map(
+        async (gameday) => [gameday, await getYamBattery(gameday)] as const,
+      ),
+    ),
+  );
+
   const result: CalendarData = {
     dailies: Object.fromEntries(
       [...dailiesByGameday.entries()].map(([gameday, entries]) => [
@@ -227,6 +265,7 @@ calendarRouter.get("/", async (req, res) => {
     mrStoreItemEvents,
     towerOpenDays,
     pvpSeasons,
+    yamBattery,
   };
 
   res.json(result);

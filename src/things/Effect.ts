@@ -30,6 +30,10 @@ export class Effect extends Thing<DolEffect> {
       effect.quality !== EffectQuality.Bad;
   }
 
+  get modifiers() {
+    return this.dol.modifiers?.modifiers ?? [];
+  }
+
   describePizzaCompatibility() {
     if (!this.hookah) return "Ineligible for pizza, wishes, or hookahs.";
     if (!this.pizza) return "Pizza: Something is broken.";

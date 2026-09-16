@@ -2,7 +2,11 @@ import { LoathingDate } from "kol.js";
 import { toWikiLink } from "kol.js";
 
 import { TIME_TWITCHING_TOWER } from "../../../../../timeTwitchingTower.js";
-import type { CalendarData, MrStoreItemEvent, PvpSeasonInfo } from "../types/calendar.js";
+import type {
+  CalendarData,
+  MrStoreItemEvent,
+  PvpSeasonInfo,
+} from "../types/calendar.js";
 import WardrobeSection from "./WardrobeSection.js";
 
 const MOON_ICONS = ["🌑", "🌘", "🌗", "🌖", "🌕", "🌔", "🌓", "🌒"];
@@ -56,6 +60,7 @@ export default function DayDetail({
 
   const mrStoreItemEvents = data.mrStoreItemEvents[gameday];
   const towerOpen = data.towerOpenDays.includes(gameday);
+  const yamBattery = data.yamBattery[gameday];
 
   const activePvpSeason = Object.entries(data.pvpSeasons)
     .map(([k, v]): [number, PvpSeasonInfo] => [Number(k), v])
@@ -173,7 +178,8 @@ export default function DayDetail({
               target="_blank"
               rel="noreferrer"
             >
-              Season {activePvpSeason.seasonNumber}: {activePvpSeason.seasonName}
+              Season {activePvpSeason.seasonNumber}:{" "}
+              {activePvpSeason.seasonName}
             </a>
           </p>
         </div>
@@ -250,6 +256,39 @@ export default function DayDetail({
           ) : (
             <p className="no-data">No data</p>
           )}
+        </div>
+      )}
+
+      {yamBattery && (
+        <div className="day-detail-section">
+          <h3>
+            <a
+              href={toWikiLink("yam battery")}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Yam Battery
+            </a>
+          </h3>
+          <ul>
+            {yamBattery.map((effect) => (
+              <li key={effect.duration}>
+                <strong>{effect.duration} turns</strong>:{" "}
+                {effect.wikiLink ? (
+                  <a href={effect.wikiLink} target="_blank" rel="noreferrer">
+                    {effect.name}
+                  </a>
+                ) : (
+                  effect.name
+                )}
+                {effect.modifiers.length > 0 && (
+                  <div className="yam-battery-modifiers">
+                    {effect.modifiers.join(", ")}
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
