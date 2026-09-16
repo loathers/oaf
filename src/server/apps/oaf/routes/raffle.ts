@@ -38,21 +38,17 @@ raffleCsvRouter.get("/", async (_req, res) => {
       firstPlaceWinnerTickets: firstWinner ? firstWinner.tickets : "",
       ...secondWinners.reduce<
         Partial<
-          Record<
-            | `secondPlaceWinner${1 | 2 | 3}`
-            | `secondPlaceWinner${1 | 2 | 3}Tickets`,
-            string
-          >
+          Record<`secondPlaceWinner${1 | 2 | 3}`, string> &
+            Record<`secondPlaceWinner${1 | 2 | 3}Tickets`, number>
         >
-      >(
-        (acc, w, i) => ({
-          // biome-ignore lint/performance/noAccumulatingSpread: at most three winners, and the spread keeps the template-literal keys type-safe
-          ...acc,
-          [`secondPlaceWinner${i + 1}`]: `${w.player.playerName} (#${w.player.playerId})`,
-          [`secondPlaceWinner${i + 1}Tickets`]: w.tickets,
-        }),
-        {},
-      ),
+      >((acc, w, i) => {
+        // Only three second-place columns exist in the CSV
+        const place = (i + 1) as 1 | 2 | 3;
+        acc[`secondPlaceWinner${place}`] =
+          `${w.player.playerName} (#${w.player.playerId})`;
+        acc[`secondPlaceWinner${place}Tickets`] = w.tickets;
+        return acc;
+      }, {}),
     };
   });
 
