@@ -1,7 +1,7 @@
 import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
+  type ChatInputCommandInteraction,
   inlineCode,
+  SlashCommandBuilder,
 } from "discord.js";
 
 const ORB_RESPONSES: string[] = [

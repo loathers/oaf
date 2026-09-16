@@ -1,8 +1,8 @@
 import {
   AttachmentBuilder,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
   bold,
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
 } from "discord.js";
 import { LoathingDate } from "kol.js";
 import { dedent } from "ts-dedent";

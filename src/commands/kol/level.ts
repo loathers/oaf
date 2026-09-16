@@ -1,4 +1,7 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 import { statsForLevel } from "kol.js";
 
 import { clamp } from "../../utils.js";

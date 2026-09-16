@@ -1,7 +1,7 @@
 import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
+  type ChatInputCommandInteraction,
   codeBlock,
+  SlashCommandBuilder,
 } from "discord.js";
 
 export const data = new SlashCommandBuilder()

@@ -1,6 +1,6 @@
 import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
+  type AutocompleteInteraction,
+  type ChatInputCommandInteraction,
   SlashCommandBuilder,
   TimestampStyles,
   time,
@@ -20,10 +20,10 @@ const leaderboard = new Leaderboard(kolClient);
 const BOARD_ALIASES: Record<string, BoardName | number> = {
   // Automatically alias board names without non-alphanumerics
   ...Object.keys(BOARD_MAPPINGS).reduce<Record<string, BoardName>>(
-    (acc, key) => ({
-      ...acc,
-      [key.toLowerCase().replace(/[\W_]+/g, "")]: key as BoardName,
-    }),
+    (acc, key) => {
+      acc[key.toLowerCase().replace(/[\W_]+/g, "")] = key as BoardName;
+      return acc;
+    },
     {},
   ),
   clan: "Clan Dungeons",
@@ -128,7 +128,7 @@ const parseBoard = (input: string) => {
   const normalized = BOARD_ALIASES[input.toLowerCase().replace(/\W/g, "")];
   if (typeof normalized === "number") return normalized;
   if (normalized) return Leaderboard.boardIdFor(normalized);
-  const boardNumber = parseInt(input) || 0;
+  const boardNumber = parseInt(input, 10) || 0;
   // Board referenced by internal id
   if (boardNumber <= 2000) return boardNumber;
   // Standard year

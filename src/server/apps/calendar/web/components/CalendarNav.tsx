@@ -70,7 +70,7 @@ export default function CalendarNav(props: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const year = parseInt(inputYear, 10);
-    if (isNaN(year)) return;
+    if (Number.isNaN(year)) return;
     if (props.mode === "gregorian") {
       if (year < 2003 || (year === 2003 && inputMonth < 1)) return;
       props.onJump(year, inputMonth);

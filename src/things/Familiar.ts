@@ -6,8 +6,8 @@ import { bold, hyperlink } from "discord.js";
 import { cleanString, toWikiLink } from "kol.js";
 
 import { kolClient } from "../clients/kol.js";
-import { indent } from "../utils.js";
 import { memoize } from "../utils/memoize.js";
+import { indent } from "../utils.js";
 import { Item } from "./Item.js";
 import { Thing } from "./Thing.js";
 

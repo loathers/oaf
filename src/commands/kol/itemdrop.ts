@@ -1,4 +1,7 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 import { itemDropBonusToCap } from "kol.js/domains/Familiar";
 
 export const data = new SlashCommandBuilder()

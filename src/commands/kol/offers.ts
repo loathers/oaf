@@ -1,12 +1,10 @@
 import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
+  type AutocompleteInteraction,
+  type ChatInputCommandInteraction,
   MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { resolveKoLImage } from "kol.js";
-
-import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import {
   countBetterOffers,
   deleteOffer,
@@ -14,6 +12,7 @@ import {
   getTopOffersForItem,
   upsertOffer,
 } from "../../clients/database.js";
+import { dataOfLoathingClient } from "../../clients/dataOfLoathing.js";
 import { createEmbed } from "../../clients/discord.js";
 import { formatPlayer } from "../../discordUtils.js";
 import { itemAutocomplete, itemOption } from "../_options.js";

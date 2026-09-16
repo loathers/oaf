@@ -1,4 +1,7 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 import { levelForMainstat, statsForLevel } from "kol.js";
 
 import { pluralize } from "../../utils.js";

@@ -1,4 +1,4 @@
-import { Effect } from "../things/index.js";
+import type { Effect } from "../things/index.js";
 
 export class PizzaNode {
   children: Map<string, PizzaNode> = new Map();

@@ -1,8 +1,8 @@
 import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
   bold,
+  type ChatInputCommandInteraction,
   roleMention,
+  SlashCommandBuilder,
 } from "discord.js";
 import { JoinClanError } from "kol.js";
 import { DreadsylvaniaDungeon } from "kol.js/domains/Dreadsylvania";

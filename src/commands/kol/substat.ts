@@ -1,4 +1,7 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 import { levelForSubstat, statsForLevel } from "kol.js";
 
 export const data = new SlashCommandBuilder()

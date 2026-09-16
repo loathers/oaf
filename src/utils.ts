@@ -31,7 +31,7 @@ export const lf = new Intl.ListFormat("en");
 export const pluralize = (count: number, singular: string, plural?: string) =>
   count.toLocaleString() +
   " " +
-  (count === 1 ? singular : plural || singular + "s");
+  (count === 1 ? singular : plural || `${singular}s`);
 
 export function groupToMap<K, V>(
   array: V[],

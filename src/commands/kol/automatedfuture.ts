@@ -1,7 +1,7 @@
 import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
   bold,
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
 } from "discord.js";
 import { AutomatedFuture } from "kol.js/domains/AutomatedFuture";
 

@@ -1,5 +1,5 @@
 import {
-  ChatInputCommandInteraction,
+  type ChatInputCommandInteraction,
   MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
@@ -62,7 +62,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     // Otherwise, if the message is a reply, was it a reply to the user?
     if (message.mentions.repliedUser?.id === interaction.user.id) {
       messagesToDelete.push(messageId);
-      continue;
     }
   }
 

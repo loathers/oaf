@@ -1,5 +1,5 @@
 import {
-  APIEmbedField,
+  type APIEmbedField,
   hideLinkEmbed,
   hyperlink,
   inlineCode,
@@ -39,7 +39,7 @@ export function columnsByMaxLength<T extends { toString: () => string }>(
       columns.push(column.slice(0, -1));
       column = "";
     }
-    column += str + "\n";
+    column += `${str}\n`;
   }
 
   if (column.length > 0) {
@@ -48,7 +48,7 @@ export function columnsByMaxLength<T extends { toString: () => string }>(
 
   return columns.map((col) => ({
     name: "\u200b",
-    value: "\u200b" + col,
+    value: `\u200b${col}`,
   }));
 }
 
@@ -63,9 +63,9 @@ export function formatPlayer(
     | undefined,
   backupId?: number,
 ) {
-  let playerName: string | undefined = undefined;
+  let playerName: string | undefined;
   let playerId: number | undefined = backupId;
-  let discordId: string | undefined = undefined;
+  let discordId: string | undefined;
 
   if (player) {
     if ("name" in player) {

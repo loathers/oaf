@@ -1,4 +1,4 @@
-import { EmbedBuilder } from "discord.js";
+import type { EmbedBuilder } from "discord.js";
 import { decodeHTML } from "entities";
 import { resolveKoLImage } from "kol.js";
 

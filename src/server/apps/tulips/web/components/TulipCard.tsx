@@ -9,7 +9,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { type Range, formatTime } from "../../types.js";
+import { formatTime, type Range } from "../../types.js";
 
 const numberFormat = new Intl.NumberFormat();
 

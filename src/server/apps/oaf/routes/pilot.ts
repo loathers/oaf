@@ -90,7 +90,7 @@ pilotRouter.post("/", async (req, res) => {
   const payload = buildPilotMessage(content, moderatorNotice);
 
   try {
-    let message;
+    let message: Message;
 
     if (reply) {
       const replyee = await fetchReplyTarget(reply);

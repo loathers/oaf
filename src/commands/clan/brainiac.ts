@@ -1,7 +1,7 @@
 import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
+  type ChatInputCommandInteraction,
   italic,
+  SlashCommandBuilder,
 } from "discord.js";
 
 import { setPlayerBrainiac } from "../../clients/database.js";

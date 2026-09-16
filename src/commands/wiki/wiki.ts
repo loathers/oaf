@@ -1,13 +1,13 @@
 import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
+  type AutocompleteInteraction,
+  type ChatInputCommandInteraction,
   DiscordAPIError,
   Events,
-  Message,
+  inlineCode,
+  type Message,
   MessageType,
   RESTJSONErrorCodes,
   SlashCommandBuilder,
-  inlineCode,
   userMention,
 } from "discord.js";
 
@@ -87,7 +87,7 @@ async function onMessage(message: Message) {
   if (queries.length === 0) return;
 
   let preamble = "";
-  let reaction;
+  let reaction: string | undefined;
   if (
     matches.length > 0 &&
     matches[0][0] === trim(message.content) &&

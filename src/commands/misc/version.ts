@@ -1,9 +1,9 @@
 import {
-  ChatInputCommandInteraction,
+  type ChatInputCommandInteraction,
   Events,
+  inlineCode,
   MessageFlags,
   SlashCommandBuilder,
-  inlineCode,
 } from "discord.js";
 import ms from "pretty-ms";
 

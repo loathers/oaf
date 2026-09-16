@@ -1,4 +1,4 @@
-import { EnvType, load } from "ts-dotenv";
+import { type EnvType, load } from "ts-dotenv";
 
 const SNOWFLAKE_PATTERN = /[0-9]{17,64}/;
 

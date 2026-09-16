@@ -1,4 +1,7 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import {
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
+} from "discord.js";
 
 const PROJECT_ALIASES = new Map<string, string>([
   ["garbo", "garbage-collector"],

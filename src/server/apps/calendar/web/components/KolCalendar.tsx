@@ -84,10 +84,13 @@ export default function KolCalendar({
                 const isToday = gameday === todayGameday;
                 const isSelected = gameday === selectedDay;
                 const statDay = ld.getStatDay();
-                const holidays = ld
-                  .getHolidays()
-                  .filter((h) => h !== statDay);
-                const events = getDayEvents(holidays, mrStoreItemEvents[gameday], pvpSeasons[gameday], towerOpenDays.includes(gameday));
+                const holidays = ld.getHolidays().filter((h) => h !== statDay);
+                const events = getDayEvents(
+                  holidays,
+                  mrStoreItemEvents[gameday],
+                  pvpSeasons[gameday],
+                  towerOpenDays.includes(gameday),
+                );
 
                 const classes = [
                   "calendar-cell",

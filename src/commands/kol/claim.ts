@@ -2,18 +2,18 @@ import { bypassAsString } from "@otplib/plugin-base32-alt";
 import { crypto } from "@otplib/plugin-crypto-node";
 import { generate, getRemainingTime, verify } from "@otplib/totp";
 import {
-  ChatInputCommandInteraction,
-  Client,
+  type ChatInputCommandInteraction,
+  type Client,
   DiscordAPIError,
   Events,
-  GuildMember,
-  Message,
-  MessageFlags,
-  PartialGuildMember,
-  RESTJSONErrorCodes,
-  SlashCommandBuilder,
+  type GuildMember,
   hyperlink,
   inlineCode,
+  type Message,
+  MessageFlags,
+  type PartialGuildMember,
+  RESTJSONErrorCodes,
+  SlashCommandBuilder,
 } from "discord.js";
 
 import {

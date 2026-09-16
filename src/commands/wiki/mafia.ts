@@ -1,8 +1,8 @@
 import {
-  AutocompleteInteraction,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
+  type AutocompleteInteraction,
+  type ChatInputCommandInteraction,
   codeBlock,
+  SlashCommandBuilder,
 } from "discord.js";
 import { StatusCodes } from "http-status-codes";
 

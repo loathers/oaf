@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 
 const formatDate = (d: Date) => {
-  const days = Math.ceil(
-    ((new Date().getTime() - d.getTime()) / 1000) * 60 * 60 * 24,
-  );
+  const days = Math.ceil(((Date.now() - d.getTime()) / 1000) * 60 * 60 * 24);
   return `${
     days === 0 ? "Today" : days === 1 ? "Yesterday" : d.toLocaleDateString()
   } ${d.toLocaleTimeString(undefined, { timeStyle: "short" })}`;

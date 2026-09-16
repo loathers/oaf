@@ -1,12 +1,12 @@
 import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  MessageFlags,
-  SlashCommandBuilder,
   bold,
+  type ChatInputCommandInteraction,
+  EmbedBuilder,
   hyperlink,
   inlineCode,
   italic,
+  MessageFlags,
+  SlashCommandBuilder,
   time,
   underline,
   userMention,
@@ -50,7 +50,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 const ENTRY_DEADLINE = new Date(2023, 10, 5);
 const GAUSIE = userMention("263438077865754644");
-const ABOUT_EMBED = new EmbedBuilder().setTitle("THICC 2023")
+const ABOUT_EMBED = new EmbedBuilder()
+  .setTitle("THICC 2023")
   .setDescription(dedent`
         Welcome to Traditional Holiday Intergifting: Covert Crimbo! To celebrate the holiday season, ${GAUSIE} is holding an international "${hyperlink(
           "secret santa",

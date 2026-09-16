@@ -1,4 +1,4 @@
-import { SlashCommandIntegerOption } from "discord.js";
+import type { SlashCommandIntegerOption } from "discord.js";
 
 import { dataOfLoathingClient } from "../clients/dataOfLoathing.js";
 

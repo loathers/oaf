@@ -1,12 +1,11 @@
 import {
-  ChatInputCommandInteraction,
+  type ChatInputCommandInteraction,
   SlashCommandBuilder,
   TimestampStyles,
   time,
 } from "discord.js";
-
-import { LibreLinkUpClient } from "../../clients/LibreLinkupClient.js";
 import { discordClient } from "../../clients/discord.js";
+import { LibreLinkUpClient } from "../../clients/LibreLinkupClient.js";
 import { config } from "../../config.js";
 
 export const data = new SlashCommandBuilder()

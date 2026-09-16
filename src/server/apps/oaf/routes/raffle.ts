@@ -1,10 +1,9 @@
 import { Router } from "express";
-
-import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
 import {
   getRafflesForCsv,
   getRafflesWithWinners,
 } from "../../../../clients/database.js";
+import { dataOfLoathingClient } from "../../../../clients/dataOfLoathing.js";
 
 function arrayToCsv<T extends object>(data: T[], headers: (keyof T)[]): string {
   const headerRow = headers.join(",");
@@ -47,6 +46,7 @@ raffleCsvRouter.get("/", async (_req, res) => {
         >
       >(
         (acc, w, i) => ({
+          // biome-ignore lint/performance/noAccumulatingSpread: at most three winners, and the spread keeps the template-literal keys type-safe
           ...acc,
           [`secondPlaceWinner${i + 1}`]: `${w.player.playerName} (#${w.player.playerId})`,
           [`secondPlaceWinner${i + 1}Tickets`]: w.tickets,

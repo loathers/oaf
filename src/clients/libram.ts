@@ -233,7 +233,7 @@ const EMBED_TOTAL_LIMIT = 6000;
 
 function truncate(text: string, limit: number): string {
   if (text.length <= limit) return text;
-  return text.slice(0, limit - 3) + "...";
+  return `${text.slice(0, limit - 3)}...`;
 }
 
 type EmbedData = {
@@ -347,7 +347,7 @@ function formatFunction(
 
   if (signatures.length > 0) {
     const sigLines = signatures.map((sig) => renderSignature(sig, name));
-    lines.push("```ts\n" + sigLines.join("\n") + "\n```");
+    lines.push(`\`\`\`ts\n${sigLines.join("\n")}\n\`\`\``);
   }
 
   // Add parameter descriptions from comment
@@ -380,7 +380,7 @@ function formatVariable(
   if (declaration.defaultValue != null) {
     const val =
       declaration.defaultValue.length > 200
-        ? declaration.defaultValue.slice(0, 200) + "..."
+        ? `${declaration.defaultValue.slice(0, 200)}...`
         : declaration.defaultValue;
     fields.push({ name: "Default Value", value: `\`\`\`ts\n${val}\n\`\`\`` });
   }
@@ -429,7 +429,7 @@ function formatNamespaceFunctions(children: TypedocDeclaration[]): string {
     }
   }
   if (sigLines.length === 0) return "";
-  return "```ts\n" + sigLines.join("\n") + "\n```";
+  return `\`\`\`ts\n${sigLines.join("\n")}\n\`\`\``;
 }
 
 function formatNamespace(
@@ -458,7 +458,7 @@ function formatNamespace(
 
     fields.push({
       name: group.title,
-      value: value.length > 1024 ? value.slice(0, 1021) + "..." : value,
+      value: value.length > 1024 ? `${value.slice(0, 1021)}...` : value,
     });
   }
 }
@@ -482,7 +482,7 @@ function formatEnum(
       .join(", ");
     fields.push({
       name: "Members",
-      value: value.length > 1024 ? value.slice(0, 1021) + "..." : value,
+      value: value.length > 1024 ? `${value.slice(0, 1021)}...` : value,
     });
   }
 }

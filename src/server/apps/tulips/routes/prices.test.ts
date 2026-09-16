@@ -38,7 +38,7 @@ describe("RANGES config", () => {
   });
 
   test("YTD uses the YTD sentinel", () => {
-    const config = RANGES["YTD"];
+    const config = RANGES.YTD;
     expect(config.duration).toBe("YTD");
     expect(config.bucket).toBe("hour");
   });

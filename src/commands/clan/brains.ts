@@ -1,7 +1,7 @@
 import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
   bold,
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
   underline,
 } from "discord.js";
 
@@ -40,9 +40,9 @@ function formatPlayerList(players: Player[]) {
   for (const player of players.sort()) {
     const formattedPlayer = formatPlayer(player);
     if (output.length + formattedPlayer.length > 1020) {
-      return output + "...";
+      return `${output}...`;
     }
-    output += formattedPlayer + "\n";
+    output += `${formattedPlayer}\n`;
   }
 
   return output.slice(0, -1);

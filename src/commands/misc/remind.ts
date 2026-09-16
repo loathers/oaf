@@ -1,6 +1,12 @@
-import { Duration, add, intervalToDuration, milliseconds, sub } from "date-fns";
 import {
-  ChatInputCommandInteraction,
+  add,
+  type Duration,
+  intervalToDuration,
+  milliseconds,
+  sub,
+} from "date-fns";
+import {
+  type ChatInputCommandInteraction,
   DiscordAPIError,
   Events,
   MessageFlags,
@@ -122,7 +128,7 @@ async function clearOldReminders() {
 }
 
 async function checkReminders() {
-  let reminders;
+  let reminders: Awaited<ReturnType<typeof getDueReminders>>;
   try {
     reminders = await getDueReminders();
   } catch {

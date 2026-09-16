@@ -2,12 +2,12 @@ import { readFile } from "node:fs/promises";
 import { describe, expect, test } from "vitest";
 
 import {
-  type LibramTopic,
-  TypedocRoot,
   formatTopicEmbed,
+  type LibramTopic,
   parseTopics,
   renderType,
   resolveReference,
+  type TypedocRoot,
 } from "./libram.js";
 
 const typedocData = JSON.parse(
