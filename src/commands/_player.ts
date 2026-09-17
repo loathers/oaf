@@ -1,3 +1,8 @@
+import {
+  type ChatInputCommandInteraction,
+  FormattingPatterns,
+  inlineCode,
+} from "discord.js";
 import type { Player } from "kol.js";
 
 import { findPlayerWithRaffleWins } from "../clients/database.js";
@@ -18,24 +23,79 @@ export async function findPlayer(where: {
 
 type FoundPlayer = Awaited<ReturnType<typeof findPlayer>>;
 
-export async function identifyPlayer(
-  input: string,
-): Promise<string | [Player, FoundPlayer]> {
-  // Check if this is a discord mention
-  if (input.match(/^<@\d+>$/)) {
-    const knownPlayer = await findPlayer({ discordId: input.slice(2, -1) });
+type Identification = string | [Player, FoundPlayer];
 
-    if (knownPlayer === null) {
-      return "That user hasn't claimed a KoL account.";
+/** Thrown when a Discord user has no KoL account linked to them. */
+export class UnclaimedAccountError extends Error {
+  constructor(discordId: string) {
+    super(`Discord user ${discordId} has not claimed a KoL account`);
+    this.name = "UnclaimedAccountError";
+  }
+}
+
+/** Thrown when a claimed KoL account can no longer be found in-game. */
+export class PlayerNotInGameError extends Error {
+  constructor(playerId: number) {
+    super(`KoL player #${playerId} could not be found in-game`);
+    this.name = "PlayerNotInGameError";
+  }
+}
+
+const IDENTIFICATION_ERRORS = {
+  other: {
+    unclaimed:
+      "That user hasn't claimed a KoL account, so I don't know who they are in-game.",
+    notInGame:
+      "That user has claimed a KoL account, but I can't find it in-game.",
+  },
+  self: {
+    unclaimed: `You haven't claimed a KoL account, so you'll have to tell me which player you mean or link one by running ${inlineCode("/claim")}.`,
+    notInGame: "You've claimed a KoL account, but I can't find it in-game.",
+  },
+} as const;
+
+function describeIdentificationError(
+  error: unknown,
+  subject: keyof typeof IDENTIFICATION_ERRORS,
+) {
+  const messages = IDENTIFICATION_ERRORS[subject];
+
+  if (error instanceof UnclaimedAccountError) return messages.unclaimed;
+  if (error instanceof PlayerNotInGameError) return messages.notInGame;
+
+  throw error;
+}
+
+async function identifyClaimedPlayer(
+  discordId: string,
+): Promise<[Player, FoundPlayer]> {
+  const knownPlayer = await findPlayer({ discordId });
+
+  if (knownPlayer === null) throw new UnclaimedAccountError(discordId);
+
+  const player = await kolClient.players.resolve(knownPlayer.playerId);
+
+  if (!player) throw new PlayerNotInGameError(knownPlayer.playerId);
+
+  return [player, knownPlayer];
+}
+
+// discord.js's pattern matches a mention anywhere in a string; we only want input that is nothing else
+const MENTION = new RegExp(`^${FormattingPatterns.User.source}$`);
+
+function parseMention(input: string) {
+  return MENTION.exec(input)?.groups?.id ?? null;
+}
+
+export async function identifyPlayer(input: string): Promise<Identification> {
+  const discordId = parseMention(input);
+
+  if (discordId) {
+    try {
+      return await identifyClaimedPlayer(discordId);
+    } catch (error) {
+      return describeIdentificationError(error, "other");
     }
-
-    const player = await kolClient.players.resolve(knownPlayer.playerId);
-
-    if (!player) {
-      return "That user has claimed a KoL account, but I can't find it in-game.";
-    }
-
-    return [player, knownPlayer];
   }
 
   // Validate if the string identifies a KoL player, either as a player ID or a user name
@@ -51,4 +111,21 @@ export async function identifyPlayer(
   const knownPlayer = await findPlayer({ playerId: player.id });
 
   return [player, knownPlayer];
+}
+
+/** Identify the player named in the "player" option, defaulting to the caller's own claimed account. */
+export async function identifyPlayerOrSelf(
+  interaction: ChatInputCommandInteraction,
+): Promise<Identification> {
+  const input = interaction.options.getString("player", false);
+
+  // Mentioning yourself should read the same as leaving the option out
+  if (input && parseMention(input) !== interaction.user.id)
+    return await identifyPlayer(input);
+
+  try {
+    return await identifyClaimedPlayer(interaction.user.id);
+  } catch (error) {
+    return describeIdentificationError(error, "self");
+  }
 }

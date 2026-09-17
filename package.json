@@ -40,7 +40,7 @@
     "http-status-codes": "^2.3.0",
     "js-sha256": "^1.0.0",
     "jsonwebtoken": "^9.0.3",
-    "kol.js": "^0.14.2",
+    "kol.js": "^0.14.3",
     "kysely": "^0.29.6",
     "lightstreamer-client-node": "^9.2.2",
     "pg": "^8.23.0",
