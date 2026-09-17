@@ -80,13 +80,19 @@ async function identifyClaimedPlayer(
   return [player, knownPlayer];
 }
 
-export async function identifyPlayer(input: string): Promise<Identification> {
-  // Check if this is a discord mention
-  const mention = FormattingPatterns.User.exec(input);
+// discord.js's pattern matches a mention anywhere in a string; we only want input that is nothing else
+const MENTION = new RegExp(`^${FormattingPatterns.User.source}$`);
 
-  if (mention?.groups) {
+function parseMention(input: string) {
+  return MENTION.exec(input)?.groups?.id ?? null;
+}
+
+export async function identifyPlayer(input: string): Promise<Identification> {
+  const discordId = parseMention(input);
+
+  if (discordId) {
     try {
-      return await identifyClaimedPlayer(mention.groups.id);
+      return await identifyClaimedPlayer(discordId);
     } catch (error) {
       return describeIdentificationError(error, "other");
     }
@@ -113,7 +119,9 @@ export async function identifyPlayerOrSelf(
 ): Promise<Identification> {
   const input = interaction.options.getString("player", false);
 
-  if (input) return await identifyPlayer(input);
+  // Mentioning yourself should read the same as leaving the option out
+  if (input && parseMention(input) !== interaction.user.id)
+    return await identifyPlayer(input);
 
   try {
     return await identifyClaimedPlayer(interaction.user.id);

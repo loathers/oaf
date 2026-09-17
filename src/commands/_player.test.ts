@@ -84,6 +84,15 @@ describe("identifyPlayer", () => {
       discordId: DISCORD_ID,
     });
   });
+
+  test("only treats input that is nothing but a mention as one", async () => {
+    resolve.mockResolvedValue(null);
+
+    expect(await identifyPlayer(`gausie <@${DISCORD_ID}>`)).toBe(
+      `According to KoL, player gausie <@${DISCORD_ID}> does not exist.`,
+    );
+    expect(findPlayerWithRaffleWins).not.toHaveBeenCalled();
+  });
 });
 
 describe("identifyPlayerOrSelf", () => {
@@ -119,5 +128,15 @@ describe("identifyPlayerOrSelf", () => {
       "You haven't claimed a KoL account, so you'll have to tell me which player you mean or link one by running `/claim`.",
     );
     expect(resolve).not.toHaveBeenCalled();
+  });
+
+  test("treats a mention of yourself as yourself", async () => {
+    findPlayerWithRaffleWins.mockResolvedValue(null);
+
+    expect(
+      await identifyPlayerOrSelf(mockInteraction(`<@${DISCORD_ID}>`)),
+    ).toBe(
+      "You haven't claimed a KoL account, so you'll have to tell me which player you mean or link one by running `/claim`.",
+    );
   });
 });
