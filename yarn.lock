@@ -3705,9 +3705,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kol.js@npm:^0.14.3":
-  version: 0.14.3
-  resolution: "kol.js@npm:0.14.3"
+"kol.js@npm:^0.15.0":
+  version: 0.15.0
+  resolution: "kol.js@npm:0.15.0"
   dependencies:
     "@date-fns/tz": "npm:^1.5.0"
     async-mutex: "npm:^0.5.0"
@@ -3729,7 +3729,7 @@ __metadata:
     zod: "npm:^4.4.3"
   peerDependencies:
     data-of-loathing: ">=4.3.2"
-  checksum: 10c0/02c835a6cbe3a7a50a850c8175a405d560dea4f99afc1044bcf44e53807803d022e125aa939b06fc5237daf89257c0ccbb79bc4d1713bfbddae693cd5a9b0ed5
+  checksum: 10c0/d6d95d26ee8edd27b419cc266d2b4a8bbccc1334c5c88a568352843501ad014502c208475dc64f4f5633b8d57db1f9f495acd83269c6c009e23e48cb3c1b5807
   languageName: node
   linkType: hard
 
@@ -4144,7 +4144,7 @@ __metadata:
     husky: "npm:^9.1.7"
     js-sha256: "npm:^1.0.0"
     jsonwebtoken: "npm:^9.0.3"
-    kol.js: "npm:^0.14.3"
+    kol.js: "npm:^0.15.0"
     kysely: "npm:^0.29.6"
     kysely-ctl: "npm:^0.21.0"
     lightstreamer-client-node: "npm:^9.2.2"

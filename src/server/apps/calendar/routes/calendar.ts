@@ -102,7 +102,7 @@ function renderDaily(key: string, value: string): TextSegment[] {
 
 async function getYamBattery(gameday: number): Promise<YamBatteryEffect[]> {
   const rolls = await MayamCalendar.getYamBatteryEffects(gameday);
-  return rolls.map(({ duration, effect: rolled }) => {
+  return [...rolls].map(({ duration, effect: rolled }) => {
     // Re-look-up through our own client for the wiki link and modifiers
     const effect = dataOfLoathingClient.findEffectById(rolled.id);
     return {

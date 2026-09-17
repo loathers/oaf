@@ -334,13 +334,16 @@ export class Familiar extends Thing<DolFamiliar> {
     if (singleEquip) output.push("Single equip only.");
     if (blueText) output.push(blueText);
     if (effect) {
-      const { blueText: effectBlueText } = await kolClient.getEffectDescription(
-        effect.descid,
-      );
+      const { effect: gained, duration } = effect;
+      const name = cleanString(gained.name);
       output.push(
-        `Gives ${effect.duration} adventures of ${bold(hyperlink(cleanString(effect.name), toWikiLink(cleanString(effect.name))))}`,
-        indent(effectBlueText),
+        `Gives ${duration} adventures of ${bold(hyperlink(name, toWikiLink(name)))}`,
       );
+      if (gained.descid) {
+        const { blueText: effectBlueText } =
+          await kolClient.getEffectDescription(gained.descid);
+        output.push(indent(effectBlueText));
+      }
     }
 
     return output.join("\n");
