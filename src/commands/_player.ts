@@ -27,7 +27,7 @@ type Identification = string | [Player, FoundPlayer];
 
 /** Thrown when a Discord user has no KoL account linked to them. */
 export class UnclaimedAccountError extends Error {
-  constructor(readonly discordId: string) {
+  constructor(discordId: string) {
     super(`Discord user ${discordId} has not claimed a KoL account`);
     this.name = "UnclaimedAccountError";
   }
@@ -35,10 +35,35 @@ export class UnclaimedAccountError extends Error {
 
 /** Thrown when a claimed KoL account can no longer be found in-game. */
 export class PlayerNotInGameError extends Error {
-  constructor(readonly playerId: number) {
+  constructor(playerId: number) {
     super(`KoL player #${playerId} could not be found in-game`);
     this.name = "PlayerNotInGameError";
   }
+}
+
+const IDENTIFICATION_ERRORS = {
+  other: {
+    unclaimed:
+      "That user hasn't claimed a KoL account, so I don't know who they are in-game.",
+    notInGame:
+      "That user has claimed a KoL account, but I can't find it in-game.",
+  },
+  self: {
+    unclaimed: `You haven't claimed a KoL account, so you'll have to tell me which player you mean or link one by running ${inlineCode("/claim")}.`,
+    notInGame: "You've claimed a KoL account, but I can't find it in-game.",
+  },
+} as const;
+
+function describeIdentificationError(
+  error: unknown,
+  subject: keyof typeof IDENTIFICATION_ERRORS,
+) {
+  const messages = IDENTIFICATION_ERRORS[subject];
+
+  if (error instanceof UnclaimedAccountError) return messages.unclaimed;
+  if (error instanceof PlayerNotInGameError) return messages.notInGame;
+
+  throw error;
 }
 
 async function identifyClaimedPlayer(
@@ -63,11 +88,7 @@ export async function identifyPlayer(input: string): Promise<Identification> {
     try {
       return await identifyClaimedPlayer(mention.groups.id);
     } catch (error) {
-      if (error instanceof UnclaimedAccountError)
-        return "That user hasn't claimed a KoL account, so I don't know who they are in-game.";
-      if (error instanceof PlayerNotInGameError)
-        return "That user has claimed a KoL account, but I can't find it in-game.";
-      throw error;
+      return describeIdentificationError(error, "other");
     }
   }
 
@@ -86,22 +107,17 @@ export async function identifyPlayer(input: string): Promise<Identification> {
   return [player, knownPlayer];
 }
 
-/** Identify the player named in an option, defaulting to the caller's own claimed account. */
+/** Identify the player named in the "player" option, defaulting to the caller's own claimed account. */
 export async function identifyPlayerOrSelf(
   interaction: ChatInputCommandInteraction,
-  option = "player",
 ): Promise<Identification> {
-  const input = interaction.options.getString(option, false);
+  const input = interaction.options.getString("player", false);
 
   if (input) return await identifyPlayer(input);
 
   try {
     return await identifyClaimedPlayer(interaction.user.id);
   } catch (error) {
-    if (error instanceof UnclaimedAccountError)
-      return `You haven't claimed a KoL account, so you'll have to tell me which player you mean or link one by running ${inlineCode("/claim")}.`;
-    if (error instanceof PlayerNotInGameError)
-      return "You've claimed a KoL account, but I can't find it in-game.";
-    throw error;
+    return describeIdentificationError(error, "self");
   }
 }
