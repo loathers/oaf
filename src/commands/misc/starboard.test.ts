@@ -68,7 +68,8 @@ const guild = {
 };
 
 const starboardSend = vi.fn();
-const starboardFetch = vi.fn();
+const starboardEdit = vi.fn();
+const starboardDelete = vi.fn();
 
 vi.mock("../../clients/discord.js", () => ({
   discordClient: {
@@ -239,7 +240,7 @@ const starboardChannel = {
   isTextBased: () => true,
   isSendable: () => true,
   send: starboardSend,
-  messages: { fetch: starboardFetch },
+  messages: { edit: starboardEdit, delete: starboardDelete },
 };
 
 const channels = new Map<string, unknown>();
@@ -263,12 +264,19 @@ async function boot() {
   init();
   const [, ready] = once.mock.calls.at(-1) ?? [];
   (ready as () => void)();
-  await settle();
+  await vi.waitFor(() => expect(guild.channels.fetch).toHaveBeenCalled());
 }
 
-/** Waits for the evaluation queue to drain. */
-async function settle() {
-  for (let i = 0; i < 20; i++) await Promise.resolve();
+const POSTED_ROW = {
+  sourceMessageId: "source-message",
+  starboardMessageId: "post",
+  score: 5,
+  suppressed: false,
+};
+
+/** A list of `count` distinct non-bot voters. */
+function stars(count: number) {
+  return Array.from({ length: count }, (_, i) => ({ id: `voter-${i}` }));
 }
 
 beforeEach(async () => {
@@ -284,7 +292,7 @@ beforeEach(async () => {
   claimStarboardMessage.mockResolvedValue(true);
   isAtLeastRole.mockResolvedValue(false);
   starboardSend.mockResolvedValue({ id: "post" });
-  starboardFetch.mockReset();
+  deleteStarboardMessage.mockResolvedValue(null);
   await boot();
 });
 
@@ -298,32 +306,26 @@ describe("reaction filtering", () => {
       emoji: { name: "thumbsup" },
       message,
     } as never);
-    await settle();
 
     expect(channel.messages.fetch).not.toHaveBeenCalled();
   });
 
-  test("resolves a partial reaction and a partial message", async () => {
-    const message = makeMessage({ plusOne: [{ id: "a" }] });
-    serve(message);
+  test("handles a partial reaction without resolving it", async () => {
+    const message = makeMessage({ plusOne: stars(5) });
+    const channel = serve(message);
+    const fetch = vi.fn();
 
-    const resolvedMessage = { ...message, partial: true, fetch: vi.fn() };
-    const fetch = vi.fn().mockResolvedValue({
-      emoji: { name: "plusone" },
-      message: resolvedMessage,
-      partial: false,
-    });
-
+    // The ids we need are on the partial, and the evaluation re-fetches the
+    // message anyway
     await onReactionChange({
       partial: true,
       emoji: { name: "plusone" },
-      message,
+      message: { id: message.id, channelId: channel.id, guildId: "guild" },
       fetch,
     } as never);
-    await settle();
 
-    expect(fetch).toHaveBeenCalled();
-    expect(resolvedMessage.fetch).toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(starboardSend).toHaveBeenCalledOnce();
   });
 
   test("ignores reactions from outside the configured guild", async () => {
@@ -335,7 +337,6 @@ describe("reaction filtering", () => {
       emoji: { name: "plusone" },
       message: { ...message, guildId: "elsewhere" },
     } as never);
-    await settle();
 
     expect(channel.messages.fetch).not.toHaveBeenCalled();
   });
@@ -345,18 +346,11 @@ describe("eligibility", () => {
   const react = async (channel: TestChannel) => {
     const message = makeMessage({
       channel,
-      plusOne: [
-        { id: "a" },
-        { id: "b" },
-        { id: "c" },
-        { id: "d" },
-        { id: "e" },
-      ],
+      plusOne: stars(5),
     });
     channel.messages.fetch.mockResolvedValue(message);
     register(channel);
-    enqueue(channel.id, message.id);
-    await settle();
+    await enqueue(channel.id, message.id);
   };
 
   test("posts from an ordinary channel", async () => {
@@ -396,39 +390,23 @@ describe("eligibility", () => {
     const message = makeMessage({
       channel,
       system: true,
-      plusOne: [
-        { id: "a" },
-        { id: "b" },
-        { id: "c" },
-        { id: "d" },
-        { id: "e" },
-      ],
+      plusOne: stars(5),
     });
     channel.messages.fetch.mockResolvedValue(message);
     register(channel);
 
-    enqueue(channel.id, message.id);
-    await settle();
+    await enqueue(channel.id, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
 });
 
 describe("posting", () => {
-  const fiveStars = [
-    { id: "a" },
-    { id: "b" },
-    { id: "c" },
-    { id: "d" },
-    { id: "e" },
-  ];
-
   test("claims before sending and records the post", async () => {
-    const message = makeMessage({ plusOne: fiveStars });
+    const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(claimStarboardMessage).toHaveBeenCalledWith({
       sourceMessageId: message.id,
@@ -439,209 +417,175 @@ describe("posting", () => {
   });
 
   test("leads the post with the plusone emoji, count and message link", async () => {
-    const message = makeMessage({ plusOne: fiveStars });
+    const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     const [options] = starboardSend.mock.calls[0] as [{ content: string }];
     expect(options.content).toBe(`<:p:1> **5** | ${message.url}`);
   });
 
   test("does not post below the threshold", async () => {
-    const message = makeMessage({ plusOne: [{ id: "a" }] });
+    const message = makeMessage({ plusOne: stars(1) });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
 
   test("ignores bot reactions and the author's own star", async () => {
     const message = makeMessage({
-      plusOne: [...fiveStars, { id: "author" }, { id: "oaf", bot: true }],
+      plusOne: [...stars(5), { id: "author" }, { id: "oaf", bot: true }],
     });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(setStarboardPost).toHaveBeenCalledWith(message.id, "post", 5);
   });
 
   test("posts only once when reactions arrive together", async () => {
-    const message = makeMessage({ plusOne: fiveStars });
+    // What the real claim does once a row holds a post id
+    claimStarboardMessage.mockResolvedValueOnce(true).mockResolvedValue(false);
+
+    const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    enqueue(message.channelId, message.id);
-    enqueue(message.channelId, message.id);
-    await settle();
+    await Promise.all([
+      enqueue(message.channelId, message.id),
+      enqueue(message.channelId, message.id),
+      enqueue(message.channelId, message.id),
+    ]);
 
     expect(starboardSend).toHaveBeenCalledOnce();
+    // Coalesced: however many events arrive, a burst costs at most one queued
+    // evaluation behind the running one
+    expect(claimStarboardMessage).toHaveBeenCalledTimes(2);
   });
 
   test("does not post when another evaluation holds the claim", async () => {
     claimStarboardMessage.mockResolvedValue(false);
-    const message = makeMessage({ plusOne: fiveStars });
+    const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
 
   test("does not post a message older than the age limit", async () => {
     const message = makeMessage({
-      plusOne: fiveStars,
+      plusOne: stars(5),
       createdTimestamp: Date.now() - 31 * 24 * 60 * 60 * 1000,
     });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
 
   test("does not post a message with nothing to show", async () => {
-    const message = makeMessage({ plusOne: fiveStars, content: "" });
+    const message = makeMessage({ plusOne: stars(5), content: "" });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
 });
 
 describe("moderator veto", () => {
-  const fiveStars = [
-    { id: "a" },
-    { id: "b" },
-    { id: "c" },
-    { id: "d" },
-    { id: "e" },
-  ];
-
   test("blocks a message a moderator has minusoned", async () => {
     isAtLeastRole.mockResolvedValue(true);
     const message = makeMessage({
-      plusOne: fiveStars,
+      plusOne: stars(5),
       minusOne: [{ id: "mod" }],
     });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
 
   test("ignores a minusone from a non-moderator", async () => {
     const message = makeMessage({
-      plusOne: fiveStars,
+      plusOne: stars(5),
       minusOne: [{ id: "nobody" }],
     });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(starboardSend).toHaveBeenCalledOnce();
   });
 
   test("posts once the moderator removes their minusone", async () => {
-    const message = makeMessage({ plusOne: fiveStars });
-    serve(message);
+    isAtLeastRole.mockResolvedValue(true);
+    const vetoed = makeMessage({
+      plusOne: stars(5),
+      minusOne: [{ id: "mod" }],
+    });
+    serve(vetoed);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(vetoed.channelId, vetoed.id);
+    expect(starboardSend).not.toHaveBeenCalled();
+
+    // The veto lives only in the reactions, so taking it off is enough
+    const cleared = makeMessage({ plusOne: stars(5) });
+    serve(cleared);
+
+    await enqueue(cleared.channelId, cleared.id);
 
     expect(starboardSend).toHaveBeenCalledOnce();
   });
 
   test("takes down a post that a moderator later vetoes", async () => {
     isAtLeastRole.mockResolvedValue(true);
-    findStarboardMessage.mockResolvedValue({
-      sourceMessageId: "source-message",
-      starboardMessageId: "post",
-      score: 5,
-      suppressed: false,
-    });
-    const post = { delete: vi.fn() };
-    starboardFetch.mockResolvedValue(post);
+    findStarboardMessage.mockResolvedValue(POSTED_ROW);
 
     const message = makeMessage({
-      plusOne: fiveStars,
+      plusOne: stars(5),
       minusOne: [{ id: "mod" }],
     });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(clearStarboardPost).toHaveBeenCalledWith(message.id);
-    expect(post.delete).toHaveBeenCalled();
+    expect(starboardDelete).toHaveBeenCalledWith("post");
   });
 });
 
 describe("updating an existing post", () => {
   beforeEach(() => {
-    findStarboardMessage.mockResolvedValue({
-      sourceMessageId: "source-message",
-      starboardMessageId: "post",
-      score: 5,
-      suppressed: false,
-    });
+    findStarboardMessage.mockResolvedValue(POSTED_ROW);
   });
 
-  test("edits the post when the score moves", async () => {
-    const post = { edit: vi.fn(), attachments: new Collection() };
-    starboardFetch.mockResolvedValue(post);
-
-    const message = makeMessage({
-      plusOne: [
-        { id: "a" },
-        { id: "b" },
-        { id: "c" },
-        { id: "d" },
-        { id: "e" },
-        { id: "f" },
-      ],
-    });
+  test("edits only the count line when the score moves", async () => {
+    const message = makeMessage({ plusOne: stars(6) });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
-    expect(post.edit).toHaveBeenCalledOnce();
+    // The embed is deliberately left alone, so the patch carries content only
+    expect(starboardEdit).toHaveBeenCalledWith("post", {
+      content: `<:p:1> **6** | ${message.url}`,
+    });
     expect(starboardSend).not.toHaveBeenCalled();
     expect(setStarboardScore).toHaveBeenCalledWith(message.id, 6);
   });
 
   test("does nothing when the score has not moved", async () => {
-    const post = { edit: vi.fn(), attachments: new Collection() };
-    starboardFetch.mockResolvedValue(post);
-
-    const message = makeMessage({
-      plusOne: [
-        { id: "a" },
-        { id: "b" },
-        { id: "c" },
-        { id: "d" },
-        { id: "e" },
-      ],
-    });
+    const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
-    expect(post.edit).not.toHaveBeenCalled();
+    expect(starboardEdit).not.toHaveBeenCalled();
     expect(starboardSend).not.toHaveBeenCalled();
   });
 
@@ -651,56 +595,38 @@ describe("updating an existing post", () => {
       order.push("clear");
       return Promise.resolve();
     });
-    const post = {
-      delete: vi.fn(() => {
-        order.push("delete");
-        return Promise.resolve();
-      }),
-    };
-    starboardFetch.mockResolvedValue(post);
+    starboardDelete.mockImplementation(() => {
+      order.push("delete");
+      return Promise.resolve();
+    });
 
-    const message = makeMessage({ plusOne: [{ id: "a" }] });
+    const message = makeMessage({ plusOne: stars(1) });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(order).toEqual(["clear", "delete"]);
   });
 
   test("still unstars a message that is past the age limit", async () => {
-    const post = { delete: vi.fn() };
-    starboardFetch.mockResolvedValue(post);
-
     const message = makeMessage({
-      plusOne: [{ id: "a" }],
+      plusOne: stars(1),
       createdTimestamp: Date.now() - 31 * 24 * 60 * 60 * 1000,
     });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
-    expect(post.delete).toHaveBeenCalled();
+    expect(starboardDelete).toHaveBeenCalledWith("post");
   });
 
   test("suppresses the message when the post has already been removed", async () => {
-    starboardFetch.mockRejectedValue(unknownMessage);
+    starboardEdit.mockRejectedValue(unknownMessage);
 
-    const message = makeMessage({
-      plusOne: [
-        { id: "a" },
-        { id: "b" },
-        { id: "c" },
-        { id: "d" },
-        { id: "e" },
-        { id: "f" },
-      ],
-    });
+    const message = makeMessage({ plusOne: stars(6) });
     serve(message);
 
-    enqueue(message.channelId, message.id);
-    await settle();
+    await enqueue(message.channelId, message.id);
 
     expect(suppressStarboardMessage).toHaveBeenCalledWith(message.id);
     expect(starboardSend).not.toHaveBeenCalled();
@@ -709,14 +635,7 @@ describe("updating an existing post", () => {
 
 describe("deletions", () => {
   test("removes our post and row when the source is deleted", async () => {
-    findStarboardMessage.mockResolvedValue({
-      sourceMessageId: "source-message",
-      starboardMessageId: "post",
-      score: 5,
-      suppressed: false,
-    });
-    const post = { delete: vi.fn() };
-    starboardFetch.mockResolvedValue(post);
+    deleteStarboardMessage.mockResolvedValue("post");
 
     await onMessageDelete({
       id: "source-message",
@@ -724,18 +643,18 @@ describe("deletions", () => {
       guildId: "guild",
     } as never);
 
-    expect(post.delete).toHaveBeenCalled();
     expect(deleteStarboardMessage).toHaveBeenCalledWith("source-message");
+    expect(starboardDelete).toHaveBeenCalledWith("post");
   });
 
-  test("does nothing for an unstarred message", async () => {
+  test("leaves the starboard alone for an unstarred message", async () => {
     await onMessageDelete({
       id: "whatever",
       channelId: "source",
       guildId: "guild",
     } as never);
 
-    expect(deleteStarboardMessage).not.toHaveBeenCalled();
+    expect(starboardDelete).not.toHaveBeenCalled();
   });
 
   test("suppresses the source when a human deletes our post", async () => {
@@ -771,20 +690,14 @@ describe("deletions", () => {
 
 describe("error handling", () => {
   test("cleans up quietly when the source message has gone", async () => {
-    findStarboardMessage.mockResolvedValue({
-      sourceMessageId: "source-message",
-      starboardMessageId: "post",
-      score: 5,
-      suppressed: false,
-    });
-    starboardFetch.mockResolvedValue({ delete: vi.fn() });
+    findStarboardMessage.mockResolvedValue(POSTED_ROW);
+    deleteStarboardMessage.mockResolvedValue("post");
 
     const channel = makeChannel();
     channel.messages.fetch.mockRejectedValue(unknownMessage);
     register(channel);
 
-    enqueue("source", "source-message");
-    await settle();
+    await enqueue("source", "source-message");
 
     expect(deleteStarboardMessage).toHaveBeenCalledWith("source-message");
     expect(alert).not.toHaveBeenCalled();
@@ -795,10 +708,8 @@ describe("error handling", () => {
     channel.messages.fetch.mockRejectedValue(missingAccess);
     register(channel);
 
-    enqueue("locked", "one");
-    await settle();
-    enqueue("locked", "two");
-    await settle();
+    await enqueue("locked", "one");
+    await enqueue("locked", "two");
 
     expect(alert).toHaveBeenCalledOnce();
   });
@@ -806,52 +717,36 @@ describe("error handling", () => {
 
 describe("clearing all reactions", () => {
   test("re-evaluates the message", async () => {
-    findStarboardMessage.mockResolvedValue({
-      sourceMessageId: "source-message",
-      starboardMessageId: "post",
-      score: 5,
-      suppressed: false,
-    });
-    const post = { delete: vi.fn() };
-    starboardFetch.mockResolvedValue(post);
+    findStarboardMessage.mockResolvedValue(POSTED_ROW);
 
     const message = makeMessage();
     serve(message);
 
-    onReactionsCleared({
+    await onReactionsCleared({
       id: message.id,
       channelId: message.channelId,
       guildId: "guild",
     } as never);
-    await settle();
 
-    expect(post.delete).toHaveBeenCalled();
+    expect(starboardDelete).toHaveBeenCalledWith("post");
   });
 });
 
 describe("parseExcludedChannelIds", () => {
-  test("treats an unset variable as no exclusions", () => {
-    expect(parseExcludedChannelIds(undefined).size).toBe(0);
-  });
-
-  test("treats an empty variable as no exclusions", () => {
-    expect(parseExcludedChannelIds("").size).toBe(0);
-  });
-
-  test("parses a single id", () => {
-    expect([...parseExcludedChannelIds("123")]).toEqual(["123"]);
-  });
-
-  test("parses several ids, tolerating whitespace", () => {
-    expect([...parseExcludedChannelIds("123, 456 ,789")]).toEqual([
-      "123",
-      "456",
-      "789",
-    ]);
-  });
-
-  test("ignores empty entries from a trailing comma", () => {
-    expect([...parseExcludedChannelIds("123,")]).toEqual(["123"]);
+  test.each([
+    ["an unset variable", undefined, []],
+    ["an empty variable", "", []],
+    ["a single id", "123", ["123"]],
+    [
+      "several ids, tolerating whitespace",
+      "123, 456 ,789",
+      ["123", "456", "789"],
+    ],
+    ["a trailing comma", "123,", ["123"]],
+  ])("parses %s", (_label, raw, expected) => {
+    expect([...parseExcludedChannelIds(raw as string | undefined)]).toEqual(
+      expected,
+    );
   });
 });
 
@@ -889,19 +784,34 @@ describe("decideAction", () => {
 
   test("posts a new message that crosses the threshold", () => {
     expect(
-      decideAction({ score: 5, threshold: 5, vetoed: false, existing: null }),
+      decideAction({
+        score: 5,
+        threshold: 5,
+        vetoed: false,
+        existing: undefined,
+      }),
     ).toBe("post");
   });
 
   test("does nothing for a new message below the threshold", () => {
     expect(
-      decideAction({ score: 4, threshold: 5, vetoed: false, existing: null }),
+      decideAction({
+        score: 4,
+        threshold: 5,
+        vetoed: false,
+        existing: undefined,
+      }),
     ).toBe("nothing");
   });
 
   test("does not post a vetoed message however popular", () => {
     expect(
-      decideAction({ score: 50, threshold: 5, vetoed: true, existing: null }),
+      decideAction({
+        score: 50,
+        threshold: 5,
+        vetoed: true,
+        existing: undefined,
+      }),
     ).toBe("nothing");
   });
 
@@ -940,6 +850,8 @@ describe("decideAction", () => {
     ).toBe("delete");
   });
 
+  // Covers both a post a human deleted and one the cutover backfill adopted
+  // from the previous starboard bot
   test.each([
     ["below threshold", 0, false],
     ["above threshold", 50, false],
@@ -954,27 +866,14 @@ describe("decideAction", () => {
       }),
     ).toBe("nothing");
   });
-
-  // What the cutover backfill writes for posts the old starboard bot made
-  test("never reposts a message adopted from the previous bot", () => {
-    expect(
-      decideAction({
-        score: 22,
-        threshold: 5,
-        vetoed: false,
-        existing: { starboardMessageId: null, score: 0, suppressed: true },
-      }),
-    ).toBe("nothing");
-  });
 });
 
 describe("truncate", () => {
-  test("leaves short text alone", () => {
-    expect(truncate("hello", 10)).toBe("hello");
-  });
-
-  test("ellipsises long text within the limit", () => {
-    expect(truncate("hello world", 8)).toBe("hello w…");
+  test.each([
+    ["leaves short text alone", "hello", 10, "hello"],
+    ["ellipsises long text within the limit", "hello world", 8, "hello w…"],
+  ])("%s", (_label, text, max, expected) => {
+    expect(truncate(text as string, max as number)).toBe(expected);
   });
 });
 
@@ -1051,7 +950,7 @@ describe("describeStarboardPost", () => {
       options,
     );
     expect(render.imageUrl).toBe(file.url);
-    expect(render.reuploadAttachment).toBe(file);
+    expect(render.reuploadName).toBe(file.name);
     expect(render.fields).toEqual([]);
   });
 
@@ -1062,7 +961,7 @@ describe("describeStarboardPost", () => {
       options,
     );
     expect(render.imageUrl).toBe(file.url);
-    expect(render.reuploadAttachment).toBeNull();
+    expect(render.reuploadName).toBeNull();
   });
 
   test("lists attachments beyond the first in a field", () => {
@@ -1096,7 +995,7 @@ describe("describeStarboardPost", () => {
       options,
     );
     expect(render.imageUrl).toBe("https://example.com/preview.png");
-    expect(render.reuploadAttachment).toBeNull();
+    expect(render.reuploadName).toBeNull();
   });
 
   test("prefers a real attachment over a link preview image", () => {

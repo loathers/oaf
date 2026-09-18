@@ -7,9 +7,9 @@ import {
   type Guild,
   type GuildBasedChannel,
   type GuildTextBasedChannel,
+  hyperlink,
   type Message,
   type MessageCreateOptions,
-  type MessageEditOptions,
   type MessageReaction,
   MessageReferenceType,
   type MessageSnapshot,
@@ -33,6 +33,7 @@ import {
 } from "../../clients/database.js";
 import { discordClient } from "../../clients/discord.js";
 import { config } from "../../config.js";
+import type { StarboardMessage } from "../../database-types.js";
 import { isAtLeastRole } from "../../discordUtils.js";
 
 // ── Deciding and rendering ──
@@ -86,11 +87,10 @@ export function countStars(voters: Voter[], authorId: string) {
 
 type StarboardAction = "post" | "edit" | "delete" | "nothing";
 
-export type ExistingStarboardMessage = {
-  starboardMessageId: string | null;
-  score: number;
-  suppressed: boolean;
-};
+export type ExistingStarboardMessage = Pick<
+  StarboardMessage,
+  "starboardMessageId" | "score" | "suppressed"
+>;
 
 export function decideAction({
   score,
@@ -101,7 +101,7 @@ export function decideAction({
   score: number;
   threshold: number;
   vetoed: boolean;
-  existing: ExistingStarboardMessage | null | undefined;
+  existing: ExistingStarboardMessage | undefined;
 }): StarboardAction {
   // A human removed our post, or the previous starboard bot already handled
   // this message. Either way it is never ours to post again.
@@ -147,8 +147,9 @@ type StarboardRender = {
   description: string;
   timestamp: Date;
   imageUrl: string | null;
-  // Set when imageUrl refers to a file we should re-upload rather than link.
-  reuploadAttachment: StarboardAttachment | null;
+  // The filename to re-upload imageUrl under, when we want the post to own a
+  // copy rather than link one that will expire.
+  reuploadName: string | null;
   fields: { name: string; value: string }[];
 };
 
@@ -156,7 +157,7 @@ function describeReply(source: StarboardSource) {
   if (!source.replyPreview) return null;
   const { authorName, content, url } = source.replyPreview;
   const preview = truncate(content.replaceAll("\n", " "), REPLY_PREVIEW_LIMIT);
-  return `> [replying to ${authorName}](${url}): ${preview}`;
+  return `> ${hyperlink(`replying to ${authorName}`, url)}: ${preview}`;
 }
 
 function pickImage(source: StarboardSource) {
@@ -167,28 +168,30 @@ function pickImage(source: StarboardSource) {
   if (image) {
     return {
       imageUrl: image.url,
-      reuploadAttachment: image.size <= MAX_REUPLOAD_SIZE ? image : null,
-      used: image,
+      reuploadName: image.size <= MAX_REUPLOAD_SIZE ? image.name : null,
+      remaining: source.attachments.filter((a) => a !== image),
     };
   }
 
-  if (source.embedImageUrl) {
-    return {
-      imageUrl: source.embedImageUrl,
-      reuploadAttachment: null,
-      used: null,
-    };
-  }
+  return {
+    imageUrl: source.embedImageUrl ?? source.stickerUrl,
+    reuploadName: null,
+    remaining: source.attachments,
+  };
+}
 
-  if (source.stickerUrl) {
-    return {
-      imageUrl: source.stickerUrl,
-      reuploadAttachment: null,
-      used: null,
-    };
-  }
+function describeAttachments(attachments: StarboardAttachment[]) {
+  if (attachments.length === 0) return [];
 
-  return { imageUrl: null, reuploadAttachment: null, used: null };
+  return [
+    {
+      name: "Attachments",
+      value: truncate(
+        attachments.map((a) => hyperlink(a.name, a.url)).join("\n"),
+        FIELD_LIMIT,
+      ),
+    },
+  ];
 }
 
 export function hasRenderableContent(source: StarboardSource) {
@@ -198,6 +201,12 @@ export function hasRenderableContent(source: StarboardSource) {
       source.embedImageUrl ||
       source.stickerName,
   );
+}
+
+export function describeCountLine(emoji: string, score: number, url: string) {
+  // The bare URL is deliberate: Discord unfurls a message link into a
+  // channel-name chip, which doubles as the jump link
+  return `${emoji} **${score}** | ${url}`;
 }
 
 export function describeStarboardPost(
@@ -214,29 +223,15 @@ export function describeStarboardPost(
 
   const image = pickImage(source);
 
-  const remaining = source.attachments.filter((a) => a !== image.used);
-  const fields =
-    remaining.length > 0
-      ? [
-          {
-            name: "Attachments",
-            value: truncate(
-              remaining.map((a) => `[${a.name}](${a.url})`).join("\n"),
-              FIELD_LIMIT,
-            ),
-          },
-        ]
-      : [];
-
   return {
     score,
-    content: `${emoji} **${score}** | ${source.url}`,
+    content: describeCountLine(emoji, score, source.url),
     author: { name: source.authorName, iconURL: source.authorAvatarUrl },
     description: truncate(lines.join("\n"), DESCRIPTION_LIMIT),
     timestamp: source.createdAt,
     imageUrl: image.imageUrl,
-    reuploadAttachment: image.reuploadAttachment,
-    fields,
+    reuploadName: image.reuploadName,
+    fields: describeAttachments(image.remaining),
   };
 }
 
@@ -244,7 +239,7 @@ export function describeStarboardPost(
 
 const FALLBACK_EMOJI = "⭐";
 
-const MISSING_ACCESS_CODES: number[] = [
+const MISSING_ACCESS_CODES = [
   RESTJSONErrorCodes.MissingAccess,
   RESTJSONErrorCodes.MissingPermissions,
   RESTJSONErrorCodes.CannotExecuteActionOnThisChannelType,
@@ -262,10 +257,7 @@ function isDiscordError(error: unknown, code: number) {
 }
 
 function isMissingAccess(error: unknown) {
-  return (
-    error instanceof DiscordAPIError &&
-    MISSING_ACCESS_CODES.includes(Number(error.code))
-  );
+  return MISSING_ACCESS_CODES.some((code) => isDiscordError(error, code));
 }
 
 async function alertOncePerChannel(channelId: string, error: unknown) {
@@ -368,6 +360,8 @@ async function toStarboardSource(message: Message): Promise<StarboardSource> {
   };
 }
 
+// Deliberately not createEmbed() - that appends the standard contribute
+// footer, and a mirrored post should look like the message it mirrors.
 function toEmbed(render: StarboardRender, imageUrl: string | null) {
   const embed = new EmbedBuilder()
     .setColor(0xffd700)
@@ -381,41 +375,19 @@ function toEmbed(render: StarboardRender, imageUrl: string | null) {
   return embed;
 }
 
-// Attachment URLs are signed and expire within a day, so the post takes its own
-// copy of the image rather than hotlinking one that will rot.
-function toCreateOptions(render: StarboardRender): MessageCreateOptions {
-  const reupload = render.reuploadAttachment;
-
-  if (!reupload) {
-    return {
-      content: render.content,
-      embeds: [toEmbed(render, render.imageUrl)],
-      allowedMentions: { parse: [] },
-    };
-  }
+// Attachment URLs are signed and expire within a day, so where we can the post
+// takes its own copy of the image rather than hotlinking one that will rot.
+function toMessageOptions(render: StarboardRender): MessageCreateOptions {
+  const { imageUrl, reuploadName } = render;
 
   return {
     content: render.content,
-    embeds: [toEmbed(render, `attachment://${reupload.name}`)],
-    files: [{ attachment: reupload.url, name: reupload.name }],
-    allowedMentions: { parse: [] },
-  };
-}
-
-// Edits never touch files - the attachment uploaded at creation persists, so
-// the embed keeps referring to it.
-function toEditOptions(
-  render: StarboardRender,
-  existing: Message,
-): MessageEditOptions {
-  const existingAttachment = existing.attachments.first();
-  const imageUrl = existingAttachment
-    ? `attachment://${existingAttachment.name}`
-    : render.imageUrl;
-
-  return {
-    content: render.content,
-    embeds: [toEmbed(render, imageUrl)],
+    embeds: [
+      toEmbed(render, reuploadName ? `attachment://${reuploadName}` : imageUrl),
+    ],
+    ...(reuploadName && imageUrl
+      ? { files: [{ attachment: imageUrl, name: reuploadName }] }
+      : {}),
     allowedMentions: { parse: [] },
   };
 }
@@ -438,27 +410,22 @@ async function fetchAllReactors(reaction: MessageReaction) {
 // fills it in when unset, so a cached count drifts across missed events. The
 // reactor list is authoritative, and we need it anyway to drop bots and the
 // author's own star.
-function findReactions(message: Message, emojiName: string) {
-  return [...message.reactions.cache.values()].filter(
-    (reaction) => reaction.emoji.name?.toLowerCase() === emojiName,
-  );
-}
-
 async function collectVoters(message: Message, emojiName: string) {
-  const voters: Voter[] = [];
   // Several entries can share a name if the emoji was re-uploaded, or if
   // someone reacted with a same-named emoji from another guild
-  for (const reaction of findReactions(message, emojiName)) {
+  const reactions = [...message.reactions.cache.values()].filter(
+    (reaction) => reaction.emoji.name?.toLowerCase() === emojiName,
+  );
+
+  const voters: Voter[] = [];
+  for (const reaction of reactions) {
     voters.push(...(await fetchAllReactors(reaction)));
   }
-  return voters;
+  return voters.filter((voter) => !voter.bot);
 }
 
 async function isVetoed(message: Message, guild: Guild) {
-  const detractors = await collectVoters(message, MINUS_ONE);
-
-  for (const detractor of detractors) {
-    if (detractor.bot) continue;
+  for (const detractor of await collectVoters(message, MINUS_ONE)) {
     if (
       await isAtLeastRole(guild, detractor.id, config.EXTENDED_TEAM_ROLE_ID)
     ) {
@@ -476,13 +443,13 @@ function getEmoji(guild: Guild) {
   );
 }
 
-async function fetchStarboardPost(starboardMessageId: string) {
-  if (!starboardChannel) return null;
+async function deleteStarboardPost(starboardMessageId: string) {
+  if (!starboardChannel) return;
+
   try {
-    return await starboardChannel.messages.fetch(starboardMessageId);
+    await starboardChannel.messages.delete(starboardMessageId);
   } catch (error) {
-    if (isDiscordError(error, RESTJSONErrorCodes.UnknownMessage)) return null;
-    throw error;
+    if (!isDiscordError(error, RESTJSONErrorCodes.UnknownMessage)) throw error;
   }
 }
 
@@ -493,15 +460,7 @@ async function removeStarboardPost(
   // Cleared first so our own deletion isn't mistaken for a human removing the
   // post, which would suppress the message permanently
   await clearStarboardPost(sourceMessageId);
-
-  const post = await fetchStarboardPost(starboardMessageId);
-  if (!post) return;
-
-  try {
-    await post.delete();
-  } catch (error) {
-    if (!isDiscordError(error, RESTJSONErrorCodes.UnknownMessage)) throw error;
-  }
+  await deleteStarboardPost(starboardMessageId);
 }
 
 async function post(message: Message, render: StarboardRender) {
@@ -521,89 +480,100 @@ async function post(message: Message, render: StarboardRender) {
 
 async function send(channel: GuildTextBasedChannel, render: StarboardRender) {
   try {
-    return await channel.send(toCreateOptions(render));
+    return await channel.send(toMessageOptions(render));
   } catch (error) {
-    if (!render.reuploadAttachment) throw error;
+    if (!render.reuploadName) throw error;
     // Re-uploading the image failed, so hotlink it instead and accept that the
     // signed URL will eventually expire
     return await channel.send(
-      toCreateOptions({ ...render, reuploadAttachment: null }),
+      toMessageOptions({ ...render, reuploadName: null }),
     );
   }
 }
 
 async function edit(
-  message: Message,
-  render: StarboardRender,
+  sourceMessageId: string,
   starboardMessageId: string,
+  content: string,
+  score: number,
 ) {
-  const existing = await fetchStarboardPost(starboardMessageId);
-
-  if (!existing) {
-    await suppressStarboardMessage(message.id);
-    return;
-  }
+  if (!starboardChannel) return;
 
   try {
-    await existing.edit(toEditOptions(render, existing));
-    await setStarboardScore(message.id, render.score);
+    await starboardChannel.messages.edit(starboardMessageId, { content });
+    await setStarboardScore(sourceMessageId, score);
   } catch (error) {
     if (!isDiscordError(error, RESTJSONErrorCodes.UnknownMessage)) throw error;
-    await suppressStarboardMessage(message.id);
+    await suppressStarboardMessage(sourceMessageId);
   }
+}
+
+async function createStarboardPost(
+  message: Message,
+  guild: Guild,
+  score: number,
+) {
+  // Creating a post is gated on age and having something to show; editing and
+  // deleting are not, so an old post stays correctable
+  if (Date.now() - message.createdTimestamp > MAX_MESSAGE_AGE) return;
+
+  const source = await toStarboardSource(message);
+  if (!hasRenderableContent(source)) return;
+
+  await post(
+    message,
+    describeStarboardPost(source, { emoji: getEmoji(guild), score }),
+  );
 }
 
 async function evaluateMessage(channel: GuildTextBasedChannel, id: string) {
   const guild = channel.guild;
-  const message = await channel.messages.fetch({ message: id, force: true });
 
+  // Read first: a suppressed message can never be posted again, and the ones
+  // adopted from the previous starboard bot are exactly the popular messages
+  // that keep attracting reactions
+  const existing = await findStarboardMessage(id);
+  if (existing?.suppressed) return;
+
+  const message = await channel.messages.fetch({ message: id, force: true });
   if (message.system) return;
 
-  const existing = await findStarboardMessage(id);
+  const threshold = config.STARBOARD_THRESHOLD;
   const score = countStars(
     await collectVoters(message, PLUS_ONE),
     message.author.id,
   );
-  const vetoed = score > 0 ? await isVetoed(message, guild) : false;
 
-  const action = decideAction({
-    score,
-    threshold: config.STARBOARD_THRESHOLD,
-    vetoed,
-    existing,
-  });
+  // Below the threshold the outcome is the same either way, so don't pay for
+  // the detractor list and a member lookup each
+  const vetoed = score >= threshold ? await isVetoed(message, guild) : false;
 
-  if (action === "nothing") return;
+  switch (decideAction({ score, threshold, vetoed, existing })) {
+    case "post":
+      await createStarboardPost(message, guild, score);
+      return;
 
-  if (action === "delete") {
-    if (!existing?.starboardMessageId) return;
-    await removeStarboardPost(id, existing.starboardMessageId);
-    return;
-  }
+    // Only the count can have changed - a starred message's content is
+    // deliberately never refreshed - so patch that and leave the embed be
+    case "edit":
+      if (existing?.starboardMessageId) {
+        await edit(
+          id,
+          existing.starboardMessageId,
+          describeCountLine(getEmoji(guild), score, message.url),
+          score,
+        );
+      }
+      return;
 
-  const source = await toStarboardSource(message);
+    case "delete":
+      if (existing?.starboardMessageId) {
+        await removeStarboardPost(id, existing.starboardMessageId);
+      }
+      return;
 
-  // Creating a post is gated on age and having something to show; editing or
-  // deleting an existing one is not, so old posts stay correctable
-  if (action === "post") {
-    const age = Date.now() - message.createdTimestamp;
-    if (age > MAX_MESSAGE_AGE) return;
-    if (!hasRenderableContent(source)) return;
-  }
-
-  const render = describeStarboardPost(source, {
-    emoji: getEmoji(guild),
-    score,
-  });
-
-  if (action === "post") {
-    await post(message, render);
-    return;
-  }
-
-  // decideAction only returns "edit" when a post already exists
-  if (existing?.starboardMessageId) {
-    await edit(message, render, existing.starboardMessageId);
+    case "nothing":
+      return;
   }
 }
 
@@ -646,10 +616,12 @@ async function evaluate(channelId: string, messageId: string) {
 const running = new Map<string, Promise<void>>();
 const pending = new Set<string>();
 
+// Returns the evaluation this event will be served by, so callers can await
+// the work settling.
 export function enqueue(channelId: string, messageId: string) {
-  if (pending.has(messageId)) return;
-
   const previous = running.get(messageId);
+
+  if (pending.has(messageId)) return previous ?? Promise.resolve();
   if (previous !== undefined) pending.add(messageId);
 
   const next = (previous ?? Promise.resolve()).then(async () => {
@@ -662,27 +634,23 @@ export function enqueue(channelId: string, messageId: string) {
   void next.finally(() => {
     if (running.get(messageId) === next) running.delete(messageId);
   });
+
+  return next;
 }
 
-async function resolveReaction(
-  reaction: MessageReaction | PartialMessageReaction,
-) {
-  const resolved = reaction.partial ? await reaction.fetch() : reaction;
-  if (resolved.message.partial) await resolved.message.fetch();
-  return resolved;
-}
-
+// A reaction event always carries the message's id, channel and guild, even
+// when the message itself is a partial, and evaluate re-fetches the message
+// anyway - so there is nothing here worth resolving the partial for.
 export async function onReactionChange(
   reaction: MessageReaction | PartialMessageReaction,
 ) {
   try {
     if (!isRelevantEmoji(reaction.emoji.name)) return;
 
-    const resolved = await resolveReaction(reaction);
-    const { message } = resolved;
+    const { message } = reaction;
     if (message.guildId !== config.GUILD_ID) return;
 
-    enqueue(message.channelId, message.id);
+    await enqueue(message.channelId, message.id);
   } catch (error) {
     if (isDiscordError(error, RESTJSONErrorCodes.UnknownMessage)) return;
     if (isMissingAccess(error)) {
@@ -700,19 +668,15 @@ export async function onReactionChange(
 export function onReactionsCleared(
   message: OmitPartialGroupDMChannel<Message | PartialMessage>,
 ) {
-  if (message.guildId !== config.GUILD_ID) return;
-  enqueue(message.channelId, message.id);
+  if (message.guildId !== config.GUILD_ID) return Promise.resolve();
+  return enqueue(message.channelId, message.id);
 }
 
 async function cleanUpDeletedSource(messageId: string) {
-  const row = await findStarboardMessage(messageId);
-  if (!row) return;
-
-  if (row.starboardMessageId) {
-    await removeStarboardPost(messageId, row.starboardMessageId);
-  }
-
-  await deleteStarboardMessage(messageId);
+  // Deleting the row first both tells us whether we had posted it and stops
+  // our own deletion being read as a human removing the post
+  const starboardMessageId = await deleteStarboardMessage(messageId);
+  if (starboardMessageId) await deleteStarboardPost(starboardMessageId);
 }
 
 export async function onMessageDelete(
@@ -786,9 +750,13 @@ export function init() {
     Events.MessageDelete,
     (message) => void onMessageDelete(message),
   );
+  // Serialised rather than fanned out: a 100-message purge firing 100 queries
+  // at once would just queue behind the connection pool
   discordClient.on(Events.MessageBulkDelete, (messages) => {
-    for (const message of messages.values()) {
-      void onMessageDelete(message);
-    }
+    void (async () => {
+      for (const message of messages.values()) {
+        await onMessageDelete(message);
+      }
+    })();
   });
 }

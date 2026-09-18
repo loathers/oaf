@@ -22,6 +22,7 @@ const {
   claimStarboardMessage,
   clearStarboardPost,
   db,
+  deleteStarboardMessage,
   findStarboardMessage,
   findStarboardMessageByPostId,
   setStarboardPost,
@@ -42,8 +43,7 @@ describeIfDb("starboard claim (integration)", () => {
         "starboardMessageId" TEXT,
         "score" INTEGER NOT NULL DEFAULT 0,
         "suppressed" BOOLEAN NOT NULL DEFAULT false,
-        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `.execute(db);
     await sql`
@@ -129,6 +129,24 @@ describeIfDb("starboard claim (integration)", () => {
     await clearStarboardPost(SOURCE);
 
     expect(await findStarboardMessageByPostId("post-1")).toBeUndefined();
+  });
+
+  test("hands back the post id when deleting the row, in one round trip", async () => {
+    await claim();
+    await setStarboardPost(SOURCE, "post-1", 5);
+
+    expect(await deleteStarboardMessage(SOURCE)).toBe("post-1");
+    expect(await findStarboardMessage(SOURCE)).toBeUndefined();
+  });
+
+  test("reports no post id when deleting a row we never posted", async () => {
+    await claim();
+
+    expect(await deleteStarboardMessage(SOURCE)).toBeNull();
+  });
+
+  test("reports no post id when there was no row at all", async () => {
+    expect(await deleteStarboardMessage(SOURCE)).toBeNull();
   });
 
   test("adopted messages are suppressed and never claimable", async () => {

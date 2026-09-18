@@ -145,7 +145,6 @@ export interface StarboardMessageTable {
   score: Generated<number>;
   suppressed: Generated<boolean>;
   createdAt: Generated<Date>;
-  updatedAt: ColumnType<Date, Date | undefined, Date>;
 }
 
 export interface DB {

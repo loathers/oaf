@@ -3,7 +3,7 @@ import { Kysely, PostgresDialect, sql } from "kysely";
 import pg from "pg";
 
 import { config } from "../config.js";
-import type { DB, Player } from "../database-types.js";
+import type { DB, Player, StarboardMessage } from "../database-types.js";
 
 function getConnectionString() {
   if (!config.DATABASE_URL) return undefined;
@@ -545,50 +545,61 @@ export async function claimStarboardMessage(data: {
   return existing?.starboardMessageId === null && !existing.suppressed;
 }
 
+async function updateStarboardMessage(
+  sourceMessageId: string,
+  data: Partial<
+    Pick<StarboardMessage, "starboardMessageId" | "score" | "suppressed">
+  >,
+) {
+  await db
+    .updateTable("StarboardMessage")
+    .set(data)
+    .where("sourceMessageId", "=", sourceMessageId)
+    .execute();
+}
+
 export async function setStarboardPost(
   sourceMessageId: string,
   starboardMessageId: string,
   score: number,
 ) {
-  await db
-    .updateTable("StarboardMessage")
-    .set({ starboardMessageId, score, updatedAt: new Date() })
-    .where("sourceMessageId", "=", sourceMessageId)
-    .execute();
+  await updateStarboardMessage(sourceMessageId, {
+    starboardMessageId,
+    score,
+  });
 }
 
 export async function setStarboardScore(
   sourceMessageId: string,
   score: number,
 ) {
-  await db
-    .updateTable("StarboardMessage")
-    .set({ score, updatedAt: new Date() })
-    .where("sourceMessageId", "=", sourceMessageId)
-    .execute();
+  await updateStarboardMessage(sourceMessageId, { score });
 }
 
 export async function clearStarboardPost(sourceMessageId: string) {
-  await db
-    .updateTable("StarboardMessage")
-    .set({ starboardMessageId: null, score: 0, updatedAt: new Date() })
-    .where("sourceMessageId", "=", sourceMessageId)
-    .execute();
+  await updateStarboardMessage(sourceMessageId, {
+    starboardMessageId: null,
+    score: 0,
+  });
 }
 
 export async function suppressStarboardMessage(sourceMessageId: string) {
-  await db
-    .updateTable("StarboardMessage")
-    .set({ suppressed: true, starboardMessageId: null, updatedAt: new Date() })
-    .where("sourceMessageId", "=", sourceMessageId)
-    .execute();
+  await updateStarboardMessage(sourceMessageId, {
+    suppressed: true,
+    starboardMessageId: null,
+  });
 }
 
+// Returns the id of the post we made for it, if we had made one, so the caller
+// can tidy up in one round trip. Deleting the row before the post means our own
+// deletion is not mistaken for a human removing it.
 export async function deleteStarboardMessage(sourceMessageId: string) {
-  await db
+  const deleted = await db
     .deleteFrom("StarboardMessage")
     .where("sourceMessageId", "=", sourceMessageId)
-    .execute();
+    .returning("starboardMessageId")
+    .executeTakeFirst();
+  return deleted?.starboardMessageId ?? null;
 }
 
 // One-off cutover helper: marks messages the previous starboard bot already

@@ -8,8 +8,7 @@ export async function up(db: Kysely<never>): Promise<void> {
       "starboardMessageId" TEXT,
       "score" INTEGER NOT NULL DEFAULT 0,
       "suppressed" BOOLEAN NOT NULL DEFAULT false,
-      "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `.execute(db);
 

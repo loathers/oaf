@@ -104,9 +104,7 @@ export const schema = {
     default: 5,
   },
   STARBOARD_EXCLUDED_CHANNEL_IDS: {
-    type: new RegExp(
-      `^$|${SNOWFLAKE_PATTERN.source}(,${SNOWFLAKE_PATTERN.source})*`,
-    ),
+    type: String,
     optional: true,
   },
 
@@ -120,8 +118,6 @@ export const schema = {
 export type Env = EnvType<typeof schema>;
 
 // Do not attempt to load if in testing environment
-export const config = process.env.VITEST_WORKER_ID
-  ? ({} as { PORT: number; STARBOARD_THRESHOLD: number } & {
-      [key: string]: string;
-    })
+export const config: Env = process.env.VITEST_WORKER_ID
+  ? ({} as Env)
   : load(schema);
