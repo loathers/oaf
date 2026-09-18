@@ -16,6 +16,27 @@ Purges the last message `oaf` sent in the current channel. Useful if you typo'd 
 
 Purges the last X messages `oaf` sent in the current channel. Useful if you typo'd your existence as a human being and would like to hide the evidence more thoroughly.
 
+### Starboard
+
+Not a command. When a message collects enough `:plusone:` reactions it is
+mirrored into `STARBOARD_CHANNEL_ID`. The whole thing is driven from live
+reaction state, so it is reversible in both directions: take reactions away and
+the post's count is edited down, or removed entirely once it falls below
+`STARBOARD_THRESHOLD`.
+
+A moderator (Extended Team or higher) reacting with `:minusone:` blocks a
+message from the starboard, and taking that reaction off lets it back in.
+
+Messages are ineligible if they are in `STARBOARD_EXCLUDED_CHANNEL_IDS` (or in a
+thread whose parent is), in a channel `@everyone` cannot see, in an NSFW
+channel, in the starboard channel itself, or more than 30 days old. The
+`@everyone` rule means private and staff channels are excluded automatically,
+without anyone having to maintain the list.
+
+Two deliberate limitations: editing a starred message does not refresh its
+starboard post, and if someone deletes a starboard post by hand that message
+will never be posted again (otherwise the next reaction would resurrect it).
+
 ---
 
 ## Fun Commands

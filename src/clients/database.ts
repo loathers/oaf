@@ -506,6 +506,104 @@ export async function replaceTag(
   });
 }
 
+// ── StarboardMessage ──
+
+export async function findStarboardMessage(sourceMessageId: string) {
+  return await db
+    .selectFrom("StarboardMessage")
+    .selectAll()
+    .where("sourceMessageId", "=", sourceMessageId)
+    .executeTakeFirst();
+}
+
+export async function findStarboardMessageByPostId(starboardMessageId: string) {
+  return await db
+    .selectFrom("StarboardMessage")
+    .selectAll()
+    .where("starboardMessageId", "=", starboardMessageId)
+    .executeTakeFirst();
+}
+
+// Reserves the right to post before we actually post, so a crash between the
+// two heals on the next evaluation rather than double-posting. A row that
+// already holds a post id (or is suppressed) is not ours to claim; one left
+// behind by an unstarring or a crash is.
+export async function claimStarboardMessage(data: {
+  sourceMessageId: string;
+  sourceChannelId: string;
+}) {
+  const inserted = await db
+    .insertInto("StarboardMessage")
+    .values(data)
+    .onConflict((oc) => oc.column("sourceMessageId").doNothing())
+    .returning("sourceMessageId")
+    .executeTakeFirst();
+
+  if (inserted) return true;
+
+  const existing = await findStarboardMessage(data.sourceMessageId);
+  return existing?.starboardMessageId === null && !existing.suppressed;
+}
+
+export async function setStarboardPost(
+  sourceMessageId: string,
+  starboardMessageId: string,
+  score: number,
+) {
+  await db
+    .updateTable("StarboardMessage")
+    .set({ starboardMessageId, score, updatedAt: new Date() })
+    .where("sourceMessageId", "=", sourceMessageId)
+    .execute();
+}
+
+export async function setStarboardScore(
+  sourceMessageId: string,
+  score: number,
+) {
+  await db
+    .updateTable("StarboardMessage")
+    .set({ score, updatedAt: new Date() })
+    .where("sourceMessageId", "=", sourceMessageId)
+    .execute();
+}
+
+export async function clearStarboardPost(sourceMessageId: string) {
+  await db
+    .updateTable("StarboardMessage")
+    .set({ starboardMessageId: null, score: 0, updatedAt: new Date() })
+    .where("sourceMessageId", "=", sourceMessageId)
+    .execute();
+}
+
+export async function suppressStarboardMessage(sourceMessageId: string) {
+  await db
+    .updateTable("StarboardMessage")
+    .set({ suppressed: true, starboardMessageId: null, updatedAt: new Date() })
+    .where("sourceMessageId", "=", sourceMessageId)
+    .execute();
+}
+
+export async function deleteStarboardMessage(sourceMessageId: string) {
+  await db
+    .deleteFrom("StarboardMessage")
+    .where("sourceMessageId", "=", sourceMessageId)
+    .execute();
+}
+
+// One-off cutover helper: marks messages the previous starboard bot already
+// posted so we never post them a second time. Its posts aren't ours to edit.
+export async function adoptStarboardMessages(
+  rows: { sourceMessageId: string; sourceChannelId: string }[],
+) {
+  if (rows.length === 0) return;
+  await db
+    .insertInto("StarboardMessage")
+    .values(rows.map((row) => ({ ...row, suppressed: true })))
+    .onConflict((oc) => oc.column("sourceMessageId").doNothing())
+    .execute();
+}
+
 // ── Raffle ──
 
 export async function findRaffle(gameday: number) {
