@@ -524,10 +524,15 @@ export async function findStarboardMessageByPostId(starboardMessageId: string) {
     .executeTakeFirst();
 }
 
-// Reserves the right to post before we actually post, so a crash between the
-// two heals on the next evaluation rather than double-posting. A row that
-// already holds a post id (or is suppressed) is not ours to claim; one left
-// behind by an unstarring or a crash is.
+// The row is the claim: whoever inserts it owns the right to post, and any
+// other evaluation - in this process or another - loses the conflict and backs
+// off. That only holds because unstarring releases the row outright rather than
+// blanking it, so a row existing always means somebody owns this message.
+//
+// The trade is that a claim nobody ever posts against - a process dying between
+// the two, or a send that fails outright - strands the message, which can then
+// never be starred again. Rare enough to live with. post() hands the claim back
+// for the one failure it can see coming, recording the post it just sent.
 export async function claimStarboardMessage(data: {
   sourceMessageId: string;
   sourceChannelId: string;
@@ -539,10 +544,7 @@ export async function claimStarboardMessage(data: {
     .returning("sourceMessageId")
     .executeTakeFirst();
 
-  if (inserted) return true;
-
-  const existing = await findStarboardMessage(data.sourceMessageId);
-  return existing?.starboardMessageId === null && !existing.suppressed;
+  return inserted !== undefined;
 }
 
 async function updateStarboardMessage(
@@ -551,19 +553,24 @@ async function updateStarboardMessage(
     Pick<StarboardMessage, "starboardMessageId" | "score" | "suppressed">
   >,
 ) {
-  await db
+  const updated = await db
     .updateTable("StarboardMessage")
     .set(data)
     .where("sourceMessageId", "=", sourceMessageId)
-    .execute();
+    .returning("sourceMessageId")
+    .executeTakeFirst();
+
+  return updated !== undefined;
 }
 
+// False means the row has gone, which tells a caller mid-post that the source
+// message was deleted underneath it. The other updates have no use for it.
 export async function setStarboardPost(
   sourceMessageId: string,
   starboardMessageId: string,
   score: number,
 ) {
-  await updateStarboardMessage(sourceMessageId, {
+  return await updateStarboardMessage(sourceMessageId, {
     starboardMessageId,
     score,
   });
@@ -576,11 +583,14 @@ export async function setStarboardScore(
   await updateStarboardMessage(sourceMessageId, { score });
 }
 
-export async function clearStarboardPost(sourceMessageId: string) {
-  await updateStarboardMessage(sourceMessageId, {
-    starboardMessageId: null,
-    score: 0,
-  });
+// Gives the message up rather than blanking its row, so the row's existence
+// stays a reliable claim. A suppressed row is a tombstone and stays put.
+export async function releaseStarboardMessage(sourceMessageId: string) {
+  await db
+    .deleteFrom("StarboardMessage")
+    .where("sourceMessageId", "=", sourceMessageId)
+    .where("suppressed", "=", false)
+    .execute();
 }
 
 export async function suppressStarboardMessage(sourceMessageId: string) {

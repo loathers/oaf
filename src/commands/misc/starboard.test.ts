@@ -9,19 +9,19 @@ import type {
 
 const {
   claimStarboardMessage,
-  clearStarboardPost,
   deleteStarboardMessage,
   findStarboardMessage,
   findStarboardMessageByPostId,
+  releaseStarboardMessage,
   setStarboardPost,
   setStarboardScore,
   suppressStarboardMessage,
 } = vi.hoisted(() => ({
   claimStarboardMessage: vi.fn(),
-  clearStarboardPost: vi.fn(),
   deleteStarboardMessage: vi.fn(),
   findStarboardMessage: vi.fn(),
   findStarboardMessageByPostId: vi.fn(),
+  releaseStarboardMessage: vi.fn(),
   setStarboardPost: vi.fn(),
   setStarboardScore: vi.fn(),
   suppressStarboardMessage: vi.fn(),
@@ -44,10 +44,10 @@ const { config } = vi.hoisted(() => ({
 
 vi.mock("../../clients/database.js", () => ({
   claimStarboardMessage,
-  clearStarboardPost,
   deleteStarboardMessage,
   findStarboardMessage,
   findStarboardMessageByPostId,
+  releaseStarboardMessage,
   setStarboardPost,
   setStarboardScore,
   suppressStarboardMessage,
@@ -56,14 +56,13 @@ vi.mock("../../clients/database.js", () => ({
 vi.mock("../../discordUtils.js", () => ({ isAtLeastRole }));
 vi.mock("../../config.js", () => ({ config }));
 
+const emojiNamed = (name: string) =>
+  new Collection([["1", { name, toString: () => "<:p:1>" }]]);
+
 const guild = {
   id: "guild",
   roles: { everyone: "everyone" },
-  emojis: {
-    cache: new Collection([
-      ["1", { name: "plusone", toString: () => "<:p:1>" }],
-    ]),
-  },
+  emojis: { cache: emojiNamed("plusone") },
   channels: { fetch: vi.fn() },
 };
 
@@ -86,7 +85,6 @@ const {
   countStars,
   decideAction,
   describeStarboardPost,
-  enqueue,
   hasRenderableContent,
   init,
   MAX_REUPLOAD_SIZE,
@@ -267,6 +265,13 @@ async function boot() {
   await vi.waitFor(() => expect(guild.channels.fetch).toHaveBeenCalled());
 }
 
+/** Fires a plusone reaction at a message, the way Discord would. */
+const reactTo = (channelId: string, messageId: string) =>
+  onReactionChange({
+    emoji: { name: "plusone" },
+    message: { channelId, id: messageId, guildId: "guild" },
+  } as never);
+
 const POSTED_ROW = {
   sourceMessageId: "source-message",
   starboardMessageId: "post",
@@ -287,9 +292,11 @@ beforeEach(async () => {
     Promise.resolve(channels.get(id) ?? null),
   );
   config.STARBOARD_EXCLUDED_CHANNEL_IDS = "excluded";
+  guild.emojis.cache = emojiNamed("plusone");
   findStarboardMessage.mockResolvedValue(undefined);
   findStarboardMessageByPostId.mockResolvedValue(undefined);
   claimStarboardMessage.mockResolvedValue(true);
+  setStarboardPost.mockResolvedValue(true);
   isAtLeastRole.mockResolvedValue(false);
   starboardSend.mockResolvedValue({ id: "post" });
   deleteStarboardMessage.mockResolvedValue(null);
@@ -350,7 +357,7 @@ describe("eligibility", () => {
     });
     channel.messages.fetch.mockResolvedValue(message);
     register(channel);
-    await enqueue(channel.id, message.id);
+    await reactTo(channel.id, message.id);
   };
 
   test("posts from an ordinary channel", async () => {
@@ -375,6 +382,13 @@ describe("eligibility", () => {
     expect(starboardSend).not.toHaveBeenCalled();
   });
 
+  test("skips a thread hanging off the starboard channel", async () => {
+    await react(
+      makeChannel({ id: "thread", thread: true, parentId: "starboard" }),
+    );
+    expect(starboardSend).not.toHaveBeenCalled();
+  });
+
   test("skips a channel everyone cannot view", async () => {
     await react(makeChannel({ id: "staff", visible: false }));
     expect(starboardSend).not.toHaveBeenCalled();
@@ -395,7 +409,7 @@ describe("eligibility", () => {
     channel.messages.fetch.mockResolvedValue(message);
     register(channel);
 
-    await enqueue(channel.id, message.id);
+    await reactTo(channel.id, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
@@ -406,7 +420,7 @@ describe("posting", () => {
     const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(claimStarboardMessage).toHaveBeenCalledWith({
       sourceMessageId: message.id,
@@ -420,17 +434,51 @@ describe("posting", () => {
     const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     const [options] = starboardSend.mock.calls[0] as [{ content: string }];
     expect(options.content).toBe(`<:p:1> **5** | ${message.url}`);
+  });
+
+  test("finds the plusone emoji whatever case it was uploaded under", async () => {
+    guild.emojis.cache = emojiNamed("PlusOne");
+    const message = makeMessage({ plusOne: stars(5) });
+    serve(message);
+
+    await reactTo(message.channelId, message.id);
+
+    const [options] = starboardSend.mock.calls[0] as [{ content: string }];
+    expect(options.content).toBe(`<:p:1> **5** | ${message.url}`);
+  });
+
+  test("takes the post down and releases the claim when recording it fails", async () => {
+    setStarboardPost.mockRejectedValueOnce(new Error("the database is down"));
+    const message = makeMessage({ plusOne: stars(5) });
+    serve(message);
+
+    await reactTo(message.channelId, message.id);
+
+    expect(starboardDelete).toHaveBeenCalledWith("post");
+    expect(releaseStarboardMessage).toHaveBeenCalledWith(message.id);
+    expect(alert).toHaveBeenCalled();
+  });
+
+  test("takes the post down when the source is deleted mid-send", async () => {
+    // The row has gone, so there is nothing left to record the post against
+    setStarboardPost.mockResolvedValueOnce(false);
+    const message = makeMessage({ plusOne: stars(5) });
+    serve(message);
+
+    await reactTo(message.channelId, message.id);
+
+    expect(starboardDelete).toHaveBeenCalledWith("post");
   });
 
   test("does not post below the threshold", async () => {
     const message = makeMessage({ plusOne: stars(1) });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
@@ -441,28 +489,27 @@ describe("posting", () => {
     });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(setStarboardPost).toHaveBeenCalledWith(message.id, "post", 5);
   });
 
   test("posts only once when reactions arrive together", async () => {
-    // What the real claim does once a row holds a post id
+    // What the real claim does: the row is the claim, so only the evaluation
+    // that manages to insert it gets to post
     claimStarboardMessage.mockResolvedValueOnce(true).mockResolvedValue(false);
 
     const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
     await Promise.all([
-      enqueue(message.channelId, message.id),
-      enqueue(message.channelId, message.id),
-      enqueue(message.channelId, message.id),
+      reactTo(message.channelId, message.id),
+      reactTo(message.channelId, message.id),
+      reactTo(message.channelId, message.id),
     ]);
 
+    expect(claimStarboardMessage).toHaveBeenCalledTimes(3);
     expect(starboardSend).toHaveBeenCalledOnce();
-    // Coalesced: however many events arrive, a burst costs at most one queued
-    // evaluation behind the running one
-    expect(claimStarboardMessage).toHaveBeenCalledTimes(2);
   });
 
   test("does not post when another evaluation holds the claim", async () => {
@@ -470,7 +517,7 @@ describe("posting", () => {
     const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
@@ -482,7 +529,7 @@ describe("posting", () => {
     });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
@@ -491,7 +538,7 @@ describe("posting", () => {
     const message = makeMessage({ plusOne: stars(5), content: "" });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
@@ -506,7 +553,7 @@ describe("moderator veto", () => {
     });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(starboardSend).not.toHaveBeenCalled();
   });
@@ -518,7 +565,7 @@ describe("moderator veto", () => {
     });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(starboardSend).toHaveBeenCalledOnce();
   });
@@ -531,14 +578,14 @@ describe("moderator veto", () => {
     });
     serve(vetoed);
 
-    await enqueue(vetoed.channelId, vetoed.id);
+    await reactTo(vetoed.channelId, vetoed.id);
     expect(starboardSend).not.toHaveBeenCalled();
 
     // The veto lives only in the reactions, so taking it off is enough
     const cleared = makeMessage({ plusOne: stars(5) });
     serve(cleared);
 
-    await enqueue(cleared.channelId, cleared.id);
+    await reactTo(cleared.channelId, cleared.id);
 
     expect(starboardSend).toHaveBeenCalledOnce();
   });
@@ -553,9 +600,9 @@ describe("moderator veto", () => {
     });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
-    expect(clearStarboardPost).toHaveBeenCalledWith(message.id);
+    expect(releaseStarboardMessage).toHaveBeenCalledWith(message.id);
     expect(starboardDelete).toHaveBeenCalledWith("post");
   });
 });
@@ -569,7 +616,7 @@ describe("updating an existing post", () => {
     const message = makeMessage({ plusOne: stars(6) });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     // The embed is deliberately left alone, so the patch carries content only
     expect(starboardEdit).toHaveBeenCalledWith("post", {
@@ -583,16 +630,16 @@ describe("updating an existing post", () => {
     const message = makeMessage({ plusOne: stars(5) });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(starboardEdit).not.toHaveBeenCalled();
     expect(starboardSend).not.toHaveBeenCalled();
   });
 
-  test("clears the row before deleting, so the deletion is not treated as manual", async () => {
+  test("releases the row before deleting, so the deletion is not treated as manual", async () => {
     const order: string[] = [];
-    clearStarboardPost.mockImplementation(() => {
-      order.push("clear");
+    releaseStarboardMessage.mockImplementation(() => {
+      order.push("release");
       return Promise.resolve();
     });
     starboardDelete.mockImplementation(() => {
@@ -603,9 +650,9 @@ describe("updating an existing post", () => {
     const message = makeMessage({ plusOne: stars(1) });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
-    expect(order).toEqual(["clear", "delete"]);
+    expect(order).toEqual(["release", "delete"]);
   });
 
   test("still unstars a message that is past the age limit", async () => {
@@ -615,7 +662,7 @@ describe("updating an existing post", () => {
     });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(starboardDelete).toHaveBeenCalledWith("post");
   });
@@ -626,7 +673,7 @@ describe("updating an existing post", () => {
     const message = makeMessage({ plusOne: stars(6) });
     serve(message);
 
-    await enqueue(message.channelId, message.id);
+    await reactTo(message.channelId, message.id);
 
     expect(suppressStarboardMessage).toHaveBeenCalledWith(message.id);
     expect(starboardSend).not.toHaveBeenCalled();
@@ -675,7 +722,7 @@ describe("deletions", () => {
   });
 
   test("does not suppress when we deleted the post ourselves", async () => {
-    // Our own deletes clear the row first, so the lookup finds nothing
+    // Our own deletes release the row first, so the lookup finds nothing
     findStarboardMessageByPostId.mockResolvedValue(undefined);
 
     await onMessageDelete({
@@ -697,7 +744,7 @@ describe("error handling", () => {
     channel.messages.fetch.mockRejectedValue(unknownMessage);
     register(channel);
 
-    await enqueue("source", "source-message");
+    await reactTo("source", "source-message");
 
     expect(deleteStarboardMessage).toHaveBeenCalledWith("source-message");
     expect(alert).not.toHaveBeenCalled();
@@ -708,8 +755,8 @@ describe("error handling", () => {
     channel.messages.fetch.mockRejectedValue(missingAccess);
     register(channel);
 
-    await enqueue("locked", "one");
-    await enqueue("locked", "two");
+    await reactTo("locked", "one");
+    await reactTo("locked", "two");
 
     expect(alert).toHaveBeenCalledOnce();
   });

@@ -23,10 +23,10 @@ import {
 
 import {
   claimStarboardMessage,
-  clearStarboardPost,
   deleteStarboardMessage,
   findStarboardMessage,
   findStarboardMessageByPostId,
+  releaseStarboardMessage,
   setStarboardPost,
   setStarboardScore,
   suppressStarboardMessage,
@@ -291,11 +291,13 @@ function isPubliclyVisible(channel: GuildBasedChannel, guild: Guild) {
 }
 
 function isEligibleChannel(channel: GuildBasedChannel, guild: Guild) {
-  if (channel.id === config.STARBOARD_CHANNEL_ID) return false;
   if (channel.type === ChannelType.PrivateThread) return false;
 
   const governing = getGoverningChannel(channel);
 
+  // Governing rather than the channel itself, so threads people start off a
+  // starboard post don't get mirrored back into it
+  if (governing.id === config.STARBOARD_CHANNEL_ID) return false;
   if (excludedChannelIds.has(channel.id)) return false;
   if (excludedChannelIds.has(governing.id)) return false;
   if (!isPubliclyVisible(governing, guild)) return false;
@@ -438,8 +440,9 @@ async function isVetoed(message: Message, guild: Guild) {
 
 function getEmoji(guild: Guild) {
   return (
-    guild.emojis.cache.find((e) => e.name === PLUS_ONE)?.toString() ??
-    FALLBACK_EMOJI
+    guild.emojis.cache
+      .find((e) => e.name?.toLowerCase() === PLUS_ONE)
+      ?.toString() ?? FALLBACK_EMOJI
   );
 }
 
@@ -457,9 +460,9 @@ async function removeStarboardPost(
   sourceMessageId: string,
   starboardMessageId: string,
 ) {
-  // Cleared first so our own deletion isn't mistaken for a human removing the
+  // Released first so our own deletion isn't mistaken for a human removing the
   // post, which would suppress the message permanently
-  await clearStarboardPost(sourceMessageId);
+  await releaseStarboardMessage(sourceMessageId);
   await deleteStarboardPost(starboardMessageId);
 }
 
@@ -475,7 +478,18 @@ async function post(message: Message, render: StarboardRender) {
   if (!claimed) return;
 
   const sent = await send(starboardChannel, render);
-  await setStarboardPost(message.id, sent.id, render.score);
+
+  try {
+    // The row going missing means the source was deleted while we were
+    // sending, so the post mirrors something that isn't there any more
+    const recorded = await setStarboardPost(message.id, sent.id, render.score);
+    if (!recorded) await deleteStarboardPost(sent.id);
+  } catch (error) {
+    // Nothing records the post, so hand the claim back and take the post down
+    // rather than strand it where no later evaluation can reach it
+    await removeStarboardPost(message.id, sent.id);
+    throw error;
+  }
 }
 
 async function send(channel: GuildTextBasedChannel, render: StarboardRender) {
@@ -610,66 +624,25 @@ async function evaluate(channelId: string, messageId: string) {
   }
 }
 
-// Reaction bursts on one message must not race into duplicate posts. Every
-// evaluation re-reads live state, so one queued run behind the running one is
-// always enough to catch up.
-const running = new Map<string, Promise<void>>();
-const pending = new Set<string>();
-
-// Returns the evaluation this event will be served by, so callers can await
-// the work settling.
-export function enqueue(channelId: string, messageId: string) {
-  const previous = running.get(messageId);
-
-  if (pending.has(messageId)) return previous ?? Promise.resolve();
-  if (previous !== undefined) pending.add(messageId);
-
-  const next = (previous ?? Promise.resolve()).then(async () => {
-    pending.delete(messageId);
-    await evaluate(channelId, messageId);
-  });
-
-  running.set(messageId, next);
-
-  void next.finally(() => {
-    if (running.get(messageId) === next) running.delete(messageId);
-  });
-
-  return next;
-}
-
 // A reaction event always carries the message's id, channel and guild, even
 // when the message itself is a partial, and evaluate re-fetches the message
 // anyway - so there is nothing here worth resolving the partial for.
 export async function onReactionChange(
   reaction: MessageReaction | PartialMessageReaction,
 ) {
-  try {
-    if (!isRelevantEmoji(reaction.emoji.name)) return;
+  if (!isRelevantEmoji(reaction.emoji.name)) return;
 
-    const { message } = reaction;
-    if (message.guildId !== config.GUILD_ID) return;
+  const { message } = reaction;
+  if (message.guildId !== config.GUILD_ID) return;
 
-    await enqueue(message.channelId, message.id);
-  } catch (error) {
-    if (isDiscordError(error, RESTJSONErrorCodes.UnknownMessage)) return;
-    if (isMissingAccess(error)) {
-      await alertOncePerChannel(reaction.message.channelId, error);
-      return;
-    }
-    await discordClient.alert(
-      "Starboard: failed to handle a reaction",
-      undefined,
-      error,
-    );
-  }
+  await evaluate(message.channelId, message.id);
 }
 
-export function onReactionsCleared(
+export async function onReactionsCleared(
   message: OmitPartialGroupDMChannel<Message | PartialMessage>,
 ) {
-  if (message.guildId !== config.GUILD_ID) return Promise.resolve();
-  return enqueue(message.channelId, message.id);
+  if (message.guildId !== config.GUILD_ID) return;
+  await evaluate(message.channelId, message.id);
 }
 
 async function cleanUpDeletedSource(messageId: string) {
@@ -745,7 +718,10 @@ export function init() {
     Events.MessageReactionRemoveEmoji,
     (reaction) => void onReactionChange(reaction),
   );
-  discordClient.on(Events.MessageReactionRemoveAll, onReactionsCleared);
+  discordClient.on(
+    Events.MessageReactionRemoveAll,
+    (message) => void onReactionsCleared(message),
+  );
   discordClient.on(
     Events.MessageDelete,
     (message) => void onMessageDelete(message),

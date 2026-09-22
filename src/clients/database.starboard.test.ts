@@ -9,8 +9,9 @@ import {
   vi,
 } from "vitest";
 
-// Real-database integration test for the starboard claim, which is what stops a
-// reaction burst double-posting and what lets an unstarred message come back.
+// Real-database integration test for the starboard claim, which is the only
+// thing standing between a reaction burst and a double post, and what lets an
+// unstarred message come back.
 // Only runs when a DATABASE_URL is provided; CI supplies a throwaway Postgres.
 // We inject the URL because src/config.ts deliberately returns `{}` under Vitest.
 vi.mock("../config.js", () => ({
@@ -20,11 +21,11 @@ vi.mock("../config.js", () => ({
 const {
   adoptStarboardMessages,
   claimStarboardMessage,
-  clearStarboardPost,
   db,
   deleteStarboardMessage,
   findStarboardMessage,
   findStarboardMessageByPostId,
+  releaseStarboardMessage,
   setStarboardPost,
   suppressStarboardMessage,
 } = await import("./database.js");
@@ -90,20 +91,41 @@ describeIfDb("starboard claim (integration)", () => {
     expect(await claim()).toBe(false);
   });
 
-  test("grants the claim again after the post is cleared", async () => {
+  test("grants the claim to exactly one of two racing evaluations", async () => {
+    // The whole point: two reactions landing together must not both post
+    const [first, second] = await Promise.all([claim(), claim()]);
+
+    expect([first, second].filter(Boolean)).toHaveLength(1);
+  });
+
+  test("grants the claim again after the message is released", async () => {
     await claim();
     await setStarboardPost(SOURCE, "post-1", 5);
-    await clearStarboardPost(SOURCE);
+    await releaseStarboardMessage(SOURCE);
 
     // An unstarred message that becomes popular again must be postable
     expect(await claim()).toBe(true);
   });
 
-  test("grants the claim for a row left behind by a crash", async () => {
+  test("refuses the claim a crash left behind", async () => {
     await claim();
 
-    // Claimed but never posted, so the next evaluation should heal it
-    expect(await claim()).toBe(true);
+    // The cost of the row being the claim: dying between claiming and posting
+    // strands the message. Rarer than double-posting, and quieter.
+    expect(await claim()).toBe(false);
+  });
+
+  test("keeps a suppressed row when the message is released", async () => {
+    await claim();
+    await suppressStarboardMessage(SOURCE);
+    await releaseStarboardMessage(SOURCE);
+
+    // Releasing a tombstone would let a message a human removed come straight
+    // back the next time someone reacts
+    expect(await findStarboardMessage(SOURCE)).toMatchObject({
+      suppressed: true,
+    });
+    expect(await claim()).toBe(false);
   });
 
   test("never grants the claim for a suppressed message", async () => {
@@ -123,12 +145,21 @@ describeIfDb("starboard claim (integration)", () => {
     });
   });
 
-  test("forgets the post id when we clear it, so our own delete is not seen as manual", async () => {
+  test("forgets the post id when we release it, so our own delete is not seen as manual", async () => {
     await claim();
     await setStarboardPost(SOURCE, "post-1", 5);
-    await clearStarboardPost(SOURCE);
+    await releaseStarboardMessage(SOURCE);
 
     expect(await findStarboardMessageByPostId("post-1")).toBeUndefined();
+  });
+
+  test("reports whether recording a post found the row", async () => {
+    await claim();
+    expect(await setStarboardPost(SOURCE, "post-1", 5)).toBe(true);
+
+    // What post() sees when the source is deleted while it is sending
+    await deleteStarboardMessage(SOURCE);
+    expect(await setStarboardPost(SOURCE, "post-2", 5)).toBe(false);
   });
 
   test("hands back the post id when deleting the row, in one round trip", async () => {
