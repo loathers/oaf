@@ -1,5 +1,6 @@
 import {
   type APIEmbedField,
+  type Guild,
   hideLinkEmbed,
   hyperlink,
   inlineCode,
@@ -102,4 +103,23 @@ export function inlineExpression(value: string) {
   if (value.startsWith("[") && value.endsWith("]"))
     return inlineCode(value.slice(1, -1));
   return value;
+}
+
+// Reaction events hand us a User rather than a GuildMember, so the member has
+// to be fetched before their highest role can be compared.
+export async function isAtLeastRole(
+  guild: Guild,
+  userId: string,
+  roleId: string,
+) {
+  const role = await guild.roles.fetch(roleId);
+  if (!role) return false;
+
+  try {
+    const member = await guild.members.fetch(userId);
+    return guild.roles.comparePositions(member.roles.highest, role) >= 0;
+  } catch {
+    // They have left the guild
+    return false;
+  }
 }

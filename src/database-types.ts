@@ -138,6 +138,15 @@ export interface PvpSeasonTable {
   startDate: ColumnType<Date, Date | string, Date | string>;
 }
 
+export interface StarboardMessageTable {
+  sourceMessageId: string;
+  sourceChannelId: string;
+  starboardMessageId: string | null;
+  score: Generated<number>;
+  suppressed: Generated<boolean>;
+  createdAt: Generated<Date>;
+}
+
 export interface DB {
   Player: PlayerTable;
   StandingOffer: StandingOfferTable;
@@ -154,6 +163,7 @@ export interface DB {
   DailySubmission: DailySubmissionTable;
   MrStoreItem: MrStoreItemTable;
   PvpSeason: PvpSeasonTable;
+  StarboardMessage: StarboardMessageTable;
 }
 
 export type Player = Selectable<PlayerTable>;
@@ -171,3 +181,4 @@ export type Daily = Selectable<DailyTable>;
 export type DailySubmission = Selectable<DailySubmissionTable>;
 export type MrStoreItem = Selectable<MrStoreItemTable>;
 export type PvpSeason = Selectable<PvpSeasonTable>;
+export type StarboardMessage = Selectable<StarboardMessageTable>;
