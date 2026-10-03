@@ -29,3 +29,7 @@ When invoked, this command will assess the status of various possible users that
 ### /whitelist
 
 When invoked, this command will add a new user to the whitelist for our Dreadsylvania free-use clans. Note that this command may only be invoked by users with moderator powers in the Discord, to avoid people whitelisting themselves and stealing some of the items from the clan stashes.
+
+### /unwhitelist
+
+When invoked, this command will boot a user from our Dreadsylvania free-use clans and remove their whitelist. Note that this command may only be invoked by users with moderator powers in the Discord, typically because someone has been stealing some of the items from the clan stashes.
