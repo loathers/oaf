@@ -55,7 +55,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   for (const dungeonClan of DUNGEON_CLANS) {
-    await clan.addPlayerToWhitelist(player.playerId, dungeonClan.id);
+    await clan.addPlayerToWhitelist(player.playerId, dungeonClan.id, 2);
   }
 
   await interaction.editReply({
