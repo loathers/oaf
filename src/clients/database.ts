@@ -3,7 +3,7 @@ import { Kysely, PostgresDialect, sql } from "kysely";
 import pg from "pg";
 
 import { config } from "../config.js";
-import type { DB, Player } from "../database-types.js";
+import type { DB, Player, StarboardMessage } from "../database-types.js";
 
 function getConnectionString() {
   if (!config.DATABASE_URL) return undefined;
@@ -504,6 +504,125 @@ export async function replaceTag(
     }
     await tx.insertInto("Tag").values(data).execute();
   });
+}
+
+// ── StarboardMessage ──
+
+export async function findStarboardMessage(sourceMessageId: string) {
+  return await db
+    .selectFrom("StarboardMessage")
+    .selectAll()
+    .where("sourceMessageId", "=", sourceMessageId)
+    .executeTakeFirst();
+}
+
+export async function findStarboardMessageByPostId(starboardMessageId: string) {
+  return await db
+    .selectFrom("StarboardMessage")
+    .selectAll()
+    .where("starboardMessageId", "=", starboardMessageId)
+    .executeTakeFirst();
+}
+
+// The row is the claim: whoever inserts it owns the right to post, and any
+// other evaluation - in this process or another - loses the conflict and backs
+// off. That only holds because unstarring releases the row outright rather than
+// blanking it, so a row existing always means somebody owns this message.
+//
+// The trade is that a claim nobody ever posts against - a process dying between
+// the two, or a send that fails outright - strands the message, which can then
+// never be starred again. Rare enough to live with. post() hands the claim back
+// for the one failure it can see coming, recording the post it just sent.
+export async function claimStarboardMessage(data: {
+  sourceMessageId: string;
+  sourceChannelId: string;
+}) {
+  const inserted = await db
+    .insertInto("StarboardMessage")
+    .values(data)
+    .onConflict((oc) => oc.column("sourceMessageId").doNothing())
+    .returning("sourceMessageId")
+    .executeTakeFirst();
+
+  return inserted !== undefined;
+}
+
+async function updateStarboardMessage(
+  sourceMessageId: string,
+  data: Partial<
+    Pick<StarboardMessage, "starboardMessageId" | "score" | "suppressed">
+  >,
+) {
+  const updated = await db
+    .updateTable("StarboardMessage")
+    .set(data)
+    .where("sourceMessageId", "=", sourceMessageId)
+    .returning("sourceMessageId")
+    .executeTakeFirst();
+
+  return updated !== undefined;
+}
+
+// False means the row has gone, which tells a caller mid-post that the source
+// message was deleted underneath it. The other updates have no use for it.
+export async function setStarboardPost(
+  sourceMessageId: string,
+  starboardMessageId: string,
+  score: number,
+) {
+  return await updateStarboardMessage(sourceMessageId, {
+    starboardMessageId,
+    score,
+  });
+}
+
+export async function setStarboardScore(
+  sourceMessageId: string,
+  score: number,
+) {
+  await updateStarboardMessage(sourceMessageId, { score });
+}
+
+// Gives the message up rather than blanking its row, so the row's existence
+// stays a reliable claim. A suppressed row is a tombstone and stays put.
+export async function releaseStarboardMessage(sourceMessageId: string) {
+  await db
+    .deleteFrom("StarboardMessage")
+    .where("sourceMessageId", "=", sourceMessageId)
+    .where("suppressed", "=", false)
+    .execute();
+}
+
+export async function suppressStarboardMessage(sourceMessageId: string) {
+  await updateStarboardMessage(sourceMessageId, {
+    suppressed: true,
+    starboardMessageId: null,
+  });
+}
+
+// Returns the id of the post we made for it, if we had made one, so the caller
+// can tidy up in one round trip. Deleting the row before the post means our own
+// deletion is not mistaken for a human removing it.
+export async function deleteStarboardMessage(sourceMessageId: string) {
+  const deleted = await db
+    .deleteFrom("StarboardMessage")
+    .where("sourceMessageId", "=", sourceMessageId)
+    .returning("starboardMessageId")
+    .executeTakeFirst();
+  return deleted?.starboardMessageId ?? null;
+}
+
+// One-off cutover helper: marks messages the previous starboard bot already
+// posted so we never post them a second time. Its posts aren't ours to edit.
+export async function adoptStarboardMessages(
+  rows: { sourceMessageId: string; sourceChannelId: string }[],
+) {
+  if (rows.length === 0) return;
+  await db
+    .insertInto("StarboardMessage")
+    .values(rows.map((row) => ({ ...row, suppressed: true })))
+    .onConflict((oc) => oc.column("sourceMessageId").doNothing())
+    .execute();
 }
 
 // ── Raffle ──
