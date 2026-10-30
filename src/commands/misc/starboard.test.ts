@@ -663,7 +663,7 @@ describe("updating an existing post", () => {
     expect(starboardSend).not.toHaveBeenCalled();
   });
 
-  test("releases the row before deleting, so the deletion is not treated as manual", async () => {
+  test("releases the row before deleting the post", async () => {
     const order: string[] = [];
     releaseStarboardMessage.mockImplementation(() => {
       order.push("release");
@@ -744,6 +744,50 @@ describe("deletions", () => {
       channelId: "starboard",
       guildId: "guild",
     } as never);
+
+    expect(suppressStarboardMessage).toHaveBeenCalledWith("source-message");
+  });
+
+  test("does not suppress a post we deleted even if its row is still there", async () => {
+    deleteStarboardMessage.mockResolvedValue("post");
+    await onMessageDelete({
+      id: "source-message",
+      channelId: "source",
+      guildId: "guild",
+    } as never);
+
+    findStarboardMessageByPostId.mockResolvedValue({
+      sourceMessageId: "source-message",
+      starboardMessageId: "post",
+      score: 5,
+      suppressed: false,
+    });
+    await onMessageDelete({
+      id: "post",
+      channelId: "starboard",
+      guildId: "guild",
+    } as never);
+
+    expect(suppressStarboardMessage).not.toHaveBeenCalled();
+  });
+
+  test("suppresses a later human deletion of a post id we once deleted", async () => {
+    deleteStarboardMessage.mockResolvedValue("post");
+    await onMessageDelete({
+      id: "source-message",
+      channelId: "source",
+      guildId: "guild",
+    } as never);
+    const deletion = { id: "post", channelId: "starboard", guildId: "guild" };
+    await onMessageDelete(deletion as never);
+
+    findStarboardMessageByPostId.mockResolvedValue({
+      sourceMessageId: "source-message",
+      starboardMessageId: "post",
+      score: 5,
+      suppressed: false,
+    });
+    await onMessageDelete(deletion as never);
 
     expect(suppressStarboardMessage).toHaveBeenCalledWith("source-message");
   });

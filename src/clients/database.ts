@@ -601,8 +601,7 @@ export async function suppressStarboardMessage(sourceMessageId: string) {
 }
 
 // Returns the id of the post we made for it, if we had made one, so the caller
-// can tidy up in one round trip. Deleting the row before the post means our own
-// deletion is not mistaken for a human removing it.
+// can tidy up in one round trip.
 export async function deleteStarboardMessage(sourceMessageId: string) {
   const deleted = await db
     .deleteFrom("StarboardMessage")

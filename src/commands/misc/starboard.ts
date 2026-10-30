@@ -434,12 +434,16 @@ function getEmoji(guild: Guild) {
   );
 }
 
+const ownDeletions = new Set<string>();
+
 async function deleteStarboardPost(starboardMessageId: string) {
   if (!starboardChannel) return;
 
+  ownDeletions.add(starboardMessageId);
   try {
     await starboardChannel.messages.delete(starboardMessageId);
   } catch (error) {
+    ownDeletions.delete(starboardMessageId);
     if (!isDiscordError(error, RESTJSONErrorCodes.UnknownMessage)) throw error;
   }
 }
@@ -448,8 +452,6 @@ async function removeStarboardPost(
   sourceMessageId: string,
   starboardMessageId: string,
 ) {
-  // Released first so our own deletion isn't mistaken for a human removing the
-  // post, which would suppress the message permanently
   await releaseStarboardMessage(sourceMessageId);
   await deleteStarboardPost(starboardMessageId);
 }
@@ -638,9 +640,8 @@ export async function onMessageDelete(
   message: OmitPartialGroupDMChannel<Message | PartialMessage>,
 ) {
   try {
-    // A deletion in the starboard channel means a human took our post down.
-    // Our own deletions clear the row first, so they don't land here.
     if (message.channelId === config.STARBOARD_CHANNEL_ID) {
+      if (ownDeletions.delete(message.id)) return;
       const row = await findStarboardMessageByPostId(message.id);
       if (row) await suppressStarboardMessage(row.sourceMessageId);
       return;
@@ -685,6 +686,7 @@ export function init() {
   excludedChannelIds = parseExcludedChannelIds(
     config.STARBOARD_EXCLUDED_CHANNEL_IDS,
   );
+  ownDeletions.clear();
 
   discordClient.once(Events.ClientReady, () => void resolveStarboardChannel());
 
