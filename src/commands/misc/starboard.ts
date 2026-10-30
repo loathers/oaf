@@ -410,11 +410,8 @@ async function collectVoters(message: Message, emojiNames: string[]) {
     emojiNames.some((n) => n === reaction.emoji.name?.toLowerCase()),
   );
 
-  const voters: Voter[] = [];
-  for (const reaction of reactions) {
-    voters.push(...(await fetchAllReactors(reaction)));
-  }
-  return voters.filter((voter) => !voter.bot);
+  const voters = await Promise.all(reactions.map(fetchAllReactors));
+  return voters.flat().filter((voter) => !voter.bot);
 }
 
 async function isVetoed(message: Message, guild: Guild) {
