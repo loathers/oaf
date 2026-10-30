@@ -36,11 +36,6 @@ import { config } from "../../config.js";
 import type { StarboardMessage } from "../../database-types.js";
 import { isAtLeastRole } from "../../discordUtils.js";
 
-// ── Deciding and rendering ──
-//
-// Everything down to describeStarboardPost is free of Discord and database
-// access, so it can be tested directly.
-
 // Reactions are matched by emoji name rather than snowflake so the feature
 // survives the emoji being deleted and re-uploaded.
 const PLUS_ONE = "plusone";
@@ -117,7 +112,6 @@ export function decideAction({
 
   if (!posted) return "post";
 
-  // Reaction traffic that doesn't move the score shouldn't cost an edit
   return score === existing?.score ? "nothing" : "edit";
 }
 
@@ -237,8 +231,6 @@ export function describeStarboardPost(
   };
 }
 
-// ── Discord plumbing ──
-
 const FALLBACK_EMOJI = "⭐";
 
 const MISSING_ACCESS_CODES = [
@@ -328,13 +320,12 @@ async function describeReplyPreview(message: Message) {
       url: parent.url,
     };
   } catch {
-    // The message being replied to is gone; not worth mentioning
     return null;
   }
 }
 
 // A forward carries no content of its own - everything visible lives in the
-// snapshot, which is why naive starboards post forwards as blanks.
+// snapshot.
 function getSnapshot(message: Message): MessageSnapshot | null {
   if (message.reference?.type !== MessageReferenceType.Forward) return null;
   return message.messageSnapshots.first() ?? null;
@@ -379,8 +370,6 @@ function toEmbed(render: StarboardRender, imageUrl: string | null) {
   return embed;
 }
 
-// Attachment URLs are signed and expire within a day, so where we can the post
-// takes its own copy of the image rather than hotlinking one that will rot.
 function toMessageOptions(render: StarboardRender): MessageCreateOptions {
   const { imageUrl, reuploadName } = render;
 
@@ -476,7 +465,6 @@ async function post(message: Message, render: StarboardRender) {
     sourceChannelId: message.channelId,
   });
 
-  // Another evaluation owns this message; it will post and we would duplicate
   if (!claimed) return;
 
   const sent = await send(starboardChannel, render);
@@ -601,14 +589,11 @@ async function evaluate(channelId: string, messageId: string) {
     const channel = await guild.channels.fetch(channelId);
     if (!channel?.isTextBased()) return;
 
-    // Checked before fetching the message so reaction traffic in an ineligible
-    // channel costs us nothing
     if (!isEligibleChannel(channel, guild)) return;
 
     await evaluateMessage(channel, messageId);
   } catch (error) {
     if (isDiscordError(error, RESTJSONErrorCodes.UnknownMessage)) {
-      // The source message went away mid-evaluation
       await cleanUpDeletedSource(messageId);
       return;
     }
@@ -648,8 +633,6 @@ export async function onReactionsCleared(
 }
 
 async function cleanUpDeletedSource(messageId: string) {
-  // Deleting the row first both tells us whether we had posted it and stops
-  // our own deletion being read as a human removing the post
   const starboardMessageId = await deleteStarboardMessage(messageId);
   if (starboardMessageId) await deleteStarboardPost(starboardMessageId);
 }

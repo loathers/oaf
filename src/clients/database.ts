@@ -564,7 +564,7 @@ async function updateStarboardMessage(
 }
 
 // False means the row has gone, which tells a caller mid-post that the source
-// message was deleted underneath it. The other updates have no use for it.
+// message was deleted underneath it.
 export async function setStarboardPost(
   sourceMessageId: string,
   starboardMessageId: string,

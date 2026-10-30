@@ -9,9 +9,6 @@ import {
   vi,
 } from "vitest";
 
-// Real-database integration test for the starboard claim, which is the only
-// thing standing between a reaction burst and a double post, and what lets an
-// unstarred message come back.
 // Only runs when a DATABASE_URL is provided; CI supplies a throwaway Postgres.
 // We inject the URL because src/config.ts deliberately returns `{}` under Vitest.
 vi.mock("../config.js", () => ({
@@ -92,7 +89,6 @@ describeIfDb("starboard claim (integration)", () => {
   });
 
   test("grants the claim to exactly one of two racing evaluations", async () => {
-    // The whole point: two reactions landing together must not both post
     const [first, second] = await Promise.all([claim(), claim()]);
 
     expect([first, second].filter(Boolean)).toHaveLength(1);
@@ -103,15 +99,12 @@ describeIfDb("starboard claim (integration)", () => {
     await setStarboardPost(SOURCE, "post-1", 5);
     await releaseStarboardMessage(SOURCE);
 
-    // An unstarred message that becomes popular again must be postable
     expect(await claim()).toBe(true);
   });
 
   test("refuses the claim a crash left behind", async () => {
     await claim();
 
-    // The cost of the row being the claim: dying between claiming and posting
-    // strands the message. Rarer than double-posting, and quieter.
     expect(await claim()).toBe(false);
   });
 
@@ -120,8 +113,6 @@ describeIfDb("starboard claim (integration)", () => {
     await suppressStarboardMessage(SOURCE);
     await releaseStarboardMessage(SOURCE);
 
-    // Releasing a tombstone would let a message a human removed come straight
-    // back the next time someone reacts
     expect(await findStarboardMessage(SOURCE)).toMatchObject({
       suppressed: true,
     });
@@ -157,7 +148,6 @@ describeIfDb("starboard claim (integration)", () => {
     await claim();
     expect(await setStarboardPost(SOURCE, "post-1", 5)).toBe(true);
 
-    // What post() sees when the source is deleted while it is sending
     await deleteStarboardMessage(SOURCE);
     expect(await setStarboardPost(SOURCE, "post-2", 5)).toBe(false);
   });

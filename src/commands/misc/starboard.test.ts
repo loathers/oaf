@@ -251,14 +251,12 @@ function register(channel: TestChannel) {
   return channel;
 }
 
-/** Registers a channel whose message fetch resolves to `message`. */
 function serve(message: ReturnType<typeof makeMessage>) {
   const channel = makeChannel({ id: message.channelId });
   channel.messages.fetch.mockResolvedValue(message);
   return register(channel);
 }
 
-/** Runs init() and the ClientReady hook so the starboard channel resolves. */
 async function boot() {
   const { discordClient } = await import("../../clients/discord.js");
   const once = vi.mocked(discordClient.once);
@@ -268,7 +266,6 @@ async function boot() {
   await vi.waitFor(() => expect(guild.channels.fetch).toHaveBeenCalled());
 }
 
-/** Fires a plusone reaction at a message, the way Discord would. */
 const reactTo = (channelId: string, messageId: string) =>
   onReactionChange({
     emoji: { name: "plusone" },
@@ -282,7 +279,6 @@ const POSTED_ROW = {
   suppressed: false,
 };
 
-/** A list of `count` distinct non-bot voters. */
 function stars(count: number) {
   return Array.from({ length: count }, (_, i) => ({ id: `voter-${i}` }));
 }
@@ -339,8 +335,6 @@ describe("reaction filtering", () => {
     const channel = serve(message);
     const fetch = vi.fn();
 
-    // The ids we need are on the partial, and the evaluation re-fetches the
-    // message anyway
     await onReactionChange({
       partial: true,
       emoji: { name: "plusone" },
@@ -616,7 +610,6 @@ describe("moderator veto", () => {
     await reactTo(vetoed.channelId, vetoed.id);
     expect(starboardSend).not.toHaveBeenCalled();
 
-    // The veto lives only in the reactions, so taking it off is enough
     const cleared = makeMessage({ plusOne: stars(5) });
     serve(cleared);
 
@@ -653,7 +646,6 @@ describe("updating an existing post", () => {
 
     await reactTo(message.channelId, message.id);
 
-    // The embed is deliberately left alone, so the patch carries content only
     expect(starboardEdit).toHaveBeenCalledWith("post", {
       content: `<:p:1> **6** | ${message.url}`,
     });

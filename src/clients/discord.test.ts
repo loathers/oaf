@@ -2,9 +2,6 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { DiscordClient } from "./discord.js";
 
-// Alerting is the last thing a failed handler does, and handlers are fired with
-// `void`, so an alert that throws reaches the unhandledRejection handler in
-// index.ts and takes the whole bot down over a failed error report.
 describe("alerting", () => {
   const send = vi.fn();
   const client = new DiscordClient("client", "token", "alerts");
