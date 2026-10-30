@@ -172,6 +172,7 @@ type MessageOptions = {
   channel?: TestChannel;
   authorId?: string;
   plusOne?: { id: string; bot?: boolean }[];
+  plusFour?: { id: string; bot?: boolean }[];
   minusOne?: { id: string; bot?: boolean }[];
   createdTimestamp?: number;
   content?: string;
@@ -199,6 +200,7 @@ function makeMessage(options: MessageOptions = {}) {
     channel = makeChannel(),
     authorId = "author",
     plusOne = [],
+    plusFour = [],
     minusOne = [],
     createdTimestamp = Date.now(),
     content = "a funny message",
@@ -207,6 +209,7 @@ function makeMessage(options: MessageOptions = {}) {
 
   const reactions = new Collection<string, unknown>();
   if (plusOne.length) reactions.set("p", makeReaction("plusone", plusOne));
+  if (plusFour.length) reactions.set("f", makeReaction("plus_four", plusFour));
   if (minusOne.length) reactions.set("m", makeReaction("minusone", minusOne));
 
   return {
@@ -315,6 +318,20 @@ describe("reaction filtering", () => {
     } as never);
 
     expect(channel.messages.fetch).not.toHaveBeenCalled();
+  });
+
+  test("evaluates on a plus_four reaction", async () => {
+    const message = makeMessage({ plusFour: stars(5) });
+    const channel = serve(message);
+
+    await onReactionChange({
+      partial: false,
+      emoji: { name: "plus_four" },
+      message,
+    } as never);
+
+    expect(channel.messages.fetch).toHaveBeenCalled();
+    expect(starboardSend).toHaveBeenCalledOnce();
   });
 
   test("handles a partial reaction without resolving it", async () => {
@@ -487,6 +504,24 @@ describe("posting", () => {
     const message = makeMessage({
       plusOne: [...stars(5), { id: "author" }, { id: "oaf", bot: true }],
     });
+    serve(message);
+
+    await reactTo(message.channelId, message.id);
+
+    expect(setStarboardPost).toHaveBeenCalledWith(message.id, "post", 5);
+  });
+
+  test("counts a plus_four as a single vote", async () => {
+    const message = makeMessage({ plusOne: stars(4), plusFour: [{ id: "x" }] });
+    serve(message);
+
+    await reactTo(message.channelId, message.id);
+
+    expect(setStarboardPost).toHaveBeenCalledWith(message.id, "post", 5);
+  });
+
+  test("counts someone reacting with both plusone and plus_four once", async () => {
+    const message = makeMessage({ plusOne: stars(5), plusFour: stars(1) });
     serve(message);
 
     await reactTo(message.channelId, message.id);

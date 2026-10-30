@@ -44,6 +44,8 @@ import { isAtLeastRole } from "../../discordUtils.js";
 // Reactions are matched by emoji name rather than snowflake so the feature
 // survives the emoji being deleted and re-uploaded.
 const PLUS_ONE = "plusone";
+const PLUS_FOUR = "plus_four";
+const VOTE_EMOJIS = [PLUS_ONE, PLUS_FOUR];
 const MINUS_ONE = "minusone";
 
 // Messages older than this can't newly reach the starboard, so nobody can
@@ -272,7 +274,7 @@ async function alertOncePerChannel(channelId: string, error: unknown) {
 
 function isRelevantEmoji(name: string | null) {
   const lowered = name?.toLowerCase();
-  return lowered === PLUS_ONE || lowered === MINUS_ONE;
+  return lowered === MINUS_ONE || VOTE_EMOJIS.some((name) => name === lowered);
 }
 
 // Threads inherit their parent's eligibility, otherwise excluding a channel is
@@ -412,11 +414,11 @@ async function fetchAllReactors(reaction: MessageReaction) {
 // fills it in when unset, so a cached count drifts across missed events. The
 // reactor list is authoritative, and we need it anyway to drop bots and the
 // author's own star.
-async function collectVoters(message: Message, emojiName: string) {
+async function collectVoters(message: Message, emojiNames: string[]) {
   // Several entries can share a name if the emoji was re-uploaded, or if
   // someone reacted with a same-named emoji from another guild
-  const reactions = [...message.reactions.cache.values()].filter(
-    (reaction) => reaction.emoji.name?.toLowerCase() === emojiName,
+  const reactions = [...message.reactions.cache.values()].filter((reaction) =>
+    emojiNames.some((n) => n === reaction.emoji.name?.toLowerCase()),
   );
 
   const voters: Voter[] = [];
@@ -427,7 +429,7 @@ async function collectVoters(message: Message, emojiName: string) {
 }
 
 async function isVetoed(message: Message, guild: Guild) {
-  for (const detractor of await collectVoters(message, MINUS_ONE)) {
+  for (const detractor of await collectVoters(message, [MINUS_ONE])) {
     if (
       await isAtLeastRole(guild, detractor.id, config.EXTENDED_TEAM_ROLE_ID)
     ) {
@@ -554,7 +556,7 @@ async function evaluateMessage(channel: GuildTextBasedChannel, id: string) {
 
   const threshold = config.STARBOARD_THRESHOLD;
   const score = countStars(
-    await collectVoters(message, PLUS_ONE),
+    await collectVoters(message, VOTE_EMOJIS),
     message.author.id,
   );
 

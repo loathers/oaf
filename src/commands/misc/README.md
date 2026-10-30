@@ -19,7 +19,8 @@ Purges the last X messages `oaf` sent in the current channel. Useful if you typo
 ### Starboard
 
 Not a command. When a message collects enough `:plusone:` reactions it is
-mirrored into `STARBOARD_CHANNEL_ID`. The whole thing is driven from live
+mirrored into `STARBOARD_CHANNEL_ID`. `:plus_four:` counts too, but only as one
+vote, and someone reacting with both is still only counted once. The whole thing is driven from live
 reaction state, so it is reversible in both directions: take reactions away and
 the post's count is edited down, or removed entirely once it falls below
 `STARBOARD_THRESHOLD`.
