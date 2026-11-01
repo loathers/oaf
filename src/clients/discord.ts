@@ -208,12 +208,25 @@ export class DiscordClient extends Client {
     }
   }
 
+  // Alerting must never throw. Every listener is fired with `void`, so a
+  // rejection here would reach the unhandledRejection handler in index.ts and
+  // take the bot down over a failed error report - including the report of the
+  // crash that handler is trying to alert about.
+  private async sendAlert(alert: MessageCreateOptions, context: string) {
+    if (!this.alertsChannel) return;
+    try {
+      await this.alertsChannel.send(alert);
+    } catch (error) {
+      console.error("Could not send alert:", context, error);
+    }
+  }
+
   async initAlertsChannel(channel: SendableChannels) {
     this.alertsChannel = channel;
     while (this.alertsQueue.length > 0) {
       const alert = this.alertsQueue.shift();
       if (!alert) break;
-      await this.alertsChannel.send(alert);
+      await this.sendAlert(alert, "queued before startup");
     }
   }
 
@@ -289,7 +302,7 @@ export class DiscordClient extends Client {
       return;
     }
 
-    return await this.alertsChannel.send(alert);
+    await this.sendAlert(alert, description);
   }
 
   start(): void {
