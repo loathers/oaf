@@ -22,6 +22,7 @@ import {
 } from "discord.js";
 
 import {
+  adoptStarboardMessages,
   claimStarboardMessage,
   deleteStarboardMessage,
   findStarboardMessage,
@@ -75,6 +76,42 @@ type Voter = {
   bot: boolean;
 };
 
+const JUMP_LINK =
+  /https:\/\/(?:\w+\.)?discord(?:app)?\.com\/channels\/(\w+)\/(\w+)\/(\w+)/g;
+
+function linkCandidates({
+  content,
+  embeds,
+  components,
+}: Pick<Message, "content" | "embeds" | "components">) {
+  const buttonUrls = components.flatMap((row) =>
+    "components" in row
+      ? row.components.flatMap((c) => ("url" in c && c.url ? [c.url] : []))
+      : [],
+  );
+  return [
+    ...buttonUrls,
+    content,
+    ...embeds.flatMap((embed) => [
+      embed.url ?? "",
+      ...embed.fields.map((field) => field.value),
+      embed.description ?? "",
+    ]),
+  ];
+}
+
+export function findJumpLink(
+  post: Pick<Message, "content" | "embeds" | "components">,
+) {
+  for (const text of linkCandidates(post)) {
+    for (const [, guildId, channelId, messageId] of text.matchAll(JUMP_LINK)) {
+      if (guildId !== config.GUILD_ID) continue;
+      return { sourceChannelId: channelId, sourceMessageId: messageId };
+    }
+  }
+  return null;
+}
+
 export function countStars(voters: Voter[], authorId: string) {
   const counted = new Set(
     voters.filter((v) => !v.bot && v.id !== authorId).map((v) => v.id),
@@ -82,11 +119,11 @@ export function countStars(voters: Voter[], authorId: string) {
   return counted.size;
 }
 
-type StarboardAction = "post" | "edit" | "delete" | "nothing";
+type StarboardAction = "post" | "edit" | "replace" | "delete" | "nothing";
 
 export type ExistingStarboardMessage = Pick<
   StarboardMessage,
-  "starboardMessageId" | "score" | "suppressed"
+  "starboardMessageId" | "score" | "suppressed" | "adopted"
 >;
 
 export function decideAction({
@@ -100,8 +137,6 @@ export function decideAction({
   vetoed: boolean;
   existing: ExistingStarboardMessage | undefined;
 }): StarboardAction {
-  // A human removed our post, or the previous starboard bot already handled
-  // this message. Either way it is never ours to post again.
   if (existing?.suppressed) return "nothing";
 
   const posted = existing?.starboardMessageId ?? null;
@@ -111,6 +146,7 @@ export function decideAction({
   }
 
   if (!posted) return "post";
+  if (existing?.adopted) return "replace";
 
   return score === existing?.score ? "nothing" : "edit";
 }
@@ -515,10 +551,11 @@ async function createStarboardPost(
   message: Message,
   guild: Guild,
   score: number,
+  replacing = false,
 ) {
-  // Creating a post is gated on age and having something to show; editing and
-  // deleting are not, so an old post stays correctable
-  if (Date.now() - message.createdTimestamp > MAX_MESSAGE_AGE) return;
+  if (!replacing && Date.now() - message.createdTimestamp > MAX_MESSAGE_AGE) {
+    return;
+  }
 
   const source = await toStarboardSource(message);
   if (!hasRenderableContent(source)) return;
@@ -566,6 +603,13 @@ async function evaluateMessage(channel: GuildTextBasedChannel, id: string) {
           describeCountLine(getEmoji(guild), score, message.url),
           score,
         );
+      }
+      return;
+
+    case "replace":
+      if (existing?.starboardMessageId) {
+        await removeStarboardPost(id, existing.starboardMessageId);
+        await createStarboardPost(message, guild, score, true);
       }
       return;
 
@@ -678,6 +722,34 @@ async function resolveStarboardChannel() {
   }
 
   starboardChannel = channel;
+
+  try {
+    await adoptPreviousStarboard(channel);
+  } catch (error) {
+    await discordClient.alert(
+      "Starboard: failed to adopt the previous starboard's posts",
+      undefined,
+      error,
+    );
+  }
+}
+
+async function adoptPreviousStarboard(channel: GuildTextBasedChannel) {
+  let before: string | undefined;
+
+  for (;;) {
+    const page = await channel.messages.fetch({ limit: 100, before });
+    const adopted = [...page.values()]
+      .filter((post) => post.author.id !== discordClient.user?.id)
+      .flatMap((post) => {
+        const link = findJumpLink(post);
+        return link ? [{ ...link, starboardMessageId: post.id }] : [];
+      });
+    await adoptStarboardMessages(adopted);
+
+    if (page.size < 100) return;
+    before = page.lastKey();
+  }
 }
 
 export function init() {

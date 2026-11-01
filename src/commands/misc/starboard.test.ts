@@ -8,6 +8,7 @@ import type {
 } from "./starboard.js";
 
 const {
+  adoptStarboardMessages,
   claimStarboardMessage,
   deleteStarboardMessage,
   findStarboardMessage,
@@ -17,6 +18,7 @@ const {
   setStarboardScore,
   suppressStarboardMessage,
 } = vi.hoisted(() => ({
+  adoptStarboardMessages: vi.fn(),
   claimStarboardMessage: vi.fn(),
   deleteStarboardMessage: vi.fn(),
   findStarboardMessage: vi.fn(),
@@ -43,6 +45,7 @@ const { config } = vi.hoisted(() => ({
 }));
 
 vi.mock("../../clients/database.js", () => ({
+  adoptStarboardMessages,
   claimStarboardMessage,
   deleteStarboardMessage,
   findStarboardMessage,
@@ -69,12 +72,14 @@ const guild = {
 const starboardSend = vi.fn();
 const starboardEdit = vi.fn();
 const starboardDelete = vi.fn();
+const starboardHistory = vi.fn();
 
 vi.mock("../../clients/discord.js", () => ({
   discordClient: {
     alert,
     on: vi.fn(),
     once: vi.fn(),
+    user: { id: "oaf" },
     get guild() {
       return guild;
     },
@@ -85,6 +90,7 @@ const {
   countStars,
   decideAction,
   describeStarboardPost,
+  findJumpLink,
   hasRenderableContent,
   init,
   MAX_REUPLOAD_SIZE,
@@ -241,7 +247,11 @@ const starboardChannel = {
   isTextBased: () => true,
   isSendable: () => true,
   send: starboardSend,
-  messages: { edit: starboardEdit, delete: starboardDelete },
+  messages: {
+    edit: starboardEdit,
+    delete: starboardDelete,
+    fetch: starboardHistory,
+  },
 };
 
 const channels = new Map<string, unknown>();
@@ -294,6 +304,7 @@ beforeEach(async () => {
   guild.emojis.cache = emojiNamed("plusone");
   findStarboardMessage.mockResolvedValue(undefined);
   findStarboardMessageByPostId.mockResolvedValue(undefined);
+  starboardHistory.mockResolvedValue(new Collection());
   claimStarboardMessage.mockResolvedValue(true);
   setStarboardPost.mockResolvedValue(true);
   isAtLeastRole.mockResolvedValue(false);
@@ -893,12 +904,56 @@ describe("decideAction", () => {
     starboardMessageId: null,
     score: 0,
     suppressed: false,
+    adopted: false,
   };
   const posted: ExistingStarboardMessage = {
     starboardMessageId: "post",
     score: 5,
     suppressed: false,
+    adopted: false,
   };
+  const adopted: ExistingStarboardMessage = {
+    starboardMessageId: "old-post",
+    score: 0,
+    suppressed: false,
+    adopted: true,
+  };
+
+  test("replaces an adopted post on any change above the threshold", () => {
+    expect(
+      decideAction({
+        score: 0,
+        threshold: 0,
+        vetoed: false,
+        existing: adopted,
+      }),
+    ).toBe("replace");
+    expect(
+      decideAction({
+        score: 9,
+        threshold: 5,
+        vetoed: false,
+        existing: adopted,
+      }),
+    ).toBe("replace");
+  });
+
+  test("deletes an adopted post that falls below the threshold", () => {
+    expect(
+      decideAction({
+        score: 4,
+        threshold: 5,
+        vetoed: false,
+        existing: adopted,
+      }),
+    ).toBe("delete");
+  });
+
+  test("deletes an adopted post that gets vetoed", () => {
+    expect(
+      decideAction({ score: 9, threshold: 5, vetoed: true, existing: adopted }),
+    ).toBe("delete");
+  });
 
   test("posts a new message that crosses the threshold", () => {
     expect(
@@ -980,7 +1035,12 @@ describe("decideAction", () => {
         score: score as number,
         threshold: 5,
         vetoed: vetoed as boolean,
-        existing: { starboardMessageId: null, score: 0, suppressed: true },
+        existing: {
+          starboardMessageId: null,
+          score: 0,
+          suppressed: true,
+          adopted: false,
+        },
       }),
     ).toBe("nothing");
   });
@@ -1173,5 +1233,164 @@ describe("describeStarboardPost", () => {
     );
     expect(render.description).toHaveLength(4000);
     expect(render.description.endsWith("…")).toBe(true);
+  });
+});
+
+const jump = (channelId: string, messageId: string, guildId = "guild") =>
+  `https://discord.com/channels/${guildId}/${channelId}/${messageId}`;
+
+function oldPost({
+  id = "old-post",
+  authorId = "starboard-bot",
+  content = "",
+  embeds = [] as unknown[],
+  components = [] as unknown[],
+} = {}) {
+  return { id, author: { id: authorId }, content, embeds, components };
+}
+
+const button = (url: string) => ({ components: [{ url }] });
+
+describe("findJumpLink", () => {
+  test("finds the link on a button", () => {
+    const post = oldPost({ components: [button(jump("general", "source"))] });
+
+    expect(findJumpLink(post as never)).toEqual({
+      sourceChannelId: "general",
+      sourceMessageId: "source",
+    });
+  });
+
+  test("finds a link in the message text", () => {
+    const post = oldPost({ content: `⭐ 5 | ${jump("general", "source")}` });
+
+    expect(findJumpLink(post as never)).toEqual({
+      sourceChannelId: "general",
+      sourceMessageId: "source",
+    });
+  });
+
+  test("prefers the post's own link over one quoted in the starred text", () => {
+    const post = oldPost({
+      embeds: [
+        { description: `look at ${jump("general", "quoted")}`, fields: [] },
+      ],
+      components: [button(jump("general", "source"))],
+    });
+
+    expect(findJumpLink(post as never)?.sourceMessageId).toBe("source");
+  });
+
+  test("ignores links to other guilds", () => {
+    const post = oldPost({ content: jump("general", "source", "elsewhere") });
+
+    expect(findJumpLink(post as never)).toBeNull();
+  });
+});
+
+describe("adopting the previous starboard", () => {
+  test("adopts the previous bot's posts but not ours", async () => {
+    starboardHistory.mockResolvedValueOnce(
+      new Collection([
+        ["old-post", oldPost({ components: [button(jump("general", "a"))] })],
+        [
+          "our-post",
+          oldPost({
+            id: "our-post",
+            authorId: "oaf",
+            content: jump("general", "b"),
+          }),
+        ],
+      ]),
+    );
+
+    await boot();
+
+    await vi.waitFor(() =>
+      expect(adoptStarboardMessages).toHaveBeenCalledWith([
+        {
+          sourceChannelId: "general",
+          sourceMessageId: "a",
+          starboardMessageId: "old-post",
+        },
+      ]),
+    );
+  });
+
+  test("reads back through the whole history", async () => {
+    const page = new Collection(
+      Array.from({ length: 100 }, (_, i) => [
+        `post-${i}`,
+        oldPost({ id: `post-${i}`, content: jump("general", `s-${i}`) }),
+      ]),
+    );
+    starboardHistory.mockResolvedValueOnce(page);
+
+    await boot();
+
+    await vi.waitFor(() =>
+      expect(starboardHistory).toHaveBeenLastCalledWith({
+        limit: 100,
+        before: "post-99",
+      }),
+    );
+  });
+});
+
+describe("replacing adopted posts", () => {
+  const ADOPTED_ROW = {
+    sourceMessageId: "source-message",
+    starboardMessageId: "old-post",
+    score: 0,
+    suppressed: false,
+    adopted: true,
+  };
+
+  test("swaps the previous bot's post for ours", async () => {
+    findStarboardMessage.mockResolvedValue(ADOPTED_ROW);
+    const order: string[] = [];
+    starboardDelete.mockImplementation((id: string) => {
+      order.push(`delete ${id}`);
+      return Promise.resolve();
+    });
+    starboardSend.mockImplementation(() => {
+      order.push("send");
+      return Promise.resolve({ id: "post" });
+    });
+
+    const message = makeMessage({ plusOne: stars(6) });
+    serve(message);
+
+    await reactTo(message.channelId, message.id);
+
+    expect(releaseStarboardMessage).toHaveBeenCalledWith(message.id);
+    expect(order).toEqual(["delete old-post", "send"]);
+  });
+
+  test("swaps it even when the message is past the age limit", async () => {
+    findStarboardMessage.mockResolvedValue(ADOPTED_ROW);
+
+    const message = makeMessage({
+      plusOne: stars(6),
+      createdTimestamp: Date.now() - 365 * 24 * 60 * 60 * 1000,
+    });
+    serve(message);
+
+    await reactTo(message.channelId, message.id);
+
+    expect(starboardDelete).toHaveBeenCalledWith("old-post");
+    expect(starboardSend).toHaveBeenCalledOnce();
+  });
+
+  test("only takes it down when the message has dropped below", async () => {
+    findStarboardMessage.mockResolvedValue(ADOPTED_ROW);
+
+    const message = makeMessage({ plusOne: stars(2) });
+    serve(message);
+
+    await reactTo(message.channelId, message.id);
+
+    expect(starboardDelete).toHaveBeenCalledWith("old-post");
+    expect(starboardSend).not.toHaveBeenCalled();
   });
 });

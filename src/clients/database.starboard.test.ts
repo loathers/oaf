@@ -41,6 +41,7 @@ describeIfDb("starboard claim (integration)", () => {
         "starboardMessageId" TEXT,
         "score" INTEGER NOT NULL DEFAULT 0,
         "suppressed" BOOLEAN NOT NULL DEFAULT false,
+        "adopted" BOOLEAN NOT NULL DEFAULT false,
         "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `.execute(db);
@@ -170,26 +171,55 @@ describeIfDb("starboard claim (integration)", () => {
     expect(await deleteStarboardMessage(SOURCE)).toBeNull();
   });
 
-  test("adopted messages are suppressed and never claimable", async () => {
+  test("adopted messages hold the previous bot's post", async () => {
     await adoptStarboardMessages([
-      { sourceMessageId: SOURCE, sourceChannelId: CHANNEL },
+      {
+        sourceMessageId: SOURCE,
+        sourceChannelId: CHANNEL,
+        starboardMessageId: "old-post",
+      },
     ]);
 
     expect(await findStarboardMessage(SOURCE)).toMatchObject({
-      suppressed: true,
-      starboardMessageId: null,
+      suppressed: false,
+      adopted: true,
+      starboardMessageId: "old-post",
     });
     expect(await claim()).toBe(false);
   });
 
+  test("an adopted message is claimable once released", async () => {
+    await adoptStarboardMessages([
+      {
+        sourceMessageId: SOURCE,
+        sourceChannelId: CHANNEL,
+        starboardMessageId: "old-post",
+      },
+    ]);
+    await releaseStarboardMessage(SOURCE);
+
+    expect(await claim()).toBe(true);
+    expect(await findStarboardMessage(SOURCE)).toMatchObject({
+      adopted: false,
+    });
+  });
+
   test("adoption is re-runnable over rows that already exist", async () => {
     await adoptStarboardMessages([
-      { sourceMessageId: SOURCE, sourceChannelId: CHANNEL },
+      {
+        sourceMessageId: SOURCE,
+        sourceChannelId: CHANNEL,
+        starboardMessageId: "old-post",
+      },
     ]);
 
     await expect(
       adoptStarboardMessages([
-        { sourceMessageId: SOURCE, sourceChannelId: CHANNEL },
+        {
+          sourceMessageId: SOURCE,
+          sourceChannelId: CHANNEL,
+          starboardMessageId: "old-post",
+        },
       ]),
     ).resolves.toBeUndefined();
   });

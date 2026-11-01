@@ -611,15 +611,17 @@ export async function deleteStarboardMessage(sourceMessageId: string) {
   return deleted?.starboardMessageId ?? null;
 }
 
-// One-off cutover helper: marks messages the previous starboard bot already
-// posted so we never post them a second time. Its posts aren't ours to edit.
 export async function adoptStarboardMessages(
-  rows: { sourceMessageId: string; sourceChannelId: string }[],
+  rows: {
+    sourceMessageId: string;
+    sourceChannelId: string;
+    starboardMessageId: string;
+  }[],
 ) {
   if (rows.length === 0) return;
   await db
     .insertInto("StarboardMessage")
-    .values(rows.map((row) => ({ ...row, suppressed: true })))
+    .values(rows.map((row) => ({ ...row, adopted: true })))
     .onConflict((oc) => oc.column("sourceMessageId").doNothing())
     .execute();
 }

@@ -144,6 +144,7 @@ export interface StarboardMessageTable {
   starboardMessageId: string | null;
   score: Generated<number>;
   suppressed: Generated<boolean>;
+  adopted: Generated<boolean>;
   createdAt: Generated<Date>;
 }
 
