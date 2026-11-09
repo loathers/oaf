@@ -193,6 +193,23 @@ describe("PvP season sync", () => {
     );
   });
 
+  test("backdates a season recorded late to when it started", async () => {
+    getLatestPvpSeason.mockResolvedValue(stored(SEASONS[4]));
+    getCurrentSeason.mockResolvedValue({
+      seasonNumber: 88,
+      seasonName: "Glitch Season",
+      endsAt: new Date("2027-01-01"),
+    });
+
+    await rollover(new Date("2026-11-10T03:32:00Z"));
+
+    expect(upsertPvpSeason).toHaveBeenCalledWith({
+      seasonNumber: 88,
+      seasonName: "Glitch Season",
+      startDate: new Date("2026-11-01T03:30:00Z"),
+    });
+  });
+
   test("alerts and writes nothing when the season cannot be parsed", async () => {
     getLatestPvpSeason.mockResolvedValue(stored(SEASONS[3]));
     getCurrentSeason.mockRejectedValue(
