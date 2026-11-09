@@ -25,6 +25,7 @@ import {
 import { discordClient } from "../../clients/discord.js";
 import { kolClient } from "../../clients/kol.js";
 import { config } from "../../config.js";
+import { isAtLeastRole } from "../../discordUtils.js";
 import {
   CONSENSUS_THRESHOLD,
   DAILY_GLOBALS,
@@ -95,22 +96,13 @@ async function handleIgnoreButton(interaction: ButtonInteraction) {
     return;
   }
 
-  const roleToCompare = await interaction.guild.roles.fetch(
-    config.EXTENDED_TEAM_ROLE_ID,
-  );
-  if (!roleToCompare) {
-    await interaction.reply({
-      flags: [MessageFlags.Ephemeral],
-      content: "Could not find the required role.",
-    });
-    return;
-  }
-
-  const canAct = interaction.guild.roles.comparePositions(
-    interaction.member.roles.highest,
-    roleToCompare,
-  );
-  if (canAct < 0) {
+  if (
+    !(await isAtLeastRole(
+      interaction.guild,
+      interaction.user.id,
+      config.EXTENDED_TEAM_ROLE_ID,
+    ))
+  ) {
     await interaction.reply({
       flags: [MessageFlags.Ephemeral],
       content: "Only moderators can ignore crowdsourcing players.",

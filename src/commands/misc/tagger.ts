@@ -24,6 +24,7 @@ import {
   replaceTag,
 } from "../../clients/database.js";
 import { config } from "../../config.js";
+import { isAtLeastRole } from "../../discordUtils.js";
 import { init } from "./tag.js";
 
 export const data = new ContextMenuCommandBuilder()
@@ -47,21 +48,13 @@ export async function execute(interaction: ContextMenuCommandInteraction) {
     throw new Error("This can only be done in guild");
   }
 
-  const roleToCompare = await interaction.guild.roles.fetch(
-    config.EXTENDED_TEAM_ROLE_ID,
-  );
-
-  if (!roleToCompare) {
-    throw new Error("Comparison role does not exist for tagging permissions");
-  }
-
-  const highestRole = interaction.member.roles.highest;
-  const canPost = interaction.guild.roles.comparePositions(
-    highestRole,
-    roleToCompare,
-  );
-
-  if (canPost < 0) {
+  if (
+    !(await isAtLeastRole(
+      interaction.guild,
+      interaction.user.id,
+      config.EXTENDED_TEAM_ROLE_ID,
+    ))
+  ) {
     await interaction.reply({
       flags: [MessageFlags.Ephemeral],
       content:
