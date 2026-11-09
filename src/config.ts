@@ -94,6 +94,20 @@ export const schema = {
     optional: true,
   },
 
+  // Starboard
+  STARBOARD_CHANNEL_ID: {
+    type: SNOWFLAKE_PATTERN,
+    optional: true,
+  },
+  STARBOARD_THRESHOLD: {
+    type: Number,
+    default: 5,
+  },
+  STARBOARD_EXCLUDED_CHANNEL_IDS: {
+    type: String,
+    optional: true,
+  },
+
   // Piloted moderator notices
   MODERATOR_NOTICES_CHANNEL_ID: {
     type: SNOWFLAKE_PATTERN,
@@ -104,6 +118,6 @@ export const schema = {
 export type Env = EnvType<typeof schema>;
 
 // Do not attempt to load if in testing environment
-export const config = process.env.VITEST_WORKER_ID
-  ? ({} as { PORT: number } & { [key: string]: string })
+export const config: Env = process.env.VITEST_WORKER_ID
+  ? ({} as Env)
   : load(schema);
